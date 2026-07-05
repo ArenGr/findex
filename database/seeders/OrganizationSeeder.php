@@ -25,8 +25,8 @@ class OrganizationSeeder extends Seeder
             ['code' => 'GEL', 'name' => 'Georgian Lari', 'symbol' => '₾'],
         ];
 
-        foreach ($currencies as $currency) {
-            Currency::firstOrCreate(['code' => $currency['code']], $currency);
+        foreach ($currencies as $index => $currency) {
+            Currency::firstOrCreate(['code' => $currency['code']], [...$currency, 'sort_order' => $index + 1]);
         }
 
         // Create organizations
@@ -36,6 +36,7 @@ class OrganizationSeeder extends Seeder
                 'name' => 'ACBA Bank',
                 'type' => 'bank',
                 'website' => 'https://www.acba.am',
+                'logo' => '/images/organizations/acba.svg',
                 'country_code' => 'AM',
                 'is_active' => true,
             ]
@@ -58,6 +59,19 @@ class OrganizationSeeder extends Seeder
                 'name' => 'Ameriabank',
                 'type' => 'bank',
                 'website' => 'https://ameriabank.am',
+                'logo' => '/images/organizations/ameria.svg',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
+        $unibank = Organization::firstOrCreate(
+            ['slug' => 'unibank'],
+            [
+                'name' => 'Unibank',
+                'type' => 'bank',
+                'website' => 'https://www.unibank.am',
+                'logo' => '/images/organizations/unibank.svg',
                 'country_code' => 'AM',
                 'is_active' => true,
             ]
@@ -120,6 +134,14 @@ class OrganizationSeeder extends Seeder
             ['organization_id' => $ameria->id, 'source_type' => 'currency_rates'],
             [
                 'url' => 'https://ameriabank.am/en/',
+                'is_active' => true,
+            ]
+        );
+
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $unibank->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en',
                 'is_active' => true,
             ]
         );

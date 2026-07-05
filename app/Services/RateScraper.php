@@ -184,6 +184,7 @@ class RateScraper
                     [
                         'name' => $currencyCode,
                         'is_active' => true,
+                        'sort_order' => array_search($currencyCode, CurrencyCode::codes(), true) + 1,
                     ]
                 );
 

@@ -13,9 +13,10 @@ class RateParserFactory
      * @var array<string, class-string<RateParser>>
      */
     private array $parsers = [
-        'acba'   => AcbaRateParser::class,
-        'ineco'  => InecoRateParser::class,
-        'ameria' => AmeriaRateParser::class,
+        'acba'    => AcbaRateParser::class,
+        'ineco'   => InecoRateParser::class,
+        'ameria'  => AmeriaRateParser::class,
+        'unibank' => UnibankRateParser::class,
     ];
 
     /**

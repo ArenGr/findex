@@ -57,36 +57,6 @@
             <p class="mt-6 text-sm leading-relaxed text-body-text">{{ $organization->description }}</p>
         @endif
 
-        {{-- Live rates snapshot --}}
-        <h2 class="mt-12 font-heading text-xl font-semibold text-ink">{{ __('organizations.rates_heading') }}</h2>
-
-        @if ($rates->isEmpty())
-            <p class="mt-4 text-sm text-muted">{{ __('organizations.no_rates') }}</p>
-        @else
-            <div class="mt-4 overflow-x-auto border border-placeholder">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-placeholder/40 text-xs text-subtle uppercase">
-                        <tr>
-                            <th class="px-4 py-3">{{ __('organizations.currency') }}</th>
-                            <th class="px-4 py-3">{{ __('organizations.rate_type') }}</th>
-                            <th class="px-4 py-3">{{ __('organizations.buy') }}</th>
-                            <th class="px-4 py-3">{{ __('organizations.sell') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($rates as $rate)
-                            <tr class="border-t border-placeholder">
-                                <td class="px-4 py-3 font-medium text-ink">{{ $rate->currency->code }}</td>
-                                <td class="px-4 py-3 text-body-text">{{ __('organizations.rate_types.' . $rate->rate_type->value) }}</td>
-                                <td class="px-4 py-3 text-ink">{{ $rate->buy_rate }}</td>
-                                <td class="px-4 py-3 text-ink">{{ $rate->sell_rate }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-
         {{-- Reviews --}}
         <h2 class="mt-12 font-heading text-xl font-semibold text-ink">{{ __('organizations.reviews_heading') }}</h2>
 

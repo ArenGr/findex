@@ -11,6 +11,7 @@ class Currency extends Model
         'code',
         'name',
         'symbol',
+        'sort_order',
         'is_active',
     ];
 

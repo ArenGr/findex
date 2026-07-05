@@ -48,15 +48,18 @@
     x-init="setInterval(() => active = (active + 1) % total, 6000)"
     class="mx-auto max-w-7xl px-6 py-16 lg:px-10"
 >
-    <div class="relative">
+    <div class="relative grid">
         @foreach ($slides as $i => $slide)
             <div
                 x-show="active === {{ $i }}"
-                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter="transition ease-in-out duration-700"
                 x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in-out duration-700"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
                 @if ($i > 0) x-cloak @endif
-                class="grid grid-cols-1 items-center gap-12 lg:grid-cols-2"
+                class="col-start-1 row-start-1 grid grid-cols-1 items-center gap-12 lg:grid-cols-2"
             >
                 {{-- Text column --}}
                 <div>

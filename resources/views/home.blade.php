@@ -6,6 +6,7 @@
 @section('content')
     <x-hero-carousel />
     <x-partner-logos />
+    <x-rates-table />
     <x-offers-table />
     <x-news-section />
 @endsection

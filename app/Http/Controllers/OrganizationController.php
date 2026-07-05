@@ -18,19 +18,12 @@ class OrganizationController extends Controller
 
         $organization->load(['reviews.user']);
 
-        $rates = $organization->currencyRates()
-            ->with('currency')
-            ->orderBy('currency_id')
-            ->orderBy('rate_type')
-            ->get();
-
         $myReview = auth()->check()
             ? $organization->reviews->firstWhere('user_id', auth()->id())
             : null;
 
         return view('organizations.show', [
             'organization' => $organization,
-            'rates' => $rates,
             'averageRating' => $organization->reviews->avg('rating'),
             'reviewsCount' => $organization->reviews->count(),
             'myReview' => $myReview,

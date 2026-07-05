@@ -6,6 +6,10 @@
     <meta name="description" content="@yield('description', __('meta.home_description'))">
     <title>@yield('title', __('meta.home_title'))</title>
 
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+
     @if (Route::current())
         @php $routeParams = Route::current()->parameters(); @endphp
         @foreach (config('localization.available') as $code => $locale)
