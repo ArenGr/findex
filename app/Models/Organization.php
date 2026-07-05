@@ -15,6 +15,7 @@ class Organization extends Model
         'type',
         'website',
         'logo',
+        'description',
         'country_code',
         'is_active',
     ];
@@ -24,6 +25,11 @@ class Organization extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     /**
      * Get all sources for this organization.
@@ -63,6 +69,24 @@ class Organization extends Model
     public function latestCurrencyRates(): HasMany
     {
         return $this->currencyRates()->where('scraped_at', '>=', now()->subHours(24));
+    }
+
+    /**
+     * Get all reviews for this organization.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
+    public function averageRating(): ?float
+    {
+        return $this->reviews()->avg('rating');
+    }
+
+    public function reviewsCount(): int
+    {
+        return $this->reviews()->count();
     }
 
     /**

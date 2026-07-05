@@ -3,7 +3,52 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+ * FreeSans is self-hosted (not on Google/Bunny Fonts) - see the Findex
+ * style guide ("Colors and fonts"): FreeSans for English/Armenian body
+ * and UI text, Montserrat for decorative headings, Allerta Stencil for
+ * the logo wordmark only.
+ */
+@font-face {
+    font-family: 'FreeSans';
+    src: url('/fonts/FreeSans.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'FreeSans';
+    src: url('/fonts/FreeSansBold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'FreeSans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-heading: 'Montserrat', var(--font-sans);
+    --font-logo: 'Allerta Stencil', var(--font-sans);
+
+    /* Findex brand palette (see resources/views/style-guide.blade.php) */
+    --color-primary: #607e34;
+    --color-primary-dark: #4c6529;
+    --color-accent-yellow: #f1cb40;
+    --color-accent-blue: #005fb9;
+
+    /* Hero carousel per-slide accents */
+    --color-slide-green: #607e34;
+    --color-slide-blue: #87b8f5;
+    --color-slide-yellow: #f8d97e;
+    --color-slide-pink: #feb2b9;
+    --color-slide-purple: #dcb0e9;
+
+    /* Neutrals */
+    --color-ink: #161515;
+    --color-body-text: #262626;
+    --color-muted: #676767;
+    --color-subtle: #a6a6a6;
+    --color-border-muted: #b3b3b3;
+    --color-placeholder: #d9d9d9;
 }
