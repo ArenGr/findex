@@ -22,9 +22,16 @@ return [
     'update_review' => 'Update review',
     'login_to_review' => 'To leave a review, please',
     'review_submitted' => 'Your review has been posted. Thank you!',
+    'branch' => 'Branch',
+    'select_branch' => 'Select a branch (optional)',
+    'no_branch' => 'No specific branch',
+    'org_reply_label' => 'Response from :name',
 
     'types' => [
         'bank' => 'Bank',
+        'exchange' => 'Currency Exchange',
+        'insurance' => 'Insurance',
+        'other' => 'Other',
     ],
 
     'countries' => [

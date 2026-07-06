@@ -14,9 +14,9 @@ class OrganizationController extends Controller
      */
     public function show(string $locale, string $organization): View
     {
-        $organization = Organization::where('slug', $organization)->firstOrFail();
+        $organization = Organization::active()->where('slug', $organization)->firstOrFail();
 
-        $organization->load(['reviews.user']);
+        $organization->load(['reviews.user', 'reviews.reply', 'reviews.branch', 'branches' => fn ($query) => $query->active()]);
 
         $myReview = auth()->check()
             ? $organization->reviews->firstWhere('user_id', auth()->id())

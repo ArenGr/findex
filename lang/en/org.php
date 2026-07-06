@@ -1,0 +1,103 @@
+<?php
+
+return [
+    'login_title' => 'Organization Log In',
+    'register_title' => 'Register Your Organization',
+    'select_type' => 'Select a type',
+    'pending_approval' => 'Your organization is awaiting admin approval. Your public page will go live once approved — in the meantime you can complete your profile, add branches, and set your rates.',
+
+    'nav' => [
+        'overview' => 'Overview',
+        'profile' => 'Profile',
+        'reviews' => 'Reviews',
+        'branches' => 'Branches',
+        'rates' => 'Rates',
+        'reports' => 'Reports',
+    ],
+
+    'overview' => [
+        'title' => 'Overview',
+        'reviews_count' => 'Reviews',
+        'average_rating' => 'Average rating',
+        'unreplied' => 'Awaiting reply',
+        'branches_count' => 'Branches',
+        'recent_reports' => 'Recent report requests',
+        'no_recent_reports' => 'No report requests yet.',
+    ],
+
+    'profile' => [
+        'title' => 'Organization profile',
+        'name' => 'Name',
+        'description' => 'Description',
+        'website' => 'Website',
+        'logo' => 'Logo',
+        'save' => 'Save changes',
+        'updated' => 'Profile updated.',
+    ],
+
+    'reviews' => [
+        'title' => 'Reviews',
+        'no_reviews' => 'No reviews yet.',
+        'reply_label' => 'Your reply',
+        'reply_placeholder' => 'Write a public reply to this review…',
+        'reply_button' => 'Post reply',
+        'update_reply_button' => 'Update reply',
+        'reply_submitted' => 'Reply posted.',
+    ],
+
+    'branches' => [
+        'title' => 'Branches',
+        'add' => 'Add branch',
+        'edit' => 'Edit branch',
+        'name' => 'Name',
+        'address' => 'Address',
+        'city' => 'City',
+        'is_active' => 'Active',
+        'inactive' => 'inactive',
+        'save' => 'Save',
+        'delete' => 'Delete',
+        'no_branches' => 'No branches yet.',
+        'created' => 'Branch added.',
+        'updated' => 'Branch updated.',
+        'deleted' => 'Branch deleted.',
+    ],
+
+    'reports' => [
+        'title' => 'Reports',
+        'request' => 'Request a report',
+        'branch' => 'Branch',
+        'all_branches' => 'All branches',
+        'period_from' => 'From',
+        'period_to' => 'To',
+        'request_button' => 'Request report',
+        'requested' => 'Report requested — it will appear here once ready.',
+        'view' => 'View',
+        'no_requests' => 'No report requests yet.',
+        'status' => [
+            'pending' => 'Pending',
+            'processing' => 'Processing',
+            'completed' => 'Completed',
+            'failed' => 'Failed',
+        ],
+        'review_count' => 'Reviews analyzed',
+        'positive' => 'Positive',
+        'neutral' => 'Neutral',
+        'negative' => 'Negative',
+        'summary' => 'Summary',
+        'themes' => 'Common themes',
+        'no_reviews_in_period' => 'No reviews matched this request.',
+    ],
+
+    'rates' => [
+        'title' => 'Currency rates',
+        'add' => 'Add rate',
+        'edit' => 'Update rate',
+        'currency' => 'Currency',
+        'rate_type' => 'Rate type',
+        'buy' => 'Buy rate',
+        'sell' => 'Sell rate',
+        'save' => 'Save',
+        'no_rates' => 'No rates set yet.',
+        'saved' => 'Rate saved.',
+    ],
+];

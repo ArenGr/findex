@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'llm' => [
+        'key' => env('LLM_API_KEY'),
+        'model' => env('LLM_MODEL'),
+    ],
+
 ];

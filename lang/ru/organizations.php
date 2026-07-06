@@ -22,9 +22,16 @@ return [
     'update_review' => 'Обновить отзыв',
     'login_to_review' => 'Чтобы оставить отзыв, пожалуйста',
     'review_submitted' => 'Ваш отзыв опубликован. Спасибо!',
+    'branch' => 'Филиал',
+    'select_branch' => 'Выберите филиал (необязательно)',
+    'no_branch' => 'Без указания филиала',
+    'org_reply_label' => 'Ответ от :name',
 
     'types' => [
         'bank' => 'Банк',
+        'exchange' => 'Обменный пункт',
+        'insurance' => 'Страхование',
+        'other' => 'Другое',
     ],
 
     'countries' => [

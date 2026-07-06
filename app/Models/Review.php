@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Review extends Model
 {
     protected $fillable = [
         'organization_id',
         'user_id',
+        'branch_id',
         'rating',
         'comment',
     ];
@@ -28,5 +30,15 @@ class Review extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function reply(): HasOne
+    {
+        return $this->hasOne(ReviewReply::class);
     }
 }

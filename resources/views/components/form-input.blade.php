@@ -1,4 +1,4 @@
-@props(['name', 'label', 'type' => 'text', 'required' => false])
+@props(['name', 'label', 'type' => 'text', 'required' => false, 'value' => null])
 
 <div>
     <label for="{{ $name }}" class="block text-sm font-medium text-ink">{{ $label }}</label>
@@ -6,7 +6,7 @@
         type="{{ $type }}"
         name="{{ $name }}"
         id="{{ $name }}"
-        value="{{ old($name) }}"
+        value="{{ old($name, $value) }}"
         @if ($required) required @endif
         {{ $attributes->class([
             'mt-1.5 block w-full rounded-md border px-3 py-2 text-sm text-ink focus:outline-none',

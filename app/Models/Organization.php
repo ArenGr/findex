@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Organization extends Model
+class Organization extends Authenticatable
 {
     protected $fillable = [
         'name',
@@ -18,12 +18,20 @@ class Organization extends Model
         'description',
         'country_code',
         'is_active',
+        'email',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     public function getRouteKeyName(): string
@@ -87,6 +95,30 @@ class Organization extends Model
     public function reviewsCount(): int
     {
         return $this->reviews()->count();
+    }
+
+    /**
+     * Get all branches for this organization.
+     */
+    public function branches(): HasMany
+    {
+        return $this->hasMany(Branch::class);
+    }
+
+    /**
+     * Get all report requests for this organization.
+     */
+    public function reportRequests(): HasMany
+    {
+        return $this->hasMany(ReportRequest::class);
+    }
+
+    /**
+     * Get all generated reports for this organization.
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
     }
 
     /**

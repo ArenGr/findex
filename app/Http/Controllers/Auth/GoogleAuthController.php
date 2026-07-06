@@ -61,6 +61,11 @@ class GoogleAuthController extends Controller
             }
         }
 
+        if ($user->isBanned()) {
+            return redirect()->route('login', ['locale' => $locale])
+                ->withErrors(['email' => __('auth.failed')]);
+        }
+
         Auth::login($user, remember: true);
 
         return redirect()->intended(route('home', ['locale' => $locale]));

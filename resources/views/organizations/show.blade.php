@@ -84,6 +84,22 @@
                     <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
                 @enderror
 
+                @if ($organization->branches->isNotEmpty())
+                    <label for="branch_id" class="mt-5 block text-sm font-medium text-ink">{{ __('organizations.branch') }}</label>
+                    <select
+                        name="branch_id"
+                        id="branch_id"
+                        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                    >
+                        <option value="">{{ __('organizations.no_branch') }}</option>
+                        @foreach ($organization->branches as $branch)
+                            <option value="{{ $branch->id }}" @selected(old('branch_id', $myReview->branch_id ?? null) == $branch->id)>
+                                {{ $branch->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
+
                 <label for="comment" class="mt-5 block text-sm font-medium text-ink">{{ __('organizations.your_comment') }}</label>
                 <textarea
                     name="comment"
@@ -121,7 +137,19 @@
                         <x-star-rating :rating="$review->rating" />
                     </div>
                     <p class="mt-3 text-sm leading-relaxed text-body-text">{{ $review->comment }}</p>
-                    <p class="mt-2 text-xs text-subtle">{{ $review->created_at->translatedFormat('d F, Y') }}</p>
+                    <p class="mt-2 text-xs text-subtle">
+                        {{ $review->created_at->translatedFormat('d F, Y') }}
+                        @if ($review->branch)
+                            · {{ $review->branch->name }}
+                        @endif
+                    </p>
+
+                    @if ($review->reply)
+                        <div class="mt-4 ml-4 border-l-2 border-primary/30 pl-4">
+                            <p class="text-xs font-semibold text-ink">{{ __('organizations.org_reply_label', ['name' => $organization->name]) }}</p>
+                            <p class="mt-1 text-sm leading-relaxed text-body-text">{{ $review->reply->body }}</p>
+                        </div>
+                    @endif
                 </div>
             @empty
                 <p class="py-6 text-sm text-muted">{{ __('organizations.no_reviews') }}</p>
