@@ -3,7 +3,7 @@
         [
             'title' => __('footer.columns.company.title'),
             'links' => [
-                ['label' => __('footer.columns.company.links.about'), 'href' => '#'],
+                ['label' => __('footer.columns.company.links.about'), 'href' => route('about')],
                 ['label' => __('footer.columns.company.links.team'), 'href' => '#'],
                 ['label' => __('footer.columns.company.links.careers'), 'href' => '#'],
                 ['label' => __('footer.columns.company.links.news'), 'href' => '#'],

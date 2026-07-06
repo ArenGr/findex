@@ -46,4 +46,10 @@ return [
         'model' => env('LLM_MODEL'),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'group_url' => env('TELEGRAM_GROUP_URL'),
+    ],
+
 ];

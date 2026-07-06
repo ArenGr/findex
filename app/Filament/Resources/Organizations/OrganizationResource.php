@@ -8,6 +8,7 @@ use App\Filament\Resources\Organizations\Pages\ListOrganizations;
 use App\Filament\Resources\Organizations\Pages\ViewOrganization;
 use App\Filament\Resources\Organizations\RelationManagers\BranchesRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\CurrencyRatesRelationManager;
+use App\Filament\Resources\Organizations\RelationManagers\MortgageOffersRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\ReportRequestsRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\ReviewsRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\SourcesRelationManager;
@@ -58,6 +59,7 @@ class OrganizationResource extends Resource
             ReviewsRelationManager::class,
             ReportRequestsRelationManager::class,
             CurrencyRatesRelationManager::class,
+            MortgageOffersRelationManager::class,
             SourcesRelationManager::class,
         ];
     }

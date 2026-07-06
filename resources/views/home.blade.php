@@ -7,6 +7,7 @@
     <x-hero-carousel />
     <x-partner-logos />
     <x-rates-table />
+    <x-telegram-cta />
     <x-offers-table />
     <x-news-section />
 @endsection

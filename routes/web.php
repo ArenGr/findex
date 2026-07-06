@@ -38,6 +38,10 @@ Route::prefix('{locale}')
             return view('style-guide');
         })->name('style-guide');
 
+        Route::get('/about', function () {
+            return view('about');
+        })->name('about');
+
         Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
 
         Route::get('/register', function () {

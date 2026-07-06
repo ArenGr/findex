@@ -113,6 +113,14 @@ class OrganizationSeeder extends Seeder
             ]
         );
 
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $acba->id, 'source_type' => 'mortgages'],
+            [
+                'url' => 'https://acba.am/en/individual/loan/161',
+                'is_active' => true,
+            ]
+        );
+
         // Inactive: Inecobank sits behind a Cloudflare Managed Challenge
         // (a JS challenge, not just a cookie check) that a plain HTTP client
         // cannot solve. Left registered for whenever that gets tackled -
@@ -145,6 +153,18 @@ class OrganizationSeeder extends Seeder
             ['organization_id' => $ameria->id, 'source_type' => 'currency_rates'],
             [
                 'url' => 'https://ameriabank.am/en/',
+                'is_active' => true,
+            ]
+        );
+
+        // Points directly at the JSON content-module endpoint the mortgage
+        // page's disclosure tab loads via XHR - the page itself is JS-hydrated
+        // and Guzzle wouldn't see the numbers, but this endpoint is a plain,
+        // stable HTTP GET with no session/JS required.
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $ameria->id, 'source_type' => 'mortgages'],
+            [
+                'url' => 'https://ameriabank.am/en/API/WebsitesCreative/MyContentManager/API/Init?portalId=0&tabId=6119&moduleId=20719',
                 'is_active' => true,
             ]
         );

@@ -64,7 +64,7 @@
             @endforeach
 
             <a href="#" class="hover:text-primary">{{ __('nav.brokers') }}</a>
-            <a href="#" class="hover:text-primary">{{ __('nav.about') }}</a>
+            <a href="{{ route('about') }}" class="hover:text-primary">{{ __('nav.about') }}</a>
         </nav>
 
         <div class="flex items-center gap-5">
@@ -176,7 +176,7 @@
             @endforeach
 
             <a href="#" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.brokers') }}</a>
-            <a href="#" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.about') }}</a>
+            <a href="{{ route('about') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.about') }}</a>
 
             <div class="mt-3 flex items-center gap-3 border-t border-placeholder pt-4">
                 @foreach (config('localization.available') as $code => $locale)

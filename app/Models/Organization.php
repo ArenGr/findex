@@ -56,6 +56,14 @@ class Organization extends Authenticatable
     }
 
     /**
+     * Get all mortgage offers from this organization.
+     */
+    public function mortgageOffers(): HasMany
+    {
+        return $this->hasMany(MortgageOffer::class);
+    }
+
+    /**
      * Get all scraping jobs for this organization.
      */
     public function scrapingJobs(): HasMany

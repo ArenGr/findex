@@ -84,9 +84,14 @@
         @endforeach
     </div>
 
+    {{-- Mortgages content --}}
+    <div x-show="tab === 'mortgages'" x-cloak class="overflow-hidden border border-t-0 border-placeholder">
+        <x-mortgage-offers-table />
+    </div>
+
     {{-- Placeholder for the other tabs - no design/content provided for these yet --}}
     @foreach (array_keys($tabs) as $key)
-        @if ($key !== 'credit-cards')
+        @if (!in_array($key, ['credit-cards', 'mortgages'], true))
             <div x-show="tab === '{{ $key }}'" x-cloak class="border border-t-0 border-placeholder px-6 py-16 text-center text-sm text-muted">
                 {{ __('offers.coming_soon') }}
             </div>
