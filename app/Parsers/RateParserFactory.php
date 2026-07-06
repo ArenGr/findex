@@ -17,6 +17,7 @@ class RateParserFactory
         'ineco'   => InecoRateParser::class,
         'ameria'  => AmeriaRateParser::class,
         'unibank' => UnibankRateParser::class,
+        'evoca'   => EvocaRateParser::class,
     ];
 
     /**

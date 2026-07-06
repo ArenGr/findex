@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\RateController;
@@ -47,3 +48,11 @@ Route::prefix('{locale}')
     });
 
 Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
+
+// A single fixed callback URL is far simpler to register with Google than a
+// locale-prefixed one, so this pair lives outside the {locale} group - the
+// current locale is restored via session (see GoogleAuthController).
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+});

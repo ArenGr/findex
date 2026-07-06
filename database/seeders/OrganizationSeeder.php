@@ -77,6 +77,17 @@ class OrganizationSeeder extends Seeder
             ]
         );
 
+        $evoca = Organization::firstOrCreate(
+            ['slug' => 'evoca'],
+            [
+                'name' => 'Evocabank',
+                'type' => 'bank',
+                'website' => 'https://www.evoca.am',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
         // Create organization sources
         OrganizationSource::updateOrCreate(
             ['organization_id' => $acba->id, 'source_type' => 'currency_rates'],
@@ -140,6 +151,14 @@ class OrganizationSeeder extends Seeder
 
         OrganizationSource::updateOrCreate(
             ['organization_id' => $unibank->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en',
+                'is_active' => true,
+            ]
+        );
+
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $evoca->id, 'source_type' => 'currency_rates'],
             [
                 'url' => '/en',
                 'is_active' => true,

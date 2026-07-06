@@ -22,6 +22,8 @@
             </button>
         </form>
 
+        <x-google-auth-button />
+
         <p class="mt-6 text-center text-sm text-muted">
             {{ __('auth.no_account') }}
             <a href="{{ route('register') }}" class="font-medium text-primary hover:underline">{{ __('auth.register_button') }}</a>

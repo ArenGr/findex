@@ -17,4 +17,8 @@ return [
 
     'no_account' => 'Հաշիվ չունե՞ք։',
     'have_account' => 'Արդեն գրանցվա՞ծ եք։',
+
+    'continue_with_google' => 'Շարունակել Google-ով',
+    'or_divider' => 'կամ',
+    'google_failed' => 'Google-ով մուտք գործելիս սխալ առաջացավ։ Խնդրում ենք փորձել կրկին։',
 ];

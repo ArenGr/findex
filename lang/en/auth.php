@@ -17,4 +17,8 @@ return [
 
     'no_account' => "Don't have an account?",
     'have_account' => 'Already have an account?',
+
+    'continue_with_google' => 'Continue with Google',
+    'or_divider' => 'or',
+    'google_failed' => 'Something went wrong signing in with Google. Please try again.',
 ];

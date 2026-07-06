@@ -19,6 +19,8 @@
             </button>
         </form>
 
+        <x-google-auth-button />
+
         <p class="mt-6 text-center text-sm text-muted">
             {{ __('auth.have_account') }}
             <a href="{{ route('login') }}" class="font-medium text-primary hover:underline">{{ __('auth.login_button') }}</a>
