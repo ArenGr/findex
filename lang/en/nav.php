@@ -4,6 +4,7 @@ return [
     'home' => 'Home',
     'brokers' => 'Brokers',
     'about' => 'About Us',
+    'get_updates' => 'Get Updates',
 
     'banks' => [
         'label' => 'Banks',

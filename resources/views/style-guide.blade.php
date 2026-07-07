@@ -73,7 +73,7 @@
         <div class="mt-6 space-y-10">
             <div>
                 <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('style_guide.fonts.free_sans') }}</p>
-                <p class="mt-2 font-sans text-3xl text-ink">{!! __('hero.heading') !!}</p>
+                <p class="mt-2 font-sans text-3xl text-ink">{!! __('hero.slides.1.heading') !!}</p>
                 <p class="mt-1 font-sans text-3xl text-ink">The quick brown fox jumps over the lazy dog</p>
             </div>
 
@@ -84,7 +84,7 @@
 
             <div>
                 <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('style_guide.fonts.montserrat') }}</p>
-                <p class="mt-2 font-heading text-3xl font-bold text-ink">{!! __('hero.heading') !!}</p>
+                <p class="mt-2 font-heading text-3xl font-bold text-ink">{!! __('hero.slides.1.heading') !!}</p>
             </div>
         </div>
 

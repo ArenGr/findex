@@ -23,6 +23,19 @@
 
     $currentRoute = Route::current() ? Route::currentRouteName() : 'home';
     $currentRouteParams = Route::current() ? Route::current()->parameters() : [];
+
+    // WhatsApp's real group link isn't set up yet - shown now with a
+    // placeholder so the entry is visible, swapped in once WHATSAPP_GROUP_URL
+    // is set (unlike Telegram, which only appears once it has a real URL).
+    $joinLinks = collect([
+        ['label' => 'Telegram', 'url' => config('services.telegram.group_url'), 'icon' => asset('images/telegram-logo.svg')],
+        [
+            'label' => 'Rates Bot',
+            'url' => config('services.telegram.bot_username') ? 'https://t.me/' . config('services.telegram.bot_username') : null,
+            'icon' => asset('images/telegram-logo.svg'),
+        ],
+        ['label' => 'WhatsApp', 'url' => config('services.whatsapp.group_url') ?: '#', 'icon' => asset('images/whatsapp-logo.svg')],
+    ])->filter(fn ($link) => $link['url']);
 @endphp
 
 <header x-data="{ mobileOpen: false }" class="border-b border-placeholder">
@@ -74,6 +87,41 @@
                     <path d="M20 20 16 16" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
             </button>
+
+            @if ($joinLinks->isNotEmpty())
+                <div x-data="{ open: false }" class="relative hidden sm:block" @click.outside="open = false">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        class="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-dark"
+                        :aria-expanded="open"
+                    >
+                        {{ __('nav.get_updates') }}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
+                            <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+
+                    <div
+                        x-show="open"
+                        x-transition
+                        x-cloak
+                        class="absolute right-0 top-full z-20 mt-3 w-48 rounded-md border border-placeholder bg-white py-2 shadow-lg"
+                    >
+                        @foreach ($joinLinks as $link)
+                            <a
+                                href="{{ $link['url'] }}"
+                                target="_blank"
+                                rel="noopener"
+                                class="flex items-center gap-2 px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary"
+                            >
+                                <img src="{{ $link['icon'] }}" alt="" class="h-4 w-4">
+                                {{ $link['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- Language switcher --}}
             <div x-data="{ open: false }" class="relative hidden sm:block" @click.outside="open = false">
@@ -177,6 +225,23 @@
 
             <a href="#" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.brokers') }}</a>
             <a href="{{ route('about') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.about') }}</a>
+
+            @if ($joinLinks->isNotEmpty())
+                <div class="mt-1 border-t border-placeholder pt-3">
+                    <p class="px-2 pb-1 text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('nav.get_updates') }}</p>
+                    @foreach ($joinLinks as $link)
+                        <a
+                            href="{{ $link['url'] }}"
+                            target="_blank"
+                            rel="noopener"
+                            class="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary"
+                        >
+                            <img src="{{ $link['icon'] }}" alt="" class="h-4 w-4">
+                            {{ $link['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="mt-3 flex items-center gap-3 border-t border-placeholder pt-4">
                 @foreach (config('localization.available') as $code => $locale)

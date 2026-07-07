@@ -52,4 +52,8 @@ return [
         'group_url' => env('TELEGRAM_GROUP_URL'),
     ],
 
+    'whatsapp' => [
+        'group_url' => env('WHATSAPP_GROUP_URL'),
+    ],
+
 ];

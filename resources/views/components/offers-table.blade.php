@@ -20,8 +20,15 @@
 @endphp
 
 <section
-    x-data="{ tab: 'credit-cards' }"
-    class="mx-auto max-w-7xl px-6 py-16 lg:px-10"
+    id="offers"
+    x-data="{
+        tab: (() => {
+            const requested = new URLSearchParams(window.location.search).get('tab');
+            const valid = @js(array_keys($tabs));
+            return valid.includes(requested) ? requested : 'credit-cards';
+        })(),
+    }"
+    class="mx-auto max-w-7xl px-6 py-16 lg:px-10 scroll-mt-24"
 >
     <h2 class="font-heading text-2xl font-bold text-ink lg:text-3xl">
         {{ __('offers.heading', ['date' => now()->translatedFormat('Y F')]) }}

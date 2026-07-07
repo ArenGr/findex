@@ -7,6 +7,18 @@
     display: none !important;
 }
 
+/* Continuous partner-logos marquee (partner-logos.blade.php) - the strip is
+ * rendered twice back to back and scrolled exactly one copy-width so the
+ * loop point is seamless. */
+@keyframes partner-scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
 /*
  * FreeSans is self-hosted (not on Google/Bunny Fonts) - see the Findex
  * style guide ("Colors and fonts"): FreeSans for English/Armenian body

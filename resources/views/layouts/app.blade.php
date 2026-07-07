@@ -26,9 +26,9 @@
         >
     @endif
 
-    @fonts
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @fonts
 </head>
 <body class="min-h-screen bg-white font-sans text-body-text antialiased">
     <x-site-header />

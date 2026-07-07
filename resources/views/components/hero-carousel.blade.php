@@ -6,7 +6,7 @@
             'dot' => 'bg-slide-green',
             'blob' => 'bg-slide-green/20',
             'photo' => 'slide-1.jpg',
-            'alt' => __('hero.alt.slide_1'),
+            'href' => route('home') . '#offers',
         ],
         [
             'badge' => 'bg-slide-blue text-ink',
@@ -14,7 +14,7 @@
             'dot' => 'bg-slide-blue',
             'blob' => 'bg-slide-blue/40',
             'photo' => 'slide-2.jpg',
-            'alt' => __('hero.alt.slide_2'),
+            'href' => route('home') . '#rates',
         ],
         [
             'badge' => 'bg-slide-yellow text-ink',
@@ -22,7 +22,7 @@
             'dot' => 'bg-slide-yellow',
             'blob' => 'bg-slide-yellow/40',
             'photo' => 'slide-3.jpg',
-            'alt' => __('hero.alt.slide_3'),
+            'href' => route('home') . '?tab=mortgages#offers',
         ],
         [
             'badge' => 'bg-slide-pink text-ink',
@@ -30,7 +30,7 @@
             'dot' => 'bg-slide-pink',
             'blob' => 'bg-slide-pink/40',
             'photo' => 'slide-4.jpg',
-            'alt' => __('hero.alt.slide_4'),
+            'href' => route('home') . '?tab=insurance#offers',
         ],
         [
             'badge' => 'bg-slide-purple text-ink',
@@ -38,7 +38,7 @@
             'dot' => 'bg-slide-purple',
             'blob' => 'bg-slide-purple/40',
             'photo' => 'slide-5.jpg',
-            'alt' => __('hero.alt.slide_5'),
+            'href' => route('home') . '#rates',
         ],
     ];
 @endphp
@@ -50,37 +50,33 @@
 >
     <div class="relative grid">
         @foreach ($slides as $i => $slide)
+            @php($n = $i + 1)
             <div
-                x-show="active === {{ $i }}"
-                x-transition:enter="transition ease-in-out duration-700"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in-out duration-700"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
+                :inert="active !== {{ $i }}"
+                :class="active === {{ $i }} ? 'opacity-100' : 'opacity-0'"
                 @if ($i > 0) x-cloak @endif
-                class="col-start-1 row-start-1 grid grid-cols-1 items-center gap-12 lg:grid-cols-2"
+                class="col-start-1 row-start-1 grid grid-cols-1 items-center gap-12 transition-opacity duration-700 ease-in-out lg:grid-cols-2"
             >
                 {{-- Text column --}}
                 <div>
                     <span class="relative inline-flex rounded-full px-4 py-2 text-sm font-medium {{ $slide['badge'] }}">
-                        {{ __('hero.badge') }}
+                        {{ __("hero.slides.$n.badge") }}
                         <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 {{ $slide['badge'] }}"></span>
                     </span>
 
                     <h1 class="mt-6 font-heading text-4xl leading-tight font-bold text-ink lg:text-5xl">
-                        {!! __('hero.heading') !!}
+                        {!! __("hero.slides.$n.heading") !!}
                     </h1>
 
                     <p class="mt-4 max-w-md text-sm leading-relaxed text-muted">
-                        {{ __('hero.paragraph') }}
+                        {{ __("hero.slides.$n.paragraph") }}
                     </p>
 
                     <div class="mt-8 flex flex-wrap items-center gap-4">
-                        <a href="#" class="px-6 py-3 text-sm font-medium transition {{ $slide['button'] }}">
-                            {{ __('common.learn_more') }}
+                        <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium transition {{ $slide['button'] }}">
+                            {{ __("hero.slides.$n.cta") }}
                         </a>
-                        <a href="#" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition hover:bg-ink hover:text-white">
+                        <a href="{{ route('home') }}#rates" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition hover:bg-ink hover:text-white">
                             {{ __('common.compare_banks') }}
                         </a>
                     </div>
@@ -93,7 +89,7 @@
                     <div class="overflow-hidden rounded-3xl">
                         <img
                             src="{{ asset('images/hero/' . $slide['photo']) }}"
-                            alt="{{ $slide['alt'] }}"
+                            alt="{{ __("hero.slides.$n.alt") }}"
                             width="874"
                             height="428"
                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
@@ -103,10 +99,10 @@
 
                     <div class="absolute top-6 -left-4 flex flex-col items-start gap-2">
                         <span class="relative rounded-2xl bg-white px-4 py-2 text-xs font-medium whitespace-nowrap text-ink shadow-md">
-                            {{ __('hero.bubble_question') }}
+                            {{ __("hero.slides.$n.bubble_question") }}
                         </span>
                         <span class="relative ml-4 w-[240px] rounded-2xl bg-white px-4 py-3 text-xs leading-relaxed text-ink shadow-md">
-                            {{ __('hero.bubble_answer') }}
+                            {{ __("hero.slides.$n.bubble_answer") }}
                             <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 bg-white"></span>
                         </span>
                     </div>

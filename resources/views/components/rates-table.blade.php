@@ -52,8 +52,9 @@
 
 @if ($currencies->isNotEmpty())
     <section
+        id="rates"
         x-data="{ tab: '{{ $defaultCurrency }}', rateTab: '{{ $defaultRateType }}' }"
-        class="mx-auto max-w-7xl px-6 py-16 lg:px-10"
+        class="mx-auto max-w-7xl px-6 py-16 lg:px-10 scroll-mt-24"
     >
         <h2 class="font-heading text-2xl font-bold text-ink lg:text-3xl">
             {{ __('rates.heading') }}

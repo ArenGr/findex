@@ -4,6 +4,7 @@ return [
     'home' => 'Главная',
     'brokers' => 'Брокеры',
     'about' => 'О Нас',
+    'get_updates' => 'Получать Обновления',
 
     'banks' => [
         'label' => 'Банки',

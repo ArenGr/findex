@@ -22,11 +22,13 @@ class TelegramClient
     }
 
     /**
-     * Send a text message, optionally with an inline keyboard.
+     * Send a text message, optionally with a persistent reply keyboard (the
+     * button row that sits above the text box - tapping one sends its label
+     * as a normal text message, unlike an inline keyboard's silent callback).
      *
-     * @param array<int, array<int, array{text: string, callback_data: string}>>|null $inlineKeyboard
+     * @param array<int, array<int, string>>|null $keyboard Rows of button labels.
      */
-    public function sendMessage(int|string $chatId, string $text, ?array $inlineKeyboard = null): array
+    public function sendMessage(int|string $chatId, string $text, ?array $keyboard = null): array
     {
         $payload = [
             'chat_id' => $chatId,
@@ -34,35 +36,14 @@ class TelegramClient
             'parse_mode' => 'HTML',
         ];
 
-        if ($inlineKeyboard !== null) {
-            $payload['reply_markup'] = json_encode(['inline_keyboard' => $inlineKeyboard]);
+        if ($keyboard !== null) {
+            $payload['reply_markup'] = json_encode([
+                'keyboard' => array_map(fn ($row) => array_map(fn ($label) => ['text' => $label], $row), $keyboard),
+                'resize_keyboard' => true,
+            ]);
         }
 
         return $this->call('sendMessage', $payload);
-    }
-
-    /**
-     * Acknowledge a button tap. Telegram shows a loading spinner on the
-     * button until this is called, so it must happen even if we have
-     * nothing to say (an empty $text just clears the spinner silently).
-     *
-     * With $showAlert, $text is shown as a popup visible only to the user
-     * who tapped - nobody else in the chat sees it. Plain text only (no
-     * HTML, no buttons), capped at 200 characters by Telegram.
-     */
-    public function answerCallbackQuery(string $callbackQueryId, ?string $text = null, bool $showAlert = false): array
-    {
-        $payload = ['callback_query_id' => $callbackQueryId];
-
-        if ($text !== null) {
-            $payload['text'] = $text;
-        }
-
-        if ($showAlert) {
-            $payload['show_alert'] = true;
-        }
-
-        return $this->call('answerCallbackQuery', $payload);
     }
 
     /**
