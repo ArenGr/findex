@@ -7,6 +7,31 @@ return [
 
     'reviews_count' => '{0} No reviews|{1} 1 review|[2,*] :count reviews',
 
+    'top_rated_heading' => 'Top Rated',
+    'top_rated_subtitle' => 'See what customers say about banks and organizations, and leave your own review.',
+    'view_all' => 'View All Organizations',
+
+    'directory_heading' => 'Banks & Organizations',
+    'directory_subtitle' => 'Browse every organization on Findex, see their ratings, and read reviews from real customers.',
+    'filter_all_types' => 'All',
+    'no_organizations' => 'No organizations found.',
+    'unrated' => 'Not yet rated',
+
+    'compare_add' => 'Compare',
+    'compare_added' => 'Added',
+    'compare_clear' => 'Clear',
+    'compare_now' => 'Compare',
+    'compare_need_more' => 'Pick at least 2 to compare',
+    'compare_heading' => 'Compare Organizations',
+    'compare_subtitle' => 'See ratings, exchange rates, and mortgage rates side by side.',
+    'compare_need_more_full' => 'Pick at least 2 organizations to compare. Add them from the directory below.',
+    'compare_mortgage_rate' => 'Mortgage Rate',
+    'compare_visit' => 'Visit Website',
+    'cash_rate' => ':currency Cash Rate (Buy / Sell)',
+
+    'verified_reviewer' => 'Verified',
+    'verified_reviewer_tooltip' => 'Signed in with a verified account',
+
     'rates_heading' => 'Current Rates',
     'no_rates' => 'No rates available yet.',
     'currency' => 'Currency',

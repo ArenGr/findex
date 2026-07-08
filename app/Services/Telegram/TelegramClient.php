@@ -3,6 +3,7 @@
 namespace App\Services\Telegram;
 
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 class TelegramClient
 {
@@ -51,6 +52,11 @@ class TelegramClient
      * to $timeout seconds and returns as soon as an update arrives, so this
      * is cheap to call in a tight loop (no busy-waiting).
      *
+     * Only usable when no webhook is registered - Telegram delivers updates
+     * via one channel or the other, never both. Intended for local
+     * development (see the telegram:poll command); production registers a
+     * webhook instead so nothing needs a supervised long-running process.
+     *
      * @return array<int, array<string, mixed>>
      */
     public function getUpdates(int $offset, int $timeout = 30): array
@@ -63,6 +69,33 @@ class TelegramClient
         return $response['result'] ?? [];
     }
 
+    /**
+     * Register the URL Telegram should POST updates to. $secretToken, if
+     * given, comes back on every webhook request as the
+     * X-Telegram-Bot-Api-Secret-Token header, so the receiving route can
+     * verify the request actually came from Telegram.
+     */
+    public function setWebhook(string $url, ?string $secretToken = null): array
+    {
+        $payload = ['url' => $url];
+
+        if ($secretToken !== null) {
+            $payload['secret_token'] = $secretToken;
+        }
+
+        return $this->call('setWebhook', $payload);
+    }
+
+    public function deleteWebhook(): array
+    {
+        return $this->call('deleteWebhook', []);
+    }
+
+    public function getWebhookInfo(): array
+    {
+        return $this->call('getWebhookInfo', []);
+    }
+
     private function call(string $method, array $payload, ?int $requestTimeout = null): array
     {
         $response = $this->httpClient->post($method, [
@@ -70,6 +103,21 @@ class TelegramClient
             'timeout' => $requestTimeout ?? 35,
         ]);
 
-        return json_decode((string) $response->getBody(), true) ?? [];
+        $decoded = json_decode((string) $response->getBody(), true) ?? [];
+
+        // Telegram signals logical failures (bad chat id, user never opened
+        // a DM with the bot, etc.) via ok:false in an otherwise-normal JSON
+        // body rather than an HTTP error status - without this, callers
+        // that don't check `ok` themselves (e.g. CheckRateAlerts::notify)
+        // would silently treat a failed send as delivered.
+        if (($decoded['ok'] ?? null) === false) {
+            Log::warning("Telegram API call failed: {$method}", [
+                'chat_id' => $payload['chat_id'] ?? null,
+                'description' => $decoded['description'] ?? null,
+                'error_code' => $decoded['error_code'] ?? null,
+            ]);
+        }
+
+        return $decoded;
     }
 }

@@ -8,14 +8,18 @@
         ->orderBy('sort_order')
         ->get();
 
+    // Precomputed once (instead of per-row) so displaying a rating badge
+    // next to each organization doesn't add an N+1 query per row.
+    $ratingsByOrgId = \App\Models\Organization::withRatingStats()->get()->keyBy('id');
+
     // Per currency, per rate type (cash/non-cash/card/...), ranked cheapest-to-buy
     // first (lowest sell_rate = best for a visitor buying foreign currency with
     // AMD). Rate types with no data for a currency are dropped entirely so the
     // sub-tabs only ever show options that actually have something to display.
     // Rows are reduced to plain arrays (rather than kept as Eloquent models) so
     // they can be embedded as JSON and re-sorted client-side by Buy/Sell.
-    $ratesByCurrency = $currencies->mapWithKeys(function ($currency) {
-        $byType = collect(RateType::cases())->mapWithKeys(function ($rateType) use ($currency) {
+    $ratesByCurrency = $currencies->mapWithKeys(function ($currency) use ($ratingsByOrgId) {
+        $byType = collect(RateType::cases())->mapWithKeys(function ($rateType) use ($currency, $ratingsByOrgId) {
             $rows = CurrencyRate::query()
                 ->where('currency_id', $currency->id)
                 ->where('rate_type', $rateType)
@@ -32,6 +36,18 @@
                     'initial' => mb_strtoupper(mb_substr($rate->organization->name, 0, 1)),
                     'buy_rate' => (float) $rate->buy_rate,
                     'sell_rate' => (float) $rate->sell_rate,
+                    'rating' => (float) ($ratingsByOrgId[$rate->organization_id]->reviews_avg_rating ?? 0),
+                    'reviews_count' => (int) ($ratingsByOrgId[$rate->organization_id]->reviews_count ?? 0),
+                    // Pre-fills the alert-creation form (see alerts/index.blade.php)
+                    // so a visitor doesn't have to re-enter what they're already
+                    // looking at - defaults to the sell rate, the one most
+                    // relevant when buying foreign currency with AMD.
+                    'alertUrl' => route('alerts.index', [
+                        'currency_id' => $currency->id,
+                        'organization_id' => $rate->organization_id,
+                        'rate_type' => $rateType->value,
+                        'rate_field' => 'sell_rate',
+                    ]) . '#create-alert',
                 ])
                 ->values()
                 ->all();
@@ -164,11 +180,19 @@
                                         x-text="row.initial"
                                     ></div>
 
-                                    <a
-                                        :href="row.url"
-                                        class="min-w-0 flex-1 truncate text-sm font-medium text-ink hover:text-primary"
-                                        x-text="row.name"
-                                    ></a>
+                                    <div class="min-w-0 flex-1">
+                                        <a
+                                            :href="row.url"
+                                            class="block truncate text-sm font-medium text-ink hover:text-primary"
+                                            x-text="row.name"
+                                        ></a>
+                                        <div x-show="row.reviews_count > 0" class="mt-0.5 flex items-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 fill-accent-yellow">
+                                                <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
+                                            </svg>
+                                            <span class="text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
+                                        </div>
+                                    </div>
 
                                     <div class="hidden w-20 text-right sm:block">
                                         <p class="font-heading text-lg font-bold text-primary" x-text="row.buy_rate.toFixed(2)"></p>
@@ -177,6 +201,16 @@
                                     <div class="w-20 text-right">
                                         <p class="font-heading text-lg font-bold text-[#c25b6e]" x-text="row.sell_rate.toFixed(2)"></p>
                                     </div>
+
+                                    <a
+                                        :href="row.alertUrl"
+                                        :title="'{{ __('rates.create_alert') }}'"
+                                        class="shrink-0 text-subtle hover:text-primary"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+                                            <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
                                 </div>
                             </template>
                         </div>

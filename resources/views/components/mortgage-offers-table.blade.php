@@ -10,6 +10,10 @@
 
     $preferredCurrencyOrder = ['AMD', 'USD', 'EUR', 'GBP', 'CHF', 'RUB', 'GEL'];
 
+    // Precomputed once (instead of per-row) so displaying a rating badge
+    // next to each organization doesn't add an N+1 query per row.
+    $ratingsByOrgId = \App\Models\Organization::withRatingStats()->get()->keyBy('id');
+
     // Rough starting points per currency so the calculator shows a sensible
     // result before the user changes anything.
     $defaultPropertyPrice = ['AMD' => 30000000, 'USD' => 80000, 'EUR' => 70000];
@@ -29,7 +33,7 @@
     // and the resulting monthly payment depend on the property price/down
     // payment/term the user picks - that has to be computed client-side as
     // those inputs change, not fixed at render time.
-    $offersByCurrency = $availableCurrencies->mapWithKeys(function ($currency) use ($category) {
+    $offersByCurrency = $availableCurrencies->mapWithKeys(function ($currency) use ($category, $ratingsByOrgId) {
         $rows = MortgageOffer::query()
             ->where('category', $category)
             ->where('currency', $currency)
@@ -50,6 +54,8 @@
                 'min_amount' => $offer->min_amount !== null ? (float) $offer->min_amount : 0,
                 'max_amount' => $offer->max_amount !== null ? (float) $offer->max_amount : 999999999999,
                 'source_url' => $offer->source_url,
+                'rating' => (float) ($ratingsByOrgId[$offer->organization_id]->reviews_avg_rating ?? 0),
+                'reviews_count' => (int) ($ratingsByOrgId[$offer->organization_id]->reviews_count ?? 0),
             ])
             ->values();
 
@@ -193,7 +199,15 @@
                                     x-text="row.initial"
                                 ></div>
 
-                                <a :href="row.url" class="min-w-0 flex-1 truncate text-sm font-medium text-ink hover:text-primary" x-text="row.name"></a>
+                                <div class="min-w-0 flex-1">
+                                    <a :href="row.url" class="block truncate text-sm font-medium text-ink hover:text-primary" x-text="row.name"></a>
+                                    <div x-show="row.reviews_count > 0" class="mt-0.5 flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 fill-accent-yellow">
+                                            <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
+                                        </svg>
+                                        <span class="text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
+                                    </div>
+                                </div>
 
                                 <div class="hidden w-24 shrink-0 text-right sm:block">
                                     <p class="text-sm font-semibold text-ink">

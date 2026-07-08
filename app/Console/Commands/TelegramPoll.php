@@ -20,10 +20,15 @@ class TelegramPoll extends Command
      *
      * @var string
      */
-    protected $description = 'Long-poll Telegram for bot updates and reply to the rates menu (no public webhook needed)';
+    protected $description = 'Long-poll Telegram for bot updates (local development only - production registers a webhook instead, see the telegram:webhook command)';
 
     /**
      * Execute the console command.
+     *
+     * Telegram delivers updates via polling or a webhook, never both - if a
+     * webhook is currently registered (`telegram:webhook set`), this will
+     * fail with a "can't use getUpdates" error from the API until it's
+     * removed (`telegram:webhook unset`).
      */
     public function handle(TelegramClient $telegram, RatesBotHandler $handler): int
     {

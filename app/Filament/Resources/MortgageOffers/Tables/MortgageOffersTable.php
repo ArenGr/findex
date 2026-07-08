@@ -24,6 +24,9 @@ class MortgageOffersTable
                 TextColumn::make('rate_type')
                     ->badge()
                     ->searchable(),
+                TextColumn::make('category')
+                    ->badge()
+                    ->searchable(),
                 TextColumn::make('interest_rate_min')
                     ->numeric()
                     ->sortable(),
@@ -63,6 +66,8 @@ class MortgageOffersTable
                     ->options(fn () => \App\Models\MortgageOffer::query()->distinct()->pluck('currency', 'currency')->all()),
                 SelectFilter::make('rate_type')
                     ->options(MortgageRateType::class),
+                SelectFilter::make('category')
+                    ->options(fn () => \App\Models\MortgageOffer::query()->distinct()->pluck('category', 'category')->filter()->all()),
             ])
             ->recordActions([
                 ViewAction::make(),

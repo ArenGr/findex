@@ -8,5 +8,6 @@
     <x-partner-logos />
     <x-rates-table />
     <x-offers-table />
+    <x-top-rated-organizations />
     <x-news-section />
 @endsection

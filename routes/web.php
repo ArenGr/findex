@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\CompareController;
 use App\Http\Controllers\Organization\Auth\AuthenticatedSessionController as OrganizationAuthenticatedSessionController;
 use App\Http\Controllers\Organization\Auth\RegisteredOrganizationController;
 use App\Http\Controllers\Organization\BranchController;
@@ -12,8 +13,10 @@ use App\Http\Controllers\Organization\ProfileController as OrganizationProfileCo
 use App\Http\Controllers\Organization\ReportRequestController;
 use App\Http\Controllers\Organization\ReviewReplyController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\RateAlertController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect the bare domain to the visitor's preferred supported language,
@@ -42,6 +45,8 @@ Route::prefix('{locale}')
             return view('about');
         })->name('about');
 
+        Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations.index');
+        Route::get('/compare', [CompareController::class, 'show'])->name('organizations.compare');
         Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
 
         Route::get('/register', function () {
@@ -53,19 +58,24 @@ Route::prefix('{locale}')
             Route::post('/register/customer', [RegisteredUserController::class, 'store']);
 
             Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-            Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+            Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
         });
 
         Route::middleware(['auth', 'banned'])->group(function () {
             Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
             Route::post('/organizations/{organization}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+            Route::get('/alerts', [RateAlertController::class, 'index'])->name('alerts.index');
+            Route::post('/alerts', [RateAlertController::class, 'store'])->name('alerts.store');
+            Route::patch('/alerts/{rateAlert}/toggle', [RateAlertController::class, 'toggle'])->name('alerts.toggle');
+            Route::delete('/alerts/{rateAlert}', [RateAlertController::class, 'destroy'])->name('alerts.destroy');
         });
 
         Route::prefix('org')->name('org.')->group(function () {
             Route::middleware('guest:organization')->group(function () {
                 Route::get('/login', [OrganizationAuthenticatedSessionController::class, 'create'])->name('login');
-                Route::post('/login', [OrganizationAuthenticatedSessionController::class, 'store']);
+                Route::post('/login', [OrganizationAuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 
                 Route::get('/register', [RegisteredOrganizationController::class, 'create'])->name('register');
                 Route::post('/register', [RegisteredOrganizationController::class, 'store']);
@@ -114,3 +124,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 });
+
+// Telegram POSTs here directly (see TelegramWebhookController and the
+// telegram:webhook command) - no locale prefix, no CSRF token, since this
+// isn't a browser request. Auth is the X-Telegram-Bot-Api-Secret-Token
+// header, checked in the controller.
+Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');

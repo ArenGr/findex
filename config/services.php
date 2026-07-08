@@ -50,6 +50,11 @@ return [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
         'group_url' => env('TELEGRAM_GROUP_URL'),
+        // Telegram echoes this back on every webhook POST as the
+        // X-Telegram-Bot-Api-Secret-Token header - lets the webhook route
+        // reject requests that didn't actually come from Telegram. Generate
+        // with e.g. `php artisan tinker --execute="echo Str::random(32);"`.
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
     'whatsapp' => [

@@ -30,6 +30,7 @@
                         ({{ trans_choice('organizations.reviews_count', $reviewsCount, ['count' => $reviewsCount]) }})
                     </span>
                 </div>
+                <x-compare-toggle :organization="$organization" class="mt-3" />
             </div>
         </div>
 
@@ -133,6 +134,15 @@
                                 {{ Str::of($review->user->name)->substr(0, 1)->upper() }}
                             </span>
                             <span class="text-sm font-medium text-ink">{{ $review->user->name }}</span>
+                            @if ($review->user->email_verified_at)
+                                <span class="flex items-center gap-1 text-xs font-medium text-primary" title="{{ __('organizations.verified_reviewer_tooltip') }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-4 w-4 fill-primary">
+                                        <path fill-rule="evenodd" d="M10 1.8l1.9 1.05 2.16-.2 1.02 1.9 1.9 1.02-.2 2.16 1.05 1.9-1.05 1.9.2 2.16-1.9 1.02-1.02 1.9-2.16-.2L10 18.2l-1.9-1.05-2.16.2-1.02-1.9-1.9-1.02.2-2.16L2.17 10l1.05-1.9-.2-2.16 1.9-1.02 1.02-1.9 2.16.2z" clip-rule="evenodd" />
+                                        <path fill="#fff" d="M13.2 7.4l-4 4.4-2.4-2.2-1 1.1 3.4 3.1 5-5.5z" />
+                                    </svg>
+                                    {{ __('organizations.verified_reviewer') }}
+                                </span>
+                            @endif
                         </div>
                         <x-star-rating :rating="$review->rating" />
                     </div>

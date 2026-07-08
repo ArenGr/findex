@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Admins\AdminResource;
 use App\Models\Admin;
 use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\Organization;
 use App\Models\OrganizationSource;
+use App\Models\RateAlert;
 use App\Models\Report;
 use App\Models\ReportRequest;
 use App\Models\Review;
@@ -40,6 +42,9 @@ class AdminPanelSmokeTest extends TestCase
         $this->get('/admin/currency-rates')->assertOk();
         $this->get('/admin/scraping-jobs')->assertOk();
         $this->get('/admin/report-requests')->assertOk();
+        $this->get('/admin/rate-alerts')->assertOk();
+        $this->get('/admin/admins')->assertOk();
+        $this->get('/admin/admins/create')->assertOk();
 
         $user = User::factory()->create();
         $organization = Organization::create([
@@ -82,6 +87,17 @@ class AdminPanelSmokeTest extends TestCase
             'records_found' => 1,
         ]);
         $scrapingJob->log('info', 'Scraped successfully');
+        $rateAlert = RateAlert::create([
+            'user_id' => $user->id,
+            'currency_id' => $currency->id,
+            'organization_id' => $organization->id,
+            'rate_type' => 'cash',
+            'rate_field' => 'sell_rate',
+            'direction' => 'below',
+            'threshold' => 390,
+            'channel' => 'email',
+            'is_active' => true,
+        ]);
         $reportRequest = ReportRequest::create(['organization_id' => $organization->id, 'status' => 'completed']);
         Report::create([
             'report_request_id' => $reportRequest->id,
@@ -105,12 +121,39 @@ class AdminPanelSmokeTest extends TestCase
         $this->get("/admin/scraping-jobs/{$scrapingJob->id}")->assertOk();
         $this->get("/admin/report-requests/{$reportRequest->id}")->assertOk();
         $this->get("/admin/report-requests/{$reportRequest->id}/edit")->assertOk();
+        $this->get("/admin/rate-alerts/{$rateAlert->id}")->assertOk();
+        $this->get("/admin/rate-alerts/{$rateAlert->id}/edit")->assertOk();
+        $this->get("/admin/admins/{$admin->id}")->assertOk();
+        $this->get("/admin/admins/{$admin->id}/edit")->assertOk();
 
         $organization->update(['is_active' => true]);
         $this->assertTrue($organization->fresh()->is_active);
 
         $user->update(['banned_at' => now()]);
         $this->assertTrue($user->fresh()->isBanned());
+    }
+
+    public function test_admin_cannot_delete_self_or_the_last_remaining_admin(): void
+    {
+        $admin = Admin::create([
+            'name' => 'Sole Admin',
+            'email' => 'sole-admin@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertFalse(AdminResource::canDelete($admin));
+
+        $this->actingAs($admin, 'admin');
+        $second = Admin::create([
+            'name' => 'Second Admin',
+            'email' => 'second-admin@example.com',
+            'password' => 'password',
+        ]);
+
+        // With two admins, the acting admin still can't delete themselves,
+        // but can delete the other one.
+        $this->assertFalse(AdminResource::canDelete($admin));
+        $this->assertTrue(AdminResource::canDelete($second));
     }
 
     public function test_guest_is_redirected_from_admin_panel(): void

@@ -16,6 +16,9 @@ class MortgageOfferInfolist
                 TextEntry::make('currency'),
                 TextEntry::make('rate_type')
                     ->badge(),
+                TextEntry::make('category')
+                    ->badge()
+                    ->placeholder('-'),
                 TextEntry::make('interest_rate_min')
                     ->numeric(),
                 TextEntry::make('interest_rate_max')

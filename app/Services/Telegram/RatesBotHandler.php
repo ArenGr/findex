@@ -57,7 +57,8 @@ class RatesBotHandler
 
         $this->telegram->sendMessage(
             $chatId,
-            "Welcome to Findex! 👋\nTap a currency below to see today's best cash rate.",
+            "Welcome to Findex! 👋\nTap a currency below to see today's best cash rate.\n\n"
+                . "Setting up a rate alert on the website? Your chat ID is: <code>{$chatId}</code>",
             $keyboard
         );
     }

@@ -23,6 +23,15 @@ class MortgageOfferForm
                     ->options(MortgageRateType::class)
                     ->default('fixed')
                     ->required(),
+                Select::make('category')
+                    // Only one category is supported so far - the public
+                    // mortgage/compare pages filter on it, so it must never
+                    // be left empty (see mortgage-offers-table.blade.php).
+                    ->options([
+                        'secondary_market' => 'Buying an existing home (secondary market)',
+                    ])
+                    ->default('secondary_market')
+                    ->required(),
                 TextInput::make('interest_rate_min')
                     ->required()
                     ->numeric(),

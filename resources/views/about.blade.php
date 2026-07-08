@@ -120,13 +120,23 @@
     <section class="border-t border-placeholder bg-primary/5">
         <div class="mx-auto max-w-7xl px-6 py-16 text-center lg:px-10">
             <h2 class="font-heading text-xl font-semibold text-ink">{{ __('about.cta.title') }}</h2>
-            <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle') }}</p>
-            <a
-                href="{{ route('register') }}"
-                class="mt-6 inline-block bg-primary px-6 py-3 text-sm text-white hover:bg-primary-dark"
-            >
-                {{ __('about.cta.button') }}
-            </a>
+            @auth
+                <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle_authenticated') }}</p>
+                <a
+                    href="{{ route('alerts.index') }}"
+                    class="mt-6 inline-block bg-primary px-6 py-3 text-sm text-white hover:bg-primary-dark"
+                >
+                    {{ __('about.cta.button_authenticated') }}
+                </a>
+            @else
+                <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle') }}</p>
+                <a
+                    href="{{ route('register') }}"
+                    class="mt-6 inline-block bg-primary px-6 py-3 text-sm text-white hover:bg-primary-dark"
+                >
+                    {{ __('about.cta.button') }}
+                </a>
+            @endauth
         </div>
     </section>
 @endsection

@@ -8,8 +8,12 @@ use App\Models\Organization;
 use App\Models\ScrapingJob;
 use App\Parsers\MortgageParserFactory;
 use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class MortgageScraper
 {
@@ -24,11 +28,27 @@ class MortgageScraper
     private const FIXTURE_DISK = 'local';
     private const FIXTURE_PATH = 'fixtures/scrapers';
 
+    /**
+     * Retries for transient failures only (connection/timeout errors, 5xx,
+     * 429) - a plain 403/404 means the site is actively blocking us or the
+     * URL is wrong, and hammering it again won't help. Kept short since
+     * this runs in a daily cron job for many organizations in sequence, not
+     * as a background retry queue.
+     */
+    private const MAX_RETRIES = 2;
+
     private Client $httpClient;
 
     public function __construct(private MortgageParserFactory $parsers)
     {
+        $handlerStack = HandlerStack::create();
+        $handlerStack->push(Middleware::retry(
+            self::shouldRetry(...),
+            self::retryDelay(...),
+        ));
+
         $this->httpClient = new Client([
+            'handler' => $handlerStack,
             'timeout' => 20,
             'allow_redirects' => ['max' => 5],
             'cookies' => true,
@@ -41,6 +61,32 @@ class MortgageScraper
                 'Upgrade-Insecure-Requests' => '1',
             ],
         ]);
+    }
+
+    private static function shouldRetry(
+        int $retries,
+        RequestInterface $request,
+        ?ResponseInterface $response = null,
+        ?\Throwable $exception = null,
+    ): bool {
+        if ($retries >= self::MAX_RETRIES) {
+            return false;
+        }
+
+        if ($exception !== null) {
+            return true;
+        }
+
+        $status = $response?->getStatusCode();
+
+        return $status !== null && ($status >= 500 || $status === 429);
+    }
+
+    private static function retryDelay(int $retries): int
+    {
+        // Guzzle passes a 1-based retry count here (1, 2, ...), unlike the
+        // 0-based count shouldRetry() sees. Milliseconds: 1s, then 3s.
+        return (int) (1000 * (2 * ($retries - 1) + 1));
     }
 
     /**
@@ -90,21 +136,29 @@ class MortgageScraper
 
     /**
      * Return the HTML for a URL, backed by a local fixture file.
+     *
+     * Fixtures are only used in local/testing so repeated runs during
+     * development don't hit the external banks (which risks getting
+     * blocked). Outside those environments every run fetches live - a
+     * production scrape must never serve stale cached HTML.
      */
     private function getHtml(string $url, ScrapingJob $job): string
     {
         $path = $this->fixturePath($url);
         $disk = Storage::disk(self::FIXTURE_DISK);
+        $useFixture = app()->environment('local', 'testing');
 
-        if ($disk->exists($path)) {
+        if ($useFixture && $disk->exists($path)) {
             $job->log('info', "Using local fixture for: {$url}");
             return $disk->get($path);
         }
 
-        $job->log('info', "No local fixture - fetching from site: {$url}");
+        $job->log('info', "Fetching from site: {$url}");
         $html = (string) $this->httpClient->get($url)->getBody();
 
-        $disk->put($path, $html);
+        if ($useFixture) {
+            $disk->put($path, $html);
+        }
 
         return $html;
     }

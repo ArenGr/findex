@@ -62,5 +62,7 @@ return [
         'title' => 'Ready to find the right offer?',
         'subtitle' => 'Create a free account to save comparisons, leave reviews, and get notified when rates change.',
         'button' => 'Sign Up Free',
+        'subtitle_authenticated' => 'Browse the latest rates and manage the alerts you\'ve already set up.',
+        'button_authenticated' => 'View My Alerts',
     ],
 ];

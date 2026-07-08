@@ -38,5 +38,6 @@
     </main>
 
     <x-site-footer />
+    <x-compare-bar />
 </body>
 </html>

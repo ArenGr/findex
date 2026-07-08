@@ -37,6 +37,11 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    public function rateAlerts(): HasMany
+    {
+        return $this->hasMany(RateAlert::class);
+    }
+
     public function isBanned(): bool
     {
         return $this->banned_at !== null;

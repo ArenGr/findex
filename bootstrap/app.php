@@ -17,11 +17,34 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('scrape:rates')->daily()->withoutOverlapping();
         $schedule->command('scrape:mortgages')->daily()->withoutOverlapping();
+        // Runs after the daily rate scrape so it checks against fresh rates.
+        $schedule->command('alerts:check')->dailyAt('00:30')->withoutOverlapping();
+
+        // Report generation (GenerateReportJob) is queued rather than run
+        // inline, so a failed LLM call can retry with backoff instead of
+        // failing the org's HTTP request. Rather than requiring a
+        // separately-supervised `queue:work` daemon, this piggybacks on the
+        // cron -> schedule:run infrastructure the commands above already
+        // need: it drains whatever's queued once a minute and exits, so
+        // queued jobs are picked up within ~1 minute with no extra
+        // deployment step. withoutOverlapping() means a slow run (e.g. a
+        // slow LLM call) simply gets picked up again next minute instead of
+        // running concurrently. Revisit with a real supervised worker (or
+        // Laravel Horizon) if report volume grows enough for the ~1 minute
+        // latency or per-run bootstrap cost to matter.
+        $schedule->command('queue:work --stop-when-empty --tries=3')->everyMinute()->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'setlocale' => SetLocale::class,
             'banned' => EnsureUserIsNotBanned::class,
+        ]);
+
+        // Telegram's webhook POST is not a browser request and carries no
+        // CSRF token - it's authenticated by its own secret-token header
+        // instead (see TelegramWebhookController).
+        $middleware->validateCsrfTokens(except: [
+            'telegram/webhook',
         ]);
 
         // Organization dashboard routes use the 'organization' guard; without

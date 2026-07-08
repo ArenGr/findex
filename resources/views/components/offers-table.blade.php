@@ -96,9 +96,21 @@
         <x-mortgage-offers-table />
     </div>
 
+    {{-- Personal loans: standalone affordability calculator (no live per-bank
+    loan offers are tracked yet, unlike mortgages). --}}
+    <div x-show="tab === 'personal-loans'" x-cloak class="overflow-hidden border border-t-0 border-placeholder">
+        <x-loan-affordability-calculator />
+    </div>
+
+    {{-- Banking: standalone savings/deposit growth calculator (no live
+    per-bank deposit offers are tracked yet). --}}
+    <div x-show="tab === 'banking'" x-cloak class="overflow-hidden border border-t-0 border-placeholder">
+        <x-savings-calculator />
+    </div>
+
     {{-- Placeholder for the other tabs - no design/content provided for these yet --}}
     @foreach (array_keys($tabs) as $key)
-        @if (!in_array($key, ['credit-cards', 'mortgages'], true))
+        @if (!in_array($key, ['credit-cards', 'mortgages', 'personal-loans', 'banking'], true))
             <div x-show="tab === '{{ $key }}'" x-cloak class="border border-t-0 border-placeholder px-6 py-16 text-center text-sm text-muted">
                 {{ __('offers.coming_soon') }}
             </div>

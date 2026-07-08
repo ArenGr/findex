@@ -76,7 +76,7 @@
                 </div>
             @endforeach
 
-            <a href="#" class="hover:text-primary">{{ __('nav.brokers') }}</a>
+            <a href="{{ route('organizations.index') }}" class="hover:text-primary">{{ __('nav.reviews') }}</a>
             <a href="{{ route('about') }}" class="hover:text-primary">{{ __('nav.about') }}</a>
         </nav>
 
@@ -165,6 +165,9 @@
                     </button>
 
                     <div x-show="open" x-transition x-cloak class="absolute right-0 top-full z-20 mt-3 w-40 rounded-md border border-placeholder bg-white py-2 shadow-lg">
+                        <a href="{{ route('alerts.index') }}" class="block px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary">
+                            {{ __('alerts.heading') }}
+                        </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-body-text hover:bg-primary/5 hover:text-primary">
@@ -223,7 +226,7 @@
                 </div>
             @endforeach
 
-            <a href="#" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.brokers') }}</a>
+            <a href="{{ route('organizations.index') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.reviews') }}</a>
             <a href="{{ route('about') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.about') }}</a>
 
             @if ($joinLinks->isNotEmpty())
@@ -257,6 +260,7 @@
             <div class="mt-2 flex items-center gap-4 border-t border-placeholder pt-4">
                 @auth
                     <span class="text-ink">{{ auth()->user()->name }}</span>
+                    <a href="{{ route('alerts.index') }}" class="text-ink hover:text-primary">{{ __('alerts.heading') }}</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="border border-ink px-5 py-2.5 text-ink hover:bg-ink hover:text-white">

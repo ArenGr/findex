@@ -106,6 +106,17 @@ class Organization extends Authenticatable
     }
 
     /**
+     * Eager-load `reviews_avg_rating` and `reviews_count` in a single query,
+     * for listing many organizations at once (homepage teaser, directory)
+     * without an N+1 query per organization.
+     */
+    #[Scope]
+    protected function withRatingStats(Builder $query): Builder
+    {
+        return $query->withCount('reviews')->withAvg('reviews', 'rating');
+    }
+
+    /**
      * Get all branches for this organization.
      */
     public function branches(): HasMany
