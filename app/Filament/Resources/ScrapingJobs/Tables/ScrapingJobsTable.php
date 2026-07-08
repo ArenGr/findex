@@ -15,6 +15,7 @@ class ScrapingJobsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->poll('5s')
             ->columns([
                 TextColumn::make('organization.name')
                     ->searchable(),
@@ -22,6 +23,7 @@ class ScrapingJobsTable
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
+                    ->sortable()
                     ->color(fn (string $state) => match ($state) {
                         'success' => 'success',
                         'failed' => 'danger',

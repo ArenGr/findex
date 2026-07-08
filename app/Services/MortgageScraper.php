@@ -10,24 +10,11 @@ use App\Parsers\MortgageParserFactory;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class MortgageScraper
 {
-    /**
-     * Disk + directory used to store one local HTML file per source URL.
-     *
-     * During development these fixtures let us re-run the parser without
-     * hitting the external banks on every run (which risks getting blocked).
-     * The first request for a URL is fetched and saved; every later request
-     * for the same URL reads the saved file instead of going to the network.
-     */
-    private const FIXTURE_DISK = 'local';
-    private const FIXTURE_PATH = 'fixtures/scrapers';
-
     /**
      * Retries for transient failures only (connection/timeout errors, 5xx,
      * 429) - a plain 403/404 means the site is actively blocking us or the
@@ -94,10 +81,16 @@ class MortgageScraper
      */
     public function scrape(Organization $organization, string $sourceType = 'mortgages'): ScrapingJob
     {
-        $job = $organization->scrapingJobs()->create([
-            'source_type' => $sourceType,
-            'status' => 'pending',
-        ]);
+        // One row per organization+source_type, updated in place on every
+        // run - the admin's scraping jobs table is a current-status view,
+        // not a growing history log. Updating (rather than deleting the old
+        // row and inserting a new one) means the row is never briefly
+        // absent from the table while a run is in progress.
+        $job = ScrapingJob::updateOrCreate(
+            ['organization_id' => $organization->id, 'source_type' => $sourceType],
+            ['status' => 'pending', 'started_at' => null, 'finished_at' => null, 'records_found' => 0, 'error_message' => null],
+        );
+        $job->logs()->delete();
 
         try {
             $job->markAsRunning();
@@ -115,7 +108,7 @@ class MortgageScraper
             $url = $source->getFullUrl();
             $job->log('info', "Fetching from: {$url}");
 
-            $html = $this->getHtml($url, $job);
+            $html = $this->getHtml($url);
 
             $recordsFound = $this->parseAndSaveOffers($organization, $html, $url, $job);
 
@@ -135,43 +128,12 @@ class MortgageScraper
     }
 
     /**
-     * Return the HTML for a URL, backed by a local fixture file.
-     *
-     * Fixtures are only used in local/testing so repeated runs during
-     * development don't hit the external banks (which risks getting
-     * blocked). Outside those environments every run fetches live - a
-     * production scrape must never serve stale cached HTML.
+     * Fetch a URL's HTML. Always live - no caching, so this always reflects
+     * whatever the bank is currently publishing.
      */
-    private function getHtml(string $url, ScrapingJob $job): string
+    private function getHtml(string $url): string
     {
-        $path = $this->fixturePath($url);
-        $disk = Storage::disk(self::FIXTURE_DISK);
-        $useFixture = app()->environment('local', 'testing');
-
-        if ($useFixture && $disk->exists($path)) {
-            $job->log('info', "Using local fixture for: {$url}");
-            return $disk->get($path);
-        }
-
-        $job->log('info', "Fetching from site: {$url}");
-        $html = (string) $this->httpClient->get($url)->getBody();
-
-        if ($useFixture) {
-            $disk->put($path, $html);
-        }
-
-        return $html;
-    }
-
-    /**
-     * Build the local fixture path for a URL.
-     */
-    private function fixturePath(string $url): string
-    {
-        $host = Str::slug(parse_url($url, PHP_URL_HOST) ?? 'unknown');
-        $hash = substr(hash('sha256', $url), 0, 16);
-
-        return self::FIXTURE_PATH . "/{$host}_{$hash}.html";
+        return (string) $this->httpClient->get($url)->getBody();
     }
 
     /**

@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Organization\Auth;
 
+use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Organization;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,11 +47,38 @@ class RegisteredOrganizationController extends Controller
             'is_active' => false,
         ]);
 
+        $this->notifyAdminsOfPendingApproval($organization);
+
         Auth::guard('organization')->login($organization);
 
         $request->session()->regenerate();
 
         return redirect()->route('org.dashboard.index');
+    }
+
+    /**
+     * New organizations register inactive (see is_active above) and need an
+     * admin to review and approve them - surfaced via the admin panel's
+     * topbar notification bell (see AdminPanelProvider::databaseNotifications())
+     * rather than relying on an admin to notice by browsing the list.
+     */
+    private function notifyAdminsOfPendingApproval(Organization $organization): void
+    {
+        Notification::make()
+            ->title('New organization awaiting approval')
+            ->body("{$organization->name} just registered and is inactive until approved.")
+            ->icon('heroicon-o-building-office-2')
+            ->actions([
+                Action::make('review')
+                    ->label('Review')
+                    // OrganizationResource deliberately routes admin pages by
+                    // id ($recordRouteKeyName = 'id'), unlike the model's own
+                    // slug-based getRouteKeyName() used for public routes -
+                    // passing the model instance here would build the URL
+                    // from the slug instead, which the resource can't resolve.
+                    ->url(OrganizationResource::getUrl('edit', ['record' => $organization->getKey()])),
+            ])
+            ->sendToDatabase(Admin::all());
     }
 
     private function uniqueSlug(string $name): string
