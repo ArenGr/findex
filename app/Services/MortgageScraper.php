@@ -114,6 +114,15 @@ class MortgageScraper
 
             $job->log('info', "Successfully parsed {$recordsFound} records");
 
+            // The fetch succeeded and the parser didn't throw, but found
+            // nothing - most likely the site's markup changed under the
+            // parser. Left unflagged, this looks identical to "offers didn't
+            // change since last time" with no error anywhere.
+            if ($recordsFound === 0) {
+                $job->log('warning', 'Zero records parsed - the source markup may have changed');
+                AdminNotifier::zeroRecordsScraped($organization->name, $sourceType);
+            }
+
             $source->markAsScraped();
 
             $job->markAsSuccess($recordsFound);
@@ -167,9 +176,9 @@ class MortgageScraper
                         'organization_id' => $organization->id,
                         'currency' => $currency,
                         'rate_type' => $rateType,
+                        'category' => $row['category'] ?? null,
                     ],
                     [
-                        'category' => $row['category'] ?? null,
                         'interest_rate_min' => $rateMin,
                         'interest_rate_max' => $rateMax,
                         'term_min_months' => $row['term_min_months'] ?? null,

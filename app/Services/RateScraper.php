@@ -133,6 +133,15 @@ class RateScraper
 
             $job->log('info', "Successfully parsed {$recordsFound} records");
 
+            // The fetch succeeded and the parser didn't throw, but found
+            // nothing - most likely the site's markup changed under the
+            // parser. Left unflagged, this looks identical to "rates didn't
+            // change since last time" with no error anywhere.
+            if ($recordsFound === 0) {
+                $job->log('warning', 'Zero records parsed - the source markup may have changed');
+                AdminNotifier::zeroRecordsScraped($organization->name, $sourceType);
+            }
+
             // Mark source as last scraped
             $source->markAsScraped();
 

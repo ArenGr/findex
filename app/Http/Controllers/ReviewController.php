@@ -17,7 +17,7 @@ class ReviewController extends Controller
      */
     public function store(Request $request, string $locale, string $organization): RedirectResponse
     {
-        $organization = Organization::where('slug', $organization)->firstOrFail();
+        $organization = Organization::active()->where('slug', $organization)->firstOrFail();
 
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],

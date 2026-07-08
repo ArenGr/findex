@@ -101,12 +101,13 @@ class CompareControllerTest extends TestCase
             'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
             'category' => 'secondary_market', 'interest_rate_min' => 10, 'interest_rate_max' => 12,
         ]);
-        // A different currency, not a second category for the same
-        // currency+rate_type: (organization_id, currency, rate_type) is
-        // uniquely constrained, so a bank can't actually have two offers -
-        // in different categories or not - for the same combination today.
+        // A second, distinct offer for the same currency+rate_type but a
+        // different category - (organization_id, currency, rate_type,
+        // category) is uniquely constrained (see
+        // 2026_07_09_000001_widen_mortgage_offers_unique_key), so both rows
+        // coexist rather than colliding.
         MortgageOffer::create([
-            'organization_id' => $bank->id, 'currency' => 'USD', 'rate_type' => 'fixed',
+            'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
             'category' => 'new_construction', 'interest_rate_min' => 9, 'interest_rate_max' => 11,
         ]);
 
@@ -115,5 +116,28 @@ class CompareControllerTest extends TestCase
         $offers = $response->original->getData()['mortgagesByOrgId'][$bank->id];
         $this->assertCount(1, $offers);
         $this->assertSame('secondary_market', $offers->first()->category);
+    }
+
+    public function test_offers_with_the_same_currency_and_rate_type_but_different_category_both_persist(): void
+    {
+        // Regression test for the unique-key gap: category was added to
+        // mortgage_offers after the original unique key, and was never
+        // folded into it - MortgageScraper::parseAndSaveOffers's
+        // updateOrCreate() used to silently overwrite one category's offer
+        // with another's on the very next scrape.
+        $bank = $this->makeOrganization('bank-unique-key-test');
+
+        MortgageOffer::create([
+            'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
+            'category' => 'secondary_market', 'interest_rate_min' => 10, 'interest_rate_max' => 12,
+        ]);
+        MortgageOffer::create([
+            'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
+            'category' => 'new_construction', 'interest_rate_min' => 9, 'interest_rate_max' => 11,
+        ]);
+
+        $this->assertSame(2, MortgageOffer::where([
+            'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
+        ])->count());
     }
 }

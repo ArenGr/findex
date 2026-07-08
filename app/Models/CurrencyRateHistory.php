@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CurrencyRateHistory extends Model
 {
+    use Prunable;
+
     protected $table = 'currency_rate_history';
 
     protected $fillable = [
@@ -30,6 +34,15 @@ class CurrencyRateHistory extends Model
     public function currencyRate(): BelongsTo
     {
         return $this->belongsTo(CurrencyRate::class);
+    }
+
+    /**
+     * Scanned by the scheduled `model:prune` command - see
+     * config/history.php.
+     */
+    public function prunable(): Builder
+    {
+        return static::where('scraped_at', '<=', now()->subMonths(config('history.retention_months')));
     }
 
     /**

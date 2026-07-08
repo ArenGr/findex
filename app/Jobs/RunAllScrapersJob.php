@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\AdminNotifier;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Artisan;
@@ -20,7 +21,24 @@ class RunAllScrapersJob implements ShouldQueue
 
     public function handle(): void
     {
-        Artisan::call('scrape:rates');
-        Artisan::call('scrape:mortgages');
+        $ratesExit = Artisan::call('scrape:rates');
+        $ratesOutput = Artisan::output();
+
+        $mortgagesExit = Artisan::call('scrape:mortgages');
+        $mortgagesOutput = Artisan::output();
+
+        // Both commands return non-zero exit codes when at least one
+        // organization failed (see ScrapeRates/ScrapeMortgages), but that was
+        // previously discarded here - a fully failed run (or every source
+        // failing on a given day) had no signal beyond someone happening to
+        // check the admin scraping jobs table.
+        if ($ratesExit !== 0 || $mortgagesExit !== 0) {
+            $summary = collect([
+                $ratesExit !== 0 ? "Rate scraping:\n{$ratesOutput}" : null,
+                $mortgagesExit !== 0 ? "Mortgage scraping:\n{$mortgagesOutput}" : null,
+            ])->filter()->implode("\n\n");
+
+            AdminNotifier::scraperRunFailed($summary);
+        }
     }
 }

@@ -129,7 +129,7 @@ class AdminPanelSmokeTest extends TestCase
         $organization->update(['is_active' => true]);
         $this->assertTrue($organization->fresh()->is_active);
 
-        $user->update(['banned_at' => now()]);
+        $user->ban();
         $this->assertTrue($user->fresh()->isBanned());
     }
 

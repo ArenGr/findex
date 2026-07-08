@@ -26,7 +26,10 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
             'website' => ['nullable', 'url', 'max:255'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            // Laravel's generic 'image' rule allows SVG, which can carry
+            // embedded scripts - a stored-XSS risk if ever served inline
+            // rather than as a download. Restrict to raster formats only.
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         if ($request->hasFile('logo')) {

@@ -47,6 +47,20 @@ class AcbaMortgageParser implements MortgageParser
             $window = substr($html, $anchor[0][1], 3000);
             preg_match_all(self::RATE_SPAN_PATTERN, $window, $rates);
 
+            // There is no textual anchor tying a rate span to a currency
+            // (see class docblock) - the mapping is purely positional, by
+            // count. A column being added or removed is the one column
+            // change this can actually detect; fail loudly rather than
+            // silently attributing a rate to the wrong currency or column.
+            if (count($rates[1]) !== count(self::CURRENCY_ORDER)) {
+                throw new \RuntimeException(sprintf(
+                    "ACBA mortgage page layout changed: expected %d rate columns for '%s', found %d",
+                    count(self::CURRENCY_ORDER),
+                    $pattern,
+                    count($rates[1]),
+                ));
+            }
+
             foreach (self::CURRENCY_ORDER as $index => $currency) {
                 if (!isset($rates[1][$index])) {
                     continue;

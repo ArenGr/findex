@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MortgageOfferHistory extends Model
 {
+    use Prunable;
+
     protected $table = 'mortgage_offer_history';
 
     protected $fillable = [
@@ -30,6 +34,15 @@ class MortgageOfferHistory extends Model
     public function mortgageOffer(): BelongsTo
     {
         return $this->belongsTo(MortgageOffer::class);
+    }
+
+    /**
+     * Scanned by the scheduled `model:prune` command - see
+     * config/history.php.
+     */
+    public function prunable(): Builder
+    {
+        return static::where('scraped_at', '<=', now()->subMonths(config('history.retention_months')));
     }
 
     /**

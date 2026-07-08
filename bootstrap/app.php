@@ -7,6 +7,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Sentry\Laravel\Integration as SentryIntegration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,12 +35,44 @@ return Application::configure(basePath: dirname(__DIR__))
         // Laravel Horizon) if report volume grows enough for the ~1 minute
         // latency or per-run bootstrap cost to matter.
         $schedule->command('queue:work --stop-when-empty --tries=3')->everyMinute()->withoutOverlapping();
+
+        // Prunes currency_rate_history/mortgage_offer_history rows older
+        // than config('history.retention_months') - see those models'
+        // Prunable implementation.
+        $schedule->command('model:prune')->daily();
+
+        // Everything above depends on the server's `* * * * * php artisan
+        // schedule:run` cron entry actually existing and firing - if it's
+        // ever missing or silently stops after a deploy, scraping/alerts/
+        // reports all stop with no symptom anyone would notice. If
+        // SCHEDULE_HEARTBEAT_URL is set (e.g. a healthchecks.io/Cronitor/
+        // Better Uptime check URL, which just needs a periodic GET), this
+        // pings it every run so a missed schedule actually triggers an
+        // alert there. A no-op when unset.
+        if ($heartbeatUrl = env('SCHEDULE_HEARTBEAT_URL')) {
+            $schedule->call(fn () => Http::get($heartbeatUrl))
+                ->everyFiveMinutes()
+                ->name('schedule-heartbeat')
+                ->withoutOverlapping();
+        }
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'setlocale' => SetLocale::class,
             'banned' => EnsureUserIsNotBanned::class,
         ]);
+
+        // Unset by default (trusts nothing extra, Laravel's own default).
+        // If deployed behind a reverse proxy or load balancer, set
+        // TRUSTED_PROXIES to its IP(s)/CIDR (comma-separated) or '*' for a
+        // trusted internal LB - otherwise scheme/IP detection misbehaves
+        // (HTTPS redirects, IP-based checks) since every request appears to
+        // come from the proxy itself.
+        if ($trustedProxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(
+                at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)),
+            );
+        }
 
         // Telegram's webhook POST is not a browser request and carries no
         // CSRF token - it's authenticated by its own secret-token header
@@ -70,4 +104,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // No-op until SENTRY_LARAVEL_DSN is set (see config/sentry.php) -
+        // reports unhandled exceptions with full request/user context,
+        // beyond what the 'sentry' log channel alone captures.
+        SentryIntegration::handles($exceptions);
     })->create();

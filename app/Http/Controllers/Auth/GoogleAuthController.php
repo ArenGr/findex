@@ -45,11 +45,28 @@ class GoogleAuthController extends Controller
                 $user = new User([
                     'name' => $googleUser->getName() ?: $googleUser->getNickname(),
                     'email' => $googleUser->getEmail(),
-                    'email_verified_at' => now(),
                     // Google-only accounts never use this - a random value
                     // just satisfies the column's NOT NULL constraint.
                     'password' => Str::random(40),
                 ]);
+                // Not mass-assignable (deliberately absent from $fillable,
+                // like banned_at) - set directly instead.
+                $user->email_verified_at = now();
+            } else {
+                // An existing password-based account is being linked to
+                // Google for the first time. Google has just authoritatively
+                // proven ownership of this email address, which a
+                // pre-existing password may not have - e.g. someone could
+                // have pre-registered this email with a password only they
+                // know, waiting for the real owner to eventually "Sign in
+                // with Google" and inherit access to that account. Rotating
+                // the password here revokes any such squatted password the
+                // moment the real owner is verified, without requiring a
+                // full email-verification flow. The legitimate user is
+                // unaffected since they're about to be logged in via Google
+                // anyway and can set a new password later if they want one.
+                $user->password = Str::random(40);
+                $user->email_verified_at ??= now();
             }
 
             $user->google_id = $googleUser->getId();

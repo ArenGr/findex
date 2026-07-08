@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'google_id', 'avatar', 'banned_at'])]
+#[Fillable(['name', 'email', 'password', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -45,5 +45,21 @@ class User extends Authenticatable
     public function isBanned(): bool
     {
         return $this->banned_at !== null;
+    }
+
+    /**
+     * banned_at is deliberately not mass-assignable (see $fillable above) -
+     * banning/unbanning goes through these dedicated methods instead, so a
+     * future `User::create($request->all())` or similar can't be tricked
+     * into self-unbanning or forging a ban timestamp.
+     */
+    public function ban(): void
+    {
+        $this->forceFill(['banned_at' => now()])->save();
+    }
+
+    public function unban(): void
+    {
+        $this->forceFill(['banned_at' => null])->save();
     }
 }

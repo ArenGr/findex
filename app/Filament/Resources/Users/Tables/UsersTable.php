@@ -51,7 +51,7 @@ class UsersTable
                     ->icon(fn ($record) => $record->banned_at ? 'heroicon-o-check-circle' : 'heroicon-o-no-symbol')
                     ->color(fn ($record) => $record->banned_at ? 'success' : 'danger')
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['banned_at' => $record->banned_at ? null : now()])),
+                    ->action(fn ($record) => $record->banned_at ? $record->unban() : $record->ban()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -60,13 +60,13 @@ class UsersTable
                         ->label('Ban selected')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->action(fn (Collection $records) => $records->each->update(['banned_at' => now()]))
+                        ->action(fn (Collection $records) => $records->each->ban())
                         ->deselectRecordsAfterCompletion(),
                     BulkAction::make('unban')
                         ->label('Unban selected')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(fn (Collection $records) => $records->each->update(['banned_at' => null]))
+                        ->action(fn (Collection $records) => $records->each->unban())
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ]);

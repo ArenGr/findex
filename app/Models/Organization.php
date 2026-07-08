@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Organization extends Authenticatable
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'slug',
@@ -31,6 +34,7 @@ class Organization extends Authenticatable
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
         'password' => 'hashed',
     ];
 

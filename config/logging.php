@@ -123,6 +123,15 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        // A no-op until SENTRY_LARAVEL_DSN is set (see config/sentry.php) -
+        // add 'sentry' to LOG_STACK once a DSN is configured to get error
+        // alerting without any further deploy. Only warnings and above are
+        // sent, to avoid noise from routine debug/info-level log entries.
+        'sentry' => [
+            'driver' => 'sentry',
+            'level' => env('LOG_LEVEL', 'warning'),
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

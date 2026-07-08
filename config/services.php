@@ -42,6 +42,10 @@ return [
     ],
 
     'llm' => [
+        // Left unset until a provider is chosen - LlmReportAnalyzer degrades
+        // to an empty summary/themes rather than failing report generation
+        // when this is empty.
+        'url' => env('LLM_API_URL'),
         'key' => env('LLM_API_KEY'),
         'model' => env('LLM_MODEL'),
     ],
