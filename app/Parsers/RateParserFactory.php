@@ -13,11 +13,16 @@ class RateParserFactory
      * @var array<string, class-string<RateParser>>
      */
     private array $parsers = [
-        'acba'    => AcbaRateParser::class,
-        'ineco'   => InecoRateParser::class,
-        'ameria'  => AmeriaRateParser::class,
-        'unibank' => UnibankRateParser::class,
-        'evoca'   => EvocaRateParser::class,
+        'acba'         => AcbaRateParser::class,
+        'ineco'        => InecoRateParser::class,
+        'ameria'       => AmeriaRateParser::class,
+        'unibank'      => UnibankRateParser::class,
+        'evoca'        => EvocaRateParser::class,
+        'araratbank'   => AraratbankRateParser::class,
+        'aeb'          => ArmeconombankRateParser::class,
+        'vtb'          => VtbRateParser::class,
+        'idbank'       => IdbankRateParser::class,
+        'artsakhbank'  => ArtsakhbankRateParser::class,
     ];
 
     /**

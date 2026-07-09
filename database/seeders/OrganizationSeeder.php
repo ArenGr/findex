@@ -88,6 +88,61 @@ class OrganizationSeeder extends Seeder
             ]
         );
 
+        $araratbank = Organization::firstOrCreate(
+            ['slug' => 'araratbank'],
+            [
+                'name' => 'AraratBank',
+                'type' => 'bank',
+                'website' => 'https://www.araratbank.am',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
+        $aeb = Organization::firstOrCreate(
+            ['slug' => 'aeb'],
+            [
+                'name' => 'Armeconombank',
+                'type' => 'bank',
+                'website' => 'https://www.aeb.am',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
+        $vtb = Organization::firstOrCreate(
+            ['slug' => 'vtb'],
+            [
+                'name' => 'VTB Bank (Armenia)',
+                'type' => 'bank',
+                'website' => 'https://www.vtb.am',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
+        $idbank = Organization::firstOrCreate(
+            ['slug' => 'idbank'],
+            [
+                'name' => 'IDBank',
+                'type' => 'bank',
+                'website' => 'https://www.idbank.am',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
+        $artsakhbank = Organization::firstOrCreate(
+            ['slug' => 'artsakhbank'],
+            [
+                'name' => 'Artsakhbank',
+                'type' => 'bank',
+                'website' => 'https://www.artsakhbank.am',
+                'country_code' => 'AM',
+                'is_active' => true,
+            ]
+        );
+
         // Create organization sources
         OrganizationSource::updateOrCreate(
             ['organization_id' => $acba->id, 'source_type' => 'currency_rates'],
@@ -181,6 +236,53 @@ class OrganizationSeeder extends Seeder
             ['organization_id' => $evoca->id, 'source_type' => 'currency_rates'],
             [
                 'url' => '/en',
+                'is_active' => true,
+            ]
+        );
+
+        // The homepage embeds the full rate table (all rows, including ones
+        // hidden behind a "See more" toggle) as static server-rendered HTML.
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $araratbank->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en',
+                'is_active' => true,
+            ]
+        );
+
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $aeb->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en',
+                'is_active' => true,
+            ]
+        );
+
+        // Both rate-type tabs on this page are present in the static HTML
+        // (Bootstrap tabs toggled with CSS/JS, not fetched via AJAX).
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $vtb->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en/currency',
+                'is_active' => true,
+            ]
+        );
+
+        // The dedicated /rates/ page (rather than the homepage widget) is
+        // used since it's the same markup with no other benefit either way,
+        // but is the page IDBank's own "All rates" link points to.
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $idbank->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en/rates/',
+                'is_active' => true,
+            ]
+        );
+
+        OrganizationSource::updateOrCreate(
+            ['organization_id' => $artsakhbank->id, 'source_type' => 'currency_rates'],
+            [
+                'url' => '/en/exchange-rates',
                 'is_active' => true,
             ]
         );
