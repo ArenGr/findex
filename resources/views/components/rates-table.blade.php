@@ -72,6 +72,8 @@
         x-data="{ tab: '{{ $defaultCurrency }}', rateTab: '{{ $defaultRateType }}' }"
         class="mx-auto max-w-7xl px-6 py-16 lg:px-10 scroll-mt-24"
     >
+        <div class="lg:flex lg:items-start lg:gap-10">
+        <div class="min-w-0 flex-1">
         <h2 class="font-heading text-2xl font-bold text-ink lg:text-3xl">
             {{ __('rates.heading') }}
         </h2>
@@ -158,6 +160,7 @@
                                     {{ __('organizations.sell') }}
                                     <span x-show="sortKey === 'sell_rate'" x-text="sortDir === 'asc' ? '▲' : '▼'"></span>
                                 </button>
+                                <span class="w-28 shrink-0 text-right whitespace-nowrap">{{ __('rates.alert_column') }}</span>
                             </div>
 
                             <template x-for="(row, index) in sorted" :key="row.id">
@@ -205,9 +208,10 @@
                                     <a
                                         :href="row.alertUrl"
                                         :title="'{{ __('rates.create_alert') }}'"
-                                        class="shrink-0 text-subtle hover:text-primary"
+                                        class="flex w-28 shrink-0 items-center justify-end gap-1 whitespace-nowrap text-subtle hover:text-primary"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+                                        <span class="hidden text-xs font-medium sm:inline">{{ __('rates.alert_short') }}</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">
                                             <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
                                         </svg>
                                     </a>
@@ -218,5 +222,15 @@
                 @endif
             </div>
         @endforeach
+
+        <div class="mt-6 text-center">
+            <a href="{{ route('rates.index', ['currency' => $defaultCurrency]) }}" class="text-sm font-medium text-primary hover:underline">
+                {{ __('rates.view_all') }} →
+            </a>
+        </div>
+        </div>
+
+        <x-ad-slot placement="home_rates" />
+        </div>
     </section>
 @endif

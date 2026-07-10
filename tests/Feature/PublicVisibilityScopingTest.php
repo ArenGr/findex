@@ -39,7 +39,7 @@ class PublicVisibilityScopingTest extends TestCase
             'buy_rate' => 100, 'sell_rate' => 105, 'scraped_at' => now(),
         ]);
 
-        $response = $this->get('/rates');
+        $response = $this->get('/en/rates');
 
         $organizationIds = $response->original->getData()['rates']->pluck('organization_id')->all();
         $this->assertContains($active->id, $organizationIds);

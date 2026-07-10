@@ -28,5 +28,10 @@
             {{ __('auth.no_account') }}
             <a href="{{ route('register') }}" class="font-medium text-primary hover:underline">{{ __('auth.register_button') }}</a>
         </p>
+
+        <p class="mt-3 text-center text-xs text-subtle">
+            {{ __('org.business_login_prompt') }}
+            <a href="{{ route('org.login') }}" class="font-medium text-primary hover:underline">{{ __('org.business_login_link') }}</a>
+        </p>
     </section>
 @endsection

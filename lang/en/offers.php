@@ -3,6 +3,7 @@
 return [
     'heading' => 'Best Bank Card Offers — :date',
     'coming_soon' => 'This section will be available soon.',
+    'soon_badge' => 'Soon',
     'per_month' => 'mo',
 
     'tabs' => [

@@ -51,11 +51,18 @@ return [
     'select_branch' => 'Ընտրեք մասնաճյուղ (ոչ պարտադիր)',
     'no_branch' => 'Առանց մասնաճյուղի',
     'org_reply_label' => ':name-ի պատասխանը',
+    'your_name' => 'Ձեր անունը',
+    'your_name_placeholder' => 'Ինչպե՞ս ցուցադրենք ձեր անունը',
+    'name_attribute' => 'անուն',
+    'guest_reviewer_tag' => 'Հյուր',
+    'guest_reviewer_tooltip' => 'Հրապարակվել է առանց հաշվի',
+    'login_hint' => 'Ունե՞ք հաշիվ։',
 
     'types' => [
         'bank' => 'Բանկ',
         'exchange' => 'Արտարժույթի փոխանակում',
         'insurance' => 'Ապահովագրություն',
+        'tourism' => 'Ճամփորդական գործակալություն',
         'other' => 'Այլ',
     ],
 

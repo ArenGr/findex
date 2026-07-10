@@ -3,6 +3,10 @@
 return [
     'login_title' => 'Organization Log In',
     'register_title' => 'Register Your Organization',
+    'business_login_prompt' => 'Are you a bank or organization?',
+    'business_login_link' => 'Log in to your business account',
+    'personal_login_prompt' => 'Looking for your personal account?',
+    'personal_login_link' => 'Log in here',
     'select_type' => 'Select a type',
     'pending_approval' => 'Your organization is awaiting admin approval. Your public page will go live once approved — in the meantime you can complete your profile, add branches, and set your rates.',
 

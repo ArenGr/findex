@@ -51,11 +51,18 @@ return [
     'select_branch' => 'Select a branch (optional)',
     'no_branch' => 'No specific branch',
     'org_reply_label' => 'Response from :name',
+    'your_name' => 'Your name',
+    'your_name_placeholder' => 'How should we show your name?',
+    'name_attribute' => 'name',
+    'guest_reviewer_tag' => 'Guest',
+    'guest_reviewer_tooltip' => 'Posted without an account',
+    'login_hint' => 'Have an account?',
 
     'types' => [
         'bank' => 'Bank',
         'exchange' => 'Currency Exchange',
         'insurance' => 'Insurance',
+        'tourism' => 'Tourism Agency',
         'other' => 'Other',
     ],
 

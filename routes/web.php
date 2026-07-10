@@ -12,7 +12,9 @@ use App\Http\Controllers\Organization\DashboardController as OrganizationDashboa
 use App\Http\Controllers\Organization\ProfileController as OrganizationProfileController;
 use App\Http\Controllers\Organization\ReportRequestController;
 use App\Http\Controllers\Organization\ReviewReplyController;
+use App\Http\Controllers\Organization\TourismController as OrganizationTourismController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\RateAlertController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\ReviewController;
@@ -37,17 +39,34 @@ Route::prefix('{locale}')
             return view('home');
         })->name('home');
 
-        Route::get('/style-guide', function () {
-            return view('style-guide');
-        })->name('style-guide');
+        // Internal design reference only - never routable in production so it
+        // can't be stumbled onto as an unlabeled "real" page.
+        if (! app()->isProduction()) {
+            Route::get('/style-guide', function () {
+                return view('style-guide');
+            })->name('style-guide');
+        }
 
         Route::get('/about', function () {
             return view('about');
         })->name('about');
 
+        Route::get('/terms', function () {
+            return view('legal.terms');
+        })->name('terms');
+
+        Route::get('/privacy', function () {
+            return view('legal.privacy');
+        })->name('privacy');
+
+        Route::get('/cookies', function () {
+            return view('legal.cookies');
+        })->name('cookies');
+
         Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations.index');
         Route::get('/compare', [CompareController::class, 'show'])->name('organizations.compare');
         Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
+        Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
 
         Route::get('/register', function () {
             return view('auth.register-choice');
@@ -61,10 +80,38 @@ Route::prefix('{locale}')
             Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
         });
 
+        // Open to guests (see ReviewController::store) - 'banned' still
+        // blocks a signed-in banned user, it's simply a no-op for guests.
+        Route::middleware(['banned', 'throttle:reviews'])->group(function () {
+            Route::post('/organizations/{organization}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+        });
+
+        Route::get('/tourism', [QuoteRequestController::class, 'create'])->name('tourism.request');
+
+        // Registered before the {quoteRequest} wildcard below so "mine" and
+        // "resend" aren't swallowed by it and treated as a request ID.
+        Route::get('/tourism/mine', [QuoteRequestController::class, 'mine'])
+            ->middleware(['auth', 'banned'])
+            ->name('tourism.mine');
+
+        Route::get('/tourism/resend', [QuoteRequestController::class, 'resendForm'])->name('tourism.resend');
+
+        // Same response either way (see QuoteRequestController::resend) so
+        // this can't be used to check which emails have filed a request.
+        Route::middleware(['banned', 'throttle:quote_link_resend'])->group(function () {
+            Route::post('/tourism/resend', [QuoteRequestController::class, 'resend'])->name('tourism.resend.send');
+        });
+
+        Route::get('/tourism/{quoteRequest}', [QuoteRequestController::class, 'show'])->name('tourism.show');
+
+        // Open to guests, same abuse guard as reviews above - each submission
+        // fans out to every matching partner, so this also protects partners.
+        Route::middleware(['banned', 'throttle:quote_requests'])->group(function () {
+            Route::post('/tourism', [QuoteRequestController::class, 'store'])->name('tourism.request.store');
+        });
+
         Route::middleware(['auth', 'banned'])->group(function () {
             Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
-            Route::post('/organizations/{organization}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
             Route::get('/alerts', [RateAlertController::class, 'index'])->name('alerts.index');
             Route::post('/alerts', [RateAlertController::class, 'store'])->name('alerts.store');
@@ -110,12 +157,14 @@ Route::prefix('{locale}')
                     Route::post('/rates', [CurrencyRateController::class, 'store'])->name('rates.store');
                     Route::get('/rates/{rate}/edit', [CurrencyRateController::class, 'edit'])->name('rates.edit');
                     Route::put('/rates/{rate}', [CurrencyRateController::class, 'update'])->name('rates.update');
+
+                    Route::get('/tourism', [OrganizationTourismController::class, 'index'])->name('tourism.index');
+                    Route::post('/tourism/refresh-connect-link', [OrganizationTourismController::class, 'refreshConnectLink'])->name('tourism.refresh-connect-link');
+                    Route::put('/tourism/destinations', [OrganizationTourismController::class, 'updateDestinations'])->name('tourism.destinations.update');
                 });
             });
         });
     });
-
-Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
 
 // A single fixed callback URL is far simpler to register with Google than a
 // locale-prefixed one, so this pair lives outside the {locale} group - the

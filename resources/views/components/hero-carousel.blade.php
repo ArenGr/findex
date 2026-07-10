@@ -48,6 +48,8 @@
     x-init="setInterval(() => active = (active + 1) % total, 6000)"
     class="mx-auto max-w-7xl px-6 py-16 lg:px-10"
 >
+    <div class="lg:flex lg:items-start lg:gap-10">
+    <div class="min-w-0 flex-1">
     <div class="relative grid">
         @foreach ($slides as $i => $slide)
             @php($n = $i + 1)
@@ -122,5 +124,9 @@
                 ></button>
             @endforeach
         </div>
+    </div>
+    </div>
+
+    <x-ad-slot placement="home_hero" />
     </div>
 </section>

@@ -6,4 +6,7 @@ return [
     'style_guide_title' => 'Ոճի ուղեցույց — Findex',
     'about_title' => 'Մեր մասին — Findex',
     'about_description' => 'Իմացեք Findex-ի առաքելության մասին՝ դարձնել Հայաստանում բանկերի, փոխարժեքների և ապահովագրության համեմատությունը պարզ և թափանցիկ։',
+    'terms_title' => 'Օգտագործման Կանոններ — Findex',
+    'privacy_title' => 'Գաղտնիության Քաղաքականություն — Findex',
+    'cookies_title' => 'Cookie-ների Քաղաքականություն — Findex',
 ];

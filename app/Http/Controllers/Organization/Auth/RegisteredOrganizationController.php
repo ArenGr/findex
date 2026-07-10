@@ -19,7 +19,7 @@ use Illuminate\View\View;
 
 class RegisteredOrganizationController extends Controller
 {
-    public const TYPES = ['bank', 'exchange', 'insurance', 'other'];
+    public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'other'];
 
     public function create(): View
     {

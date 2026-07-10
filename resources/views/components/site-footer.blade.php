@@ -20,9 +20,9 @@
         [
             'title' => __('footer.columns.legal.title'),
             'links' => [
-                ['label' => __('footer.columns.legal.links.terms'), 'href' => '#'],
-                ['label' => __('footer.columns.legal.links.privacy'), 'href' => '#'],
-                ['label' => __('footer.columns.legal.links.cookies'), 'href' => '#'],
+                ['label' => __('footer.columns.legal.links.terms'), 'href' => route('terms')],
+                ['label' => __('footer.columns.legal.links.privacy'), 'href' => route('privacy')],
+                ['label' => __('footer.columns.legal.links.cookies'), 'href' => route('cookies')],
             ],
         ],
     ];

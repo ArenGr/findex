@@ -21,5 +21,10 @@
                 {{ __('auth.login_button') }}
             </button>
         </form>
+
+        <p class="mt-6 text-center text-xs text-subtle">
+            {{ __('org.personal_login_prompt') }}
+            <a href="{{ route('login') }}" class="font-medium text-primary hover:underline">{{ __('org.personal_login_link') }}</a>
+        </p>
     </section>
 @endsection

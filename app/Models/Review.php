@@ -11,6 +11,7 @@ class Review extends Model
     protected $fillable = [
         'organization_id',
         'user_id',
+        'guest_name',
         'branch_id',
         'rating',
         'comment',
@@ -21,6 +22,15 @@ class Review extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * The account name if the review was left while signed in, otherwise
+     * the display name the guest reviewer typed in.
+     */
+    public function getReviewerNameAttribute(): string
+    {
+        return $this->user->name ?? $this->guest_name;
+    }
 
     public function organization(): BelongsTo
     {

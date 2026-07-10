@@ -6,4 +6,7 @@ return [
     'style_guide_title' => 'Руководство по стилю — Findex',
     'about_title' => 'О нас — Findex',
     'about_description' => 'Узнайте о миссии Findex — сделать сравнение банков, курсов валют и страхования в Армении простым и прозрачным.',
+    'terms_title' => 'Условия Использования — Findex',
+    'privacy_title' => 'Политика Конфиденциальности — Findex',
+    'cookies_title' => 'Политика Использования Cookie — Findex',
 ];

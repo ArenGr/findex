@@ -51,11 +51,18 @@ return [
     'select_branch' => 'Выберите филиал (необязательно)',
     'no_branch' => 'Без указания филиала',
     'org_reply_label' => 'Ответ от :name',
+    'your_name' => 'Ваше имя',
+    'your_name_placeholder' => 'Как нам показать ваше имя?',
+    'name_attribute' => 'имя',
+    'guest_reviewer_tag' => 'Гость',
+    'guest_reviewer_tooltip' => 'Опубликовано без аккаунта',
+    'login_hint' => 'Уже есть аккаунт?',
 
     'types' => [
         'bank' => 'Банк',
         'exchange' => 'Обменный пункт',
         'insurance' => 'Страхование',
+        'tourism' => 'Туристическое агентство',
         'other' => 'Другое',
     ],
 

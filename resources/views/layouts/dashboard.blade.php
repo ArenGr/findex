@@ -41,6 +41,7 @@
                 'org.dashboard.branches.index' => __('org.nav.branches'),
                 'org.dashboard.rates.index' => __('org.nav.rates'),
                 'org.dashboard.reports.index' => __('org.nav.reports'),
+                ...($organization->type === 'tourism' ? ['org.dashboard.tourism.index' => __('tourism.nav_label')] : []),
             ] as $routeName => $label)
                 <a
                     href="{{ route($routeName) }}"
@@ -67,6 +68,8 @@
                     'branch-deleted' => __('org.branches.deleted'),
                     'report-requested' => __('org.reports.requested'),
                     'rate-saved' => __('org.rates.saved'),
+                    'destinations-saved' => __('tourism.dashboard.destinations_saved'),
+                    'telegram-link-refreshed' => __('tourism.dashboard.telegram_hint'),
                 ];
             @endphp
 

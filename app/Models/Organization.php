@@ -23,6 +23,8 @@ class Organization extends Authenticatable
         'is_active',
         'email',
         'password',
+        'telegram_chat_id',
+        'telegram_connect_token',
     ];
 
     protected $hidden = [
@@ -142,6 +144,22 @@ class Organization extends Authenticatable
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
+    }
+
+    /**
+     * Destination countries this organization (type: tourism) can quote for.
+     */
+    public function tourismDestinations(): HasMany
+    {
+        return $this->hasMany(TourismDestination::class);
+    }
+
+    /**
+     * Quote requests this organization has been asked to reply to.
+     */
+    public function quoteResponses(): HasMany
+    {
+        return $this->hasMany(QuoteResponse::class);
     }
 
     /**

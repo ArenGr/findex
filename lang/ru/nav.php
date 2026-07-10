@@ -2,12 +2,16 @@
 
 return [
     'home' => 'Главная',
+    'rates' => 'Курсы',
     'reviews' => 'Отзывы',
+    'compare' => 'Сравнить Банки',
     'about' => 'О Нас',
+    'soon_badge' => 'Скоро',
     'get_updates' => 'Получать Обновления',
 
     'banks' => [
         'label' => 'Банки',
+        'browse_all' => 'Все Банки',
     ],
 
     'insurance' => [

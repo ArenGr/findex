@@ -27,6 +27,7 @@ class OrganizationForm
                         'bank' => 'Bank',
                         'exchange' => 'Currency Exchange',
                         'insurance' => 'Insurance',
+                        'tourism' => 'Tourism Agency',
                         'other' => 'Other',
                     ])
                     ->required(),
