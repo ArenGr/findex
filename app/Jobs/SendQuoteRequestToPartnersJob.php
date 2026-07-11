@@ -5,10 +5,11 @@ namespace App\Jobs;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
-use App\Services\Telegram\TelegramClient;
+use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SendQuoteRequestToPartnersJob implements ShouldQueue
 {
@@ -25,7 +26,14 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
         return [10, 30, 60];
     }
 
-    public function handle(TelegramClient $telegram): void
+    /**
+     * Matching partners is business logic and stays here regardless of
+     * notification channel; a QuoteResponse row (with its secure respond
+     * token) is created for every match up front, so the response - and the
+     * link a partner would use to answer it - exists independently of
+     * whether this particular notification attempt succeeds.
+     */
+    public function handle(PartnerNotifierInterface $notifier): void
     {
         $partners = Organization::active()
             ->where('type', 'tourism')
@@ -36,52 +44,23 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
             ))
             ->get();
 
-        $message = $this->buildMessage();
-
         foreach ($partners as $partner) {
-            $response = $telegram->sendMessage($partner->telegram_chat_id, $message);
-
-            if (($response['ok'] ?? null) === false) {
-                Log::warning('Quote request Telegram send failed', [
-                    'quote_request_id' => $this->quoteRequest->id,
-                    'organization_id' => $partner->id,
-                    'description' => $response['description'] ?? null,
-                ]);
-
-                continue;
-            }
-
-            QuoteResponse::create([
+            $response = QuoteResponse::create([
                 'quote_request_id' => $this->quoteRequest->id,
                 'organization_id' => $partner->id,
-                'telegram_message_id' => $response['result']['message_id'] ?? null,
+                'response_token' => Str::random(40),
+                'status' => QuoteResponse::STATUS_PENDING,
             ]);
+
+            $response->setRelation('organization', $partner);
+            $response->setRelation('quoteRequest', $this->quoteRequest);
+
+            if (!$notifier->notify($response)) {
+                Log::warning('Quote request partner notification failed', [
+                    'quote_request_id' => $this->quoteRequest->id,
+                    'organization_id' => $partner->id,
+                ]);
+            }
         }
-    }
-
-    /**
-     * Written in Armenian regardless of the requester's own site language -
-     * these messages go to local Armenian travel agencies, not the tourist
-     * who filed the request.
-     */
-    private function buildMessage(): string
-    {
-        $r = $this->quoteRequest;
-
-        $extras = collect([
-            $r->all_inclusive ? __('tourism.telegram.all_inclusive', [], 'hy') : null,
-            $r->insurance ? __('tourism.telegram.insurance', [], 'hy') : null,
-        ])->filter()->implode(', ');
-
-        return __('tourism.telegram.request_message', [
-            'destination' => __('destinations.' . $r->destination_country, [], 'hy'),
-            'hotel' => $r->hotel_name ?: __('tourism.telegram.any_hotel', [], 'hy'),
-            'check_in' => $r->check_in->locale('hy')->translatedFormat('d F Y'),
-            'check_out' => $r->check_out->locale('hy')->translatedFormat('d F Y'),
-            'adults' => $r->adults,
-            'children' => $r->children,
-            'extras' => $extras !== '' ? $extras : __('tourism.telegram.no_extras', [], 'hy'),
-            'notes' => $r->notes ?: '-',
-        ], 'hy');
     }
 }

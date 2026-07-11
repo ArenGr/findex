@@ -2,21 +2,21 @@
 
 namespace Tests\Feature;
 
-use App\Mail\QuoteResponseReceived;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
 use App\Services\Telegram\PartnerReplyHandler;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
  * Covers PartnerReplyHandler: the /start <token> connect deep link (see
- * TourismController::index, which generates the token) and capturing a
- * partner's in-chat reply against the QuoteResponse it belongs to (see
- * SendQuoteRequestToPartnersJob, which records telegram_message_id).
+ * TourismController::index, which generates the token) and the "Not
+ * Interested" inline-button callback. Giving an actual quote happens on the
+ * secure web response page (see PartnerResponseController), not by typing a
+ * reply in Telegram - see that controller's tests for the response flow.
  */
 class TelegramPartnerFlowTest extends TestCase
 {
@@ -65,10 +65,17 @@ class TelegramPartnerFlowTest extends TestCase
         $this->assertNull($organization->refresh()->telegram_chat_id);
     }
 
-    public function test_reply_to_a_known_message_records_it_and_notifies_the_requester(): void
+    public function test_plain_message_with_no_start_command_is_left_unhandled(): void
     {
-        Mail::fake();
-        $organization = $this->organization(['telegram_chat_id' => '555']);
+        $handled = app(PartnerReplyHandler::class)->handleUpdate([
+            'message' => ['chat' => ['id' => 555], 'text' => 'USD'],
+        ]);
+
+        $this->assertFalse($handled);
+    }
+
+    private function pendingResponse(): QuoteResponse
+    {
         $quoteRequest = QuoteRequest::create([
             'guest_name' => 'Test Guest',
             'guest_email' => 'guest@example.com',
@@ -80,49 +87,51 @@ class TelegramPartnerFlowTest extends TestCase
             'children' => 0,
             'expires_at' => now()->addDays(14),
         ]);
-        $response = QuoteResponse::create([
+
+        return QuoteResponse::create([
             'quote_request_id' => $quoteRequest->id,
-            'organization_id' => $organization->id,
-            'telegram_message_id' => 424242,
+            'organization_id' => $this->organization()->id,
+            'response_token' => Str::random(40),
+            'status' => QuoteResponse::STATUS_PENDING,
         ]);
+    }
+
+    public function test_not_interested_callback_declines_a_pending_response_and_answers_the_query(): void
+    {
+        $response = $this->pendingResponse();
+
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('answerCallbackQuery')->once()->with('cbq-1', \Mockery::type('string'))->andReturn(['ok' => true]);
+        });
 
         $handled = app(PartnerReplyHandler::class)->handleUpdate([
-            'message' => [
-                'chat' => ['id' => 555],
-                'text' => '$850 per person, all-inclusive.',
-                'reply_to_message' => ['message_id' => 424242],
-            ],
+            'callback_query' => ['id' => 'cbq-1', 'data' => 'decline:' . $response->id],
         ]);
 
         $this->assertTrue($handled);
-        $response->refresh();
-        $this->assertSame('$850 per person, all-inclusive.', $response->reply_text);
-        $this->assertNotNull($response->responded_at);
-        $this->assertTrue($response->has_replied);
-
-        Mail::assertSent(QuoteResponseReceived::class, function ($mail) use ($response) {
-            return $mail->quoteResponse->is($response) && $mail->hasTo('guest@example.com');
-        });
+        $this->assertSame(QuoteResponse::STATUS_DECLINED, $response->fresh()->status);
     }
 
-    public function test_reply_to_an_unknown_message_is_not_handled(): void
+    public function test_not_interested_callback_does_not_decline_an_already_responded_response(): void
     {
-        $handled = app(PartnerReplyHandler::class)->handleUpdate([
-            'message' => [
-                'chat' => ['id' => 555],
-                'text' => 'Some unrelated reply',
-                'reply_to_message' => ['message_id' => 999999],
-            ],
+        $response = $this->pendingResponse();
+        $response->update(['status' => QuoteResponse::STATUS_RESPONDED, 'responded_at' => now()]);
+
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('answerCallbackQuery')->once()->andReturn(['ok' => true]);
+        });
+
+        app(PartnerReplyHandler::class)->handleUpdate([
+            'callback_query' => ['id' => 'cbq-2', 'data' => 'decline:' . $response->id],
         ]);
 
-        $this->assertFalse($handled);
-        $this->assertSame(0, QuoteResponse::count());
+        $this->assertSame(QuoteResponse::STATUS_RESPONDED, $response->fresh()->status);
     }
 
-    public function test_plain_message_with_no_start_command_or_reply_is_left_unhandled(): void
+    public function test_callback_query_with_unrecognized_data_is_left_unhandled(): void
     {
         $handled = app(PartnerReplyHandler::class)->handleUpdate([
-            'message' => ['chat' => ['id' => 555], 'text' => 'USD'],
+            'callback_query' => ['id' => 'cbq-3', 'data' => 'something-else'],
         ]);
 
         $this->assertFalse($handled);

@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Hash;
  * partners with a fake telegram_chat_id (real enough to pass the "does a
  * partner serve this destination" check, but any real send to it will fail
  * against the live Telegram API - use the tourism:fake-reply command to
- * simulate a partner's reply instead of relying on a real Telegram round trip).
+ * simulate a partner submitting their secure response form instead of
+ * relying on a real Telegram round trip).
  *
  * Run with: php artisan db:seed --class=TourismDemoSeeder
  */

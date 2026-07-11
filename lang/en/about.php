@@ -3,12 +3,13 @@
 return [
     'hero' => [
         'title' => 'About Findex',
-        'subtitle' => "Findex is Armenia's independent platform for comparing bank cards, currency exchange rates, mortgages and insurance — built to save you the hours it takes to check every bank's website yourself.",
+        'subtitle' => "Findex is Armenia's independent platform for comparing bank cards, currency exchange rates, mortgages, insurance and travel packages — built to save you the hours it takes to check every provider's website yourself.",
         'pillars' => [
             'cards' => 'Bank Cards',
             'rates' => 'Exchange Rates',
             'mortgages' => 'Mortgages',
             'insurance' => 'Insurance',
+            'travel' => 'Travel',
         ],
     ],
 
@@ -53,7 +54,7 @@ return [
             ],
             3 => [
                 'title' => 'Go Direct',
-                'body' => "Head straight to the bank's own page to apply. Findex doesn't add a markup or a middleman fee.",
+                'body' => "Head straight to the provider to apply or book. Findex doesn't add a markup or a middleman fee.",
             ],
         ],
     ],

@@ -2,17 +2,17 @@
 
 namespace App\Services\Telegram;
 
-use App\Mail\QuoteResponseReceived;
 use App\Models\Organization;
 use App\Models\QuoteResponse;
-use Illuminate\Support\Facades\Mail;
 
 /**
- * Handles the two update shapes that belong to the tourism quote-request
- * flow before the general RatesBotHandler ever sees them: a partner tapping
+ * Handles the update shapes that belong to the tourism quote-request flow
+ * before the general RatesBotHandler ever sees them: a partner tapping
  * their one-time "connect" deep link (/start <token>), and a partner
- * replying (in-chat, via Telegram's own reply-to feature) to one of our
- * outbound quote-request messages.
+ * tapping the "Not Interested" inline button on a quote-request
+ * notification. Actually giving a quote happens on the secure web response
+ * page (see PartnerResponseController), not by typing a reply in Telegram -
+ * Telegram here is purely a notification channel plus a one-tap decline.
  */
 class PartnerReplyHandler
 {
@@ -26,6 +26,10 @@ class PartnerReplyHandler
      */
     public function handleUpdate(array $update): bool
     {
+        if (isset($update['callback_query'])) {
+            return $this->handleCallbackQuery($update['callback_query']);
+        }
+
         $message = $update['message'] ?? null;
 
         if (!is_array($message)) {
@@ -39,12 +43,6 @@ class PartnerReplyHandler
             $this->handleConnect($chatId, trim(substr($text, 7)));
 
             return true;
-        }
-
-        $repliedToId = $message['reply_to_message']['message_id'] ?? null;
-
-        if ($repliedToId !== null && $text !== '') {
-            return $this->handleReply((int) $repliedToId, $text);
         }
 
         return false;
@@ -68,27 +66,32 @@ class PartnerReplyHandler
         $this->telegram->sendMessage($chatId, __('tourism.telegram.connected_confirmation', [], 'hy'));
     }
 
-    private function handleReply(int $repliedToMessageId, string $text): bool
+    /**
+     * "Not Interested" is a one-tap decline: no page visit, no typing -
+     * just answer the callback (Telegram shows a loading spinner on the
+     * button until we do) and mark the response so it drops off the
+     * traveler's "waiting" list instead of hanging forever.
+     */
+    private function handleCallbackQuery(array $callbackQuery): bool
     {
-        $response = QuoteResponse::query()->where('telegram_message_id', $repliedToMessageId)->first();
+        $callbackId = $callbackQuery['id'] ?? null;
+        $data = $callbackQuery['data'] ?? '';
 
-        if (!$response) {
+        if (!$callbackId || !str_starts_with($data, 'decline:')) {
             return false;
         }
 
-        $response->update([
-            'reply_text' => $text,
-            'responded_at' => now(),
-        ]);
+        $responseId = (int) substr($data, strlen('decline:'));
+        $response = QuoteResponse::query()
+            ->where('id', $responseId)
+            ->where('status', QuoteResponse::STATUS_PENDING)
+            ->first();
 
-        $response->load(['quoteRequest', 'organization']);
-        $requesterEmail = $response->quoteRequest->requester_email;
-
-        if ($requesterEmail) {
-            Mail::to($requesterEmail)
-                ->locale($response->quoteRequest->locale)
-                ->send(new QuoteResponseReceived($response, $response->quoteRequest->signedResultsUrl()));
+        if ($response) {
+            $response->update(['status' => QuoteResponse::STATUS_DECLINED]);
         }
+
+        $this->telegram->answerCallbackQuery($callbackId, __('tourism.telegram.declined_confirmation', [], 'hy'));
 
         return true;
     }

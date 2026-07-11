@@ -6,10 +6,16 @@ use App\Jobs\SendQuoteRequestToPartnersJob;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
-use App\Services\Telegram\TelegramClient;
+use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Covers the partner-matching/fan-out logic only. Message content and
+ * delivery live in TelegramPartnerNotifier (see TelegramPartnerNotifierTest)
+ * behind the PartnerNotifierInterface seam, so this job is tested against
+ * that interface and shouldn't care which channel implements it.
+ */
 class SendQuoteRequestToPartnersJobTest extends TestCase
 {
     use RefreshDatabase;
@@ -63,47 +69,53 @@ class SendQuoteRequestToPartnersJobTest extends TestCase
         ]);
         $notConnected->tourismDestinations()->create(['country_code' => 'GE']);
 
-        $this->mock(TelegramClient::class, function ($mock) use ($matching) {
-            $mock->shouldReceive('sendMessage')
+        $this->mock(PartnerNotifierInterface::class, function ($mock) use ($matching) {
+            $mock->shouldReceive('notify')
                 ->once()
-                ->with($matching->telegram_chat_id, \Mockery::type('string'))
-                ->andReturn(['ok' => true, 'result' => ['message_id' => 777]]);
+                ->with(\Mockery::on(fn (QuoteResponse $response) => $response->organization_id === $matching->id))
+                ->andReturn(true);
         });
 
         $quoteRequest = $this->quoteRequest();
-        (new SendQuoteRequestToPartnersJob($quoteRequest))->handle(app(TelegramClient::class));
+        (new SendQuoteRequestToPartnersJob($quoteRequest))->handle(app(PartnerNotifierInterface::class));
 
         $response = QuoteResponse::sole();
         $this->assertSame($matching->id, $response->organization_id);
-        $this->assertSame(777, $response->telegram_message_id);
+        $this->assertSame(QuoteResponse::STATUS_PENDING, $response->status);
+        $this->assertNotEmpty($response->response_token);
     }
 
-    public function test_failed_telegram_send_does_not_create_a_quote_response(): void
+    public function test_a_pending_quote_response_is_still_created_when_the_notification_fails(): void
     {
         $this->partner('GE');
-        $this->mock(TelegramClient::class, function ($mock) {
-            $mock->shouldReceive('sendMessage')->once()->andReturn(['ok' => false, 'description' => 'chat not found']);
+        $this->mock(PartnerNotifierInterface::class, function ($mock) {
+            $mock->shouldReceive('notify')->once()->andReturn(false);
         });
 
         $quoteRequest = $this->quoteRequest();
-        (new SendQuoteRequestToPartnersJob($quoteRequest))->handle(app(TelegramClient::class));
+        (new SendQuoteRequestToPartnersJob($quoteRequest))->handle(app(PartnerNotifierInterface::class));
 
-        $this->assertSame(0, QuoteResponse::count());
+        $response = QuoteResponse::sole();
+        $this->assertSame(QuoteResponse::STATUS_PENDING, $response->status);
+        $this->assertNotEmpty($response->response_token);
     }
 
-    public function test_message_is_written_in_armenian_regardless_of_ambient_locale(): void
+    public function test_every_matched_partner_gets_its_own_response_and_notify_call(): void
     {
-        app()->setLocale('en');
-        $this->partner('GE');
-        $quoteRequest = $this->quoteRequest(['locale' => 'en', 'destination_country' => 'GE']);
+        $first = $this->partner('GE');
+        $second = $this->partner('GE');
 
-        $this->mock(TelegramClient::class, function ($mock) {
-            $mock->shouldReceive('sendMessage')
-                ->once()
-                ->with(\Mockery::any(), \Mockery::on(fn ($text) => str_contains($text, 'Ուղղություն')))
-                ->andReturn(['ok' => true]);
+        $this->mock(PartnerNotifierInterface::class, function ($mock) {
+            $mock->shouldReceive('notify')->twice()->andReturn(true);
         });
 
-        (new SendQuoteRequestToPartnersJob($quoteRequest))->handle(app(TelegramClient::class));
+        $quoteRequest = $this->quoteRequest();
+        (new SendQuoteRequestToPartnersJob($quoteRequest))->handle(app(PartnerNotifierInterface::class));
+
+        $this->assertSame(2, QuoteResponse::count());
+        $this->assertSame(
+            [$first->id, $second->id],
+            QuoteResponse::orderBy('organization_id')->pluck('organization_id')->sort()->values()->all()
+        );
     }
 }

@@ -4,17 +4,17 @@
             'title' => __('footer.columns.company.title'),
             'links' => [
                 ['label' => __('footer.columns.company.links.about'), 'href' => route('about')],
-                ['label' => __('footer.columns.company.links.team'), 'href' => '#'],
-                ['label' => __('footer.columns.company.links.careers'), 'href' => '#'],
-                ['label' => __('footer.columns.company.links.news'), 'href' => '#'],
+                ['label' => __('footer.columns.company.links.team'), 'href' => route('team')],
+                ['label' => __('footer.columns.company.links.careers'), 'href' => route('careers')],
+                ['label' => __('footer.columns.company.links.news'), 'href' => route('company.news')],
             ],
         ],
         [
             'title' => __('footer.columns.help.title'),
             'links' => [
-                ['label' => __('footer.columns.help.links.help_center'), 'href' => '#'],
-                ['label' => __('footer.columns.help.links.faq'), 'href' => '#'],
-                ['label' => __('footer.columns.help.links.contact'), 'href' => '#'],
+                ['label' => __('footer.columns.help.links.help_center'), 'href' => route('help')],
+                ['label' => __('footer.columns.help.links.faq'), 'href' => route('faq')],
+                ['label' => __('footer.columns.help.links.contact'), 'href' => route('contact')],
             ],
         ],
         [

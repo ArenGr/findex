@@ -25,11 +25,15 @@ class TelegramClient
     /**
      * Send a text message, optionally with a persistent reply keyboard (the
      * button row that sits above the text box - tapping one sends its label
-     * as a normal text message, unlike an inline keyboard's silent callback).
+     * as a normal text message) or an inline keyboard (buttons attached to
+     * the message itself - a url button opens a link, a callback_data
+     * button silently notifies our webhook instead of sending any text).
+     * Telegram allows only one or the other per message.
      *
      * @param array<int, array<int, string>>|null $keyboard Rows of button labels.
+     * @param array<int, array<int, array{text: string, url?: string, callback_data?: string}>>|null $inlineKeyboard Rows of inline buttons.
      */
-    public function sendMessage(int|string $chatId, string $text, ?array $keyboard = null): array
+    public function sendMessage(int|string $chatId, string $text, ?array $keyboard = null, ?array $inlineKeyboard = null): array
     {
         $payload = [
             'chat_id' => $chatId,
@@ -37,7 +41,9 @@ class TelegramClient
             'parse_mode' => 'HTML',
         ];
 
-        if ($keyboard !== null) {
+        if ($inlineKeyboard !== null) {
+            $payload['reply_markup'] = json_encode(['inline_keyboard' => $inlineKeyboard]);
+        } elseif ($keyboard !== null) {
             $payload['reply_markup'] = json_encode([
                 'keyboard' => array_map(fn ($row) => array_map(fn ($label) => ['text' => $label], $row), $keyboard),
                 'resize_keyboard' => true,
@@ -45,6 +51,23 @@ class TelegramClient
         }
 
         return $this->call('sendMessage', $payload);
+    }
+
+    /**
+     * Acknowledge an inline-button tap (a "callback query"). Telegram shows
+     * a loading spinner on the button until this is called, regardless of
+     * whether the tap needs any visible response - $text, if given, pops up
+     * as a small toast for the user.
+     */
+    public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): array
+    {
+        $payload = ['callback_query_id' => $callbackQueryId];
+
+        if ($text !== null) {
+            $payload['text'] = $text;
+        }
+
+        return $this->call('answerCallbackQuery', $payload);
     }
 
     /**

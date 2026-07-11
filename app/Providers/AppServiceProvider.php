@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Notifications\PartnerNotifierInterface;
+use App\Services\Notifications\TelegramPartnerNotifier;
 use App\Services\Report\LlmReportAnalyzer;
 use App\Services\Report\ReportAnalyzerInterface;
 use App\Services\Telegram\TelegramClient;
@@ -21,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ReportAnalyzerInterface::class, LlmReportAnalyzer::class);
 
         $this->app->singleton(TelegramClient::class, fn () => new TelegramClient(config('services.telegram.bot_token')));
+
+        // The only channel implemented so far - swap or add to this binding
+        // (e.g. a composite notifier trying WhatsApp/email too) without
+        // touching SendQuoteRequestToPartnersJob, which only knows about
+        // the interface.
+        $this->app->bind(PartnerNotifierInterface::class, TelegramPartnerNotifier::class);
     }
 
     /**
@@ -49,5 +57,10 @@ class AppServiceProvider extends ServiceProvider
         // addresses - the response is identical whether or not a match is
         // found, so this is the only real abuse control here.
         RateLimiter::for('quote_link_resend', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+
+        // The response_token itself is the real access control (a 40-char
+        // random string per partner per request) - this is just defense in
+        // depth against brute-forcing or spamming the submit endpoint.
+        RateLimiter::for('quote_response_submit', fn (Request $request) => Limit::perHour(20)->by($request->ip()));
     }
 }

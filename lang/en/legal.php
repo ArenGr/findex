@@ -9,11 +9,15 @@ return [
         'sections' => [
             [
                 'title' => 'What Findex is',
-                'body' => "Findex is an independent comparison service for bank cards, currency rates, loans and insurance in Armenia. We are not a bank, lender or insurer, and using Findex does not create a financial relationship between you and Findex.",
+                'body' => "Findex is an independent comparison service for bank cards, currency rates, loans, insurance and travel packages in Armenia. We are not a bank, lender, insurer or travel agency, and using Findex does not create a financial relationship between you and Findex.",
             ],
             [
                 'title' => 'Accuracy of information',
                 'body' => "Rates, fees and offers shown on Findex are collected from banks and other institutions and may change without notice. Always confirm the final terms on the institution's own website or branch before making a decision.",
+            ],
+            [
+                'title' => 'Travel quote requests',
+                'body' => "When you request travel quotes, Findex forwards your trip details to independent partner travel agencies, who reply with their own offers. Findex is not a party to any resulting communication, booking or payment - that happens directly between you and the agency. We don't vet, guarantee, or take responsibility for an agency's pricing, availability or service; always verify an agency's legitimacy before paying a deposit or booking.",
             ],
             [
                 'title' => 'Accounts and reviews',

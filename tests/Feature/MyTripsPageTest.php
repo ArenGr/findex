@@ -7,6 +7,7 @@ use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -81,12 +82,16 @@ class MyTripsPageTest extends TestCase
         QuoteResponse::create([
             'quote_request_id' => $quoteRequest->id,
             'organization_id' => $partnerA->id,
+            'response_token' => Str::random(40),
+            'status' => QuoteResponse::STATUS_RESPONDED,
             'reply_text' => 'Our offer...',
             'responded_at' => now(),
         ]);
         QuoteResponse::create([
             'quote_request_id' => $quoteRequest->id,
             'organization_id' => $partnerB->id,
+            'response_token' => Str::random(40),
+            'status' => QuoteResponse::STATUS_PENDING,
         ]);
 
         $response = $this->actingAs($user)->get(route('tourism.mine', ['locale' => 'en']));

@@ -19,9 +19,8 @@
     {{-- Hero --}}
     <section class="border-b border-placeholder bg-primary/5">
         <div class="mx-auto max-w-3xl px-6 py-16 text-center lg:px-10">
-            <span class="relative inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
+            <span class="inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
                 {{ __('tourism.request.badge') }}
-                <span class="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-slide-green/20"></span>
             </span>
 
             <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink sm:text-4xl">{{ __('tourism.request.heading') }}</h1>

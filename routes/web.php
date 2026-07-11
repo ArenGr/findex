@@ -14,6 +14,7 @@ use App\Http\Controllers\Organization\ReportRequestController;
 use App\Http\Controllers\Organization\ReviewReplyController;
 use App\Http\Controllers\Organization\TourismController as OrganizationTourismController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PartnerResponseController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\RateAlertController;
 use App\Http\Controllers\RateController;
@@ -50,6 +51,30 @@ Route::prefix('{locale}')
         Route::get('/about', function () {
             return view('about');
         })->name('about');
+
+        Route::get('/team', function () {
+            return view('team');
+        })->name('team');
+
+        Route::get('/careers', function () {
+            return view('careers');
+        })->name('careers');
+
+        Route::get('/news', function () {
+            return view('company-news');
+        })->name('company.news');
+
+        Route::get('/help', function () {
+            return view('help');
+        })->name('help');
+
+        Route::get('/faq', function () {
+            return view('faq');
+        })->name('faq');
+
+        Route::get('/contact', function () {
+            return view('contact');
+        })->name('contact');
 
         Route::get('/terms', function () {
             return view('legal.terms');
@@ -100,6 +125,15 @@ Route::prefix('{locale}')
         // this can't be used to check which emails have filed a request.
         Route::middleware(['banned', 'throttle:quote_link_resend'])->group(function () {
             Route::post('/tourism/resend', [QuoteRequestController::class, 'resend'])->name('tourism.resend.send');
+        });
+
+        // The secure, no-login page a partner lands on from the Telegram
+        // notification - registered before the {quoteRequest} wildcard below
+        // for the same reason as "mine" and "resend" above.
+        Route::get('/tourism/respond/{token}', [PartnerResponseController::class, 'show'])->name('tourism.respond');
+
+        Route::middleware('throttle:quote_response_submit')->group(function () {
+            Route::post('/tourism/respond/{token}', [PartnerResponseController::class, 'store'])->name('tourism.respond.store');
         });
 
         Route::get('/tourism/{quoteRequest}', [QuoteRequestController::class, 'show'])->name('tourism.show');

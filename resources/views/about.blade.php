@@ -22,6 +22,7 @@
             ['label' => __('about.hero.pillars.rates'), 'color' => 'slide-blue'],
             ['label' => __('about.hero.pillars.mortgages'), 'color' => 'slide-yellow'],
             ['label' => __('about.hero.pillars.insurance'), 'color' => 'slide-pink'],
+            ['label' => __('about.hero.pillars.travel'), 'color' => 'accent-blue'],
         ];
     @endphp
 
@@ -29,9 +30,8 @@
     <section class="overflow-hidden border-b border-placeholder bg-primary/5">
         <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:px-10">
             <div>
-                <span class="relative inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
+                <span class="inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
                     {{ __('about.hero.title') }}
-                    <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 bg-slide-green/20"></span>
                 </span>
 
                 <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink sm:text-4xl">{{ __('about.hero.title') }}</h1>

@@ -68,7 +68,7 @@
         @forelse ($quoteResponses as $response)
             @php $request = $response->quoteRequest; @endphp
             <div class="py-4 text-sm">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between gap-4">
                     <span class="font-medium text-ink">
                         {{ __('tourism.results.trip_summary', [
                             'destination' => __('destinations.' . $request->destination_country),
@@ -78,17 +78,42 @@
                             'children' => $request->children,
                         ]) }}
                     </span>
+
                     @if ($response->has_replied)
-                        <span class="text-primary">{{ __('tourism.results.replied_label', ['time' => $response->responded_at->diffForHumans()]) }}</span>
+                        <span class="shrink-0 text-primary">{{ __('tourism.results.replied_label', ['time' => $response->responded_at->diffForHumans()]) }}</span>
+                    @elseif ($response->is_declined)
+                        <span class="shrink-0 text-subtle">{{ __('tourism.dashboard.declined_label') }}</span>
                     @else
-                        <span class="text-subtle">{{ __('tourism.results.waiting_label') }}</span>
+                        <span class="shrink-0 text-subtle">{{ __('tourism.results.waiting_label') }}</span>
                     @endif
                 </div>
+
                 @if ($request->hotel_name)
                     <p class="mt-1 text-xs text-muted">{{ $request->hotel_name }}</p>
                 @endif
-                @if ($response->reply_text)
-                    <p class="mt-2 border border-placeholder bg-placeholder/20 px-3 py-2 text-xs text-ink">{{ $response->reply_text }}</p>
+
+                @if ($response->has_replied)
+                    @if ($response->price_amount)
+                        <p class="mt-2 font-heading text-lg font-bold text-primary">
+                            {{ rtrim(rtrim((string) $response->price_amount, '0'), '.') }} {{ $response->price_currency }}
+                        </p>
+                    @endif
+                    @if ($response->offered_hotel_name)
+                        <p class="mt-1 text-xs text-ink"><span class="text-subtle">{{ __('tourism.dashboard.hotel_label') }}:</span> {{ $response->offered_hotel_name }}</p>
+                    @endif
+                    @if ($response->flight_details)
+                        <p class="mt-1 text-xs text-ink"><span class="text-subtle">{{ __('tourism.dashboard.flight_label') }}:</span> {{ $response->flight_details }}</p>
+                    @endif
+                    @if ($response->inclusions)
+                        <p class="mt-1 text-xs text-ink"><span class="text-subtle">{{ __('tourism.dashboard.inclusions_label') }}:</span> {{ $response->inclusions }}</p>
+                    @endif
+                    @if ($response->reply_text)
+                        <p class="mt-2 border border-placeholder bg-placeholder/20 px-3 py-2 text-xs text-ink">{{ $response->reply_text }}</p>
+                    @endif
+                @elseif (!$response->is_declined)
+                    <a href="{{ $response->secureRespondUrl() }}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs font-medium text-primary hover:underline">
+                        {{ __('tourism.dashboard.open_response_link') }} &rarr;
+                    </a>
                 @endif
             </div>
         @empty
