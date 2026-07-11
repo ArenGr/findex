@@ -33,12 +33,6 @@ class CheckRateAlerts extends Command
             $matchingRate = $this->findMatchingRate($alert);
             $isMet = $matchingRate !== null;
 
-            // Edge-triggered: only notify on the false -> true transition, so
-            // a rate that stays past the threshold doesn't renotify every
-            // run. is_currently_met only advances to true once notify()
-            // actually succeeds - if delivery fails (e.g. Telegram rejects
-            // the message), it's left false so the next run retries instead
-            // of the failure being silently treated as "delivered".
             if ($isMet && !$alert->is_currently_met) {
                 try {
                     $this->notify($telegram, $alert, $matchingRate);

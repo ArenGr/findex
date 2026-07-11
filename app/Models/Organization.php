@@ -163,6 +163,14 @@ class Organization extends Authenticatable
     }
 
     /**
+     * Auto insurance quotes this organization (type: insurance) has provided.
+     */
+    public function autoInsuranceQuotes(): HasMany
+    {
+        return $this->hasMany(AutoInsuranceQuote::class);
+    }
+
+    /**
      * Scope a query to only include active organizations.
      *
      * @param Builder $query

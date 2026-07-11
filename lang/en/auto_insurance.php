@@ -1,0 +1,67 @@
+<?php
+
+return [
+    'nav_label' => 'Auto Insurance',
+
+    'request' => [
+        'heading' => 'Compare Auto Insurance Quotes',
+        'subheading' => "Enter your vehicle's plate number once, and we'll fetch live quotes from our partner insurers - compare them side by side in seconds.",
+        'badge' => 'Partner Insurers',
+        'step_1_title' => 'Tell us once',
+        'step_1_body' => 'Your plate number, owner ID, and the contract term you want.',
+        'step_2_title' => 'We ask insurers',
+        'step_2_body' => "Every partner insurer is asked for a quote through their API - no waiting for a callback.",
+        'step_3_title' => 'You compare instantly',
+        'step_3_body' => 'Quotes land on one page the moment you submit.',
+        'section_vehicle' => 'Vehicle & owner',
+        'section_details' => 'Your details',
+        'vehicle_plate' => 'Vehicle plate number',
+        'vehicle_plate_placeholder' => 'e.g. 01AA123',
+        'owner_type' => 'Owner type',
+        'owner_types' => [
+            'individual' => 'Individual',
+            'legal_entity' => 'Legal entity',
+        ],
+        'owner_id_number_individual' => "Owner's passport / ID / PSC number",
+        'owner_id_number_legal_entity' => 'TIN (Tax Payer Identification Number)',
+        'contract_term' => 'Contract term',
+        'contract_terms' => [
+            3 => '3 months',
+            6 => '6 months',
+            12 => '12 months',
+        ],
+        'consent' => "I agree that these vehicle details will be shared with Findex's partner insurers so they can prepare a quote.",
+        'submit' => 'Get quotes',
+    ],
+
+    'results' => [
+        'heading' => 'Your Auto Insurance Quotes',
+        'submitted' => 'Done! :count partner insurers responded - compare their quotes below.',
+        'vehicle_summary' => 'Plate :plate · :term',
+        'best_price_badge' => 'Best price',
+        'premium_label' => 'Premium',
+        'term_label' => 'Policy term',
+        'term_months' => ':months months',
+        'coverage_summary_label' => "What's covered",
+        'notes_label' => 'Notes',
+        'declined_label' => 'Not available',
+        'declined_hint' => "This insurer isn't able to cover this vehicle.",
+        'no_quotes_yet' => "We don't have a partner insurer set up yet - check back soon.",
+        'compare_hint' => 'Got more than one quote? Select a few to line them up side by side.',
+        'add_to_compare' => 'Select to compare',
+        'compare_bar_button' => 'Compare',
+        'compare_bar_clear' => 'Clear',
+        'quotes_selected' => 'quotes selected',
+        'compare_max_reached' => 'You can compare up to 3 quotes at a time.',
+        'compare_heading' => 'Side by Side',
+        'compare_row_premium' => 'Premium',
+        'compare_row_coverage' => "What's covered",
+        'compare_row_notes' => 'Notes',
+        'bookmark_hint' => 'Bookmark this page to come back to your quotes any time.',
+    ],
+
+    'provider' => [
+        'coverage_summary' => 'Compulsory third-party liability - covers damage and injury you cause to other people or their property.',
+        'quote_notes' => 'Includes 24/7 roadside assistance. Final price may vary after a vehicle inspection.',
+    ],
+];

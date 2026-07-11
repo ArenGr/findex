@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Telegram\PartnerReplyHandler;
 use App\Services\Telegram\RatesBotHandler;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Console\Command;
@@ -30,7 +31,7 @@ class TelegramPoll extends Command
      * fail with a "can't use getUpdates" error from the API until it's
      * removed (`telegram:webhook unset`).
      */
-    public function handle(TelegramClient $telegram, RatesBotHandler $handler): int
+    public function handle(TelegramClient $telegram, PartnerReplyHandler $partnerHandler, RatesBotHandler $ratesHandler): int
     {
         if (!config('services.telegram.bot_token')) {
             $this->error('TELEGRAM_BOT_TOKEN is not set in .env.');
@@ -49,7 +50,13 @@ class TelegramPoll extends Command
                 $offset = $update['update_id'] + 1;
 
                 try {
-                    $handler->handleUpdate($update);
+                    // Tourism partner connect links and quote-request replies
+                    // take priority; anything left over falls through to the
+                    // general currency-rate assistant - mirrors
+                    // TelegramWebhookController's routing.
+                    if (!$partnerHandler->handleUpdate($update)) {
+                        $ratesHandler->handleUpdate($update);
+                    }
                 } catch (\Throwable $e) {
                     $this->error("Error handling update {$update['update_id']}: {$e->getMessage()}");
                 }

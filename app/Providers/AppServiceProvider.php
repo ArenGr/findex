@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Insurance\InsuranceQuoteProviderInterface;
+use App\Services\Insurance\MockInsuranceProvider;
 use App\Services\Notifications\PartnerNotifierInterface;
 use App\Services\Notifications\TelegramPartnerNotifier;
 use App\Services\Report\LlmReportAnalyzer;
@@ -29,6 +31,13 @@ class AppServiceProvider extends ServiceProvider
         // touching SendQuoteRequestToPartnersJob, which only knows about
         // the interface.
         $this->app->bind(PartnerNotifierInterface::class, TelegramPartnerNotifier::class);
+
+        // Real per-partner insurance APIs don't exist yet - MockInsuranceProvider
+        // stands in so the request/results flow can be demoed end to end.
+        // Swapping in a real integration (likely a per-partner adapter, the
+        // same pattern RateParserFactory already uses) only touches this
+        // binding, not AutoInsuranceQuoteService or the controller.
+        $this->app->bind(InsuranceQuoteProviderInterface::class, MockInsuranceProvider::class);
     }
 
     /**

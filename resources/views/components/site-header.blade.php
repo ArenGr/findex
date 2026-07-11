@@ -11,7 +11,7 @@
         'insurance' => [
             'label' => __('nav.insurance.label'),
             'items' => [
-                ['label' => __('nav.insurance.items.auto'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.insurance.items.auto'), 'href' => route('insurance.auto.request')],
                 ['label' => __('nav.insurance.items.life'), 'href' => '#', 'soon' => true],
                 ['label' => __('nav.insurance.items.medical'), 'href' => '#', 'soon' => true],
             ],

@@ -9,6 +9,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -39,6 +40,14 @@ class OrganizationsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('type')
+                    ->options([
+                        'bank' => 'Bank',
+                        'exchange' => 'Currency Exchange',
+                        'insurance' => 'Insurance',
+                        'tourism' => 'Tourism Agency',
+                        'other' => 'Other',
+                    ]),
                 TernaryFilter::make('is_active')
                     ->label('Approved'),
             ])

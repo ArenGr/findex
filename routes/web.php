@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AutoInsuranceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -142,6 +143,16 @@ Route::prefix('{locale}')
         // fans out to every matching partner, so this also protects partners.
         Route::middleware(['banned', 'throttle:quote_requests'])->group(function () {
             Route::post('/tourism', [QuoteRequestController::class, 'store'])->name('tourism.request.store');
+        });
+
+        Route::get('/insurance/auto', [AutoInsuranceController::class, 'create'])->name('insurance.auto.request');
+
+        Route::get('/insurance/auto/{autoInsuranceRequest}', [AutoInsuranceController::class, 'show'])->name('insurance.auto.show');
+
+        // Same abuse guard as the tourism request above - each submission
+        // fans out to every matching insurance partner.
+        Route::middleware(['banned', 'throttle:quote_requests'])->group(function () {
+            Route::post('/insurance/auto', [AutoInsuranceController::class, 'store'])->name('insurance.auto.request.store');
         });
 
         Route::middleware(['auth', 'banned'])->group(function () {
