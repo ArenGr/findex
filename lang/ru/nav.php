@@ -9,17 +9,38 @@ return [
     'soon_badge' => 'Скоро',
     'get_updates' => 'Получать Обновления',
 
-    'banks' => [
-        'label' => 'Банки',
-        'browse_all' => 'Все Банки',
+    'finance' => [
+        'label' => 'Финансы',
+        'items' => [
+            'banks' => 'Банки',
+            'loans' => 'Кредиты',
+            'deposits' => 'Депозиты',
+            'credit_cards' => 'Кредитные Карты',
+            'investments' => 'Инвестиции',
+            'money_transfers' => 'Денежные Переводы',
+        ],
     ],
 
     'insurance' => [
         'label' => 'Страхование',
         'items' => [
-            'auto' => 'Автострахование',
-            'life' => 'Страхование жизни',
-            'medical' => 'Медицинское страхование',
+            'health' => 'Здоровье',
+            'auto' => 'Авто',
+            'home' => 'Дом',
+            'travel' => 'Путешествие',
+            'life' => 'Жизнь',
+        ],
+    ],
+
+    'travel' => [
+        'label' => 'Путешествия',
+        'items' => [
+            'tours' => 'Туры',
+            'flights' => 'Авиабилеты',
+            'hotels' => 'Отели',
+            'travel_insurance' => 'Страхование Путешествий',
+            'car_rental' => 'Аренда Авто',
+            'esim' => 'eSIM',
         ],
     ],
 ];

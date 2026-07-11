@@ -13,7 +13,7 @@ enum CurrencyCode: string
     case EUR = 'EUR';
     case GBP = 'GBP';
     case CHF = 'CHF';
-    case RUB = 'RUB';
+    case RUB = 'RUR';
     case GEL = 'GEL';
 
     /**

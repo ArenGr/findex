@@ -16,7 +16,7 @@ class CompareController extends Controller
      * small curated set (rather than every currency) so the table stays
      * readable with 2-3 organizations side by side.
      */
-    private const CURRENCIES = ['USD', 'EUR', 'RUB'];
+    private const CURRENCIES = ['USD', 'EUR', 'RUR'];
 
     private const MAX_ORGANIZATIONS = 3;
 

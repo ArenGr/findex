@@ -1,4 +1,8 @@
 @php
+    // One slide per top-level nav category (Finance/Insurance/Travel), each
+    // linking straight to that category's real page - previously slide 3
+    // pointed at a "mortgages" tab and slide 4 at a non-existent "insurance"
+    // tab with stale "coming soon" copy, from before auto insurance shipped.
     $slides = [
         [
             'badge' => 'bg-slide-green/20 text-ink',
@@ -14,15 +18,7 @@
             'dot' => 'bg-slide-blue',
             'blob' => 'bg-slide-blue/40',
             'photo' => 'slide-2.jpg',
-            'href' => route('home') . '#rates',
-        ],
-        [
-            'badge' => 'bg-slide-yellow text-ink',
-            'button' => 'bg-slide-yellow text-ink hover:opacity-90',
-            'dot' => 'bg-slide-yellow',
-            'blob' => 'bg-slide-yellow/40',
-            'photo' => 'slide-3.jpg',
-            'href' => route('home') . '?tab=mortgages#offers',
+            'href' => route('rates.index'),
         ],
         [
             'badge' => 'bg-slide-pink text-ink',
@@ -30,7 +26,7 @@
             'dot' => 'bg-slide-pink',
             'blob' => 'bg-slide-pink/40',
             'photo' => 'slide-4.jpg',
-            'href' => route('home') . '?tab=insurance#offers',
+            'href' => route('insurance.auto.request'),
         ],
         [
             'badge' => 'bg-slide-purple text-ink',
@@ -38,7 +34,7 @@
             'dot' => 'bg-slide-purple',
             'blob' => 'bg-slide-purple/40',
             'photo' => 'slide-5.jpg',
-            'href' => route('home') . '#rates',
+            'href' => route('tourism.request'),
         ],
     ];
 @endphp

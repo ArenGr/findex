@@ -1,19 +1,37 @@
 @php
     $dropdowns = [
-        'banks' => [
-            'label' => __('nav.banks.label'),
+        'finance' => [
+            'label' => __('nav.finance.label'),
             'items' => [
                 ['label' => __('nav.rates'), 'href' => route('rates.index')],
-                ['label' => __('nav.banks.browse_all'), 'href' => route('organizations.index')],
                 ['label' => __('nav.compare'), 'href' => route('organizations.compare')],
+                ['label' => __('nav.finance.items.banks'), 'href' => route('organizations.index')],
+                ['label' => __('nav.finance.items.loans'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.finance.items.deposits'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.finance.items.credit_cards'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.finance.items.investments'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.finance.items.money_transfers'), 'href' => '#', 'soon' => true],
             ],
         ],
         'insurance' => [
             'label' => __('nav.insurance.label'),
             'items' => [
+                ['label' => __('nav.insurance.items.health'), 'href' => '#', 'soon' => true],
                 ['label' => __('nav.insurance.items.auto'), 'href' => route('insurance.auto.request')],
+                ['label' => __('nav.insurance.items.home'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.insurance.items.travel'), 'href' => '#', 'soon' => true],
                 ['label' => __('nav.insurance.items.life'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.insurance.items.medical'), 'href' => '#', 'soon' => true],
+            ],
+        ],
+        'travel' => [
+            'label' => __('nav.travel.label'),
+            'items' => [
+                ['label' => __('nav.travel.items.tours'), 'href' => route('tourism.request')],
+                ['label' => __('nav.travel.items.flights'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.travel.items.hotels'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.travel.items.travel_insurance'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.travel.items.car_rental'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.travel.items.esim'), 'href' => '#', 'soon' => true],
             ],
         ],
     ];
@@ -43,7 +61,7 @@
 
         {{-- "Home" is deliberately omitted here - the logo already links there,
              and every label saved keeps this row from wrapping in Armenian/Russian.
-             Rates lives inside the Banks dropdown rather than as its own item. --}}
+             Rates lives inside the Finance dropdown rather than as its own item. --}}
         <nav class="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink lg:flex">
             @foreach ($dropdowns as $key => $dropdown)
                 <div x-data="{ open: false }" class="relative" @click.outside="open = false">
@@ -85,7 +103,6 @@
                 </div>
             @endforeach
 
-            <a href="{{ route('tourism.request') }}" class="whitespace-nowrap hover:text-primary">{{ __('tourism.nav_label') }}</a>
             <a href="{{ route('about') }}" class="whitespace-nowrap hover:text-primary">{{ __('nav.about') }}</a>
         </nav>
 
@@ -255,7 +272,6 @@
                 </div>
             @endforeach
 
-            <a href="{{ route('tourism.request') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('tourism.nav_label') }}</a>
             <a href="{{ route('about') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.about') }}</a>
 
             @if ($joinLinks->isNotEmpty())

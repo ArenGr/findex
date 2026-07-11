@@ -23,7 +23,7 @@ class RateScraper
      * the Russian ruble; we store everything under the current ISO code.
      */
     private const CURRENCY_ALIASES = [
-        'RUR' => 'RUB',
+        'RUR' => 'RUR',
     ];
 
     /**

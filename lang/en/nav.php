@@ -9,17 +9,38 @@ return [
     'soon_badge' => 'Soon',
     'get_updates' => 'Get Updates',
 
-    'banks' => [
-        'label' => 'Banks',
-        'browse_all' => 'Browse All Banks',
+    'finance' => [
+        'label' => 'Finance',
+        'items' => [
+            'banks' => 'Banks',
+            'loans' => 'Loans',
+            'deposits' => 'Deposits',
+            'credit_cards' => 'Credit Cards',
+            'investments' => 'Investments',
+            'money_transfers' => 'Money Transfers',
+        ],
     ],
 
     'insurance' => [
         'label' => 'Insurance',
         'items' => [
-            'auto' => 'Auto Insurance',
-            'life' => 'Life Insurance',
-            'medical' => 'Medical Insurance',
+            'health' => 'Health',
+            'auto' => 'Car',
+            'home' => 'Home',
+            'travel' => 'Travel',
+            'life' => 'Life',
+        ],
+    ],
+
+    'travel' => [
+        'label' => 'Travel',
+        'items' => [
+            'tours' => 'Tours',
+            'flights' => 'Flights',
+            'hotels' => 'Hotels',
+            'travel_insurance' => 'Travel Insurance',
+            'car_rental' => 'Car Rental',
+            'esim' => 'eSIM',
         ],
     ],
 ];

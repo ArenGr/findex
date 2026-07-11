@@ -8,7 +8,7 @@
     // parsers for how each bank's products were mapped to this category.
     $category = 'secondary_market';
 
-    $preferredCurrencyOrder = ['AMD', 'USD', 'EUR', 'GBP', 'CHF', 'RUB', 'GEL'];
+    $preferredCurrencyOrder = ['AMD', 'USD', 'EUR', 'GBP', 'CHF', 'RUR', 'GEL'];
 
     // Precomputed once (instead of per-row) so displaying a rating badge
     // next to each organization doesn't add an N+1 query per row.

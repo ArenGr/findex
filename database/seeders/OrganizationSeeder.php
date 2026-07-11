@@ -21,7 +21,7 @@ class OrganizationSeeder extends Seeder
             ['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€'],
             ['code' => 'GBP', 'name' => 'British Pound', 'symbol' => '£'],
             ['code' => 'CHF', 'name' => 'Swiss Franc', 'symbol' => 'CHF'],
-            ['code' => 'RUB', 'name' => 'Russian Ruble', 'symbol' => '₽'],
+            ['code' => 'RUR', 'name' => 'Russian Ruble', 'symbol' => '₽'],
             ['code' => 'GEL', 'name' => 'Georgian Lari', 'symbol' => '₾'],
         ];
 
