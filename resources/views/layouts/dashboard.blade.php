@@ -14,7 +14,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-white font-sans text-body-text antialiased">
-    @php $organization = auth('organization')->user(); @endphp
+    @php $organization = auth('organization')->user()->organization; @endphp
 
     <header class="border-b border-placeholder">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-5 lg:px-10">
@@ -32,20 +32,20 @@
         </div>
     </header>
 
-    <div class="mx-auto flex max-w-6xl gap-10 px-6 py-10 lg:px-10">
-        <nav class="w-48 shrink-0 space-y-1 text-sm">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 md:flex-row md:gap-10 lg:px-10">
+        <nav class="flex gap-1 overflow-x-auto text-sm md:w-48 md:shrink-0 md:flex-col md:space-y-1 md:overflow-visible">
             @foreach ([
                 'org.dashboard.index' => __('org.nav.overview'),
                 'org.dashboard.profile.edit' => __('org.nav.profile'),
                 'org.dashboard.reviews.index' => __('org.nav.reviews'),
                 'org.dashboard.branches.index' => __('org.nav.branches'),
-                'org.dashboard.rates.index' => __('org.nav.rates'),
+                ...($organization->hasRatesPage() ? ['org.dashboard.rates.index' => __('org.nav.rates')] : []),
                 'org.dashboard.reports.index' => __('org.nav.reports'),
-                ...($organization->type === 'tourism' ? ['org.dashboard.tourism.index' => __('tourism.nav_label')] : []),
+                ...($organization->hasTourismPage() ? ['org.dashboard.tourism.index' => __('tourism.nav_label')] : []),
             ] as $routeName => $label)
                 <a
                     href="{{ route($routeName) }}"
-                    class="block px-3 py-2 {{ request()->routeIs($routeName) || request()->routeIs(str_replace('.index', '.*', $routeName)) ? 'bg-primary/5 font-medium text-primary' : 'text-body-text hover:bg-placeholder/40' }}"
+                    class="block shrink-0 px-3 py-2 whitespace-nowrap md:shrink {{ request()->routeIs($routeName) || request()->routeIs(str_replace('.index', '.*', $routeName)) ? 'bg-primary/5 font-medium text-primary' : 'text-body-text hover:bg-placeholder/40' }}"
                 >
                     {{ $label }}
                 </a>

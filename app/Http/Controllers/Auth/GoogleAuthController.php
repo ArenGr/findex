@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -39,6 +40,18 @@ class GoogleAuthController extends Controller
 
         if (!$user) {
             $user = User::where('email', $googleUser->getEmail())->first();
+
+            // Bail before the "link existing account" branch below rotates
+            // this row's password - since organization/admin accounts now
+            // live in the same users table (see App\Enums\UserRole), an
+            // email collision could otherwise silently break a non-customer
+            // account's password just by someone attempting Google login
+            // with their email, even though the login itself is rejected.
+            if ($user && !$user->isCustomer()) {
+                return redirect()->route('login', ['locale' => $locale])
+                    ->withErrors(['email' => __('auth.failed')]);
+            }
+
             $isNew = !$user;
 
             if (!$user) {
@@ -50,8 +63,12 @@ class GoogleAuthController extends Controller
                     'password' => Str::random(40),
                 ]);
                 // Not mass-assignable (deliberately absent from $fillable,
-                // like banned_at) - set directly instead.
+                // like banned_at) - set directly instead. role is set
+                // explicitly rather than left to the column's DB default
+                // so the in-memory $user->isCustomer() check below (right
+                // after save()) reads correctly without a refresh().
                 $user->email_verified_at = now();
+                $user->role = UserRole::CUSTOMER;
             } else {
                 // An existing password-based account is being linked to
                 // Google for the first time. Google has just authoritatively
@@ -79,6 +96,15 @@ class GoogleAuthController extends Controller
         }
 
         if ($user->isBanned()) {
+            return redirect()->route('login', ['locale' => $locale])
+                ->withErrors(['email' => __('auth.failed')]);
+        }
+
+        // Guards against a customer-facing Google login resolving to an
+        // organization/admin account whose email happens to match - now
+        // that all three roles share one users table, matching by email
+        // alone (the $user lookups above) isn't enough on its own.
+        if (!$user->isCustomer()) {
             return redirect()->route('login', ['locale' => $locale])
                 ->withErrors(['email' => __('auth.failed')]);
         }

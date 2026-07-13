@@ -15,7 +15,7 @@ class TourismController extends Controller
 {
     public function index(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         // A connect link is only useful before the partner has linked their
         // chat - generate one lazily so the dashboard always has a live link
@@ -42,7 +42,7 @@ class TourismController extends Controller
 
     public function refreshConnectLink(): RedirectResponse
     {
-        Auth::guard('organization')->user()->update([
+        Auth::guard('organization')->user()->organization->update([
             'telegram_chat_id' => null,
             'telegram_connect_token' => Str::random(32),
         ]);
@@ -57,7 +57,7 @@ class TourismController extends Controller
             'destinations.*' => ['string', Rule::in(QuoteRequest::DESTINATIONS)],
         ]);
 
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
         $countryCodes = $validated['destinations'] ?? [];
 
         $organization->tourismDestinations()->whereNotIn('country_code', $countryCodes)->delete();

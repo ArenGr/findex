@@ -13,7 +13,7 @@ class ReviewReplyController extends Controller
 {
     public function index(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         $reviews = $organization->reviews()
             ->with(['user', 'branch', 'reply'])
@@ -35,7 +35,7 @@ class ReviewReplyController extends Controller
      */
     public function store(Request $request, string $locale, string $review): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
         $review = $organization->reviews()->findOrFail($review);
 
         $validated = $request->validate([

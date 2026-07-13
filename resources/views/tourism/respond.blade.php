@@ -115,6 +115,7 @@
                     action="{{ route('tourism.respond.store', ['locale' => app()->getLocale(), 'token' => $response->response_token]) }}"
                     enctype="multipart/form-data"
                     class="mt-8 space-y-5 rounded-2xl border border-placeholder p-6 shadow-sm"
+                    novalidate
                 >
                     @csrf
 

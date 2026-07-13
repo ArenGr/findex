@@ -13,7 +13,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('tourism.resend.send') }}" class="mt-8 space-y-5">
+        <form method="POST" action="{{ route('tourism.resend.send') }}" class="mt-8 space-y-5" novalidate>
             @csrf
 
             {{-- Honeypot: hidden from real visitors, a bot filling every field trips it (see QuoteRequestController::resend) --}}

@@ -12,7 +12,7 @@ class BranchController extends Controller
 {
     public function index(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.branches.index', [
             'branches' => $organization->branches()->latest()->get(),
@@ -26,7 +26,7 @@ class BranchController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         $validated = $this->validated($request);
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -45,7 +45,7 @@ class BranchController extends Controller
      */
     public function edit(string $locale, string $branch): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.branches.edit', [
             'branch' => $organization->branches()->findOrFail($branch),
@@ -54,7 +54,7 @@ class BranchController extends Controller
 
     public function update(Request $request, string $locale, string $branch): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
         $branch = $organization->branches()->findOrFail($branch);
 
         $validated = $this->validated($request);
@@ -67,7 +67,7 @@ class BranchController extends Controller
 
     public function destroy(string $locale, string $branch): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
         $organization->branches()->findOrFail($branch)->delete();
 
         return redirect()->route('org.dashboard.branches.index')->with('status', 'branch-deleted');

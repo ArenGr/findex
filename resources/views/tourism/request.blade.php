@@ -41,7 +41,7 @@
     </section>
 
     <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
-        <form method="POST" action="{{ route('tourism.request.store') }}" class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8">
+        <form method="POST" action="{{ route('tourism.request.store') }}" class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8" novalidate>
             @csrf
 
             {{-- Honeypot: hidden from real visitors, a bot filling every field trips it (see QuoteRequestController::store) --}}

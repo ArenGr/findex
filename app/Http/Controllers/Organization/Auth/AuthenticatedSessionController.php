@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Organization\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::guard('organization')->attempt($credentials, $request->boolean('remember'))) {
+        if (!Auth::guard('organization')->attempt([...$credentials, 'role' => UserRole::ORGANIZATION], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

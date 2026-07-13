@@ -3,17 +3,21 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -29,6 +33,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'banned_at' => 'datetime',
+            'role' => UserRole::class,
         ];
     }
 
@@ -45,6 +50,43 @@ class User extends Authenticatable
     public function quoteRequests(): HasMany
     {
         return $this->hasMany(QuoteRequest::class);
+    }
+
+    /**
+     * Only set when role is UserRole::ORGANIZATION - the business profile
+     * this account logs in on behalf of (see Organization::users()).
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === UserRole::CUSTOMER;
+    }
+
+    public function isOrganization(): bool
+    {
+        return $this->role === UserRole::ORGANIZATION;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::ADMIN;
+    }
+
+    /**
+     * Gates the Filament admin panel (see AdminPanelProvider::authGuard('admin'))
+     * - the 'admin', 'organization', and 'web' guards all share this same
+     * users table/provider now, so this is what actually keeps a customer
+     * or organization session out of the panel rather than the guard name
+     * itself. See also EnsureUserRole, which enforces the equivalent for
+     * the non-Filament 'organization' guard routes.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isAdmin();
     }
 
     public function isBanned(): bool

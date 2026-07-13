@@ -2,8 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Admin;
-use App\Models\Organization;
+use App\Models\User;
 use Filament\Notifications\Livewire\DatabaseNotifications;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -15,8 +14,8 @@ class OrganizationRegistrationNotifiesAdminsTest extends TestCase
 
     public function test_admins_are_notified_when_an_organization_registers(): void
     {
-        $adminOne = Admin::create(['name' => 'Admin One', 'email' => 'admin-one@example.com', 'password' => 'password']);
-        $adminTwo = Admin::create(['name' => 'Admin Two', 'email' => 'admin-two@example.com', 'password' => 'password']);
+        $adminOne = User::factory()->admin()->create(['name' => 'Admin One', 'email' => 'admin-one@example.com']);
+        $adminTwo = User::factory()->admin()->create(['name' => 'Admin Two', 'email' => 'admin-two@example.com']);
 
         $response = $this->post('/en/org/register', [
             'name' => 'New Test Bank',
@@ -28,7 +27,11 @@ class OrganizationRegistrationNotifiesAdminsTest extends TestCase
 
         $response->assertRedirect();
 
-        $organization = Organization::where('email', 'new-test-bank@example.com')->first();
+        // Login credentials now live on `users`, not `organizations` - see
+        // RegisteredOrganizationController::store().
+        $organizationUser = User::where('email', 'new-test-bank@example.com')->first();
+        $this->assertNotNull($organizationUser);
+        $organization = $organizationUser->organization;
         $this->assertNotNull($organization);
         $this->assertFalse($organization->is_active);
 
@@ -51,7 +54,7 @@ class OrganizationRegistrationNotifiesAdminsTest extends TestCase
 
     public function test_admin_notification_bell_shows_the_unread_count(): void
     {
-        $admin = Admin::create(['name' => 'Test Admin', 'email' => 'test-admin@example.com', 'password' => 'password']);
+        $admin = User::factory()->admin()->create(['name' => 'Test Admin', 'email' => 'test-admin@example.com']);
         $this->actingAs($admin, 'admin');
 
         \Filament\Notifications\Notification::make()

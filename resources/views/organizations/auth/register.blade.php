@@ -6,7 +6,7 @@
     <section class="mx-auto max-w-md px-6 py-16 lg:py-24">
         <h1 class="font-heading text-2xl font-bold text-ink">{{ __('org.register_title') }}</h1>
 
-        <form method="POST" action="{{ route('org.register') }}" class="mt-8 space-y-5">
+        <form method="POST" action="{{ route('org.register') }}" class="mt-8 space-y-5" novalidate>
             @csrf
 
             <x-form-input name="name" :label="__('org.profile.name')" required autofocus />

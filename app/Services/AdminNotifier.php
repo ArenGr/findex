@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Admin;
+use App\Enums\UserRole;
+use App\Models\User;
 use Filament\Notifications\Notification;
 
 /**
@@ -28,7 +29,7 @@ class AdminNotifier
             ->body("{$organizationName}'s {$sourceType} source responded successfully but no records were parsed - the site's markup may have changed.")
             ->warning()
             ->icon('heroicon-o-exclamation-triangle')
-            ->sendToDatabase(Admin::all());
+            ->sendToDatabase(User::where('role', UserRole::ADMIN)->get());
     }
 
     /**
@@ -41,6 +42,6 @@ class AdminNotifier
             ->body($summary)
             ->danger()
             ->icon('heroicon-o-exclamation-triangle')
-            ->sendToDatabase(Admin::all());
+            ->sendToDatabase(User::where('role', UserRole::ADMIN)->get());
     }
 }

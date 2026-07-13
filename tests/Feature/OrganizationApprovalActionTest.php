@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Organizations\Pages\EditOrganization;
 use App\Filament\Resources\Organizations\Pages\ViewOrganization;
-use App\Models\Admin;
 use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -16,7 +16,7 @@ class OrganizationApprovalActionTest extends TestCase
 
     private function actingAsAdmin(): void
     {
-        $admin = Admin::create(['name' => 'Test Admin', 'email' => 'test-admin@example.com', 'password' => 'password']);
+        $admin = User::factory()->admin()->create(['name' => 'Test Admin', 'email' => 'test-admin@example.com']);
         $this->actingAs($admin, 'admin');
     }
 

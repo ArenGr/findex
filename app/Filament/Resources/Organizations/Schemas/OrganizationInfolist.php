@@ -13,16 +13,22 @@ class OrganizationInfolist
         return $schema
             ->components([
                 TextEntry::make('name'),
-                TextEntry::make('email')
-                    ->label('Email address')
-                    ->placeholder('-'),
                 TextEntry::make('slug'),
                 TextEntry::make('type'),
                 TextEntry::make('website')
                     ->placeholder('-'),
                 TextEntry::make('logo')
                     ->placeholder('-'),
-                TextEntry::make('description')
+                TextEntry::make('description_hy')
+                    ->label('Description (Armenian)')
+                    ->placeholder('-')
+                    ->columnSpanFull(),
+                TextEntry::make('description_en')
+                    ->label('Description (English)')
+                    ->placeholder('-')
+                    ->columnSpanFull(),
+                TextEntry::make('description_ru')
+                    ->label('Description (Russian)')
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('country_code'),

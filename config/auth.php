@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Admin;
-use App\Models\Organization;
 use App\Models\User;
 
 return [
@@ -39,6 +37,19 @@ return [
     |
     */
 
+    // 'web', 'organization', and 'admin' are independently-namespaced
+    // sessions (see AuthGuardIsolationTest and bootstrap/app.php's
+    // redirectGuestsTo/redirectUsersTo) that all authenticate against the
+    // SAME 'users' provider now - a customer, organization, and admin are
+    // just different `role` values on one users table (see
+    // User::ROLES). Keeping 3 guard names rather than collapsing to one
+    // preserves that redirect logic and every existing
+    // auth:organization/guest:organization middleware string unchanged.
+    // What actually keeps a customer out of the 'organization'/'admin'
+    // guards is role-scoped login (see the org/customer
+    // AuthenticatedSessionControllers' Auth::attempt() calls),
+    // User::canAccessPanel() for the Filament-driven 'admin' guard, and
+    // the EnsureUserRole middleware for the 'organization' guard's routes.
     'guards' => [
         'web' => [
             'driver' => 'session',
@@ -47,12 +58,12 @@ return [
 
         'organization' => [
             'driver' => 'session',
-            'provider' => 'organizations',
+            'provider' => 'users',
         ],
 
         'admin' => [
             'driver' => 'session',
-            'provider' => 'admins',
+            'provider' => 'users',
         ],
     ],
 
@@ -83,16 +94,6 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
-
-        'organizations' => [
-            'driver' => 'eloquent',
-            'model' => Organization::class,
-        ],
-
-        'admins' => [
-            'driver' => 'eloquent',
-            'model' => Admin::class,
-        ],
     ],
 
     /*

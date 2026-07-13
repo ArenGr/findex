@@ -183,17 +183,17 @@
                                         x-text="row.initial"
                                     ></div>
 
-                                    <div class="min-w-0 flex-1">
+                                    <div class="min-w-0 flex-1 overflow-hidden">
                                         <a
                                             :href="row.url"
                                             class="block truncate text-sm font-medium text-ink hover:text-primary"
                                             x-text="row.name"
                                         ></a>
-                                        <div x-show="row.reviews_count > 0" class="mt-0.5 flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 fill-accent-yellow">
+                                        <div x-show="row.reviews_count > 0" class="mt-0.5 flex min-w-0 items-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 shrink-0 fill-accent-yellow">
                                                 <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
                                             </svg>
-                                            <span class="text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
+                                            <span class="truncate text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
                                         </div>
                                     </div>
 
@@ -208,7 +208,7 @@
                                     <a
                                         :href="row.alertUrl"
                                         :title="'{{ __('rates.create_alert') }}'"
-                                        class="flex w-28 shrink-0 items-center justify-end gap-1 whitespace-nowrap text-subtle hover:text-primary"
+                                        class="flex w-6 shrink-0 items-center justify-end gap-1 whitespace-nowrap text-subtle hover:text-primary sm:w-28"
                                     >
                                         <span class="hidden text-xs font-medium sm:inline">{{ __('rates.alert_short') }}</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">

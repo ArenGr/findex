@@ -10,7 +10,7 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.index', [
             'organization' => $organization,

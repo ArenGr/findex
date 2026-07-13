@@ -14,17 +14,19 @@ class ProfileController extends Controller
     public function edit(): View
     {
         return view('organizations.dashboard.profile', [
-            'organization' => Auth::guard('organization')->user(),
+            'organization' => Auth::guard('organization')->user()->organization,
         ]);
     }
 
     public function update(Request $request): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:5000'],
+            'description_hy' => ['nullable', 'string', 'max:5000'],
+            'description_en' => ['nullable', 'string', 'max:5000'],
+            'description_ru' => ['nullable', 'string', 'max:5000'],
             'website' => ['nullable', 'url', 'max:255'],
             // Laravel's generic 'image' rule allows SVG, which can carry
             // embedded scripts - a stored-XSS risk if ever served inline

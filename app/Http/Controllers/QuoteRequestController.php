@@ -152,7 +152,14 @@ class QuoteRequestController extends Controller
 
         return ($request->user()
             ? redirect()->route('tourism.show', $quoteRequest)
-            : redirect($resultsUrl))->with('status', 'quote-request-submitted');
+            : redirect($resultsUrl))->with([
+                'status' => 'quote-request-submitted',
+                // The real match count, known synchronously here - unlike
+                // $quoteRequest->responses->count() on the results page,
+                // which depends on the queued SendQuoteRequestToPartnersJob
+                // having actually run by the time that page first loads.
+                'contacted_count' => $partners->count(),
+            ]);
     }
 
     /**

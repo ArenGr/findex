@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\ScrapingJobs\Pages\ListScrapingJobs;
 use App\Jobs\RunAllScrapersJob;
-use App\Models\Admin;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
@@ -18,7 +18,7 @@ class RunAllScrapersActionTest extends TestCase
     {
         Queue::fake();
 
-        $admin = Admin::create(['name' => 'Test Admin', 'email' => 'test-admin@example.com', 'password' => 'password']);
+        $admin = User::factory()->admin()->create(['name' => 'Test Admin', 'email' => 'test-admin@example.com']);
         $this->actingAs($admin, 'admin');
 
         Livewire::test(ListScrapingJobs::class)

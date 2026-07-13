@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Organization\Auth;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Http\Controllers\Controller;
-use App\Models\Admin;
 use App\Models\Organization;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -19,7 +21,7 @@ use Illuminate\View\View;
 
 class RegisteredOrganizationController extends Controller
 {
-    public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'other'];
+    public const TYPES = Organization::TYPES;
 
     public function create(): View
     {
@@ -30,26 +32,41 @@ class RegisteredOrganizationController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:organizations,email'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'type' => ['required', Rule::in(self::TYPES)],
             'website' => ['nullable', 'url', 'max:255'],
         ]);
 
-        $organization = Organization::create([
-            'name' => $validated['name'],
-            'slug' => $this->uniqueSlug($validated['name']),
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'type' => $validated['type'],
-            'website' => $validated['website'] ?? null,
-            'country_code' => 'AM',
-            'is_active' => false,
-        ]);
+        // Organization (business profile) and User (login, role=organization)
+        // must both be created or neither is - see Organization::users() /
+        // User::organization().
+        $user = DB::transaction(function () use ($validated) {
+            $organization = Organization::create([
+                'name' => $validated['name'],
+                'slug' => $this->uniqueSlug($validated['name']),
+                'type' => $validated['type'],
+                'website' => $validated['website'] ?? null,
+                'country_code' => 'AM',
+                'is_active' => false,
+            ]);
 
-        $this->notifyAdminsOfPendingApproval($organization);
+            $user = new User([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+            $user->forceFill([
+                'role' => UserRole::ORGANIZATION,
+                'organization_id' => $organization->id,
+            ])->save();
 
-        Auth::guard('organization')->login($organization);
+            $this->notifyAdminsOfPendingApproval($organization);
+
+            return $user;
+        });
+
+        Auth::guard('organization')->login($user);
 
         $request->session()->regenerate();
 
@@ -78,7 +95,7 @@ class RegisteredOrganizationController extends Controller
                     // from the slug instead, which the resource can't resolve.
                     ->url(OrganizationResource::getUrl('edit', ['record' => $organization->getKey()])),
             ])
-            ->sendToDatabase(Admin::all());
+            ->sendToDatabase(User::where('role', UserRole::ADMIN)->get());
     }
 
     private function uniqueSlug(string $name): string

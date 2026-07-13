@@ -10,6 +10,7 @@ use App\Services\Report\LlmReportAnalyzer;
 use App\Services\Report\ReportAnalyzerInterface;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -45,6 +46,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Unset by default (trusts nothing extra, Laravel's own default).
+        // If deployed behind a reverse proxy, load balancer, or a local
+        // tunnel (cloudflared/ngrok), set TRUSTED_PROXIES to its IP(s)/CIDR
+        // (comma-separated) or '*' to trust the immediate connecting proxy -
+        // otherwise scheme/IP detection misbehaves (HTTPS redirects, mixed
+        // content on generated asset URLs, IP-based rate limiting) since
+        // every request appears to come from the proxy itself.
+        //
+        // This has to live here rather than bootstrap/app.php's
+        // withMiddleware() closure: that closure runs via
+        // afterResolving(HttpKernel::class), which fires before the
+        // kernel's own bootstrap() has loaded .env - env() there is always
+        // null regardless of what's actually set.
+        if ($trustedProxies = env('TRUSTED_PROXIES')) {
+            TrustProxies::at($trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
+        }
+
         // Shared by both the customer and organization login forms (see
         // routes/web.php). Keyed by email+IP, matching Laravel Fortify's
         // default: throttling by IP alone lets an attacker on shared/NAT'd

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Http\Controllers\AutoInsuranceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\RateAlertController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TelegramWebhookController;
+use App\Models\Organization;
 use Illuminate\Support\Facades\Route;
 
 // Redirect the bare domain to the visitor's preferred supported language,
@@ -176,7 +178,11 @@ Route::prefix('{locale}')
             Route::middleware('auth:organization')->group(function () {
                 Route::post('/logout', [OrganizationAuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-                Route::prefix('dashboard')->name('dashboard.')->group(function () {
+                // role:organization,<value> kept off /logout above on
+                // purpose - a wrong-role session on this guard (shouldn't
+                // happen, see EnsureUserRole's docblock) should still be
+                // able to log itself out rather than getting stuck 403'd.
+                Route::middleware('role:organization,'.UserRole::ORGANIZATION->value)->prefix('dashboard')->name('dashboard.')->group(function () {
                     Route::get('/', [OrganizationDashboardController::class, 'index'])->name('index');
 
                     Route::get('/profile', [OrganizationProfileController::class, 'edit'])->name('profile.edit');
@@ -197,15 +203,19 @@ Route::prefix('{locale}')
                     Route::post('/reports', [ReportRequestController::class, 'store'])->name('reports.store');
                     Route::get('/reports/{reportRequest}', [ReportRequestController::class, 'show'])->name('reports.show');
 
-                    Route::get('/rates', [CurrencyRateController::class, 'index'])->name('rates.index');
-                    Route::get('/rates/create', [CurrencyRateController::class, 'create'])->name('rates.create');
-                    Route::post('/rates', [CurrencyRateController::class, 'store'])->name('rates.store');
-                    Route::get('/rates/{rate}/edit', [CurrencyRateController::class, 'edit'])->name('rates.edit');
-                    Route::put('/rates/{rate}', [CurrencyRateController::class, 'update'])->name('rates.update');
+                    Route::middleware('org.type:'.implode(',', Organization::RATES_TYPES))->group(function () {
+                        Route::get('/rates', [CurrencyRateController::class, 'index'])->name('rates.index');
+                        Route::get('/rates/create', [CurrencyRateController::class, 'create'])->name('rates.create');
+                        Route::post('/rates', [CurrencyRateController::class, 'store'])->name('rates.store');
+                        Route::get('/rates/{rate}/edit', [CurrencyRateController::class, 'edit'])->name('rates.edit');
+                        Route::put('/rates/{rate}', [CurrencyRateController::class, 'update'])->name('rates.update');
+                    });
 
-                    Route::get('/tourism', [OrganizationTourismController::class, 'index'])->name('tourism.index');
-                    Route::post('/tourism/refresh-connect-link', [OrganizationTourismController::class, 'refreshConnectLink'])->name('tourism.refresh-connect-link');
-                    Route::put('/tourism/destinations', [OrganizationTourismController::class, 'updateDestinations'])->name('tourism.destinations.update');
+                    Route::middleware('org.type:'.implode(',', Organization::TOURISM_TYPES))->group(function () {
+                        Route::get('/tourism', [OrganizationTourismController::class, 'index'])->name('tourism.index');
+                        Route::post('/tourism/refresh-connect-link', [OrganizationTourismController::class, 'refreshConnectLink'])->name('tourism.refresh-connect-link');
+                        Route::put('/tourism/destinations', [OrganizationTourismController::class, 'updateDestinations'])->name('tourism.destinations.update');
+                    });
                 });
             });
         });

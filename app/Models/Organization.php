@@ -4,13 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Organization extends Authenticatable
+class Organization extends Model
 {
     use SoftDeletes;
+
+    public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'other'];
+
+    /**
+     * Types that deal in currency rates - the only ones with a reason to see
+     * the dashboard's Rates page (see hasRatesPage()).
+     */
+    public const RATES_TYPES = ['bank', 'exchange'];
+
+    /**
+     * Types that fulfil travel quote requests - the only ones with a reason
+     * to see the dashboard's Tourism page (see hasTourismPage()).
+     */
+    public const TOURISM_TYPES = ['tourism'];
 
     protected $fillable = [
         'name',
@@ -18,18 +32,13 @@ class Organization extends Authenticatable
         'type',
         'website',
         'logo',
-        'description',
+        'description_hy',
+        'description_en',
+        'description_ru',
         'country_code',
         'is_active',
-        'email',
-        'password',
         'telegram_chat_id',
         'telegram_connect_token',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
     ];
 
     protected $casts = [
@@ -37,7 +46,6 @@ class Organization extends Authenticatable
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
-        'password' => 'hashed',
     ];
 
     public function getRouteKeyName(): string
@@ -171,6 +179,17 @@ class Organization extends Authenticatable
     }
 
     /**
+     * Staff accounts that can log in on this organization's behalf (guard
+     * 'organization', role 'organization') - see User::organization().
+     * A HasMany rather than a single owner so multiple staff logins per
+     * org can be supported later without another schema change.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
      * Scope a query to only include active organizations.
      *
      * @param Builder $query
@@ -180,5 +199,44 @@ class Organization extends Authenticatable
     protected function active(Builder $query): Builder
     {
         return $query->where('is_active', 1);
+    }
+
+    public function hasRatesPage(): bool
+    {
+        return in_array($this->type, self::RATES_TYPES, true);
+    }
+
+    public function hasTourismPage(): bool
+    {
+        return in_array($this->type, self::TOURISM_TYPES, true);
+    }
+
+    /**
+     * The description in the current visitor's locale, falling back
+     * through the site's default locale and then any other language the
+     * org wrote one in - orgs serve customers across all of
+     * config('localization.available') but often only write a
+     * description in one language, and showing nothing is worse than
+     * showing it in the wrong one. Named to match the dropped
+     * `description` column so every existing read site (e.g.
+     * organizations/show.blade.php) keeps working unchanged; the
+     * dashboard profile edit form reads/writes description_hy/en/ru
+     * directly instead, since it needs all of them at once.
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        $locales = array_unique([
+            app()->getLocale(),
+            config('localization.default'),
+            ...array_keys(config('localization.available')),
+        ]);
+
+        foreach ($locales as $locale) {
+            if (!empty($this->attributes["description_{$locale}"] ?? null)) {
+                return $this->attributes["description_{$locale}"];
+            }
+        }
+
+        return null;
     }
 }

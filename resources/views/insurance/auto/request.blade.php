@@ -46,6 +46,7 @@
             action="{{ route('insurance.auto.request.store') }}"
             class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8"
             x-data="{ ownerType: '{{ old('owner_type', 'individual') }}', idLabels: @js($ownerIdLabels) }"
+            novalidate
         >
             @csrf
 

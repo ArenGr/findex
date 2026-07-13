@@ -17,7 +17,7 @@ class CurrencyRateController extends Controller
 {
     public function index(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.rates.index', [
             'rates' => $organization->currencyRates()->with('currency')->get(),
@@ -34,7 +34,7 @@ class CurrencyRateController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         $validated = $this->validated($request);
 
@@ -66,7 +66,7 @@ class CurrencyRateController extends Controller
      */
     public function edit(string $locale, string $rate): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.rates.edit', [
             'rate' => $organization->currencyRates()->with('currency')->findOrFail($rate),
@@ -75,7 +75,7 @@ class CurrencyRateController extends Controller
 
     public function update(Request $request, string $locale, string $rate): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
         $rate = $organization->currencyRates()->findOrFail($rate);
 
         $validated = $request->validate([

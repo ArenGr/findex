@@ -5,7 +5,7 @@
 @section('content')
     <h1 class="font-heading text-xl font-semibold text-ink">{{ __('org.branches.add') }}</h1>
 
-    <form method="POST" action="{{ route('org.dashboard.branches.store') }}" class="mt-6 max-w-xl space-y-5">
+    <form method="POST" action="{{ route('org.dashboard.branches.store') }}" class="mt-6 max-w-xl space-y-5" novalidate>
         @csrf
 
         <x-branch-form />

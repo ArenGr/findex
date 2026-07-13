@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\Admins\AdminResource;
-use App\Models\Admin;
 use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
@@ -25,10 +24,9 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_admin_can_access_panel_pages(): void
     {
-        $admin = Admin::create([
+        $admin = User::factory()->admin()->create([
             'name' => 'Test Admin',
             'email' => 'test-admin@example.com',
-            'password' => 'password',
         ]);
 
         $this->actingAs($admin, 'admin');
@@ -135,19 +133,17 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_admin_cannot_delete_self_or_the_last_remaining_admin(): void
     {
-        $admin = Admin::create([
+        $admin = User::factory()->admin()->create([
             'name' => 'Sole Admin',
             'email' => 'sole-admin@example.com',
-            'password' => 'password',
         ]);
 
         $this->assertFalse(AdminResource::canDelete($admin));
 
         $this->actingAs($admin, 'admin');
-        $second = Admin::create([
+        $second = User::factory()->admin()->create([
             'name' => 'Second Admin',
             'email' => 'second-admin@example.com',
-            'password' => 'password',
         ]);
 
         // With two admins, the acting admin still can't delete themselves,

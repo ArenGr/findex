@@ -9,7 +9,7 @@
         {{ $rate->currency->code }} · {{ __('organizations.rate_types.' . $rate->rate_type->value) }}
     </p>
 
-    <form method="POST" action="{{ route('org.dashboard.rates.update', $rate) }}" class="mt-6 max-w-xl space-y-5">
+    <form method="POST" action="{{ route('org.dashboard.rates.update', $rate) }}" class="mt-6 max-w-xl space-y-5" novalidate>
         @csrf
         @method('PUT')
 

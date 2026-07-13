@@ -15,7 +15,7 @@ class ReportRequestController extends Controller
 {
     public function index(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.reports.index', [
             'reportRequests' => $organization->reportRequests()->with(['report', 'branch'])->latest()->paginate(15),
@@ -24,7 +24,7 @@ class ReportRequestController extends Controller
 
     public function create(): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         return view('organizations.dashboard.reports.create', [
             'branches' => $organization->branches()->active()->get(),
@@ -33,7 +33,7 @@ class ReportRequestController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         $validated = $request->validate([
             'branch_id' => [
@@ -64,7 +64,7 @@ class ReportRequestController extends Controller
      */
     public function show(string $locale, string $reportRequest): View
     {
-        $organization = Auth::guard('organization')->user();
+        $organization = Auth::guard('organization')->user()->organization;
 
         /** @var ReportRequest $reportRequest */
         $reportRequest = $organization->reportRequests()->with(['report', 'branch'])->findOrFail($reportRequest);

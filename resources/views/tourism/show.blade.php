@@ -47,7 +47,14 @@
     <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10" x-data="{ selected: [], comparable: @js($comparableData) }">
         @if (session('status') === 'quote-request-submitted')
             <div class="mb-8 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
-                {{ __('tourism.results.submitted', ['count' => $quoteRequest->responses->count()]) }}
+                {{-- session('contacted_count') is the real, synchronously-known
+                     partner match count from the controller - $quoteRequest->responses
+                     only exist once SendQuoteRequestToPartnersJob (queued) has
+                     actually run, which can lag behind this very first page
+                     load by up to a minute (see bootstrap/app.php's scheduled
+                     queue:work) - falling back to responses count covers the
+                     rare case this flash value isn't set. --}}
+                {{ __('tourism.results.submitted', ['count' => session('contacted_count', $quoteRequest->responses->count())]) }}
             </div>
         @endif
 

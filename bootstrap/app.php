@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureOrganizationType;
 use App\Http\Middleware\EnsureUserIsNotBanned;
+use App\Http\Middleware\EnsureUserRole;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -60,19 +62,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'setlocale' => SetLocale::class,
             'banned' => EnsureUserIsNotBanned::class,
+            'org.type' => EnsureOrganizationType::class,
+            'role' => EnsureUserRole::class,
         ]);
 
-        // Unset by default (trusts nothing extra, Laravel's own default).
-        // If deployed behind a reverse proxy or load balancer, set
-        // TRUSTED_PROXIES to its IP(s)/CIDR (comma-separated) or '*' for a
-        // trusted internal LB - otherwise scheme/IP detection misbehaves
-        // (HTTPS redirects, IP-based checks) since every request appears to
-        // come from the proxy itself.
-        if ($trustedProxies = env('TRUSTED_PROXIES')) {
-            $middleware->trustProxies(
-                at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)),
-            );
-        }
+        // TRUSTED_PROXIES is configured from AppServiceProvider::boot() instead
+        // of here - this closure runs (via afterResolving(HttpKernel::class))
+        // before the kernel's own bootstrap() has loaded .env, so env() here
+        // is always null regardless of what's actually set.
 
         // Telegram's webhook POST is not a browser request and carries no
         // CSRF token - it's authenticated by its own secret-token header

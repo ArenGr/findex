@@ -17,9 +17,6 @@ class OrganizationForm
             ->components([
                 TextInput::make('name')
                     ->required(),
-                TextInput::make('email')
-                    ->label('Email address')
-                    ->email(),
                 TextInput::make('slug')
                     ->required(),
                 Select::make('type')
@@ -37,7 +34,18 @@ class OrganizationForm
                     ->image()
                     ->disk('public')
                     ->directory('organizations/logos'),
-                Textarea::make('description')
+                // One description per site language (see
+                // config('localization.available')) - Organization
+                // no longer has a single 'description' column, see
+                // 2026_07_14_000001_add_localized_description_to_organizations_table.
+                Textarea::make('description_hy')
+                    ->label('Description (Armenian)')
+                    ->columnSpanFull(),
+                Textarea::make('description_en')
+                    ->label('Description (English)')
+                    ->columnSpanFull(),
+                Textarea::make('description_ru')
+                    ->label('Description (Russian)')
                     ->columnSpanFull(),
                 TextInput::make('country_code')
                     ->required()
