@@ -174,6 +174,41 @@ class PartnerResponseControllerTest extends TestCase
         $this->assertFalse($suggestion->is_claimed);
     }
 
+    public function test_submitting_contact_info_stores_it_on_the_response(): void
+    {
+        $response = $this->pendingResponse();
+
+        $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
+            'contact_phone' => '+374 99 123456',
+            'contact_whatsapp' => '+374991234567',
+            'contact_telegram' => '@my_agency',
+            'contact_instagram' => 'my_agency',
+            'suggestions' => [
+                ['price_amount' => '400', 'price_currency' => 'USD'],
+            ],
+        ])->assertRedirect();
+
+        $response->refresh();
+        $this->assertSame('+374 99 123456', $response->contact_phone);
+        $this->assertSame('+374991234567', $response->contact_whatsapp);
+        $this->assertSame('@my_agency', $response->contact_telegram);
+        $this->assertSame('my_agency', $response->contact_instagram);
+        $this->assertTrue($response->has_contact_info);
+    }
+
+    public function test_contact_info_is_entirely_optional(): void
+    {
+        $response = $this->pendingResponse();
+
+        $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
+            'suggestions' => [
+                ['price_amount' => '400', 'price_currency' => 'USD'],
+            ],
+        ])->assertRedirect();
+
+        $this->assertFalse($response->fresh()->has_contact_info);
+    }
+
     public function test_submitting_multiple_suggestions_stores_all_of_them(): void
     {
         $response = $this->pendingResponse();

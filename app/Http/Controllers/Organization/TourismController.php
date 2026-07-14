@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\NotifyDestinationAlertsJob;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
-use App\Models\QuoteResponse;
-use App\Models\QuoteSuggestion;
-use App\Services\CurrencyConverter;
+use App\Services\TourismPriceData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -26,7 +24,7 @@ class TourismController extends Controller
      */
     private const BENCHMARK_MIN_MARKET_ORGS = 2;
 
-    public function index(CurrencyConverter $currencyConverter): View
+    public function index(TourismPriceData $priceData): View
     {
         $organization = Auth::guard('organization')->user()->organization;
 
@@ -51,7 +49,7 @@ class TourismController extends Controller
             'servedCountryCodes' => $servedDestinations->pluck('country_code')->all(),
             'servedDestinations' => $servedDestinations,
             'quoteResponses' => $quoteResponses,
-            'benchmark' => $this->priceBenchmark($organization, $servedDestinations->pluck('country_code')->all(), $currencyConverter),
+            'benchmark' => $this->priceBenchmark($organization, $servedDestinations->pluck('country_code')->all(), $priceData),
         ]);
     }
 
@@ -64,30 +62,13 @@ class TourismController extends Controller
      * (converted at today's rate - approximate by nature, matching
      * CurrencyConverter's own doc comment).
      */
-    private function priceBenchmark(Organization $organization, array $countryCodes, CurrencyConverter $currencyConverter): Collection
+    private function priceBenchmark(Organization $organization, array $countryCodes, TourismPriceData $priceData): Collection
     {
         if (empty($countryCodes)) {
             return collect();
         }
 
-        $rows = QuoteSuggestion::query()
-            ->join('quote_responses', 'quote_responses.id', '=', 'quote_suggestions.quote_response_id')
-            ->join('quote_requests', 'quote_requests.id', '=', 'quote_responses.quote_request_id')
-            ->whereIn('quote_requests.destination_country', $countryCodes)
-            ->where('quote_responses.status', QuoteResponse::STATUS_RESPONDED)
-            ->select([
-                'quote_responses.organization_id',
-                'quote_requests.destination_country',
-                'quote_suggestions.price_amount',
-                'quote_suggestions.price_currency',
-            ])
-            ->get()
-            ->map(fn ($row) => (object) [
-                'organization_id' => $row->organization_id,
-                'destination_country' => $row->destination_country,
-                'amount_amd' => $currencyConverter->convert((float) $row->price_amount, $row->price_currency, 'AMD'),
-            ])
-            ->filter(fn ($row) => $row->amount_amd !== null);
+        $rows = $priceData->respondedSuggestionAmounts($countryCodes);
 
         return collect($countryCodes)
             ->map(function ($countryCode) use ($rows, $organization) {

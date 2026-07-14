@@ -37,6 +37,10 @@ class QuoteResponse extends Model
         'reply_text',
         'responded_at',
         'reminded_at',
+        'contact_phone',
+        'contact_whatsapp',
+        'contact_telegram',
+        'contact_instagram',
     ];
 
     protected $casts = [
@@ -55,6 +59,11 @@ class QuoteResponse extends Model
     public function getIsDeclinedAttribute(): bool
     {
         return $this->status === self::STATUS_DECLINED;
+    }
+
+    public function getHasContactInfoAttribute(): bool
+    {
+        return $this->contact_phone || $this->contact_whatsapp || $this->contact_telegram || $this->contact_instagram;
     }
 
     public function suggestions(): HasMany

@@ -60,7 +60,7 @@
             <div>
                 <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('tourism.request.section_trip') }}</p>
 
-                <div class="mt-4">
+                <div class="mt-4" x-data="{ selectedDestination: '{{ old('destination_country') }}', typicalPrices: @js($typicalPrices) }">
                     <label class="block text-sm font-medium text-ink">{{ __('tourism.request.destination') }}</label>
 
                     @error('destination_country')
@@ -99,6 +99,7 @@
                                     type="radio"
                                     name="destination_country"
                                     value="{{ $code }}"
+                                    x-model="selectedDestination"
                                     class="peer sr-only"
                                     @checked(old('destination_country') === $code)
                                     required
@@ -109,6 +110,14 @@
                                 </span>
                             </label>
                         @endforeach
+                    </div>
+
+                    <div x-show="typicalPrices[selectedDestination]" x-cloak class="mt-2 flex items-center gap-1.5 rounded-lg bg-primary/5 px-3 py-2 text-xs text-ink">
+                        <span>💡 {{ __('tourism.request.typical_price_label') }}</span>
+                        <span
+                            class="font-semibold text-primary"
+                            x-text="typicalPrices[selectedDestination] ? new Intl.NumberFormat('en-US').format(typicalPrices[selectedDestination]) + ' {{ __('tourism.request.amd') }}' : ''"
+                        ></span>
                     </div>
                 </div>
 

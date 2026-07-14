@@ -31,6 +31,26 @@
                     </div>
                 @endif
 
+                @if ($response->has_contact_info)
+                    <div class="mt-4 rounded-2xl border border-placeholder p-6">
+                        <p class="text-xs font-semibold tracking-wide text-subtle uppercase">{{ __('tourism.respond.contact_heading') }}</p>
+                        <dl class="mt-3 space-y-1 text-sm text-ink">
+                            @if ($response->contact_phone)
+                                <div><dt class="inline text-subtle">{{ __('tourism.respond.contact_phone_label') }}:</dt> <dd class="inline">{{ $response->contact_phone }}</dd></div>
+                            @endif
+                            @if ($response->contact_whatsapp)
+                                <div><dt class="inline text-subtle">{{ __('tourism.respond.contact_whatsapp_label') }}:</dt> <dd class="inline">{{ $response->contact_whatsapp }}</dd></div>
+                            @endif
+                            @if ($response->contact_telegram)
+                                <div><dt class="inline text-subtle">{{ __('tourism.respond.contact_telegram_label') }}:</dt> <dd class="inline">{{ $response->contact_telegram }}</dd></div>
+                            @endif
+                            @if ($response->contact_instagram)
+                                <div><dt class="inline text-subtle">{{ __('tourism.respond.contact_instagram_label') }}:</dt> <dd class="inline">{{ $response->contact_instagram }}</dd></div>
+                            @endif
+                        </dl>
+                    </div>
+                @endif
+
                 @foreach ($response->suggestions as $suggestion)
                     <div class="mt-4 rounded-2xl border border-placeholder p-6">
                         <h2 class="font-heading text-base font-semibold text-ink">
@@ -316,6 +336,52 @@
                     >
                         {{ __('tourism.respond.add_suggestion') }}
                     </button>
+
+                    <div class="space-y-4 rounded-xl border border-placeholder p-4">
+                        <div>
+                            <p class="text-sm font-semibold text-ink">{{ __('tourism.respond.contact_heading') }}</p>
+                            <p class="mt-1 text-xs text-subtle">{{ __('tourism.respond.contact_hint') }}</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="contact_phone" class="block text-sm font-medium text-ink">{{ __('tourism.respond.contact_phone_label') }}</label>
+                                <input
+                                    type="tel" id="contact_phone" name="contact_phone" maxlength="30"
+                                    value="{{ old('contact_phone') }}"
+                                    placeholder="{{ __('tourism.respond.contact_phone_placeholder') }}"
+                                    class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                                >
+                            </div>
+                            <div>
+                                <label for="contact_whatsapp" class="block text-sm font-medium text-ink">{{ __('tourism.respond.contact_whatsapp_label') }}</label>
+                                <input
+                                    type="tel" id="contact_whatsapp" name="contact_whatsapp" maxlength="30"
+                                    value="{{ old('contact_whatsapp') }}"
+                                    placeholder="{{ __('tourism.respond.contact_whatsapp_placeholder') }}"
+                                    class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                                >
+                            </div>
+                            <div>
+                                <label for="contact_telegram" class="block text-sm font-medium text-ink">{{ __('tourism.respond.contact_telegram_label') }}</label>
+                                <input
+                                    type="text" id="contact_telegram" name="contact_telegram" maxlength="50"
+                                    value="{{ old('contact_telegram') }}"
+                                    placeholder="{{ __('tourism.respond.contact_telegram_placeholder') }}"
+                                    class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                                >
+                            </div>
+                            <div>
+                                <label for="contact_instagram" class="block text-sm font-medium text-ink">{{ __('tourism.respond.contact_instagram_label') }}</label>
+                                <input
+                                    type="text" id="contact_instagram" name="contact_instagram" maxlength="50"
+                                    value="{{ old('contact_instagram') }}"
+                                    placeholder="{{ __('tourism.respond.contact_instagram_placeholder') }}"
+                                    class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                                >
+                            </div>
+                        </div>
+                    </div>
 
                     <div>
                         <label for="reply_text" class="block text-sm font-medium text-ink">{{ __('tourism.respond.notes_label') }}</label>

@@ -205,6 +205,18 @@
                         <p class="mt-2 border border-placeholder bg-placeholder/20 px-3 py-2 text-xs text-ink">{{ $response->reply_text }}</p>
                     @endif
 
+                    @if ($response->has_contact_info)
+                        <p class="mt-2 text-xs text-ink">
+                            <span class="text-subtle">{{ __('tourism.dashboard.contact_label') }}:</span>
+                            {{ collect([
+                                $response->contact_phone,
+                                $response->contact_whatsapp ? __('tourism.dashboard.contact_whatsapp_prefix') . ' ' . $response->contact_whatsapp : null,
+                                $response->contact_telegram ? '@' . ltrim($response->contact_telegram, '@') : null,
+                                $response->contact_instagram ? '@' . ltrim($response->contact_instagram, '@') : null,
+                            ])->filter()->implode(' · ') }}
+                        </p>
+                    @endif
+
                     @foreach ($response->suggestions as $suggestion)
                         <div class="mt-2 {{ !$loop->first ? 'border-t border-placeholder pt-2' : '' }}">
                             @if ($response->suggestions->count() > 1)

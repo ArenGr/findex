@@ -248,6 +248,34 @@
                             @endforeach
                         </div>
 
+                        @if ($response->has_contact_info)
+                            <div class="mt-3 border-t border-placeholder pt-3">
+                                <p class="text-xs font-semibold tracking-wide text-subtle uppercase">{{ __('tourism.results.contact_heading') }}</p>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @if ($response->contact_phone)
+                                        <a href="tel:{{ preg_replace('/[^\d+]/', '', $response->contact_phone) }}" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                            📞 {{ __('tourism.results.contact_call') }}
+                                        </a>
+                                    @endif
+                                    @if ($response->contact_whatsapp)
+                                        <a href="https://wa.me/{{ preg_replace('/\D/', '', $response->contact_whatsapp) }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                            💬 {{ __('tourism.results.contact_whatsapp') }}
+                                        </a>
+                                    @endif
+                                    @if ($response->contact_telegram)
+                                        <a href="https://t.me/{{ ltrim($response->contact_telegram, '@') }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                            ✈️ {{ __('tourism.results.contact_telegram') }}
+                                        </a>
+                                    @endif
+                                    @if ($response->contact_instagram)
+                                        <a href="https://instagram.com/{{ ltrim($response->contact_instagram, '@') }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                            📷 {{ __('tourism.results.contact_instagram') }}
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         @if ($repliedCount >= 2)
                             <label class="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-ink">
                                 <input

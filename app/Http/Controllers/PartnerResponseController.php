@@ -55,6 +55,10 @@ class PartnerResponseController extends Controller
 
         $validated = $request->validate([
             'reply_text' => ['nullable', 'string', 'max:2000'],
+            'contact_phone' => ['nullable', 'string', 'max:30'],
+            'contact_whatsapp' => ['nullable', 'string', 'max:30'],
+            'contact_telegram' => ['nullable', 'string', 'max:50'],
+            'contact_instagram' => ['nullable', 'string', 'max:50'],
             'suggestions' => ['required', 'array', 'min:1', 'max:'.QuoteResponse::MAX_SUGGESTIONS],
             'suggestions.*.price_amount' => ['required', 'numeric', 'min:0', 'max:9999999.99'],
             'suggestions.*.price_currency' => ['required', Rule::in(QuoteResponse::CURRENCIES)],
@@ -68,6 +72,10 @@ class PartnerResponseController extends Controller
 
         $response->update([
             'reply_text' => $validated['reply_text'] ?? null,
+            'contact_phone' => $validated['contact_phone'] ?? null,
+            'contact_whatsapp' => $validated['contact_whatsapp'] ?? null,
+            'contact_telegram' => $validated['contact_telegram'] ?? null,
+            'contact_instagram' => $validated['contact_instagram'] ?? null,
             'status' => QuoteResponse::STATUS_RESPONDED,
             'responded_at' => now(),
         ]);

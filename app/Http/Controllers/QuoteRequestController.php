@@ -10,6 +10,7 @@ use App\Models\QuoteRequest;
 use App\Models\QuoteSuggestion;
 use App\Services\CurrencyConverter;
 use App\Services\Notifications\PartnerNotifierInterface;
+use App\Services\TourismPriceData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -18,11 +19,47 @@ use Illuminate\View\View;
 
 class QuoteRequestController extends Controller
 {
-    public function create(): View
+    /**
+     * Below this sample size, an "average" would be one or two agencies'
+     * prices dressed up as a market figure - not a real teaser, and a
+     * de-anonymization risk on top.
+     */
+    private const TYPICAL_PRICE_MIN_SUGGESTIONS = 3;
+    private const TYPICAL_PRICE_MIN_ORGS = 2;
+
+    public function create(TourismPriceData $priceData): View
     {
         return view('tourism.request', [
             'destinations' => QuoteRequest::DESTINATIONS,
+            'typicalPrices' => $this->typicalPrices($priceData),
         ]);
+    }
+
+    /**
+     * A rough "what does this usually cost" figure shown on the request
+     * form itself, before a visitor commits to filling it out - built from
+     * the same historical, already-responded suggestion data as the org
+     * dashboard's price benchmark (see
+     * Organization\TourismController::priceBenchmark), just aggregated
+     * across every organization instead of one. Destinations without
+     * enough sample size are simply omitted (null) rather than shown with
+     * a misleadingly precise figure.
+     */
+    private function typicalPrices(TourismPriceData $priceData): array
+    {
+        $rows = $priceData->respondedSuggestionAmounts(QuoteRequest::DESTINATIONS);
+
+        return collect(QuoteRequest::DESTINATIONS)
+            ->mapWithKeys(function ($countryCode) use ($rows) {
+                $forDestination = $rows->where('destination_country', $countryCode);
+                $orgCount = $forDestination->pluck('organization_id')->unique()->count();
+
+                $hasEnoughData = $forDestination->count() >= self::TYPICAL_PRICE_MIN_SUGGESTIONS
+                    && $orgCount >= self::TYPICAL_PRICE_MIN_ORGS;
+
+                return [$countryCode => $hasEnoughData ? round($forDestination->avg('amount_amd')) : null];
+            })
+            ->all();
     }
 
     /**
