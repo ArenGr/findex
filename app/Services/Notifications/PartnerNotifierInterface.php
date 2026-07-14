@@ -3,6 +3,7 @@
 namespace App\Services\Notifications;
 
 use App\Models\QuoteResponse;
+use App\Models\QuoteSuggestion;
 
 /**
  * Abstracts "tell this partner about a quote request" away from any one
@@ -22,4 +23,19 @@ interface PartnerNotifierInterface
      * permanently unreachable just because one notification attempt failed.
      */
     public function notify(QuoteResponse $response): bool;
+
+    /**
+     * A one-time nudge for a response still pending after a while (see
+     * RemindPartnersOfPendingQuotes) - a distinct, shorter message from
+     * notify()'s initial request rather than resending the same one.
+     */
+    public function remind(QuoteResponse $response): bool;
+
+    /**
+     * A customer has just claimed this suggestion's promo code (see
+     * QuoteRequestController::claimSuggestion) - tells the org who to
+     * expect so they can verify the same account holder when the code is
+     * redeemed in person.
+     */
+    public function notifyClaim(QuoteSuggestion $suggestion): bool;
 }

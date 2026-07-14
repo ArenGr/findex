@@ -47,9 +47,14 @@
                         </p>
                     </div>
 
-                    <span class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold {{ $quoteRequest->is_open ? 'bg-primary/10 text-primary' : 'bg-placeholder/40 text-subtle' }}">
-                        {{ __('tourism.mine.view') }}
-                    </span>
+                    <div class="flex shrink-0 flex-col items-end gap-1">
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $quoteRequest->is_open ? 'bg-primary/10 text-primary' : 'bg-placeholder/40 text-subtle' }}">
+                            {{ __('tourism.mine.view') }}
+                        </span>
+                        @if ($quoteRequest->is_open)
+                            <span class="text-xs text-subtle">{{ $quoteRequest->closes_in }}</span>
+                        @endif
+                    </div>
                 </a>
             @empty
                 <div class="rounded-2xl border border-dashed border-placeholder p-8 text-center">

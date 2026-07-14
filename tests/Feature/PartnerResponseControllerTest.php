@@ -63,6 +63,20 @@ class PartnerResponseControllerTest extends TestCase
         ], $overrides));
     }
 
+    private function respondedResponse(array $suggestionOverrides = []): QuoteResponse
+    {
+        $response = $this->pendingResponse([
+            'status' => QuoteResponse::STATUS_RESPONDED,
+            'responded_at' => now(),
+        ]);
+        $response->suggestions()->create(array_merge([
+            'price_amount' => 500,
+            'price_currency' => 'AMD',
+        ], $suggestionOverrides));
+
+        return $response;
+    }
+
     public function test_a_valid_pending_token_shows_the_offer_form(): void
     {
         $response = $this->pendingResponse();
@@ -81,12 +95,7 @@ class PartnerResponseControllerTest extends TestCase
 
     public function test_an_already_responded_token_shows_the_submitted_offer_instead_of_the_form(): void
     {
-        $response = $this->pendingResponse([
-            'status' => QuoteResponse::STATUS_RESPONDED,
-            'price_amount' => 610,
-            'price_currency' => 'USD',
-            'responded_at' => now(),
-        ]);
+        $response = $this->respondedResponse(['price_amount' => 610, 'price_currency' => 'USD']);
 
         $this->get(route('tourism.respond', ['locale' => 'en', 'token' => $response->response_token]))
             ->assertOk()
@@ -113,41 +122,114 @@ class PartnerResponseControllerTest extends TestCase
             ->assertSee(__('tourism.respond.expired_heading'));
     }
 
-    public function test_submitting_a_valid_offer_stores_it_and_emails_the_requester(): void
+    public function test_submitting_a_single_suggestion_stores_it_and_emails_the_requester(): void
     {
         Mail::fake();
         Storage::fake('public');
         $response = $this->pendingResponse();
 
         $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
-            'price_amount' => '610.50',
-            'price_currency' => 'USD',
-            'offered_hotel_name' => 'Grand Batumi Hotel',
-            'flight_details' => 'Direct flight, Yerevan - Batumi',
-            'inclusions' => 'Breakfast, airport transfer',
             'reply_text' => 'Happy to adjust dates if needed.',
-            'attachment' => UploadedFile::fake()->create('offer.pdf', 100, 'application/pdf'),
+            'suggestions' => [
+                [
+                    'price_amount' => '610.50',
+                    'price_currency' => 'USD',
+                    'offered_hotel_name' => 'Grand Batumi Hotel',
+                    'flight_details' => 'Direct flight, Yerevan - Batumi',
+                    'inclusions' => 'Breakfast, airport transfer',
+                    'attachment' => UploadedFile::fake()->create('offer.pdf', 100, 'application/pdf'),
+                ],
+            ],
         ])->assertRedirect(route('tourism.respond', ['locale' => 'en', 'token' => $response->response_token]));
 
         $response->refresh();
         $this->assertSame(QuoteResponse::STATUS_RESPONDED, $response->status);
-        $this->assertSame('610.50', $response->price_amount);
-        $this->assertSame('USD', $response->price_currency);
-        $this->assertSame('Grand Batumi Hotel', $response->offered_hotel_name);
-        $this->assertNotNull($response->attachment_path);
-        Storage::disk('public')->assertExists($response->attachment_path);
+        $this->assertSame('Happy to adjust dates if needed.', $response->reply_text);
         $this->assertNotNull($response->responded_at);
+
+        $this->assertCount(1, $response->suggestions);
+        $suggestion = $response->suggestions->first();
+        $this->assertSame('610.50', $suggestion->price_amount);
+        $this->assertSame('USD', $suggestion->price_currency);
+        $this->assertSame('Grand Batumi Hotel', $suggestion->offered_hotel_name);
+        $this->assertNotNull($suggestion->attachment_path);
+        Storage::disk('public')->assertExists($suggestion->attachment_path);
 
         Mail::assertSent(QuoteResponseReceived::class, fn ($mail) => $mail->quoteResponse->is($response));
     }
 
-    public function test_submitting_without_a_price_is_rejected(): void
+    public function test_submitting_a_suggestion_with_a_promo_code_stores_it(): void
     {
         $response = $this->pendingResponse();
 
         $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
-            'price_currency' => 'USD',
-        ])->assertSessionHasErrors('price_amount');
+            'suggestions' => [
+                ['price_amount' => '400', 'price_currency' => 'USD', 'promo_code' => 'SUMMER10', 'promo_note' => '10% off in person'],
+            ],
+        ])->assertRedirect();
+
+        $suggestion = $response->fresh()->suggestions->first();
+        $this->assertSame('SUMMER10', $suggestion->promo_code);
+        $this->assertSame('10% off in person', $suggestion->promo_note);
+        $this->assertFalse($suggestion->is_claimed);
+    }
+
+    public function test_submitting_multiple_suggestions_stores_all_of_them(): void
+    {
+        $response = $this->pendingResponse();
+
+        $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
+            'suggestions' => [
+                ['price_amount' => '400', 'price_currency' => 'USD', 'offered_hotel_name' => 'Budget Hotel'],
+                ['price_amount' => '700', 'price_currency' => 'USD', 'offered_hotel_name' => 'Premium Resort'],
+                ['price_amount' => '550', 'price_currency' => 'EUR', 'offered_hotel_name' => 'Mid-range Hotel'],
+            ],
+        ])->assertRedirect();
+
+        $response->refresh();
+        $this->assertSame(QuoteResponse::STATUS_RESPONDED, $response->status);
+        $this->assertCount(3, $response->suggestions);
+        $this->assertEqualsCanonicalizing(
+            ['Budget Hotel', 'Premium Resort', 'Mid-range Hotel'],
+            $response->suggestions->pluck('offered_hotel_name')->all()
+        );
+    }
+
+    public function test_submitting_more_than_the_max_suggestions_is_rejected(): void
+    {
+        $response = $this->pendingResponse();
+
+        $suggestions = array_fill(0, QuoteResponse::MAX_SUGGESTIONS + 1, [
+            'price_amount' => '100', 'price_currency' => 'USD',
+        ]);
+
+        $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
+            'suggestions' => $suggestions,
+        ])->assertSessionHasErrors('suggestions');
+
+        $this->assertSame(QuoteResponse::STATUS_PENDING, $response->fresh()->status);
+    }
+
+    public function test_submitting_without_any_suggestions_is_rejected(): void
+    {
+        $response = $this->pendingResponse();
+
+        $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
+            'reply_text' => 'No suggestions attached.',
+        ])->assertSessionHasErrors('suggestions');
+
+        $this->assertSame(QuoteResponse::STATUS_PENDING, $response->fresh()->status);
+    }
+
+    public function test_submitting_a_suggestion_without_a_price_is_rejected(): void
+    {
+        $response = $this->pendingResponse();
+
+        $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
+            'suggestions' => [
+                ['price_currency' => 'USD'],
+            ],
+        ])->assertSessionHasErrors('suggestions.0.price_amount');
 
         $this->assertSame(QuoteResponse::STATUS_PENDING, $response->fresh()->status);
     }
@@ -155,19 +237,16 @@ class PartnerResponseControllerTest extends TestCase
     public function test_submitting_against_an_already_responded_token_is_a_no_op(): void
     {
         Mail::fake();
-        $response = $this->pendingResponse([
-            'status' => QuoteResponse::STATUS_RESPONDED,
-            'price_amount' => 500,
-            'price_currency' => 'AMD',
-            'responded_at' => now(),
-        ]);
+        $response = $this->respondedResponse(['price_amount' => 500, 'price_currency' => 'AMD']);
 
         $this->post(route('tourism.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
-            'price_amount' => '999',
-            'price_currency' => 'USD',
+            'suggestions' => [
+                ['price_amount' => '999', 'price_currency' => 'USD'],
+            ],
         ])->assertRedirect(route('tourism.respond', ['locale' => 'en', 'token' => $response->response_token]));
 
-        $this->assertSame('500.00', $response->fresh()->price_amount);
+        $this->assertCount(1, $response->fresh()->suggestions);
+        $this->assertSame('500.00', $response->fresh()->suggestions->first()->price_amount);
         Mail::assertNothingSent();
     }
 }

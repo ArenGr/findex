@@ -41,7 +41,11 @@
                 'org.dashboard.branches.index' => __('org.nav.branches'),
                 ...($organization->hasRatesPage() ? ['org.dashboard.rates.index' => __('org.nav.rates')] : []),
                 'org.dashboard.reports.index' => __('org.nav.reports'),
-                ...($organization->hasTourismPage() ? ['org.dashboard.tourism.index' => __('tourism.nav_label')] : []),
+                'org.dashboard.team.index' => __('org.nav.team'),
+                ...($organization->hasTourismPage() ? [
+                    'org.dashboard.tourism.index' => __('tourism.nav_label'),
+                    'org.dashboard.quote-templates.index' => __('org.nav.quote_templates'),
+                ] : []),
             ] as $routeName => $label)
                 <a
                     href="{{ route($routeName) }}"
@@ -69,7 +73,15 @@
                     'report-requested' => __('org.reports.requested'),
                     'rate-saved' => __('org.rates.saved'),
                     'destinations-saved' => __('tourism.dashboard.destinations_saved'),
+                    'destination-pause-updated' => __('tourism.dashboard.destination_pause_updated'),
                     'telegram-link-refreshed' => __('tourism.dashboard.telegram_hint'),
+                    'teammate-added' => __('org.team.added'),
+                    'teammate-removed' => __('org.team.removed'),
+                    'teammate-remove-blocked' => __('org.team.remove_blocked'),
+                    'quote-template-created' => __('org.quote_templates.created'),
+                    'quote-template-updated' => __('org.quote_templates.updated'),
+                    'quote-template-deleted' => __('org.quote_templates.deleted'),
+                    'lead-preferences-updated' => __('tourism.dashboard.lead_preferences_updated'),
                 ];
             @endphp
 

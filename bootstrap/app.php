@@ -24,6 +24,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Runs after the daily rate scrape so it checks against fresh rates.
         $schedule->command('alerts:check')->dailyAt('00:30')->withoutOverlapping();
 
+        // Hourly rather than daily - REMIND_AFTER_HOURS (24h) is a rolling
+        // window per response, not a fixed time of day, so this needs to
+        // run often enough that a response isn't sitting reminder-eligible
+        // for up to a full extra day before the next check.
+        $schedule->command('tourism:remind-partners')->hourly()->withoutOverlapping();
+
+        $schedule->command('tourism:prompt-reviews')->dailyAt('09:00')->withoutOverlapping();
+
         // Report generation (GenerateReportJob) is queued rather than run
         // inline, so a failed LLM call can retry with backoff instead of
         // failing the org's HTTP request. Rather than requiring a

@@ -32,6 +32,11 @@ return [
     'verified_reviewer' => 'Подтверждено',
     'verified_reviewer_tooltip' => 'Вход выполнен через подтверждённый аккаунт',
 
+    'badge_top_rated' => 'Высокий рейтинг',
+    'badge_top_rated_tooltip' => 'Рейтинг :rating+ по многим отзывам',
+    'badge_fast_responder' => 'Быстро отвечает',
+    'badge_fast_responder_tooltip' => 'Обычно отвечает на запросы в течение нескольких часов',
+
     'rates_heading' => 'Текущие курсы',
     'no_rates' => 'Курсы пока недоступны.',
     'currency' => 'Валюта',

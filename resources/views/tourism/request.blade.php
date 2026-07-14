@@ -41,6 +41,12 @@
     </section>
 
     <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
+        @if (session('status') === 'destination-alert-created')
+            <div class="mb-6 border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+                {{ __('tourism.request.notify_me_confirmed') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('tourism.request.store') }}" class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8" novalidate>
             @csrf
 
@@ -59,6 +65,31 @@
 
                     @error('destination_country')
                         <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+
+                        <form method="POST" action="{{ route('tourism.destination-alerts.store') }}" class="mt-3 flex flex-wrap items-end gap-2 border border-placeholder bg-placeholder/10 p-3" novalidate>
+                            @csrf
+                            <input type="hidden" name="destination_country" value="{{ old('destination_country') }}">
+
+                            @guest
+                                <div class="min-w-0 flex-1">
+                                    <label for="alert_email" class="block text-xs font-medium text-ink">{{ __('tourism.request.notify_me_email_label') }}</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        id="alert_email"
+                                        required
+                                        placeholder="{{ __('auth.email') }}"
+                                        class="mt-1 block w-full rounded-md border border-border-muted px-2 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+                                    >
+                                </div>
+                            @else
+                                <p class="flex-1 text-xs text-muted">{{ __('tourism.request.notify_me_hint') }}</p>
+                            @endguest
+
+                            <button type="submit" class="shrink-0 border border-primary px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5">
+                                {{ __('tourism.request.notify_me_button') }}
+                            </button>
+                        </form>
                     @enderror
 
                     <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -113,6 +144,31 @@
                         <input type="checkbox" name="insurance" value="1" @checked(old('insurance')) class="rounded border-border-muted text-primary focus:ring-primary">
                         {{ __('tourism.request.insurance') }}
                     </label>
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-ink">{{ __('tourism.request.budget') }}</label>
+                    <p class="text-xs text-muted">{{ __('tourism.request.budget_hint') }}</p>
+                    <div class="mt-1.5 grid grid-cols-2 gap-4">
+                        <x-form-input
+                            type="number"
+                            step="1000"
+                            min="0"
+                            name="budget_min_amd"
+                            :label="__('tourism.request.budget_min')"
+                            :placeholder="__('tourism.request.budget_min_placeholder')"
+                            :value="old('budget_min_amd')"
+                        />
+                        <x-form-input
+                            type="number"
+                            step="1000"
+                            min="0"
+                            name="budget_max_amd"
+                            :label="__('tourism.request.budget_max')"
+                            :placeholder="__('tourism.request.budget_max_placeholder')"
+                            :value="old('budget_max_amd')"
+                        />
+                    </div>
                 </div>
 
                 <div class="mt-4">

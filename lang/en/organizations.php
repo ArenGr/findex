@@ -32,6 +32,11 @@ return [
     'verified_reviewer' => 'Verified',
     'verified_reviewer_tooltip' => 'Signed in with a verified account',
 
+    'badge_top_rated' => 'Top rated',
+    'badge_top_rated_tooltip' => 'Rated :rating+ stars across many reviews',
+    'badge_fast_responder' => 'Fast responder',
+    'badge_fast_responder_tooltip' => 'Usually replies to quote requests within a few hours',
+
     'rates_heading' => 'Current Rates',
     'no_rates' => 'No rates available yet.',
     'currency' => 'Currency',

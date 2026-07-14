@@ -30,6 +30,9 @@
                         ({{ trans_choice('organizations.reviews_count', $reviewsCount, ['count' => $reviewsCount]) }})
                     </span>
                 </div>
+                <div class="mt-3">
+                    <x-organization-badges :organization="$organization" :include-fast-responder="true" />
+                </div>
                 <x-compare-toggle :organization="$organization" class="mt-3" />
             </div>
         </div>

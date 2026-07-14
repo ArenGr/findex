@@ -24,6 +24,31 @@
         </div>
     </div>
 
+    @if ($tourismStats)
+        <h2 class="mt-10 font-heading text-lg font-semibold text-ink">{{ __('org.overview.tourism_performance_heading') }}</h2>
+
+        @if ($tourismStats['total'] > 0)
+            <div class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-3">
+                <div class="border border-placeholder p-5">
+                    <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('org.overview.tourism_total_leads') }}</p>
+                    <p class="mt-2 font-heading text-2xl font-bold text-ink">{{ $tourismStats['total'] }}</p>
+                </div>
+                <div class="border border-placeholder p-5">
+                    <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('org.overview.tourism_response_rate') }}</p>
+                    <p class="mt-2 font-heading text-2xl font-bold text-ink">{{ $tourismStats['responseRate'] !== null ? $tourismStats['responseRate'] . '%' : '—' }}</p>
+                </div>
+                <div class="border border-placeholder p-5">
+                    <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('org.overview.tourism_avg_response_time') }}</p>
+                    <p class="mt-2 font-heading text-2xl font-bold text-ink">
+                        {{ $tourismStats['avgResponseTimeHours'] !== null ? __('org.overview.tourism_hours', ['count' => $tourismStats['avgResponseTimeHours']]) : '—' }}
+                    </p>
+                </div>
+            </div>
+        @else
+            <p class="mt-4 text-sm text-muted">{{ __('org.overview.tourism_no_leads_yet') }}</p>
+        @endif
+    @endif
+
     <h2 class="mt-10 font-heading text-lg font-semibold text-ink">{{ __('org.overview.recent_reports') }}</h2>
 
     <div class="mt-4 divide-y divide-placeholder border-t border-placeholder">

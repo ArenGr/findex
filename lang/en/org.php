@@ -17,6 +17,8 @@ return [
         'branches' => 'Branches',
         'rates' => 'Rates',
         'reports' => 'Reports',
+        'team' => 'Team',
+        'quote_templates' => 'Templates',
     ],
 
     'overview' => [
@@ -27,6 +29,13 @@ return [
         'branches_count' => 'Branches',
         'recent_reports' => 'Recent report requests',
         'no_recent_reports' => 'No report requests yet.',
+        'tourism_performance_heading' => 'Quote Request Performance',
+        'tourism_total_leads' => 'Total leads',
+        'tourism_response_rate' => 'Response rate',
+        'tourism_avg_response_time' => 'Avg. response time',
+        'tourism_declined' => 'Declined',
+        'tourism_no_leads_yet' => 'No quote requests yet - stats will show up here once leads start coming in.',
+        'tourism_hours' => ':count hrs',
     ],
 
     'profile' => [
@@ -103,5 +112,37 @@ return [
         'save' => 'Save',
         'no_rates' => 'No rates set yet.',
         'saved' => 'Rate saved.',
+    ],
+
+    'team' => [
+        'title' => 'Team',
+        'subtitle' => 'Everyone who can log in and manage this organization.',
+        'name' => 'Name',
+        'email' => 'Email',
+        'password' => 'Password',
+        'password_confirmation' => 'Confirm password',
+        'add_button' => 'Add teammate',
+        'remove_button' => 'Remove',
+        'remove_confirm' => 'Remove this teammate? They will no longer be able to log in.',
+        'you_label' => 'You',
+        'added' => 'Teammate added.',
+        'removed' => 'Teammate removed.',
+        'remove_blocked' => "Can't remove yourself or the last remaining teammate - add someone else first.",
+    ],
+
+    'quote_templates' => [
+        'title' => 'Quote Templates',
+        'subtitle' => 'Save common offers so you can reply to a lead faster instead of typing everything from scratch.',
+        'add' => 'Add template',
+        'edit' => 'Edit template',
+        'delete' => 'Delete',
+        'save' => 'Save template',
+        'name' => 'Template name',
+        'destination' => 'Destination',
+        'any_destination' => 'Any destination',
+        'no_templates' => "You haven't saved any templates yet.",
+        'created' => 'Template saved.',
+        'updated' => 'Template updated.',
+        'deleted' => 'Template deleted.',
     ],
 ];

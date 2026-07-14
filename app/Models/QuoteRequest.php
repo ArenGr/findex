@@ -32,6 +32,9 @@ class QuoteRequest extends Model
         'insurance',
         'notes',
         'expires_at',
+        'review_prompted_at',
+        'budget_min_amd',
+        'budget_max_amd',
     ];
 
     protected $casts = [
@@ -42,6 +45,9 @@ class QuoteRequest extends Model
         'all_inclusive' => 'boolean',
         'insurance' => 'boolean',
         'expires_at' => 'datetime',
+        'review_prompted_at' => 'datetime',
+        'budget_min_amd' => 'decimal:2',
+        'budget_max_amd' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -62,6 +68,40 @@ class QuoteRequest extends Model
     public function getIsOpenAttribute(): bool
     {
         return $this->expires_at->isFuture();
+    }
+
+    /**
+     * Matched against a partner's opt-in min_lead_party_size (see
+     * Organization::tourismPartnersForDestination()).
+     */
+    public function getPartySizeAttribute(): int
+    {
+        return $this->adults + $this->children;
+    }
+
+    /**
+     * "Closes in 3 days" style countdown for surfacing urgency on the
+     * customer-facing request pages - null once the request has closed
+     * (those pages show the fixed closed date instead, see is_open).
+     */
+    public function getClosesInAttribute(): ?string
+    {
+        return $this->is_open ? $this->expires_at->diffForHumans(['parts' => 1]) : null;
+    }
+
+    /**
+     * The single figure matched against a partner's opt-in
+     * min_lead_budget_amd (see Organization::tourismPartnersForDestination()) -
+     * the stated max is the most a partner could hope to capture, so a
+     * partner's minimum is checked against it rather than the min (a
+     * request with only a min stated falls back to that, since it's the
+     * only figure available).
+     */
+    public function getBudgetForFilteringAttribute(): ?float
+    {
+        $value = $this->budget_max_amd ?? $this->budget_min_amd;
+
+        return $value !== null ? (float) $value : null;
     }
 
     /**

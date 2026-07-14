@@ -35,14 +35,11 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
      */
     public function handle(PartnerNotifierInterface $notifier): void
     {
-        $partners = Organization::active()
-            ->where('type', 'tourism')
-            ->whereNotNull('telegram_chat_id')
-            ->whereHas('tourismDestinations', fn ($query) => $query->where(
-                'country_code',
-                $this->quoteRequest->destination_country
-            ))
-            ->get();
+        $partners = Organization::tourismPartnersForDestination(
+            $this->quoteRequest->destination_country,
+            $this->quoteRequest->party_size,
+            $this->quoteRequest->budget_for_filtering,
+        )->get();
 
         foreach ($partners as $partner) {
             $response = QuoteResponse::create([

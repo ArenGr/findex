@@ -32,6 +32,11 @@ return [
     'verified_reviewer' => 'Հաստատված',
     'verified_reviewer_tooltip' => 'Մուտք է գործել հաստատված հաշվով',
 
+    'badge_top_rated' => 'Բարձր գնահատված',
+    'badge_top_rated_tooltip' => 'Գնահատված :rating+ աստղով բազմաթիվ կարծիքներում',
+    'badge_fast_responder' => 'Արագ պատասխանող',
+    'badge_fast_responder_tooltip' => 'Սովորաբար պատասխանում է հարցումներին մի քանի ժամվա ընթացքում',
+
     'rates_heading' => 'Ընթացիկ փոխարժեքներ',
     'no_rates' => 'Փոխարժեքներ դեռ հասանելի չեն։',
     'currency' => 'Արժույթ',

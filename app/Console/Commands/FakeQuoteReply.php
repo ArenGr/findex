@@ -65,14 +65,17 @@ class FakeQuoteReply extends Command
         }
 
         $response->update([
+            'reply_text' => "Thanks for your request! Let us know if you'd like to book.",
+            'status' => QuoteResponse::STATUS_RESPONDED,
+            'responded_at' => now(),
+        ]);
+
+        $response->suggestions()->create([
             'price_amount' => $this->option('price') ?: $this->samplePrice(),
             'price_currency' => $this->option('currency'),
             'offered_hotel_name' => 'Sample Hotel',
             'flight_details' => 'Direct flight, sample airline',
             'inclusions' => 'Breakfast, airport transfer',
-            'reply_text' => "Thanks for your request! Let us know if you'd like to book.",
-            'status' => QuoteResponse::STATUS_RESPONDED,
-            'responded_at' => now(),
         ]);
 
         $this->info("Recorded {$organization->name}'s offer for quote request #{$response->quote_request_id}.");

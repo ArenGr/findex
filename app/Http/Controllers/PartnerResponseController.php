@@ -28,10 +28,21 @@ class PartnerResponseController extends Controller
         // behind a plain 404.
         $response = QuoteResponse::query()
             ->where('response_token', $token)
-            ->with(['quoteRequest', 'organization'])
+            ->with(['quoteRequest', 'organization', 'suggestions.claimedBy'])
             ->first();
 
-        return view('tourism.respond', ['response' => $response]);
+        // Only templates relevant to this specific request - generic
+        // (destination_country null) or matching this trip's destination -
+        // so the partner isn't picking through templates for countries
+        // this lead has nothing to do with.
+        $templates = $response
+            ? $response->organization->quoteTemplates()
+                ->where(fn ($query) => $query->whereNull('destination_country')
+                    ->orWhere('destination_country', $response->quoteRequest->destination_country))
+                ->get()
+            : collect();
+
+        return view('tourism.respond', ['response' => $response, 'templates' => $templates]);
     }
 
     public function store(Request $request, string $locale, string $token): RedirectResponse
@@ -43,28 +54,38 @@ class PartnerResponseController extends Controller
         }
 
         $validated = $request->validate([
-            'price_amount' => ['required', 'numeric', 'min:0', 'max:9999999.99'],
-            'price_currency' => ['required', Rule::in(QuoteResponse::CURRENCIES)],
-            'offered_hotel_name' => ['nullable', 'string', 'max:255'],
-            'flight_details' => ['nullable', 'string', 'max:2000'],
-            'inclusions' => ['nullable', 'string', 'max:2000'],
             'reply_text' => ['nullable', 'string', 'max:2000'],
-            'attachment' => ['nullable', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+            'suggestions' => ['required', 'array', 'min:1', 'max:'.QuoteResponse::MAX_SUGGESTIONS],
+            'suggestions.*.price_amount' => ['required', 'numeric', 'min:0', 'max:9999999.99'],
+            'suggestions.*.price_currency' => ['required', Rule::in(QuoteResponse::CURRENCIES)],
+            'suggestions.*.offered_hotel_name' => ['nullable', 'string', 'max:255'],
+            'suggestions.*.flight_details' => ['nullable', 'string', 'max:2000'],
+            'suggestions.*.inclusions' => ['nullable', 'string', 'max:2000'],
+            'suggestions.*.attachment' => ['nullable', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+            'suggestions.*.promo_code' => ['nullable', 'string', 'max:50'],
+            'suggestions.*.promo_note' => ['nullable', 'string', 'max:255'],
         ]);
 
         $response->update([
-            'price_amount' => $validated['price_amount'],
-            'price_currency' => $validated['price_currency'],
-            'offered_hotel_name' => $validated['offered_hotel_name'] ?? null,
-            'flight_details' => $validated['flight_details'] ?? null,
-            'inclusions' => $validated['inclusions'] ?? null,
             'reply_text' => $validated['reply_text'] ?? null,
-            'attachment_path' => $request->hasFile('attachment')
-                ? $request->file('attachment')->store('quote-attachments', 'public')
-                : null,
             'status' => QuoteResponse::STATUS_RESPONDED,
             'responded_at' => now(),
         ]);
+
+        foreach ($validated['suggestions'] as $index => $suggestion) {
+            $response->suggestions()->create([
+                'price_amount' => $suggestion['price_amount'],
+                'price_currency' => $suggestion['price_currency'],
+                'offered_hotel_name' => $suggestion['offered_hotel_name'] ?? null,
+                'flight_details' => $suggestion['flight_details'] ?? null,
+                'inclusions' => $suggestion['inclusions'] ?? null,
+                'attachment_path' => $request->hasFile("suggestions.{$index}.attachment")
+                    ? $request->file("suggestions.{$index}.attachment")->store('quote-attachments', 'public')
+                    : null,
+                'promo_code' => $suggestion['promo_code'] ?? null,
+                'promo_note' => $suggestion['promo_note'] ?? null,
+            ]);
+        }
 
         $response->load('organization');
         $requesterEmail = $response->quoteRequest->requester_email;

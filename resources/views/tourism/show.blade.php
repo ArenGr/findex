@@ -24,22 +24,32 @@
     $repliedCount = $sortedResponses->where('has_replied', true)->count();
 
     // Data the comparison table needs, available to Alpine without a
-    // round trip - everything's already loaded on this one page.
+    // round trip - everything's already loaded on this one page. A
+    // response can hold several suggestions now (see QuoteSuggestion) -
+    // the comparison table (one figure per org) uses the cheapest, since
+    // that's most relevant to a budget-conscious traveler comparing
+    // across agencies. The full list of suggestions still shows in each
+    // response's own card below, this is only a simplification for the
+    // side-by-side view.
     $comparableData = $sortedResponses
         ->where('has_replied', true)
-        ->map(fn ($response) => [
-            'id' => $response->id,
-            'name' => $response->organization->name,
-            'initials' => Str::of($response->organization->name)->substr(0, 2)->upper()->toString(),
-            'logo' => $response->organization->logo,
-            'price' => $response->price_amount
-                ? rtrim(rtrim((string) $response->price_amount, '0'), '.') . ' ' . $response->price_currency
-                : null,
-            'hotel' => $response->offered_hotel_name,
-            'flight' => $response->flight_details,
-            'inclusions' => $response->inclusions,
-            'notes' => $response->reply_text,
-        ])
+        ->map(function ($response) {
+            $cheapest = $response->cheapestSuggestion();
+
+            return [
+                'id' => $response->id,
+                'name' => $response->organization->name,
+                'initials' => Str::of($response->organization->name)->substr(0, 2)->upper()->toString(),
+                'logo' => $response->organization->logo,
+                'price' => $cheapest
+                    ? rtrim(rtrim((string) $cheapest->price_amount, '0'), '.') . ' ' . $cheapest->price_currency
+                    : null,
+                'hotel' => $cheapest?->offered_hotel_name,
+                'flight' => $cheapest?->flight_details,
+                'inclusions' => $cheapest?->inclusions,
+                'notes' => $response->reply_text,
+            ];
+        })
         ->values();
 @endphp
 
@@ -55,6 +65,12 @@
                      queue:work) - falling back to responses count covers the
                      rare case this flash value isn't set. --}}
                 {{ __('tourism.results.submitted', ['count' => session('contacted_count', $quoteRequest->responses->count())]) }}
+            </div>
+        @endif
+
+        @if (session('status') === 'promo-claimed')
+            <div class="mb-8 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+                {{ __('tourism.results.promo_claimed_status') }}
             </div>
         @endif
 
@@ -84,7 +100,7 @@
 
             <p class="mt-3 border-t border-placeholder pt-3 text-xs {{ $quoteRequest->is_open ? 'text-primary' : 'text-subtle' }}">
                 @if ($quoteRequest->is_open)
-                    {{ __('tourism.results.expires_note', ['date' => $quoteRequest->expires_at->translatedFormat('d F Y')]) }}
+                    {{ __('tourism.results.expires_note', ['date' => $quoteRequest->expires_at->translatedFormat('d F Y'), 'countdown' => $quoteRequest->closes_in]) }}
                 @else
                     {{ __('tourism.results.closed_note', ['date' => $quoteRequest->expires_at->translatedFormat('d F Y')]) }}
                 @endif
@@ -135,33 +151,102 @@
                     </div>
 
                     @if ($response->has_replied)
-                        @if ($response->price_amount)
-                            <p class="mt-3 font-heading text-xl font-bold text-primary">
-                                {{ rtrim(rtrim((string) $response->price_amount, '0'), '.') }} {{ $response->price_currency }}
-                            </p>
-                        @endif
-
-                        <dl class="mt-2 space-y-1 text-sm text-ink">
-                            @if ($response->offered_hotel_name)
-                                <div><dt class="inline text-subtle">{{ __('tourism.results.hotel_label') }}:</dt> <dd class="inline">{{ $response->offered_hotel_name }}</dd></div>
-                            @endif
-                            @if ($response->flight_details)
-                                <div><dt class="inline text-subtle">{{ __('tourism.results.flight_label') }}:</dt> <dd class="inline">{{ $response->flight_details }}</dd></div>
-                            @endif
-                            @if ($response->inclusions)
-                                <div><dt class="inline text-subtle">{{ __('tourism.results.inclusions_label') }}:</dt> <dd class="inline">{{ $response->inclusions }}</dd></div>
-                            @endif
-                        </dl>
-
                         @if ($response->reply_text)
-                            <p class="mt-2 rounded-xl bg-primary/5 px-4 py-3 text-sm leading-relaxed text-ink">{{ $response->reply_text }}</p>
+                            <p class="mt-3 rounded-xl bg-primary/5 px-4 py-3 text-sm leading-relaxed text-ink">{{ $response->reply_text }}</p>
                         @endif
 
-                        @if ($response->attachment_path)
-                            <a href="{{ Storage::url($response->attachment_path) }}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs font-medium text-primary hover:underline">
-                                {{ __('tourism.results.attachment_label') }} &darr;
-                            </a>
-                        @endif
+                        <div class="mt-3 space-y-4">
+                            @foreach ($response->suggestions as $suggestion)
+                                <div class="{{ !$loop->first ? 'border-t border-placeholder pt-4' : '' }}">
+                                    @if ($response->suggestions->count() > 1)
+                                        <p class="text-xs font-semibold tracking-wide text-subtle uppercase">
+                                            {{ str_replace(':number', $loop->iteration, __('tourism.respond.suggestion_label')) }}
+                                        </p>
+                                    @endif
+
+                                    <p class="mt-1 font-heading text-xl font-bold text-primary">
+                                        {{ rtrim(rtrim((string) $suggestion->price_amount, '0'), '.') }} {{ $suggestion->price_currency }}
+                                    </p>
+
+                                    @if ($suggestion->price_currency !== $preferredCurrency)
+                                        @php
+                                            $converted = $currencyConverter->convert((float) $suggestion->price_amount, $suggestion->price_currency, $preferredCurrency);
+                                        @endphp
+                                        @if ($converted !== null)
+                                            <p class="text-xs text-subtle">
+                                                {{ __('tourism.results.approx_price', [
+                                                    'amount' => number_format($converted, 0),
+                                                    'currency' => $preferredCurrency,
+                                                ]) }}
+                                            </p>
+                                        @endif
+                                    @endif
+
+                                    <dl class="mt-2 space-y-1 text-sm text-ink">
+                                        @if ($suggestion->offered_hotel_name)
+                                            <div><dt class="inline text-subtle">{{ __('tourism.results.hotel_label') }}:</dt> <dd class="inline">{{ $suggestion->offered_hotel_name }}</dd></div>
+                                        @endif
+                                        @if ($suggestion->flight_details)
+                                            <div><dt class="inline text-subtle">{{ __('tourism.results.flight_label') }}:</dt> <dd class="inline">{{ $suggestion->flight_details }}</dd></div>
+                                        @endif
+                                        @if ($suggestion->inclusions)
+                                            <div><dt class="inline text-subtle">{{ __('tourism.results.inclusions_label') }}:</dt> <dd class="inline">{{ $suggestion->inclusions }}</dd></div>
+                                        @endif
+                                    </dl>
+
+                                    @if ($suggestion->attachment_path)
+                                        <a href="{{ Storage::url($suggestion->attachment_path) }}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs font-medium text-primary hover:underline">
+                                            {{ __('tourism.results.attachment_label') }} &darr;
+                                        </a>
+                                    @endif
+
+                                    @if ($suggestion->promo_code)
+                                        <div class="mt-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3">
+                                            @if ($suggestion->is_claimed)
+                                                @if (auth()->check() && auth()->id() === $suggestion->claimed_by_user_id)
+                                                    <p class="text-sm font-semibold text-primary">🎁 {{ __('tourism.results.promo_code_label') }}: {{ $suggestion->promo_code }}</p>
+                                                    @if ($suggestion->promo_note)
+                                                        <p class="mt-1 text-xs text-ink">{{ $suggestion->promo_note }}</p>
+                                                    @endif
+                                                    <p class="mt-1 text-xs text-subtle">{{ __('tourism.results.promo_claimed_hint') }}</p>
+                                                @else
+                                                    <p class="text-sm text-subtle">🎁 {{ __('tourism.results.promo_already_claimed') }}</p>
+                                                @endif
+                                            @else
+                                                <p class="text-sm font-semibold text-ink">🎁 {{ __('tourism.results.promo_available') }}</p>
+                                                @if ($suggestion->promo_note)
+                                                    <p class="mt-1 text-xs text-ink">{{ $suggestion->promo_note }}</p>
+                                                @endif
+
+                                                @auth
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ URL::signedRoute('tourism.suggestions.claim', [
+                                                            'locale' => app()->getLocale(),
+                                                            'quoteRequest' => $quoteRequest->id,
+                                                            'suggestion' => $suggestion->id,
+                                                        ], $quoteRequest->expires_at) }}"
+                                                        class="mt-2"
+                                                    >
+                                                        @csrf
+                                                        <button type="submit" class="text-xs font-medium text-primary hover:underline">
+                                                            {{ __('tourism.results.promo_claim_button') }} &rarr;
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <p class="mt-2 text-xs text-subtle">
+                                                        {{ __('tourism.results.promo_login_hint') }}
+                                                        <a href="{{ route('login') }}" class="font-medium text-primary hover:underline">{{ __('tourism.results.promo_login_link') }}</a>
+                                                        {{ __('tourism.results.promo_or') }}
+                                                        <a href="{{ route('register.customer') }}" class="font-medium text-primary hover:underline">{{ __('tourism.results.promo_register_link') }}</a>
+                                                    </p>
+                                                @endauth
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
 
                         @if ($repliedCount >= 2)
                             <label class="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-ink">

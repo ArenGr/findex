@@ -3,9 +3,15 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\NotifyDestinationAlertsJob;
+use App\Models\Organization;
 use App\Models\QuoteRequest;
+use App\Models\QuoteResponse;
+use App\Models\QuoteSuggestion;
+use App\Services\CurrencyConverter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -13,7 +19,14 @@ use Illuminate\View\View;
 
 class TourismController extends Controller
 {
-    public function index(): View
+    /**
+     * Below this many *other* organizations contributing a price for a
+     * destination, showing a "market average" would really just be showing
+     * one specific competitor's price - not enough to anonymize.
+     */
+    private const BENCHMARK_MIN_MARKET_ORGS = 2;
+
+    public function index(CurrencyConverter $currencyConverter): View
     {
         $organization = Auth::guard('organization')->user()->organization;
 
@@ -24,10 +37,10 @@ class TourismController extends Controller
             $organization->update(['telegram_connect_token' => Str::random(32)]);
         }
 
-        $servedCountryCodes = $organization->tourismDestinations()->pluck('country_code')->all();
+        $servedDestinations = $organization->tourismDestinations()->get();
 
         $quoteResponses = $organization->quoteResponses()
-            ->with('quoteRequest')
+            ->with(['quoteRequest', 'suggestions.claimedBy'])
             ->latest()
             ->get();
 
@@ -35,9 +48,67 @@ class TourismController extends Controller
             'organization' => $organization,
             'botUsername' => config('services.telegram.bot_username'),
             'destinations' => QuoteRequest::DESTINATIONS,
-            'servedCountryCodes' => $servedCountryCodes,
+            'servedCountryCodes' => $servedDestinations->pluck('country_code')->all(),
+            'servedDestinations' => $servedDestinations,
             'quoteResponses' => $quoteResponses,
+            'benchmark' => $this->priceBenchmark($organization, $servedDestinations->pluck('country_code')->all(), $currencyConverter),
         ]);
+    }
+
+    /**
+     * Aggregate, historical price comparison rather than live per-request
+     * bids - showing an org what other agencies quoted on a request still
+     * open for replies would encourage anchoring to "just undercut the
+     * lowest visible price" instead of genuine competition. This only ever
+     * looks at already-responded quotes, across every request, in AMD
+     * (converted at today's rate - approximate by nature, matching
+     * CurrencyConverter's own doc comment).
+     */
+    private function priceBenchmark(Organization $organization, array $countryCodes, CurrencyConverter $currencyConverter): Collection
+    {
+        if (empty($countryCodes)) {
+            return collect();
+        }
+
+        $rows = QuoteSuggestion::query()
+            ->join('quote_responses', 'quote_responses.id', '=', 'quote_suggestions.quote_response_id')
+            ->join('quote_requests', 'quote_requests.id', '=', 'quote_responses.quote_request_id')
+            ->whereIn('quote_requests.destination_country', $countryCodes)
+            ->where('quote_responses.status', QuoteResponse::STATUS_RESPONDED)
+            ->select([
+                'quote_responses.organization_id',
+                'quote_requests.destination_country',
+                'quote_suggestions.price_amount',
+                'quote_suggestions.price_currency',
+            ])
+            ->get()
+            ->map(fn ($row) => (object) [
+                'organization_id' => $row->organization_id,
+                'destination_country' => $row->destination_country,
+                'amount_amd' => $currencyConverter->convert((float) $row->price_amount, $row->price_currency, 'AMD'),
+            ])
+            ->filter(fn ($row) => $row->amount_amd !== null);
+
+        return collect($countryCodes)
+            ->map(function ($countryCode) use ($rows, $organization) {
+                $forDestination = $rows->where('destination_country', $countryCode);
+                $own = $forDestination->where('organization_id', $organization->id);
+
+                if ($own->isEmpty()) {
+                    return null;
+                }
+
+                $others = $forDestination->where('organization_id', '!=', $organization->id);
+                $otherOrgCount = $others->pluck('organization_id')->unique()->count();
+
+                return [
+                    'country_code' => $countryCode,
+                    'own_avg' => round($own->avg('amount_amd')),
+                    'market_avg' => $otherOrgCount >= self::BENCHMARK_MIN_MARKET_ORGS ? round($others->avg('amount_amd')) : null,
+                ];
+            })
+            ->filter()
+            ->values();
     }
 
     public function refreshConnectLink(): RedirectResponse
@@ -60,12 +131,69 @@ class TourismController extends Controller
         $organization = Auth::guard('organization')->user()->organization;
         $countryCodes = $validated['destinations'] ?? [];
 
+        $previouslyServed = $organization->tourismDestinations()->pluck('country_code')->all();
+        $newlyAdded = array_diff($countryCodes, $previouslyServed);
+
         $organization->tourismDestinations()->whereNotIn('country_code', $countryCodes)->delete();
 
         foreach ($countryCodes as $countryCode) {
             $organization->tourismDestinations()->firstOrCreate(['country_code' => $countryCode]);
         }
 
+        // A destination newly added here is created active (not paused),
+        // so it's always eligible to trigger alerts - see
+        // NotifyDestinationAlertsJob.
+        foreach ($newlyAdded as $countryCode) {
+            NotifyDestinationAlertsJob::dispatch($countryCode);
+        }
+
         return redirect()->route('org.dashboard.tourism.index')->with('status', 'destinations-saved');
+    }
+
+    /**
+     * Resolved manually (not via implicit route-model binding): Laravel's
+     * implicit binding does not resolve correctly for a route parameter
+     * that comes after a dynamic {locale} prefix segment. Scoping the
+     * lookup through the authenticated organization's own destinations is
+     * also what enforces that an org can only pause its own.
+     */
+    public function updateDestinationPause(Request $request, string $locale, string $destination): RedirectResponse
+    {
+        $organization = Auth::guard('organization')->user()->organization;
+        $destination = $organization->tourismDestinations()->findOrFail($destination);
+
+        $validated = $request->validate([
+            'is_paused' => ['required', 'boolean'],
+            'paused_until' => ['nullable', 'date', 'after:today'],
+        ]);
+
+        $destination->update([
+            'is_paused' => $validated['is_paused'],
+            'paused_until' => $validated['is_paused'] ? ($validated['paused_until'] ?? null) : null,
+        ]);
+
+        return redirect()->route('org.dashboard.tourism.index')->with('status', 'destination-pause-updated');
+    }
+
+    /**
+     * Both minimums are optional and independent - either can be set
+     * without the other, and clearing a field removes that filter (see
+     * Organization::tourismPartnersForDestination()).
+     */
+    public function updateLeadPreferences(Request $request): RedirectResponse
+    {
+        $organization = Auth::guard('organization')->user()->organization;
+
+        $validated = $request->validate([
+            'min_lead_budget_amd' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'min_lead_party_size' => ['nullable', 'integer', 'min:1', 'max:20'],
+        ]);
+
+        $organization->update([
+            'min_lead_budget_amd' => $validated['min_lead_budget_amd'] ?? null,
+            'min_lead_party_size' => $validated['min_lead_party_size'] ?? null,
+        ]);
+
+        return redirect()->route('org.dashboard.tourism.index')->with('status', 'lead-preferences-updated');
     }
 }

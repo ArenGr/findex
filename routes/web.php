@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\CompareController;
+use App\Http\Controllers\DestinationAlertController;
 use App\Http\Controllers\Organization\Auth\AuthenticatedSessionController as OrganizationAuthenticatedSessionController;
 use App\Http\Controllers\Organization\Auth\RegisteredOrganizationController;
 use App\Http\Controllers\Organization\BranchController;
@@ -13,7 +14,9 @@ use App\Http\Controllers\Organization\CurrencyRateController;
 use App\Http\Controllers\Organization\DashboardController as OrganizationDashboardController;
 use App\Http\Controllers\Organization\ProfileController as OrganizationProfileController;
 use App\Http\Controllers\Organization\ReportRequestController;
+use App\Http\Controllers\Organization\QuoteTemplateController;
 use App\Http\Controllers\Organization\ReviewReplyController;
+use App\Http\Controllers\Organization\TeamController;
 use App\Http\Controllers\Organization\TourismController as OrganizationTourismController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PartnerResponseController;
@@ -141,10 +144,19 @@ Route::prefix('{locale}')
 
         Route::get('/tourism/{quoteRequest}', [QuoteRequestController::class, 'show'])->name('tourism.show');
 
+        Route::middleware(['auth', 'banned'])->group(function () {
+            Route::post('/tourism/{quoteRequest}/suggestions/{suggestion}/claim', [QuoteRequestController::class, 'claimSuggestion'])
+                ->name('tourism.suggestions.claim');
+        });
+
         // Open to guests, same abuse guard as reviews above - each submission
         // fans out to every matching partner, so this also protects partners.
         Route::middleware(['banned', 'throttle:quote_requests'])->group(function () {
             Route::post('/tourism', [QuoteRequestController::class, 'store'])->name('tourism.request.store');
+        });
+
+        Route::middleware(['banned', 'throttle:quote_requests'])->group(function () {
+            Route::post('/tourism/destination-alerts', [DestinationAlertController::class, 'store'])->name('tourism.destination-alerts.store');
         });
 
         Route::get('/insurance/auto', [AutoInsuranceController::class, 'create'])->name('insurance.auto.request');
@@ -203,6 +215,10 @@ Route::prefix('{locale}')
                     Route::post('/reports', [ReportRequestController::class, 'store'])->name('reports.store');
                     Route::get('/reports/{reportRequest}', [ReportRequestController::class, 'show'])->name('reports.show');
 
+                    Route::get('/team', [TeamController::class, 'index'])->name('team.index');
+                    Route::post('/team', [TeamController::class, 'store'])->name('team.store');
+                    Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
+
                     Route::middleware('org.type:'.implode(',', Organization::RATES_TYPES))->group(function () {
                         Route::get('/rates', [CurrencyRateController::class, 'index'])->name('rates.index');
                         Route::get('/rates/create', [CurrencyRateController::class, 'create'])->name('rates.create');
@@ -215,6 +231,15 @@ Route::prefix('{locale}')
                         Route::get('/tourism', [OrganizationTourismController::class, 'index'])->name('tourism.index');
                         Route::post('/tourism/refresh-connect-link', [OrganizationTourismController::class, 'refreshConnectLink'])->name('tourism.refresh-connect-link');
                         Route::put('/tourism/destinations', [OrganizationTourismController::class, 'updateDestinations'])->name('tourism.destinations.update');
+                        Route::put('/tourism/destinations/{destination}/pause', [OrganizationTourismController::class, 'updateDestinationPause'])->name('tourism.destinations.pause');
+                        Route::put('/tourism/lead-preferences', [OrganizationTourismController::class, 'updateLeadPreferences'])->name('tourism.lead-preferences.update');
+
+                        Route::get('/quote-templates', [QuoteTemplateController::class, 'index'])->name('quote-templates.index');
+                        Route::get('/quote-templates/create', [QuoteTemplateController::class, 'create'])->name('quote-templates.create');
+                        Route::post('/quote-templates', [QuoteTemplateController::class, 'store'])->name('quote-templates.store');
+                        Route::get('/quote-templates/{quoteTemplate}/edit', [QuoteTemplateController::class, 'edit'])->name('quote-templates.edit');
+                        Route::put('/quote-templates/{quoteTemplate}', [QuoteTemplateController::class, 'update'])->name('quote-templates.update');
+                        Route::delete('/quote-templates/{quoteTemplate}', [QuoteTemplateController::class, 'destroy'])->name('quote-templates.destroy');
                     });
                 });
             });
