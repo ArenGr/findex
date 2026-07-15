@@ -47,6 +47,12 @@
             </div>
         @endif
 
+        @if (session('status') === 'email-verification-required')
+            <div class="mb-6 border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-ink">
+                {{ __('auth.verify_email.action_blocked') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('tourism.request.store') }}" class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8" novalidate>
             @csrf
 

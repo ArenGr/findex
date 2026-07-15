@@ -6,6 +6,7 @@ use App\Jobs\SendQuoteRequestToPartnersJob;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
+use App\Models\User;
 use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -50,6 +51,7 @@ class SendQuoteRequestToPartnersJobTest extends TestCase
         ], $overrides));
 
         $organization->tourismDestinations()->create(['country_code' => $countryCode]);
+        User::factory()->organization($organization)->create();
 
         return $organization;
     }

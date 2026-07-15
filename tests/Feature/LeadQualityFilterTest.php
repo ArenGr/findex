@@ -21,6 +21,7 @@ class LeadQualityFilterTest extends TestCase
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '111',
         ], $overrides));
         $organization->tourismDestinations()->create(['country_code' => 'GE']);
+        User::factory()->organization($organization)->create();
 
         return $organization;
     }

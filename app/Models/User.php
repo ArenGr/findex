@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserRole;
+use App\Mail\VerifyEmailAddress;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,10 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 #[Fillable(['name', 'email', 'password', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -108,5 +111,30 @@ class User extends Authenticatable implements FilamentUser
     public function unban(): void
     {
         $this->forceFill(['banned_at' => null])->save();
+    }
+
+    /**
+     * Overrides the MustVerifyEmail trait's default (which sends Laravel's
+     * generic notification) so verification email matches every other
+     * outbound email in this app: a branded Mailable sent directly via
+     * Mail::to(), not the Notification system.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        Mail::to($this)->send(new VerifyEmailAddress($this, $this->verificationUrl()));
+    }
+
+    /**
+     * Guard-agnostic by design (see VerifyEmailController) - the link
+     * itself is the credential, so this doesn't need to know or care
+     * whether the account it's for is a customer or an organization.
+     */
+    private function verificationUrl(): string
+    {
+        return URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'locale' => app()->getLocale(),
+            'id' => $this->getKey(),
+            'hash' => sha1($this->getEmailForVerification()),
+        ]);
     }
 }

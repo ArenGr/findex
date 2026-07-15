@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Organization;
 use App\Models\QuoteRequest;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +19,7 @@ class QuoteRequestBudgetRangeTest extends TestCase
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '123456',
         ]);
         $organization->tourismDestinations()->create(['country_code' => 'GE']);
+        User::factory()->organization($organization)->create();
 
         return $organization;
     }

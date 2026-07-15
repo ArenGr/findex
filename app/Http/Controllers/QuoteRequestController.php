@@ -130,6 +130,14 @@ class QuoteRequestController extends Controller
             return redirect()->route('tourism.request');
         }
 
+        // Guests remain unaffected (no account, nothing to verify) - this
+        // only blocks a logged-in customer whose own account email isn't
+        // confirmed yet, since replies and the results link both depend on
+        // that address actually being reachable.
+        if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+            return redirect()->route('tourism.request')->with('status', 'email-verification-required');
+        }
+
         $validated = $request->validate([
             'destination_country' => ['required', 'string', Rule::in(QuoteRequest::DESTINATIONS)],
             'hotel_name' => ['nullable', 'string', 'max:255'],

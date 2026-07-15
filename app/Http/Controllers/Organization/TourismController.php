@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\BackfillOpenRequestsToNewPartnerJob;
 use App\Jobs\NotifyDestinationAlertsJob;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
@@ -123,9 +124,13 @@ class TourismController extends Controller
 
         // A destination newly added here is created active (not paused),
         // so it's always eligible to trigger alerts - see
-        // NotifyDestinationAlertsJob.
+        // NotifyDestinationAlertsJob. BackfillOpenRequestsToNewPartnerJob
+        // covers the complementary case: customers who already have an
+        // open request for this destination, not just people who
+        // subscribed to be notified.
         foreach ($newlyAdded as $countryCode) {
             NotifyDestinationAlertsJob::dispatch($countryCode);
+            BackfillOpenRequestsToNewPartnerJob::dispatch($organization->id, $countryCode);
         }
 
         return redirect()->route('org.dashboard.tourism.index')->with('status', 'destinations-saved');

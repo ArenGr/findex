@@ -11,6 +11,12 @@
             </div>
         @endif
 
+        @if (session('status') === 'email-verification-required')
+            <div class="mb-8 border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-ink">
+                {{ __('auth.verify_email.action_blocked') }}
+            </div>
+        @endif
+
         {{-- Header --}}
         <div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             @if ($organization->logo)

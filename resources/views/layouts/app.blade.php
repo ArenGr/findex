@@ -33,6 +33,28 @@
 <body class="min-h-screen bg-white font-sans text-body-text antialiased">
     <x-site-header />
 
+    @if (session('status') === 'email-verified')
+        <div class="border-b border-primary/30 bg-primary/5 px-6 py-3 text-center text-sm text-primary">
+            {{ __('auth.verify_email.verified_confirmation') }}
+        </div>
+    @endif
+
+    @auth
+        @unless (auth()->user()->hasVerifiedEmail())
+            <div class="border-b border-accent-yellow/40 bg-accent-yellow/10 px-6 py-3 text-center text-sm text-ink">
+                @if (session('status') === 'verification-link-sent')
+                    {{ __('auth.verify_email.link_sent') }}
+                @else
+                    {{ __('auth.verify_email.banner') }}
+                    <form method="POST" action="{{ route('verification.send') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="font-medium text-primary hover:underline">{{ __('auth.verify_email.resend_button') }}</button>
+                    </form>
+                @endif
+            </div>
+        @endunless
+    @endauth
+
     <main>
         @yield('content')
     </main>

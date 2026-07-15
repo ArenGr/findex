@@ -25,4 +25,18 @@ return [
     'continue_with_google' => 'Continue with Google',
     'or_divider' => 'or',
     'google_failed' => 'Something went wrong signing in with Google. Please try again.',
+
+    'verify_email' => [
+        'subject' => 'Confirm your email address',
+        'heading' => 'One more step',
+        'body' => "Please confirm this is your email address by clicking the button below. This helps us make sure quote replies, alerts, and other account notifications actually reach you.",
+        'button' => 'Verify my email',
+        'ignore_hint' => "If you didn't create an account, you can safely ignore this email.",
+        'banner' => "Please confirm your email address - some actions are unavailable until you do.",
+        'org_banner' => "Please confirm your email address - customer leads won't be sent to you until you do.",
+        'resend_button' => 'Resend verification email',
+        'link_sent' => "We've sent a new verification link to your email.",
+        'verified_confirmation' => 'Your email is now verified. Thanks!',
+        'action_blocked' => 'Please verify your email address before doing this - check your inbox, or resend the link from the banner above.',
+    ],
 ];

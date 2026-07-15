@@ -66,6 +66,8 @@ class RegisteredOrganizationController extends Controller
             return $user;
         });
 
+        $user->sendEmailVerificationNotification();
+
         Auth::guard('organization')->login($user);
 
         $request->session()->regenerate();

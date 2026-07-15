@@ -5,6 +5,7 @@ use App\Http\Controllers\AutoInsuranceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\DestinationAlertController;
 use App\Http\Controllers\Organization\Auth\AuthenticatedSessionController as OrganizationAuthenticatedSessionController;
@@ -103,6 +104,12 @@ Route::prefix('{locale}')
             return view('auth.register-choice');
         })->name('register');
 
+        // Guard-agnostic (see VerifyEmailController) - reachable whether the
+        // link was emailed to a customer or an organization account.
+        Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
+            ->middleware(['signed', 'throttle:6,1'])
+            ->name('verification.verify');
+
         Route::middleware('guest')->group(function () {
             Route::get('/register/customer', [RegisteredUserController::class, 'create'])->name('register.customer');
             Route::post('/register/customer', [RegisteredUserController::class, 'store']);
@@ -176,6 +183,10 @@ Route::prefix('{locale}')
             Route::post('/alerts', [RateAlertController::class, 'store'])->name('alerts.store');
             Route::patch('/alerts/{rateAlert}/toggle', [RateAlertController::class, 'toggle'])->name('alerts.toggle');
             Route::delete('/alerts/{rateAlert}', [RateAlertController::class, 'destroy'])->name('alerts.destroy');
+
+            Route::post('/email/verification-notification', [VerifyEmailController::class, 'resendForCustomer'])
+                ->middleware('throttle:6,1')
+                ->name('verification.send');
         });
 
         Route::prefix('org')->name('org.')->group(function () {
@@ -189,6 +200,10 @@ Route::prefix('{locale}')
 
             Route::middleware('auth:organization')->group(function () {
                 Route::post('/logout', [OrganizationAuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+                Route::post('/email/verification-notification', [VerifyEmailController::class, 'resendForOrganization'])
+                    ->middleware('throttle:6,1')
+                    ->name('verification.send');
 
                 // role:organization,<value> kept off /logout above on
                 // purpose - a wrong-role session on this guard (shouldn't

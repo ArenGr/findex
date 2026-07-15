@@ -28,6 +28,16 @@ class ReviewController extends Controller
                 ->with('status', 'review-submitted');
         }
 
+        // Guests remain unaffected (no account, nothing to verify) - this
+        // only blocks a logged-in customer whose own account email isn't
+        // confirmed yet, since a review is public content attributed to
+        // that account.
+        if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+            return redirect()
+                ->route('organizations.show', $organization)
+                ->with('status', 'email-verification-required');
+        }
+
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['required', 'string', 'min:10', 'max:2000'],

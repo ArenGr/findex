@@ -63,6 +63,20 @@
                 </div>
             @endunless
 
+            @unless (auth('organization')->user()->hasVerifiedEmail())
+                <div class="mb-6 border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-ink">
+                    @if (session('status') === 'verification-link-sent')
+                        {{ __('auth.verify_email.link_sent') }}
+                    @else
+                        {{ __('auth.verify_email.org_banner') }}
+                        <form method="POST" action="{{ route('org.verification.send') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="font-medium text-primary hover:underline">{{ __('auth.verify_email.resend_button') }}</button>
+                        </form>
+                    @endif
+                </div>
+            @endunless
+
             @php
                 $statusMessages = [
                     'profile-updated' => __('org.profile.updated'),
@@ -82,6 +96,7 @@
                     'quote-template-updated' => __('org.quote_templates.updated'),
                     'quote-template-deleted' => __('org.quote_templates.deleted'),
                     'lead-preferences-updated' => __('tourism.dashboard.lead_preferences_updated'),
+                    'email-verified' => __('auth.verify_email.verified_confirmation'),
                 ];
             @endphp
 

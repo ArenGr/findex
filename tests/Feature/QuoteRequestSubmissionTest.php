@@ -27,6 +27,7 @@ class QuoteRequestSubmissionTest extends TestCase
         ]);
 
         $organization->tourismDestinations()->create(['country_code' => $countryCode]);
+        User::factory()->organization($organization)->create();
 
         return $organization;
     }
