@@ -39,6 +39,9 @@ class AutoInsuranceQuoteFlowTest extends TestCase
             'owner_type' => 'individual',
             'owner_id_number' => 'AN1234567',
             'contract_term_months' => 12,
+            'engine_power_hp' => 105,
+            'driver_experience_years' => 8,
+            'accident_free_years' => 3,
             'guest_name' => 'Test Guest',
             'guest_email' => 'guest@example.com',
             'consent' => '1',
@@ -144,7 +147,10 @@ class AutoInsuranceQuoteFlowTest extends TestCase
 
         $this->post(route('insurance.auto.request.store', ['locale' => 'en']), [
             'consent' => '1',
-        ])->assertSessionHasErrors(['vehicle_plate', 'owner_type', 'owner_id_number', 'contract_term_months']);
+        ])->assertSessionHasErrors([
+            'vehicle_plate', 'owner_type', 'owner_id_number', 'contract_term_months',
+            'engine_power_hp', 'driver_experience_years', 'accident_free_years',
+        ]);
 
         $this->assertSame(0, AutoInsuranceRequest::count());
     }

@@ -32,17 +32,51 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
         12 => 1.0,
     ];
 
+    // Compulsory motor TPL in Armenia really does rate on engine power -
+    // a bigger engine is a bigger payout risk. Upper bound of each band.
+    private const ENGINE_POWER_BANDS = [
+        70 => 0.85,
+        100 => 1.0,
+        120 => 1.1,
+        150 => 1.25,
+        200 => 1.45,
+    ];
+
+    private const ENGINE_POWER_TOP_FACTOR = 1.7;
+
+    // A newly licensed driver is a bigger risk than someone with a decade
+    // behind the wheel - real insurers price this in, this doesn't yet.
+    private const EXPERIENCE_FACTOR = [
+        2 => 1.15,
+        6 => 1.05,
+        10 => 1.0,
+    ];
+
+    private const EXPERIENCE_TOP_FACTOR = 0.95;
+
+    /**
+     * Bonus-malus: each consecutive accident-free year earns a discount,
+     * capped so a lifetime of clean driving doesn't imply a free policy.
+     */
+    private const ACCIDENT_FREE_DISCOUNT_PER_YEAR = 0.03;
+    private const ACCIDENT_FREE_MAX_YEARS = 5;
+
     public function quote(AutoInsuranceRequest $request, Organization $partner): array
     {
         $base = self::BASE_ANNUAL_PREMIUM[$request->owner_type];
         $termFactor = self::TERM_FACTOR[$request->contract_term_months];
+        $engineFactor = $this->engineFactor($request->engine_power_hp);
+        $experienceFactor = $this->experienceFactor($request->driver_experience_years);
+        $bonusMalusFactor = $this->bonusMalusFactor($request->accident_free_years);
 
         // Stand-in for each partner's own real-world rate differences -
         // deterministic from the partner's id so quotes stay stable across
         // page reloads instead of reshuffling on every request.
         $partnerVariance = 0.85 + ($partner->id % 7) * 0.05;
 
-        $premium = (int) round($base * $termFactor * $partnerVariance / 1000) * 1000;
+        $premium = (int) round(
+            $base * $termFactor * $engineFactor * $experienceFactor * $bonusMalusFactor * $partnerVariance / 1000
+        ) * 1000;
 
         return [
             'status' => AutoInsuranceQuote::STATUS_QUOTED,
@@ -52,5 +86,44 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
             'coverage_summary' => __('auto_insurance.provider.coverage_summary', [], $request->locale),
             'notes' => __('auto_insurance.provider.quote_notes', [], $request->locale),
         ];
+    }
+
+    private function engineFactor(?int $enginePowerHp): float
+    {
+        if ($enginePowerHp === null) {
+            return 1.0;
+        }
+
+        foreach (self::ENGINE_POWER_BANDS as $upperBound => $factor) {
+            if ($enginePowerHp <= $upperBound) {
+                return $factor;
+            }
+        }
+
+        return self::ENGINE_POWER_TOP_FACTOR;
+    }
+
+    private function experienceFactor(?int $driverExperienceYears): float
+    {
+        if ($driverExperienceYears === null) {
+            return 1.0;
+        }
+
+        foreach (self::EXPERIENCE_FACTOR as $upperBound => $factor) {
+            if ($driverExperienceYears < $upperBound) {
+                return $factor;
+            }
+        }
+
+        return self::EXPERIENCE_TOP_FACTOR;
+    }
+
+    private function bonusMalusFactor(?int $accidentFreeYears): float
+    {
+        if ($accidentFreeYears === null) {
+            return 1.0;
+        }
+
+        return 1 - min($accidentFreeYears, self::ACCIDENT_FREE_MAX_YEARS) * self::ACCIDENT_FREE_DISCOUNT_PER_YEAR;
     }
 }

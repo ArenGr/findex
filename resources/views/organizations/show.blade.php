@@ -43,6 +43,31 @@
             </div>
         </div>
 
+        @if ($organization->has_contact_info)
+            <div class="mt-4 flex flex-wrap gap-2">
+                @if ($organization->contact_phone)
+                    <a href="tel:{{ preg_replace('/[^\d+]/', '', $organization->contact_phone) }}" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                        📞 {{ __('organizations.contact_call') }}
+                    </a>
+                @endif
+                @if ($organization->contact_whatsapp)
+                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $organization->contact_whatsapp) }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                        💬 {{ __('organizations.contact_whatsapp') }}
+                    </a>
+                @endif
+                @if ($organization->contact_telegram)
+                    <a href="https://t.me/{{ ltrim($organization->contact_telegram, '@') }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                        ✈️ {{ __('organizations.contact_telegram') }}
+                    </a>
+                @endif
+                @if ($organization->contact_instagram)
+                    <a href="https://instagram.com/{{ ltrim($organization->contact_instagram, '@') }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                        📷 {{ __('organizations.contact_instagram') }}
+                    </a>
+                @endif
+            </div>
+        @endif
+
         {{-- Facts --}}
         <dl class="mt-8 grid grid-cols-1 gap-4 border-y border-placeholder py-6 sm:grid-cols-3">
             <div>

@@ -40,6 +40,12 @@
             </div>
         @endif
 
+        @if (session('status') === 'interest-marked')
+            <div class="mb-8 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+                {{ __('auto_insurance.results.interest_marked_status') }}
+            </div>
+        @endif
+
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('auto_insurance.results.heading') }}</h1>
 
         {{-- Vehicle summary "ticket" --}}
@@ -108,6 +114,51 @@
                         @if ($quote->notes)
                             <p class="mt-2 rounded-xl bg-primary/5 px-4 py-3 text-sm leading-relaxed text-ink">{{ $quote->notes }}</p>
                         @endif
+
+                        @if ($quote->organization->has_contact_info)
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @if ($quote->organization->contact_phone)
+                                    <a href="tel:{{ preg_replace('/[^\d+]/', '', $quote->organization->contact_phone) }}" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                        📞 {{ __('organizations.contact_call') }}
+                                    </a>
+                                @endif
+                                @if ($quote->organization->contact_whatsapp)
+                                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $quote->organization->contact_whatsapp) }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                        💬 {{ __('organizations.contact_whatsapp') }}
+                                    </a>
+                                @endif
+                                @if ($quote->organization->contact_telegram)
+                                    <a href="https://t.me/{{ ltrim($quote->organization->contact_telegram, '@') }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                        ✈️ {{ __('organizations.contact_telegram') }}
+                                    </a>
+                                @endif
+                                @if ($quote->organization->contact_instagram)
+                                    <a href="https://instagram.com/{{ ltrim($quote->organization->contact_instagram, '@') }}" target="_blank" rel="noopener" class="rounded-full bg-placeholder/40 px-3 py-1.5 text-xs font-medium text-ink hover:bg-placeholder/60">
+                                        📷 {{ __('organizations.contact_instagram') }}
+                                    </a>
+                                @endif
+                            </div>
+                        @endif
+
+                        <div class="mt-3">
+                            @if ($quote->is_interested)
+                                <p class="text-xs font-medium text-primary">✓ {{ __('auto_insurance.results.interested_confirmation') }}</p>
+                            @else
+                                <form
+                                    method="POST"
+                                    action="{{ URL::signedRoute('insurance.auto.quotes.interested', [
+                                        'locale' => app()->getLocale(),
+                                        'autoInsuranceRequest' => $autoInsuranceRequest->id,
+                                        'quote' => $quote->id,
+                                    ]) }}"
+                                >
+                                    @csrf
+                                    <button type="submit" class="text-xs font-medium text-primary hover:underline">
+                                        {{ __('auto_insurance.results.interested_button') }} &rarr;
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
 
                         @if ($quotedCount >= 2)
                             <label class="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-ink">

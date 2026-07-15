@@ -28,6 +28,10 @@ class ProfileController extends Controller
             'description_en' => ['nullable', 'string', 'max:5000'],
             'description_ru' => ['nullable', 'string', 'max:5000'],
             'website' => ['nullable', 'url', 'max:255'],
+            'contact_phone' => ['nullable', 'string', 'max:30'],
+            'contact_whatsapp' => ['nullable', 'string', 'max:30'],
+            'contact_telegram' => ['nullable', 'string', 'max:50'],
+            'contact_instagram' => ['nullable', 'string', 'max:50'],
             // Laravel's generic 'image' rule allows SVG, which can carry
             // embedded scripts - a stored-XSS risk if ever served inline
             // rather than as a download. Restrict to raster formats only.

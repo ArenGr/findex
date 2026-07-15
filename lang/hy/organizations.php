@@ -4,6 +4,10 @@ return [
     'website' => 'Կայք',
     'type' => 'Տեսակ',
     'country' => 'Երկիր',
+    'contact_call' => 'Զանգել',
+    'contact_whatsapp' => 'WhatsApp',
+    'contact_telegram' => 'Telegram',
+    'contact_instagram' => 'Instagram',
 
     'reviews_count' => '{0} կարծիք չկա|{1} 1 կարծիք|[2,*] :count կարծիք',
 

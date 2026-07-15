@@ -4,6 +4,10 @@ return [
     'website' => 'Website',
     'type' => 'Type',
     'country' => 'Country',
+    'contact_call' => 'Call',
+    'contact_whatsapp' => 'WhatsApp',
+    'contact_telegram' => 'Telegram',
+    'contact_instagram' => 'Instagram',
 
     'reviews_count' => '{0} No reviews|{1} 1 review|[2,*] :count reviews',
 

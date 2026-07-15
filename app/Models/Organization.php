@@ -26,11 +26,21 @@ class Organization extends Model
      */
     public const TOURISM_TYPES = ['tourism'];
 
+    /**
+     * Types that quote auto insurance - the only ones with a reason to see
+     * the dashboard's Insurance page (see hasInsurancePage()).
+     */
+    public const INSURANCE_TYPES = ['insurance'];
+
     protected $fillable = [
         'name',
         'slug',
         'type',
         'website',
+        'contact_phone',
+        'contact_whatsapp',
+        'contact_telegram',
+        'contact_instagram',
         'logo',
         'description_hy',
         'description_en',
@@ -263,9 +273,19 @@ class Organization extends Model
         return in_array($this->type, self::RATES_TYPES, true);
     }
 
+    public function getHasContactInfoAttribute(): bool
+    {
+        return $this->contact_phone || $this->contact_whatsapp || $this->contact_telegram || $this->contact_instagram;
+    }
+
     public function hasTourismPage(): bool
     {
         return in_array($this->type, self::TOURISM_TYPES, true);
+    }
+
+    public function hasInsurancePage(): bool
+    {
+        return in_array($this->type, self::INSURANCE_TYPES, true);
     }
 
     /**

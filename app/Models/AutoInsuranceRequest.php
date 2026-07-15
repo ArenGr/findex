@@ -22,10 +22,16 @@ class AutoInsuranceRequest extends Model
         'owner_type',
         'owner_id_number',
         'contract_term_months',
+        'engine_power_hp',
+        'driver_experience_years',
+        'accident_free_years',
     ];
 
     protected $casts = [
         'contract_term_months' => 'integer',
+        'engine_power_hp' => 'integer',
+        'driver_experience_years' => 'integer',
+        'accident_free_years' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

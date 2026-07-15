@@ -19,6 +19,20 @@ return [
         'reports' => 'Reports',
         'team' => 'Team',
         'quote_templates' => 'Templates',
+        'insurance' => 'Insurance Quotes',
+    ],
+
+    'insurance' => [
+        'title' => 'Insurance Quotes',
+        'subtitle' => 'Every auto insurance quote we sent on your behalf, and who showed interest.',
+        'total_quotes' => 'Total quotes',
+        'interested_count' => 'Interested customers',
+        'interested_rate' => 'Interest rate',
+        'quotes_heading' => 'Quote History',
+        'quotes_hint' => "Quotes are generated automatically - there's nothing to respond to unless a customer marks interest.",
+        'vehicle_summary' => 'Plate :plate · :term',
+        'interested_label' => 'Customer marked interested :time',
+        'no_quotes_yet' => 'No quotes given yet.',
     ],
 
     'overview' => [
@@ -43,6 +57,11 @@ return [
         'name' => 'Name',
         'description' => 'Description',
         'website' => 'Website',
+        'contact_phone' => 'Phone',
+        'contact_whatsapp' => 'WhatsApp',
+        'contact_telegram' => 'Telegram username',
+        'contact_instagram' => 'Instagram handle',
+        'contact_hint' => 'Shown on your public profile so customers can reach you directly.',
         'logo' => 'Logo',
         'save' => 'Save changes',
         'updated' => 'Profile updated.',

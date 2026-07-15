@@ -34,6 +34,14 @@
 
         <x-form-input name="website" type="url" :label="__('org.profile.website')" :value="$organization->website" />
 
+        <div class="grid grid-cols-2 gap-4">
+            <x-form-input name="contact_phone" :label="__('org.profile.contact_phone')" :value="$organization->contact_phone" placeholder="+374 xx xxx xxx" />
+            <x-form-input name="contact_whatsapp" :label="__('org.profile.contact_whatsapp')" :value="$organization->contact_whatsapp" placeholder="+374 xx xxx xxx" />
+            <x-form-input name="contact_telegram" :label="__('org.profile.contact_telegram')" :value="$organization->contact_telegram" placeholder="agency_username" />
+            <x-form-input name="contact_instagram" :label="__('org.profile.contact_instagram')" :value="$organization->contact_instagram" placeholder="agency_handle" />
+        </div>
+        <p class="-mt-3 text-xs text-subtle">{{ __('org.profile.contact_hint') }}</p>
+
         <div>
             <label for="logo" class="block text-sm font-medium text-ink">{{ __('org.profile.logo') }}</label>
             @if ($organization->logo)

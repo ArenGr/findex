@@ -4,6 +4,10 @@ return [
     'website' => 'Веб-сайт',
     'type' => 'Тип',
     'country' => 'Страна',
+    'contact_call' => 'Позвонить',
+    'contact_whatsapp' => 'WhatsApp',
+    'contact_telegram' => 'Telegram',
+    'contact_instagram' => 'Instagram',
 
     'reviews_count' => '{0} Нет отзывов|{1} :count отзыв|[2,4] :count отзыва|[5,*] :count отзывов',
 

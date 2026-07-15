@@ -97,6 +97,31 @@
                     @enderror
                 </div>
 
+                <div class="mt-4 grid grid-cols-3 gap-4">
+                    <x-form-input
+                        type="number" min="1" max="800"
+                        name="engine_power_hp"
+                        :label="__('auto_insurance.request.engine_power')"
+                        :value="old('engine_power_hp')"
+                        required
+                    />
+                    <x-form-input
+                        type="number" min="0" max="70"
+                        name="driver_experience_years"
+                        :label="__('auto_insurance.request.driver_experience')"
+                        :value="old('driver_experience_years')"
+                        required
+                    />
+                    <x-form-input
+                        type="number" min="0" max="70"
+                        name="accident_free_years"
+                        :label="__('auto_insurance.request.accident_free_years')"
+                        :value="old('accident_free_years')"
+                        required
+                    />
+                </div>
+                <p class="mt-1.5 text-xs text-subtle">{{ __('auto_insurance.request.accident_free_hint') }}</p>
+
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-ink">{{ __('auto_insurance.request.contract_term') }}</label>
                     @error('contract_term_months')

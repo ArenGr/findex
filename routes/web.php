@@ -13,6 +13,7 @@ use App\Http\Controllers\Organization\Auth\RegisteredOrganizationController;
 use App\Http\Controllers\Organization\BranchController;
 use App\Http\Controllers\Organization\CurrencyRateController;
 use App\Http\Controllers\Organization\DashboardController as OrganizationDashboardController;
+use App\Http\Controllers\Organization\InsuranceController as OrganizationInsuranceController;
 use App\Http\Controllers\Organization\ProfileController as OrganizationProfileController;
 use App\Http\Controllers\Organization\ReportRequestController;
 use App\Http\Controllers\Organization\QuoteTemplateController;
@@ -170,6 +171,11 @@ Route::prefix('{locale}')
 
         Route::get('/insurance/auto/{autoInsuranceRequest}', [AutoInsuranceController::class, 'show'])->name('insurance.auto.show');
 
+        Route::middleware('throttle:quote_response_submit')->group(function () {
+            Route::post('/insurance/auto/{autoInsuranceRequest}/quotes/{quote}/interested', [AutoInsuranceController::class, 'markInterested'])
+                ->name('insurance.auto.quotes.interested');
+        });
+
         // Same abuse guard as the tourism request above - each submission
         // fans out to every matching insurance partner.
         Route::middleware(['banned', 'throttle:quote_requests'])->group(function () {
@@ -255,6 +261,10 @@ Route::prefix('{locale}')
                         Route::get('/quote-templates/{quoteTemplate}/edit', [QuoteTemplateController::class, 'edit'])->name('quote-templates.edit');
                         Route::put('/quote-templates/{quoteTemplate}', [QuoteTemplateController::class, 'update'])->name('quote-templates.update');
                         Route::delete('/quote-templates/{quoteTemplate}', [QuoteTemplateController::class, 'destroy'])->name('quote-templates.destroy');
+                    });
+
+                    Route::middleware('org.type:'.implode(',', Organization::INSURANCE_TYPES))->group(function () {
+                        Route::get('/insurance', [OrganizationInsuranceController::class, 'index'])->name('insurance.index');
                     });
                 });
             });

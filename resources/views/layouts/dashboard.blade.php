@@ -46,6 +46,7 @@
                     'org.dashboard.tourism.index' => __('tourism.nav_label'),
                     'org.dashboard.quote-templates.index' => __('org.nav.quote_templates'),
                 ] : []),
+                ...($organization->hasInsurancePage() ? ['org.dashboard.insurance.index' => __('org.nav.insurance')] : []),
             ] as $routeName => $label)
                 <a
                     href="{{ route($routeName) }}"

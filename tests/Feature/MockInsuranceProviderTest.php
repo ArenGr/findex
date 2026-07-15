@@ -76,4 +76,36 @@ class MockInsuranceProviderTest extends TestCase
         $this->assertSame($first['premium_amount'], $firstAgain['premium_amount']);
         $this->assertNotSame($first['premium_amount'], $second['premium_amount']);
     }
+
+    public function test_a_more_powerful_engine_costs_more(): void
+    {
+        $weak = (new MockInsuranceProvider())->quote($this->request(['engine_power_hp' => 65]), $this->partner(1));
+        $strong = (new MockInsuranceProvider())->quote($this->request(['engine_power_hp' => 220]), $this->partner(1));
+
+        $this->assertGreaterThan((float) $weak['premium_amount'], (float) $strong['premium_amount']);
+    }
+
+    public function test_a_new_driver_pays_more_than_an_experienced_one(): void
+    {
+        $newDriver = (new MockInsuranceProvider())->quote($this->request(['driver_experience_years' => 1]), $this->partner(1));
+        $veteran = (new MockInsuranceProvider())->quote($this->request(['driver_experience_years' => 15]), $this->partner(1));
+
+        $this->assertGreaterThan((float) $veteran['premium_amount'], (float) $newDriver['premium_amount']);
+    }
+
+    public function test_more_accident_free_years_lowers_the_premium(): void
+    {
+        $noHistory = (new MockInsuranceProvider())->quote($this->request(['accident_free_years' => 0]), $this->partner(1));
+        $cleanRecord = (new MockInsuranceProvider())->quote($this->request(['accident_free_years' => 5]), $this->partner(1));
+
+        $this->assertGreaterThan((float) $cleanRecord['premium_amount'], (float) $noHistory['premium_amount']);
+    }
+
+    public function test_the_accident_free_discount_caps_at_five_years(): void
+    {
+        $fiveYears = (new MockInsuranceProvider())->quote($this->request(['accident_free_years' => 5]), $this->partner(1));
+        $twentyYears = (new MockInsuranceProvider())->quote($this->request(['accident_free_years' => 20]), $this->partner(1));
+
+        $this->assertSame($fiveYears['premium_amount'], $twentyYears['premium_amount']);
+    }
 }

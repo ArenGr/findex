@@ -27,6 +27,7 @@ class AutoInsuranceQuote extends Model
         'premium_amount' => 'decimal:2',
         'policy_term_months' => 'integer',
         'responded_at' => 'datetime',
+        'interested_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -34,6 +35,21 @@ class AutoInsuranceQuote extends Model
     public function getIsDeclinedAttribute(): bool
     {
         return $this->status === self::STATUS_DECLINED;
+    }
+
+    public function getIsInterestedAttribute(): bool
+    {
+        return $this->interested_at !== null;
+    }
+
+    /**
+     * interested_at is deliberately not mass-assignable (see $fillable
+     * above) - marking interest goes through this dedicated method instead,
+     * matching User::ban()'s reasoning for banned_at.
+     */
+    public function markInterested(): void
+    {
+        $this->forceFill(['interested_at' => now()])->save();
     }
 
     public function autoInsuranceRequest(): BelongsTo

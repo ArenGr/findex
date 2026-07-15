@@ -24,6 +24,10 @@ return [
         ],
         'owner_id_number_individual' => "Owner's passport / ID / PSC number",
         'owner_id_number_legal_entity' => 'TIN (Tax Payer Identification Number)',
+        'engine_power' => 'Engine power (hp)',
+        'driver_experience' => 'Driver experience (years)',
+        'accident_free_years' => 'Accident-free years',
+        'accident_free_hint' => 'How many years in a row without an at-fault accident - this can lower your premium.',
         'contract_term' => 'Contract term',
         'contract_terms' => [
             3 => '3 months',
@@ -58,10 +62,20 @@ return [
         'compare_row_coverage' => "What's covered",
         'compare_row_notes' => 'Notes',
         'bookmark_hint' => 'Bookmark this page to come back to your quotes any time.',
+        'interested_button' => "I'm interested",
+        'interested_confirmation' => "You've let this insurer know you're interested - expect them to reach out.",
+        'interest_marked_status' => "Got it - we've let the insurer know you're interested.",
     ],
 
     'provider' => [
         'coverage_summary' => 'Compulsory third-party liability - covers damage and injury you cause to other people or their property.',
         'quote_notes' => 'Includes 24/7 roadside assistance. Final price may vary after a vehicle inspection.',
+    ],
+
+    'email' => [
+        'interest_subject' => 'A customer is interested in your quote',
+        'interest_heading' => 'New interested customer',
+        'interest_body' => ':name is interested in your :premium quote for vehicle :plate.',
+        'interest_contact' => 'Reach out to them at :email.',
     ],
 ];
