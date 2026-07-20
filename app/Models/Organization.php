@@ -244,12 +244,6 @@ class Organization extends Model
         return $query->active()
             ->where('type', 'tourism')
             ->whereNotNull('telegram_chat_id')
-            // At least one team login has confirmed they actually control
-            // the email they registered with - without this, anyone could
-            // register an org under a business they don't own (using an
-            // email they don't control, unverifiable) and start receiving
-            // real customers' private trip details.
-            ->whereHas('users', fn ($query) => $query->whereNotNull('email_verified_at'))
             ->whereHas('tourismDestinations', fn ($query) => $query
                 ->where('country_code', $countryCode)
                 ->where(fn ($query) => $query->where('is_paused', false)

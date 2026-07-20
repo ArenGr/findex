@@ -14,11 +14,12 @@ use Tests\TestCase;
 /**
  * Covers the whole verification loop: sending on registration, the
  * guard-agnostic signed link (see VerifyEmailController), resending per
- * guard, and the two places verification status is actually enforced -
- * an unverified org never gets matched to leads (see
- * Organization::tourismPartnersForDestination), and a logged-in-but-
- * unverified customer can't submit a quote request or review (guests are
- * unaffected either way).
+ * guard, and where verification status is actually enforced - a
+ * logged-in-but-unverified customer can't submit a quote request or review
+ * (guests are unaffected either way). Tourism orgs are intentionally *not*
+ * gated on email verification for lead matching (see
+ * Organization::tourismPartnersForDestination) - unverified orgs still
+ * receive leads.
  */
 class EmailVerificationTest extends TestCase
 {
@@ -155,7 +156,7 @@ class EmailVerificationTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    public function test_an_organization_with_no_verified_team_member_is_excluded_from_lead_matching(): void
+    public function test_an_organization_with_no_verified_team_member_is_still_matched(): void
     {
         $organization = Organization::create([
             'name' => 'Unverified Agency', 'slug' => 'unverified-agency', 'type' => 'tourism',
@@ -166,7 +167,7 @@ class EmailVerificationTest extends TestCase
 
         $matches = Organization::tourismPartnersForDestination('GE')->get();
 
-        $this->assertFalse($matches->contains($organization));
+        $this->assertTrue($matches->contains($organization));
     }
 
     public function test_an_organization_with_at_least_one_verified_team_member_is_matched(): void
