@@ -41,9 +41,13 @@
 
     // WhatsApp's real group link isn't set up yet - shown now with a
     // placeholder so the entry is visible, swapped in once WHATSAPP_GROUP_URL
-    // is set (unlike Telegram, which only appears once it has a real URL).
+    // is set. The Telegram entry deliberately points at the bot
+    // (t.me/<bot_username>), not the separate announcements group -
+    // opening it and tapping Start lands in RatesBotHandler's currency
+    // menu (see app/Services/Telegram/RatesBotHandler.php), which the
+    // plain group link can't offer since nothing in a group chat runs
+    // that flow automatically.
     $joinLinks = collect([
-        ['label' => 'Telegram', 'url' => config('services.telegram.group_url'), 'icon' => asset('images/telegram-logo.svg')],
         [
             'label' => 'Rates Bot',
             'url' => config('services.telegram.bot_username') ? 'https://t.me/' . config('services.telegram.bot_username') : null,

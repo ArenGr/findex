@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Findex — Coming soon</title>
+<style>
+    :root {
+        --primary: #607e34;
+        --primary-dark: #4c6529;
+        --accent-yellow: #f1cb40;
+        --accent-blue: #005fb9;
+        --ink: #161515;
+        --muted: #676767;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 20% 15%, #eef3e6 0%, #ffffff 45%, #ffffff 100%);
+    }
+
+    .card {
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+    }
+
+    .mark {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 28px;
+        border-radius: 16px;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mark svg { width: 34px; height: 34px; }
+
+    .wordmark {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin: 0 0 18px;
+    }
+
+    h1 {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.35;
+        margin: 0 0 12px;
+    }
+
+    p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--muted);
+        margin: 0;
+    }
+
+    .bar {
+        width: 56px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--accent-yellow);
+        margin: 24px auto 0;
+    }
+</style>
+</head>
+<body>
+    <div class="card">
+        <div class="mark">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 16L9 10L13 13L20 5" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 5H20V11" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <p class="wordmark">Findex</p>
+        <h1>We're putting on the finishing touches.</h1>
+        <p>Findex is almost ready. We're wrapping up a few last details before opening the doors — check back soon.</p>
+        <div class="bar"></div>
+    </div>
+</body>
+</html>
