@@ -8,11 +8,6 @@
         ['title' => __('auto_insurance.request.step_2_title'), 'body' => __('auto_insurance.request.step_2_body'), 'color' => 'slide-blue'],
         ['title' => __('auto_insurance.request.step_3_title'), 'body' => __('auto_insurance.request.step_3_body'), 'color' => 'accent-yellow'],
     ];
-
-    $ownerIdLabels = [
-        'individual' => __('auto_insurance.request.owner_id_number_individual'),
-        'legal_entity' => __('auto_insurance.request.owner_id_number_legal_entity'),
-    ];
 @endphp
 
 @section('content')
@@ -45,7 +40,6 @@
             method="POST"
             action="{{ route('insurance.auto.request.store') }}"
             class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8"
-            x-data="{ ownerType: '{{ old('owner_type', 'individual') }}', idLabels: @js($ownerIdLabels) }"
             novalidate
         >
             @csrf
@@ -65,62 +59,8 @@
                 </div>
 
                 <div class="mt-4">
-                    <label class="block text-sm font-medium text-ink">{{ __('auto_insurance.request.owner_type') }}</label>
-                    @error('owner_type')
-                        <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-
-                    <div class="mt-2 grid grid-cols-2 gap-2">
-                        @foreach (['individual', 'legal_entity'] as $type)
-                            <label class="group cursor-pointer">
-                                <input type="radio" name="owner_type" value="{{ $type }}" x-model="ownerType" class="peer sr-only" @checked(old('owner_type', 'individual') === $type) required>
-                                <span class="flex items-center justify-center rounded-xl border border-border-muted px-3 py-3 text-center text-sm font-medium text-ink transition peer-checked:border-primary peer-checked:bg-primary/5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 group-hover:border-primary/60">
-                                    {{ __('auto_insurance.request.owner_types.' . $type) }}
-                                </span>
-                            </label>
-                        @endforeach
-                    </div>
+                    <x-form-input name="owner_id_number" :label="__('auto_insurance.request.owner_id_number')" :value="old('owner_id_number')" required />
                 </div>
-
-                <div class="mt-4">
-                    <label for="owner_id_number" class="block text-sm font-medium text-ink" x-text="idLabels[ownerType]"></label>
-                    <input
-                        type="text"
-                        name="owner_id_number"
-                        id="owner_id_number"
-                        value="{{ old('owner_id_number') }}"
-                        required
-                        class="mt-1.5 block w-full rounded-md border px-3 py-2 text-sm text-ink focus:outline-none {{ $errors->has('owner_id_number') ? 'border-red-400 focus:border-red-500' : 'border-border-muted focus:border-primary' }}"
-                    >
-                    @error('owner_id_number')
-                        <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="mt-4 grid grid-cols-3 gap-4">
-                    <x-form-input
-                        type="number" min="1" max="800"
-                        name="engine_power_hp"
-                        :label="__('auto_insurance.request.engine_power')"
-                        :value="old('engine_power_hp')"
-                        required
-                    />
-                    <x-form-input
-                        type="number" min="0" max="70"
-                        name="driver_experience_years"
-                        :label="__('auto_insurance.request.driver_experience')"
-                        :value="old('driver_experience_years')"
-                        required
-                    />
-                    <x-form-input
-                        type="number" min="0" max="70"
-                        name="accident_free_years"
-                        :label="__('auto_insurance.request.accident_free_years')"
-                        :value="old('accident_free_years')"
-                        required
-                    />
-                </div>
-                <p class="mt-1.5 text-xs text-subtle">{{ __('auto_insurance.request.accident_free_hint') }}</p>
 
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-ink">{{ __('auto_insurance.request.contract_term') }}</label>

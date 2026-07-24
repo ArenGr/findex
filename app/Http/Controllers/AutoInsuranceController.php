@@ -17,7 +17,6 @@ class AutoInsuranceController extends Controller
     public function create(): View
     {
         return view('insurance.auto.request', [
-            'ownerTypes' => AutoInsuranceRequest::OWNER_TYPES,
             'contractTerms' => AutoInsuranceRequest::CONTRACT_TERMS,
         ]);
     }
@@ -32,21 +31,14 @@ class AutoInsuranceController extends Controller
 
         $validated = $request->validate([
             'vehicle_plate' => ['required', 'string', 'max:20'],
-            'owner_type' => ['required', 'string', Rule::in(AutoInsuranceRequest::OWNER_TYPES)],
             'owner_id_number' => ['required', 'string', 'max:20'],
             'contract_term_months' => ['required', 'integer', Rule::in(AutoInsuranceRequest::CONTRACT_TERMS)],
-            'engine_power_hp' => ['required', 'integer', 'min:1', 'max:800'],
-            'driver_experience_years' => ['required', 'integer', 'min:0', 'max:70'],
-            'accident_free_years' => ['required', 'integer', 'min:0', 'lte:driver_experience_years'],
             'guest_name' => [Rule::requiredIf(! $request->user()), 'nullable', 'string', 'min:2', 'max:60'],
             'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', 'email', 'max:255'],
             'consent' => ['accepted'],
         ], attributes: [
             'guest_name' => __('tourism.request.your_name'),
             'guest_email' => __('tourism.request.your_email'),
-            'engine_power_hp' => __('auto_insurance.request.engine_power'),
-            'driver_experience_years' => __('auto_insurance.request.driver_experience'),
-            'accident_free_years' => __('auto_insurance.request.accident_free_years'),
         ]);
 
         $autoInsuranceRequest = AutoInsuranceRequest::create([
@@ -55,12 +47,15 @@ class AutoInsuranceController extends Controller
             'guest_email' => $request->user() ? null : $validated['guest_email'],
             'locale' => app()->getLocale(),
             'vehicle_plate' => $validated['vehicle_plate'],
-            'owner_type' => $validated['owner_type'],
+            // Rating inputs (owner type, engine power, driver experience,
+            // accident-free years) were dropped from the request form to
+            // keep the intake to plate/ID/term - owner_type still has to be
+            // one of AutoInsuranceRequest::OWNER_TYPES since the column
+            // isn't nullable, so it's fixed to 'individual' rather than
+            // asked for.
+            'owner_type' => 'individual',
             'owner_id_number' => $validated['owner_id_number'],
             'contract_term_months' => $validated['contract_term_months'],
-            'engine_power_hp' => $validated['engine_power_hp'],
-            'driver_experience_years' => $validated['driver_experience_years'],
-            'accident_free_years' => $validated['accident_free_years'],
         ]);
 
         $quoteService->requestQuotes($autoInsuranceRequest);

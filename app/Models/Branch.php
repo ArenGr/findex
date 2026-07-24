@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Branch extends Model
 {
+    // Only the fields the 'rates' cache actually reads (RateController's
+    // city filter) trigger an invalidation - a branch's name/address
+    // changing shouldn't flush rate data that doesn't depend on it.
+    protected static function booted(): void
+    {
+        static::saved(function (self $branch) {
+            if ($branch->wasChanged(['is_active', 'city'])) {
+                RateCache::invalidate();
+            }
+        });
+        static::deleted(fn () => RateCache::invalidate());
+    }
+
     protected $fillable = [
         'organization_id',
         'name',
@@ -36,9 +50,6 @@ class Branch extends Model
 
     /**
      * Scope a query to only include active branches.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     #[Scope]
     protected function active(Builder $query): Builder

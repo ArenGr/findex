@@ -1,72 +1,15 @@
 @php
-    use App\Enums\RateType;
-    use App\Models\Currency;
-    use App\Models\CurrencyRate;
-
-    $currencies = Currency::query()
-        ->where('is_active', true)
-        ->orderBy('sort_order')
-        ->get();
-
-    // Precomputed once (instead of per-row) so displaying a rating badge
-    // next to each organization doesn't add an N+1 query per row.
-    $ratingsByOrgId = \App\Models\Organization::withRatingStats()->get()->keyBy('id');
-
-    // Per currency, per rate type (cash/non-cash/card/...), ranked cheapest-to-buy
-    // first (lowest sell_rate = best for a visitor buying foreign currency with
-    // AMD). Rate types with no data for a currency are dropped entirely so the
-    // sub-tabs only ever show options that actually have something to display.
-    // Rows are reduced to plain arrays (rather than kept as Eloquent models) so
-    // they can be embedded as JSON and re-sorted client-side by Buy/Sell.
-    $ratesByCurrency = $currencies->mapWithKeys(function ($currency) use ($ratingsByOrgId) {
-        $byType = collect(RateType::cases())->mapWithKeys(function ($rateType) use ($currency, $ratingsByOrgId) {
-            $rows = CurrencyRate::query()
-                ->where('currency_id', $currency->id)
-                ->where('rate_type', $rateType)
-                ->whereHas('organization', fn ($query) => $query->active())
-                ->with('organization')
-                ->orderBy('sell_rate')
-                ->limit(5)
-                ->get()
-                ->map(fn ($rate) => [
-                    'id' => $rate->organization->id,
-                    'name' => $rate->organization->name,
-                    'url' => route('organizations.show', $rate->organization),
-                    'logo' => $rate->organization->logo,
-                    'initial' => mb_strtoupper(mb_substr($rate->organization->name, 0, 1)),
-                    'buy_rate' => (float) $rate->buy_rate,
-                    'sell_rate' => (float) $rate->sell_rate,
-                    'rating' => (float) ($ratingsByOrgId[$rate->organization_id]->reviews_avg_rating ?? 0),
-                    'reviews_count' => (int) ($ratingsByOrgId[$rate->organization_id]->reviews_count ?? 0),
-                    // Pre-fills the alert-creation form (see alerts/index.blade.php)
-                    // so a visitor doesn't have to re-enter what they're already
-                    // looking at - defaults to the sell rate, the one most
-                    // relevant when buying foreign currency with AMD.
-                    'alertUrl' => route('alerts.index', [
-                        'currency_id' => $currency->id,
-                        'organization_id' => $rate->organization_id,
-                        'rate_type' => $rateType->value,
-                        'rate_field' => 'sell_rate',
-                    ]) . '#create-alert',
-                ])
-                ->values()
-                ->all();
-
-            return [$rateType->value => $rows];
-        })->filter(fn ($rows) => count($rows) > 0);
-
-        return [$currency->code => $byType];
-    });
-
-    $defaultCurrency = $currencies->first(fn ($currency) => $ratesByCurrency[$currency->code]->isNotEmpty())?->code
-        ?? $currencies->first()?->code;
-
-    $defaultRateType = $defaultCurrency && $ratesByCurrency[$defaultCurrency]->has(RateType::CASH->value)
-        ? RateType::CASH->value
-        : $ratesByCurrency[$defaultCurrency]?->keys()->first();
+    // Query results are cached as a plain array by HomeRatesTableData (see
+    // its docblock) - this component only assembles the already-computed
+    // data for display, it doesn't query directly anymore.
+    $homeRatesData = app(\App\Services\HomeRatesTableData::class)->build();
+    $currencies = $homeRatesData['currencies'];
+    $ratesByCurrency = $homeRatesData['ratesByCurrency'];
+    $defaultCurrency = $homeRatesData['defaultCurrency'];
+    $defaultRateType = $homeRatesData['defaultRateType'];
 @endphp
 
-@if ($currencies->isNotEmpty())
+@if (!empty($currencies))
     <section
         id="rates"
         x-data="{ tab: '{{ $defaultCurrency }}', rateTab: '{{ $defaultRateType }}' }"
@@ -86,11 +29,11 @@
             @foreach ($currencies as $currency)
                 <button
                     type="button"
-                    @click="tab = '{{ $currency->code }}'"
-                    :class="tab === '{{ $currency->code }}' ? 'bg-primary text-white' : 'text-muted hover:text-ink'"
+                    @click="tab = '{{ $currency }}'"
+                    :class="tab === '{{ $currency }}' ? 'bg-primary text-white' : 'text-muted hover:text-ink'"
                     class="shrink-0 px-4 py-3 text-xs font-semibold tracking-wide whitespace-nowrap uppercase transition"
                 >
-                    {{ $currency->code }}
+                    {{ $currency }}
                 </button>
             @endforeach
         </div>
@@ -98,16 +41,16 @@
         {{-- Per-currency panels --}}
         @foreach ($currencies as $currency)
             <div
-                x-show="tab === '{{ $currency->code }}'"
-                @if ($currency->code !== $defaultCurrency) x-cloak @endif
+                x-show="tab === '{{ $currency }}'"
+                @if ($currency !== $defaultCurrency) x-cloak @endif
                 class="border border-t-0 border-placeholder"
             >
-                @if ($ratesByCurrency[$currency->code]->isEmpty())
+                @if (empty($ratesByCurrency[$currency]))
                     <p class="px-6 py-16 text-center text-sm text-muted">{{ __('rates.no_data') }}</p>
                 @else
                     {{-- Rate-type sub-tabs --}}
                     <div class="flex flex-wrap gap-2 px-6 py-4">
-                        @foreach ($ratesByCurrency[$currency->code] as $rateTypeValue => $rows)
+                        @foreach ($ratesByCurrency[$currency] as $rateTypeValue => $rows)
                             <button
                                 type="button"
                                 @click="rateTab = '{{ $rateTypeValue }}'"
@@ -119,10 +62,10 @@
                         @endforeach
                     </div>
 
-                    @foreach ($ratesByCurrency[$currency->code] as $rateTypeValue => $rows)
+                    @foreach ($ratesByCurrency[$currency] as $rateTypeValue => $rows)
                         <div
                             x-show="rateTab === '{{ $rateTypeValue }}'"
-                            @if (!($currency->code === $defaultCurrency && $rateTypeValue === $defaultRateType)) x-cloak @endif
+                            @if (!($currency === $defaultCurrency && $rateTypeValue === $defaultRateType)) x-cloak @endif
                             x-data="{
                                 rows: @js($rows),
                                 sortKey: 'sell_rate',

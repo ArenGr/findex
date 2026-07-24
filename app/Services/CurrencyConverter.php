@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\RateType;
 use App\Models\Currency;
+use App\Services\Cache\RateCache;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Approximate cross-currency conversion for display only (e.g. "≈ 850 USD"
@@ -69,22 +71,28 @@ class CurrencyConverter
      */
     private function averageRate(string $currencyCode): ?float
     {
-        $currency = Currency::where('code', $currencyCode)->first();
+        return Cache::tags([RateCache::TAG])->remember(
+            "currency_converter.average_rate.{$currencyCode}",
+            now()->addMinutes(360),
+            function () use ($currencyCode) {
+                $currency = Currency::where('code', $currencyCode)->first();
 
-        if (!$currency) {
-            return null;
-        }
+                if (! $currency) {
+                    return null;
+                }
 
-        $rates = $currency->latestRates()->where('rate_type', RateType::NON_CASH)->get();
+                $rates = $currency->latestRates()->where('rate_type', RateType::NON_CASH)->get();
 
-        if ($rates->isEmpty()) {
-            $rates = $currency->latestRates()->where('rate_type', RateType::CASH)->get();
-        }
+                if ($rates->isEmpty()) {
+                    $rates = $currency->latestRates()->where('rate_type', RateType::CASH)->get();
+                }
 
-        if ($rates->isEmpty()) {
-            return null;
-        }
+                if ($rates->isEmpty()) {
+                    return null;
+                }
 
-        return (float) $rates->avg(fn ($rate) => ((float) $rate->buy_rate + (float) $rate->sell_rate) / 2);
+                return (float) $rates->avg(fn ($rate) => ((float) $rate->buy_rate + (float) $rate->sell_rate) / 2);
+            }
+        );
     }
 }

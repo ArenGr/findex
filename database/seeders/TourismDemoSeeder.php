@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -37,18 +39,30 @@ class TourismDemoSeeder extends Seeder
         ];
 
         foreach ($partners as $partner) {
+            $email = $partner['slug'] . '@example.com';
+
+            // Organization (business profile) and User (login, role=organization)
+            // are two separate rows since the accounts-unification migration -
+            // see RegisteredOrganizationController::store() for the same pattern.
             $organization = Organization::firstOrCreate(
                 ['slug' => $partner['slug']],
                 [
                     'name' => $partner['name'],
                     'type' => 'tourism',
-                    'email' => $partner['slug'] . '@example.com',
-                    'password' => Hash::make('password'),
                     'country_code' => 'AM',
                     'is_active' => true,
                     'telegram_chat_id' => $partner['telegram_chat_id'],
                 ]
             );
+
+            $user = User::firstOrNew(['email' => $email]);
+            $user->name = $partner['name'];
+            $user->password = Hash::make('password');
+            $user->forceFill([
+                'role' => UserRole::ORGANIZATION,
+                'organization_id' => $organization->id,
+                'email_verified_at' => now(),
+            ])->save();
 
             foreach ($partner['destinations'] as $countryCode) {
                 $organization->tourismDestinations()->firstOrCreate(['country_code' => $countryCode]);

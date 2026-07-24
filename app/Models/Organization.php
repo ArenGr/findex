@@ -2,15 +2,30 @@
 
 namespace App\Models;
 
+use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class Organization extends Model
 {
     use SoftDeletes;
+
+    // Organization is written far more often than the fields RateController's
+    // filters actually read (profile/contact-info edits, etc.) - only flush
+    // the 'rates' cache when a field that actually affects it changes.
+    protected static function booted(): void
+    {
+        static::saved(function (self $organization) {
+            if ($organization->wasChanged(['is_active', 'type', 'slug', 'name'])) {
+                RateCache::invalidate();
+            }
+        });
+        static::deleted(fn () => RateCache::invalidate());
+    }
 
     public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'other'];
 
@@ -213,9 +228,6 @@ class Organization extends Model
 
     /**
      * Scope a query to only include active organizations.
-     *
-     * @param Builder $query
-     * @return Builder
      */
     #[Scope]
     protected function active(Builder $query): Builder
@@ -287,8 +299,11 @@ class Organization extends Model
      * signal (e.g. one lucky fast reply out of one lead isn't "fast").
      */
     public const FAST_RESPONDER_MAX_HOURS = 6;
+
     public const FAST_RESPONDER_MIN_RESPONSES = 3;
+
     public const TOP_RATED_MIN_RATING = 4.5;
+
     public const TOP_RATED_MIN_REVIEWS = 3;
 
     public function respondedQuoteResponses(): HasMany
@@ -300,24 +315,30 @@ class Organization extends Model
      * abs() as a defensive floor - created_at is always set before
      * responded_at in the normal request -> reply flow, but a negative
      * diff (clock skew, a manually-corrected row) should never surface as
-     * a nonsensical negative number.
+     * a nonsensical negative number. Cached (TTL-only, no tags): unbounded
+     * full-history scan viewed only on this org's own dashboard, so a few
+     * minutes of staleness after they reply to a quote is harmless.
      */
     public function avgQuoteResponseTimeHours(): ?float
     {
-        $rows = $this->respondedQuoteResponses()->get(['created_at', 'responded_at']);
+        return Cache::remember("org.{$this->id}.avg_response_time_hours", now()->addMinutes(10), function () {
+            $rows = $this->respondedQuoteResponses()->get(['created_at', 'responded_at']);
 
-        if ($rows->isEmpty()) {
-            return null;
-        }
+            if ($rows->isEmpty()) {
+                return null;
+            }
 
-        return round(abs($rows->sum(fn ($response) => $response->created_at->diffInMinutes($response->responded_at, false))) / $rows->count() / 60, 1);
+            return round(abs($rows->sum(fn ($response) => $response->created_at->diffInMinutes($response->responded_at, false))) / $rows->count() / 60, 1);
+        });
     }
 
     public function quoteResponseRate(): ?float
     {
-        $total = $this->quoteResponses()->count();
+        return Cache::remember("org.{$this->id}.quote_response_rate", now()->addMinutes(10), function () {
+            $total = $this->quoteResponses()->count();
 
-        return $total > 0 ? round($this->respondedQuoteResponses()->count() / $total * 100) : null;
+            return $total > 0 ? round($this->respondedQuoteResponses()->count() / $total * 100) : null;
+        });
     }
 
     /**
@@ -370,7 +391,7 @@ class Organization extends Model
         ]);
 
         foreach ($locales as $locale) {
-            if (!empty($this->attributes["description_{$locale}"] ?? null)) {
+            if (! empty($this->attributes["description_{$locale}"] ?? null)) {
                 return $this->attributes["description_{$locale}"];
             }
         }

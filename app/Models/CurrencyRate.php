@@ -3,12 +3,19 @@
 namespace App\Models;
 
 use App\Enums\RateType;
+use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CurrencyRate extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn () => RateCache::invalidate());
+        static::deleted(fn () => RateCache::invalidate());
+    }
+
     protected $fillable = [
         'organization_id',
         'currency_id',

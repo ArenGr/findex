@@ -17,17 +17,11 @@ return [
         'section_details' => 'Your details',
         'vehicle_plate' => 'Vehicle plate number',
         'vehicle_plate_placeholder' => 'e.g. 01AA123',
-        'owner_type' => 'Owner type',
         'owner_types' => [
             'individual' => 'Individual',
             'legal_entity' => 'Legal entity',
         ],
-        'owner_id_number_individual' => "Owner's passport / ID / PSC number",
-        'owner_id_number_legal_entity' => 'TIN (Tax Payer Identification Number)',
-        'engine_power' => 'Engine power (hp)',
-        'driver_experience' => 'Driver experience (years)',
-        'accident_free_years' => 'Accident-free years',
-        'accident_free_hint' => 'How many years in a row without an at-fault accident - this can lower your premium.',
+        'owner_id_number' => "Owner's Passport/ID/PSC",
         'contract_term' => 'Contract term',
         'contract_terms' => [
             3 => '3 months',
@@ -68,8 +62,18 @@ return [
     ],
 
     'provider' => [
-        'coverage_summary' => 'Compulsory third-party liability - covers damage and injury you cause to other people or their property.',
-        'quote_notes' => 'Includes 24/7 roadside assistance. Final price may vary after a vehicle inspection.',
+        'coverage_summaries' => [
+            'Compulsory third-party liability - covers damage and injury you cause to other people or their property.',
+            'Full compulsory third-party liability coverage, including free accident assessment at any of our branches.',
+            'Compulsory third-party liability coverage with fast, fully digital claims processing.',
+            'Compulsory third-party liability coverage backed by a nationwide branch and service network.',
+        ],
+        'quote_notes' => [
+            'Includes 24/7 roadside assistance. Final price may vary after a vehicle inspection.',
+            'Free towing up to 50 km and a replacement car for up to 3 days while your vehicle is repaired.',
+            'Instant e-policy issuance - drive away with proof of insurance in minutes.',
+            'Dedicated claims manager and a mobile app to track your policy and file claims.',
+        ],
     ],
 
     'email' => [

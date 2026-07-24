@@ -78,13 +78,20 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
             $base * $termFactor * $engineFactor * $experienceFactor * $bonusMalusFactor * $partnerVariance / 1000
         ) * 1000;
 
+        // Each partner also gets a distinct coverage/perks pitch, again
+        // picked deterministically by id - real insurers won't all phrase
+        // their product the same way, and identical boilerplate across
+        // every card would give the game away when demoing this to them.
+        $coverageOptions = (array) __('auto_insurance.provider.coverage_summaries', [], $request->locale);
+        $notesOptions = (array) __('auto_insurance.provider.quote_notes', [], $request->locale);
+
         return [
             'status' => AutoInsuranceQuote::STATUS_QUOTED,
             'premium_amount' => number_format($premium, 2, '.', ''),
             'premium_currency' => 'AMD',
             'policy_term_months' => $request->contract_term_months,
-            'coverage_summary' => __('auto_insurance.provider.coverage_summary', [], $request->locale),
-            'notes' => __('auto_insurance.provider.quote_notes', [], $request->locale),
+            'coverage_summary' => $coverageOptions[$partner->id % count($coverageOptions)],
+            'notes' => $notesOptions[($partner->id + 1) % count($notesOptions)],
         ];
     }
 

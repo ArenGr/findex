@@ -28,26 +28,25 @@
 
     <div class="mt-4 divide-y divide-placeholder border-t border-placeholder">
         @forelse ($quotes as $quote)
-            @php $request = $quote->autoInsuranceRequest; @endphp
             <div class="py-4 text-sm">
                 <div class="flex items-center justify-between gap-4">
                     <span class="font-medium text-ink">
                         {{ __('org.insurance.vehicle_summary', [
-                            'plate' => $request->vehicle_plate,
+                            'plate' => $quote->vehicle_plate,
                             'term' => __('auto_insurance.request.contract_terms.' . $quote->policy_term_months),
                         ]) }}
                     </span>
-                    <span class="shrink-0 text-subtle">{{ $quote->created_at->diffForHumans() }}</span>
+                    <span class="shrink-0 text-subtle">{{ \Illuminate\Support\Carbon::parse($quote->created_at)->diffForHumans() }}</span>
                 </div>
 
-                <p class="mt-1 text-xs text-muted">{{ $request->requester_name }} &middot; {{ $request->requester_email }}</p>
+                <p class="mt-1 text-xs text-muted">{{ $quote->requester_name }} &middot; {{ $quote->requester_email }}</p>
 
                 <p class="mt-2 font-heading text-lg font-bold text-primary">
                     {{ rtrim(rtrim((string) $quote->premium_amount, '0'), '.') }} {{ $quote->premium_currency }}
                 </p>
 
                 @if ($quote->is_interested)
-                    <p class="mt-1 text-xs font-medium text-primary">✓ {{ __('org.insurance.interested_label', ['time' => $quote->interested_at->diffForHumans()]) }}</p>
+                    <p class="mt-1 text-xs font-medium text-primary">✓ {{ __('org.insurance.interested_label', ['time' => \Illuminate\Support\Carbon::parse($quote->interested_at)->diffForHumans()]) }}</p>
                 @endif
             </div>
         @empty

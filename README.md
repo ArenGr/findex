@@ -29,6 +29,16 @@ In addition, [Laracasts](https://laracasts.com) contains thousands of video tuto
 
 You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
 
+## Local Development
+
+The app caches through Redis (`CACHE_STORE=redis` in `.env`) - you'll need a Redis instance running locally, matching `.env`'s default `REDIS_HOST=127.0.0.1` / `REDIS_PORT=6379`:
+
+```bash
+docker compose up -d redis
+```
+
+or install `redis-server` natively and start it on the default port - either works.
+
 ## Agentic Development
 
 Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:

@@ -145,20 +145,20 @@
                     @forelse ($rates as $rate)
                         <tr class="border-b border-placeholder last:border-b-0">
                             <td class="px-6 py-4">
-                                <a href="{{ route('organizations.show', $rate->organization) }}" class="flex items-center gap-3">
-                                    @if ($rate->organization->logo)
-                                        <img src="{{ $rate->organization->logo }}" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
+                                <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
+                                    @if ($rate->organization_logo)
+                                        <img src="{{ $rate->organization_logo }}" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
                                     @else
                                         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                            {{ Str::of($rate->organization->name)->substr(0, 1)->upper() }}
+                                            {{ Str::of($rate->organization_name)->substr(0, 1)->upper() }}
                                         </span>
                                     @endif
                                     <div class="min-w-0">
-                                        <span class="block font-medium text-ink hover:text-primary">{{ $rate->organization->name }}</span>
-                                        @if ($rate->organization->reviews_count > 0)
+                                        <span class="block font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
+                                        @if ($rate->organization_reviews_count > 0)
                                             <span class="flex items-center gap-1">
-                                                <x-star-rating :rating="$rate->organization->reviews_avg_rating" size="h-3 w-3" />
-                                                <span class="text-xs text-subtle">({{ $rate->organization->reviews_count }})</span>
+                                                <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
+                                                <span class="text-xs text-subtle">({{ $rate->organization_reviews_count }})</span>
                                             </span>
                                         @endif
                                     </div>
@@ -167,10 +167,10 @@
                             <td class="hidden px-4 py-4 text-right font-heading font-bold text-primary sm:table-cell">{{ number_format($rate->buy_rate, 2) }}</td>
                             <td class="px-4 py-4 text-right font-heading font-bold text-[#c25b6e]">{{ number_format($rate->sell_rate, 2) }}</td>
                             <td class="hidden px-4 py-4 text-right text-xs text-subtle md:table-cell">
-                                {{ number_format($rate->getSpread(), 2) }}
+                                {{ number_format($rate->spread, 2) }}
                             </td>
                             <td class="hidden px-4 py-4 text-left text-xs text-subtle sm:table-cell">
-                                {{ $rate->scraped_at?->diffForHumans() ?? '—' }}
+                                {{ $rate->scraped_at ? \Illuminate\Support\Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}
                             </td>
                             <td class="px-4 py-4 text-right">
                                 <a

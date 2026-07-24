@@ -2,11 +2,18 @@
 
 namespace App\Models;
 
+use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Currency extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn () => RateCache::invalidate());
+        static::deleted(fn () => RateCache::invalidate());
+    }
+
     protected $fillable = [
         'code',
         'name',
