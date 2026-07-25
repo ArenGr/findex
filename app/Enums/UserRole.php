@@ -12,4 +12,7 @@ enum UserRole: int
 
     /** Common users - the public-facing customer accounts (guard 'web'). */
     case CUSTOMER = 3;
+
+    /** Partners writing/publishing articles on their profile's behalf (guard 'writer'). */
+    case WRITER = 4;
 }

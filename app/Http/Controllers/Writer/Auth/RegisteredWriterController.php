@@ -1,32 +1,29 @@
 <?php
 
-namespace App\Http\Controllers\Organization\Auth;
+namespace App\Http\Controllers\Writer\Auth;
 
 use App\Enums\UserRole;
-use App\Filament\Resources\Organizations\OrganizationResource;
+use App\Filament\Resources\Writers\WriterResource;
 use App\Http\Controllers\Concerns\GeneratesUniqueSlug;
 use App\Http\Controllers\Controller;
-use App\Models\Organization;
 use App\Models\User;
+use App\Models\Writer;
 use App\Services\AdminNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
-class RegisteredOrganizationController extends Controller
+class RegisteredWriterController extends Controller
 {
     use GeneratesUniqueSlug;
 
-    public const TYPES = Organization::TYPES;
-
     public function create(): View
     {
-        return view('organizations.auth.register');
+        return view('writer.auth.register');
     }
 
     public function store(Request $request): RedirectResponse
@@ -35,20 +32,18 @@ class RegisteredOrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'type' => ['required', Rule::in(self::TYPES)],
-            'website' => ['nullable', 'url', 'max:255'],
+            'expertise' => ['nullable', 'string', 'max:2000'],
+            'topics' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Organization (business profile) and User (login, role=organization)
-        // must both be created or neither is - see Organization::users() /
-        // User::organization().
+        // Writer (author profile) and User (login, role=writer) must both be
+        // created or neither is - see Writer::users() / User::writer().
         $user = DB::transaction(function () use ($validated) {
-            $organization = Organization::create([
+            $writer = Writer::create([
                 'name' => $validated['name'],
-                'slug' => $this->uniqueSlug($validated['name'], Organization::class),
-                'type' => $validated['type'],
-                'website' => $validated['website'] ?? null,
-                'country_code' => 'AM',
+                'slug' => $this->uniqueSlug($validated['name'], Writer::class),
+                'expertise' => $validated['expertise'] ?? null,
+                'topics' => $validated['topics'] ?? null,
                 'is_active' => false,
             ]);
 
@@ -58,23 +53,23 @@ class RegisteredOrganizationController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
             $user->forceFill([
-                'role' => UserRole::ORGANIZATION,
-                'organization_id' => $organization->id,
+                'role' => UserRole::WRITER,
+                'writer_id' => $writer->id,
             ])->save();
 
             // Surfaced via the admin panel's topbar notification bell (see
             // AdminPanelProvider::databaseNotifications()) rather than
             // relying on an admin to notice by browsing the list.
             AdminNotifier::pendingApproval(
-                title: 'New organization awaiting approval',
-                body: "{$organization->name} just registered and is inactive until approved.",
-                icon: 'heroicon-o-building-office-2',
-                // OrganizationResource deliberately routes admin pages by id
+                title: 'New writer awaiting approval',
+                body: "{$writer->name} just registered and is inactive until approved.",
+                icon: 'heroicon-o-pencil-square',
+                // WriterResource deliberately routes admin pages by id
                 // ($recordRouteKeyName = 'id'), unlike the model's own
                 // slug-based getRouteKeyName() used for public routes -
                 // passing the model instance here would build the URL from
                 // the slug instead, which the resource can't resolve.
-                reviewUrl: OrganizationResource::getUrl('edit', ['record' => $organization->getKey()]),
+                reviewUrl: WriterResource::getUrl('edit', ['record' => $writer->getKey()]),
             );
 
             return $user;
@@ -82,10 +77,10 @@ class RegisteredOrganizationController extends Controller
 
         $user->sendEmailVerificationNotification();
 
-        Auth::guard('organization')->login($user);
+        Auth::guard('writer')->login($user);
 
         $request->session()->regenerate();
 
-        return redirect()->route('org.dashboard.index');
+        return redirect()->route('writer.dashboard.index');
     }
 }

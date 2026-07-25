@@ -86,10 +86,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'telegram/webhook',
         ]);
 
-        // Organization dashboard routes use the 'organization' guard; without
-        // these, an unauthenticated hit on auth:organization would redirect to
-        // the customer login instead of the org login (and vice versa for
-        // guest:organization), since Laravel's defaults assume a single guard.
+        // Organization/writer dashboard routes use their own guard; without
+        // these, an unauthenticated hit on auth:organization (or auth:writer)
+        // would redirect to the customer login instead of the org/writer
+        // login (and vice versa for guest:organization/guest:writer), since
+        // Laravel's defaults assume a single guard.
         //
         // Laravel's middleware priority sorting can run Authenticate (which
         // triggers this closure) before the 'setlocale' middleware has had a
@@ -97,13 +98,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // rely on that default here - the {locale} route parameter is read
         // directly off the request instead, which is available regardless of
         // middleware order since it's bound during route matching.
-        $middleware->redirectGuestsTo(fn (Request $request) => $request->routeIs('org.dashboard.*')
-            ? route('org.login', ['locale' => $request->route('locale')])
-            : route('login', ['locale' => $request->route('locale')]));
+        $middleware->redirectGuestsTo(fn (Request $request) => match (true) {
+            $request->routeIs('org.dashboard.*') => route('org.login', ['locale' => $request->route('locale')]),
+            $request->routeIs('writer.dashboard.*') => route('writer.login', ['locale' => $request->route('locale')]),
+            default => route('login', ['locale' => $request->route('locale')]),
+        });
 
-        $middleware->redirectUsersTo(fn (Request $request) => $request->routeIs('org.*')
-            ? route('org.dashboard.index', ['locale' => $request->route('locale')])
-            : route('home', ['locale' => $request->route('locale')]));
+        $middleware->redirectUsersTo(fn (Request $request) => match (true) {
+            $request->routeIs('org.*') => route('org.dashboard.index', ['locale' => $request->route('locale')]),
+            $request->routeIs('writer.*') => route('writer.dashboard.index', ['locale' => $request->route('locale')]),
+            default => route('home', ['locale' => $request->route('locale')]),
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

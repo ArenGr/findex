@@ -18,9 +18,13 @@ return [
     'no_account' => 'Հաշիվ չունե՞ք։',
     'have_account' => 'Արդեն գրանցվա՞ծ եք։',
 
-    'choose_account_type' => 'Ինչպե՞ս եք ցանկանում գրանցվել։',
-    'register_as_customer' => 'Ես հաճախորդ եմ — ուզում եմ կարծիքներ թողնել',
-    'register_as_organization' => 'Ես կազմակերպություն եմ — ուզում եմ կառավարել իմ էջը',
+    'choose_account_type' => 'Ինչպե՞ս եք ցանկանում օգտագործել Findex-ը։',
+    'register_as_customer' => 'Անհատ օգտատեր',
+    'register_as_customer_body' => 'Համեմատեք գներ, փոխարժեքներ և ծառայություններ',
+    'register_as_organization' => 'Կազմակերպություն',
+    'register_as_organization_body' => 'Հրապարակեք ձեր ընկերությունն ու առաջարկները',
+    'register_as_writer' => 'Հեղինակ',
+    'register_as_writer_body' => 'Ստեղծեք հոդվածներ և ֆինանսական ուղեցույցներ',
 
     'continue_with_google' => 'Շարունակել Google-ով',
     'or_divider' => 'կամ',

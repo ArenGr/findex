@@ -34,7 +34,11 @@ class VerifyEmailController extends Controller
         }
 
         return redirect()
-            ->route($user->isOrganization() ? 'org.dashboard.index' : 'home', ['locale' => $locale])
+            ->route(match (true) {
+                $user->isOrganization() => 'org.dashboard.index',
+                $user->isWriter() => 'writer.dashboard.index',
+                default => 'home',
+            }, ['locale' => $locale])
             ->with('status', 'email-verified');
     }
 
@@ -46,6 +50,11 @@ class VerifyEmailController extends Controller
     public function resendForOrganization(): RedirectResponse
     {
         return $this->resend(Auth::guard('organization')->user());
+    }
+
+    public function resendForWriter(): RedirectResponse
+    {
+        return $this->resend(Auth::guard('writer')->user());
     }
 
     private function resend(User $user): RedirectResponse

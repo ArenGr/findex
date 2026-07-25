@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\UserRole;
 use App\Models\Organization;
 use App\Models\User;
+use App\Models\Writer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -64,6 +65,14 @@ class UserFactory extends Factory
     {
         return $this->afterMaking(fn (User $user) => $user->forceFill([
             'role' => UserRole::ADMIN,
+        ]));
+    }
+
+    public function writer(?Writer $writer = null): static
+    {
+        return $this->afterMaking(fn (User $user) => $user->forceFill([
+            'role' => UserRole::WRITER,
+            'writer_id' => $writer?->id ?? Writer::factory()->create()->id,
         ]));
     }
 }

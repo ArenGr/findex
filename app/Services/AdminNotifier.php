@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
 /**
@@ -42,6 +43,25 @@ class AdminNotifier
             ->body($summary)
             ->danger()
             ->icon('heroicon-o-exclamation-triangle')
+            ->sendToDatabase(User::where('role', UserRole::ADMIN)->get());
+    }
+
+    /**
+     * A new partner account (organization, writer, ...) registered inactive
+     * and needs an admin to review and approve it - shared by every
+     * "Registered<Type>Controller" so each one only supplies its own
+     * copy/icon/review link rather than duplicating the notification
+     * plumbing (see RegisteredOrganizationController, RegisteredWriterController).
+     */
+    public static function pendingApproval(string $title, string $body, string $icon, string $reviewUrl): void
+    {
+        Notification::make()
+            ->title($title)
+            ->body($body)
+            ->icon($icon)
+            ->actions([
+                Action::make('review')->label('Review')->url($reviewUrl),
+            ])
             ->sendToDatabase(User::where('role', UserRole::ADMIN)->get());
     }
 }

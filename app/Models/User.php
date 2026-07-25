@@ -64,6 +64,15 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->belongsTo(Organization::class);
     }
 
+    /**
+     * Only set when role is UserRole::WRITER - the author profile this
+     * account logs in on behalf of (see Writer::users()).
+     */
+    public function writer(): BelongsTo
+    {
+        return $this->belongsTo(Writer::class);
+    }
+
     public function isCustomer(): bool
     {
         return $this->role === UserRole::CUSTOMER;
@@ -72,6 +81,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function isOrganization(): bool
     {
         return $this->role === UserRole::ORGANIZATION;
+    }
+
+    public function isWriter(): bool
+    {
+        return $this->role === UserRole::WRITER;
     }
 
     public function isAdmin(): bool
