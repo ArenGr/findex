@@ -27,8 +27,10 @@ return [
     'register_as_writer_body' => 'Создавайте статьи и финансовые руководства',
 
     'continue_with_google' => 'Продолжить с Google',
+    'continue_with_apple' => 'Продолжить с Apple',
     'or_divider' => 'или',
     'google_failed' => 'Не удалось войти через Google. Пожалуйста, попробуйте снова.',
+    'apple_failed' => 'Не удалось войти через Apple. Пожалуйста, попробуйте снова.',
 
     'verify_email' => [
         'subject' => 'Подтвердите свой email',

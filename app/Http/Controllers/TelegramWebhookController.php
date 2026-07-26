@@ -26,7 +26,7 @@ class TelegramWebhookController extends Controller
         }
 
         try {
-            $update = (array) $request->json()->all();
+            $update = $request->json()->all();
 
             // Tourism partner connect links and quote-request replies take
             // priority; anything left over falls through to the general

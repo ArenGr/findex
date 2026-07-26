@@ -19,7 +19,17 @@
             </button>
         </form>
 
-        <x-google-auth-button />
+        <x-oauth-divider />
+
+        <div class="mt-6 space-y-3">
+            <x-google-auth-button />
+            {{-- Hidden until real Apple credentials are configured (see
+                 config/services.php's 'apple' block) - remove this @if once
+                 APPLE_CLIENT_ID etc. are set in production. --}}
+            @if (config('services.apple.client_id'))
+                <x-apple-auth-button />
+            @endif
+        </div>
 
         <p class="mt-6 text-center text-sm text-muted">
             {{ __('auth.have_account') }}

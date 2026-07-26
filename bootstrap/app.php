@@ -81,9 +81,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Telegram's webhook POST is not a browser request and carries no
         // CSRF token - it's authenticated by its own secret-token header
-        // instead (see TelegramWebhookController).
+        // instead (see TelegramWebhookController). Apple's OAuth callback is
+        // also a cross-site POST (its form_post response mode, see
+        // AppleAuthController) with no CSRF token of ours to check -
+        // authenticated by Apple's own signed id_token instead.
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
+            'auth/apple/callback',
         ]);
 
         // Organization/writer dashboard routes use their own guard; without

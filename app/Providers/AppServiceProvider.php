@@ -12,9 +12,13 @@ use App\Services\Telegram\TelegramClient;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use SocialiteProviders\Apple\Provider as AppleProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,6 +50,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Constrain {locale} globally, once, instead of repeating
+        // whereIn('locale', array_keys(config('localization.available')))
+        // on every locale-prefixed route group. Adding a language becomes a
+        // config-only change (plus re-running route:cache on deploy, since
+        // this value gets baked into the cached route table).
+        Route::pattern(
+            'locale',
+            implode('|', array_map(
+                fn (string $code) => preg_quote($code, '/'),
+                array_keys(config('localization.available')),
+            )),
+        );
+
         // Unset by default (trusts nothing extra, Laravel's own default).
         // If deployed behind a reverse proxy, load balancer, or a local
         // tunnel (cloudflared/ngrok), set TRUSTED_PROXIES to its IP(s)/CIDR
@@ -69,7 +86,7 @@ class AppServiceProvider extends ServiceProvider
         // IPs lock out real users, and by email alone allows a distributed
         // brute force from many IPs.
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)
-            ->by(Str::lower((string) $request->input('email')) . '|' . $request->ip()));
+            ->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
 
         // Logged-in reviews are already capped at one per organization by a
         // DB constraint - this mainly guards against a guest submitting
@@ -89,5 +106,12 @@ class AppServiceProvider extends ServiceProvider
         // random string per partner per request) - this is just defense in
         // depth against brute-forcing or spamming the submit endpoint.
         RateLimiter::for('quote_response_submit', fn (Request $request) => Limit::perHour(20)->by($request->ip()));
+
+        // Socialite ships Google/Facebook/GitHub/etc. natively but not Apple -
+        // this registers the community socialiteproviders/apple driver so
+        // Socialite::driver('apple') resolves (see AppleAuthController).
+        Event::listen(function (SocialiteWasCalled $event) {
+            $event->extendSocialite('apple', AppleProvider::class);
+        });
     }
 }

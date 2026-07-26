@@ -6,9 +6,14 @@ use App\Http\Controllers\RateController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
+// Public organization directory. Browsing, a single organization's page, and
+// reviews are cross-type (bank, exchange, insurance, tourism, other) - see
+// OrganizationController::index for the type filter. Rates and comparison
+// only ever apply to bank/exchange organizations (Organization::RATES_TYPES)
+// - every other type has no currency rates to show.
 Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations.index');
-Route::get('/compare', [CompareController::class, 'show'])->name('organizations.compare');
 Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
+Route::get('/compare', [CompareController::class, 'show'])->name('organizations.compare');
 Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
 
 // Open to guests (see ReviewController::store) - 'banned' still

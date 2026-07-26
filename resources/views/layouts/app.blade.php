@@ -30,7 +30,7 @@
 
     @fonts
 </head>
-<body class="min-h-screen bg-white font-sans text-body-text antialiased">
+<body class="flex min-h-screen flex-col bg-white font-sans text-body-text antialiased">
     <x-site-header />
 
     @if (session('status') === 'email-verified')
@@ -55,7 +55,7 @@
         @endunless
     @endauth
 
-    <main>
+    <main class="flex-1">
         @yield('content')
     </main>
 

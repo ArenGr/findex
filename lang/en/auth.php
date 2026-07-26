@@ -27,8 +27,10 @@ return [
     'register_as_writer_body' => 'Create articles and financial guides',
 
     'continue_with_google' => 'Continue with Google',
+    'continue_with_apple' => 'Continue with Apple',
     'or_divider' => 'or',
     'google_failed' => 'Something went wrong signing in with Google. Please try again.',
+    'apple_failed' => 'Something went wrong signing in with Apple. Please try again.',
 
     'verify_email' => [
         'subject' => 'Confirm your email address',

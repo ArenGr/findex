@@ -27,8 +27,10 @@ return [
     'register_as_writer_body' => 'Ստեղծեք հոդվածներ և ֆինանսական ուղեցույցներ',
 
     'continue_with_google' => 'Շարունակել Google-ով',
+    'continue_with_apple' => 'Շարունակել Apple-ով',
     'or_divider' => 'կամ',
     'google_failed' => 'Google-ով մուտք գործելիս սխալ առաջացավ։ Խնդրում ենք փորձել կրկին։',
+    'apple_failed' => 'Apple-ով մուտք գործելիս սխալ առաջացավ։ Խնդրում ենք փորձել կրկին։',
 
     'verify_email' => [
         'subject' => 'Հաստատեք Ձեր էլ. հասցեն',

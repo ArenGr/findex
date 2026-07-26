@@ -14,6 +14,7 @@
         "laravel/tinker": "^3.0",
         "predis/predis": "^2.3",
         "sentry/sentry-laravel": "^4.26",
+        "socialiteproviders/apple": "^5.10",
         "symfony/css-selector": "^7.4",
         "symfony/dom-crawler": "^7.4"
     },

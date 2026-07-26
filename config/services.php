@@ -41,6 +41,21 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    // client_secret is deliberately left blank - socialiteproviders/apple's
+    // Provider generates it itself, fresh on every request, as a short-lived
+    // (1 hour) JWT signed from team_id/key_id/private_key below. Nothing to
+    // pre-generate or rotate manually (see AppleAuthController).
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT_URI'),
+        'team_id' => env('APPLE_TEAM_ID'),
+        'key_id' => env('APPLE_KEY_ID'),
+        // Absolute path to the downloaded .p8 key file - see
+        // storage/app/private/apple/ (already git-ignored).
+        'private_key' => env('APPLE_PRIVATE_KEY'),
+    ],
+
     'llm' => [
         // Left unset until a provider is chosen - LlmReportAnalyzer degrades
         // to an empty summary/themes rather than failing report generation

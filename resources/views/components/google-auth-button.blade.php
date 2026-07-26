@@ -1,12 +1,6 @@
-<div class="mt-6 flex items-center gap-3 text-xs text-subtle uppercase">
-    <span class="h-px flex-1 bg-placeholder"></span>
-    {{ __('auth.or_divider') }}
-    <span class="h-px flex-1 bg-placeholder"></span>
-</div>
-
 <a
     href="{{ route('auth.google.redirect') }}"
-    class="mt-6 flex w-full items-center justify-center gap-3 rounded-md border border-border-muted px-6 py-3 text-sm font-medium text-ink transition hover:bg-placeholder/20"
+    class="flex w-full items-center justify-center gap-3 rounded-md border border-border-muted px-6 py-3 text-sm font-medium text-ink transition hover:bg-placeholder/20"
 >
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5">
         <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v2.98h3.89c2.28-2.1 3.53-5.2 3.53-8.8z"/>
