@@ -43,4 +43,9 @@ class Writer extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class);
+    }
 }
