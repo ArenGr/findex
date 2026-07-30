@@ -80,32 +80,40 @@ class AppServiceProvider extends ServiceProvider
             TrustProxies::at($trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
         }
 
+        // Limits default to their real production values below, but are
+        // overridable per-environment via .env - during the pre-launch
+        // testing phase (nginx already restricts the whole site to a
+        // handful of allowlisted IPs, so public abuse isn't reachable
+        // anyway), prod's own .env can set these RATE_LIMIT_* vars much
+        // higher so the small testing team stops tripping them, without
+        // touching this file or the tests that assert the real limits.
+
         // Shared by both the customer and organization login forms (see
         // routes/web.php). Keyed by email+IP, matching Laravel Fortify's
         // default: throttling by IP alone lets an attacker on shared/NAT'd
         // IPs lock out real users, and by email alone allows a distributed
         // brute force from many IPs.
-        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute((int) env('RATE_LIMIT_LOGIN_PER_MINUTE', 5))
             ->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
 
         // Logged-in reviews are already capped at one per organization by a
         // DB constraint - this mainly guards against a guest submitting
         // reviews across many organizations from a single IP.
-        RateLimiter::for('reviews', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+        RateLimiter::for('reviews', fn (Request $request) => Limit::perHour((int) env('RATE_LIMIT_REVIEWS_PER_HOUR', 5))->by($request->ip()));
 
         // Each submission fans out to every matching partner's Telegram, so
         // this also protects partners from being spammed via one abusive IP.
-        RateLimiter::for('quote_requests', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+        RateLimiter::for('quote_requests', fn (Request $request) => Limit::perHour((int) env('RATE_LIMIT_QUOTE_REQUESTS_PER_HOUR', 5))->by($request->ip()));
 
         // Guards against using the resend form to mass-email arbitrary
         // addresses - the response is identical whether or not a match is
         // found, so this is the only real abuse control here.
-        RateLimiter::for('quote_link_resend', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+        RateLimiter::for('quote_link_resend', fn (Request $request) => Limit::perHour((int) env('RATE_LIMIT_QUOTE_LINK_RESEND_PER_HOUR', 5))->by($request->ip()));
 
         // The response_token itself is the real access control (a 40-char
         // random string per partner per request) - this is just defense in
         // depth against brute-forcing or spamming the submit endpoint.
-        RateLimiter::for('quote_response_submit', fn (Request $request) => Limit::perHour(20)->by($request->ip()));
+        RateLimiter::for('quote_response_submit', fn (Request $request) => Limit::perHour((int) env('RATE_LIMIT_QUOTE_RESPONSE_SUBMIT_PER_HOUR', 20))->by($request->ip()));
 
         // Socialite ships Google/Facebook/GitHub/etc. natively but not Apple -
         // this registers the community socialiteproviders/apple driver so

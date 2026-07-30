@@ -57,7 +57,7 @@
             >
                 {{-- Text column --}}
                 <div>
-                    <span class="relative inline-flex rounded-full px-4 py-2 text-sm font-medium {{ $slide['badge'] }}">
+                    <span class="relative inline-flex rounded-full px-4 py-2 text-sm font-medium shadow-sm {{ $slide['badge'] }}">
                         {{ __("hero.slides.$n.badge") }}
                         <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 {{ $slide['badge'] }}"></span>
                     </span>
@@ -71,10 +71,10 @@
                     </p>
 
                     <div class="mt-8 flex flex-wrap items-center gap-4">
-                        <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium transition {{ $slide['button'] }}">
+                        <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md {{ $slide['button'] }}">
                             {{ __("hero.slides.$n.cta") }}
                         </a>
-                        <a href="{{ route('home') }}#rates" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition hover:bg-ink hover:text-white">
+                        <a href="{{ route('home') }}#rates" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition duration-300 hover:-translate-y-0.5 hover:bg-ink hover:text-white hover:shadow-md">
                             {{ __('common.compare_banks') }}
                         </a>
                     </div>
@@ -84,7 +84,7 @@
                 <div class="relative">
                     <div class="absolute inset-x-6 -bottom-6 -right-6 top-6 rounded-3xl {{ $slide['blob'] }}"></div>
 
-                    <div class="overflow-hidden rounded-3xl">
+                    <div class="overflow-hidden rounded-3xl shadow-xl">
                         <img
                             src="{{ asset('images/hero/' . $slide['photo']) }}"
                             alt="{{ __("hero.slides.$n.alt") }}"
@@ -93,16 +93,6 @@
                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
                             class="h-auto w-full object-cover"
                         >
-                    </div>
-
-                    <div class="absolute top-6 -left-4 flex flex-col items-start gap-2">
-                        <span class="relative rounded-2xl bg-white px-4 py-2 text-xs font-medium whitespace-nowrap text-ink shadow-md">
-                            {{ __("hero.slides.$n.bubble_question") }}
-                        </span>
-                        <span class="relative ml-4 w-[240px] rounded-2xl bg-white px-4 py-3 text-xs leading-relaxed text-ink shadow-md">
-                            {{ __("hero.slides.$n.bubble_answer") }}
-                            <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 bg-white"></span>
-                        </span>
                     </div>
                 </div>
             </div>
