@@ -4,6 +4,8 @@ return [
     'home_title' => 'Findex — Compare Bank Cards, Insurance, Loans and Travel',
     'home_description' => "Compare Armenia's bank card offers, insurance, loans and travel packages all in one place, on Findex.",
     'style_guide_title' => 'Style Guide — Findex',
+    'offers_title' => 'Best Bank Card Offers — Findex',
+    'offers_description' => "Compare credit card, mortgage, personal loan and savings offers from Armenia's banks in one place.",
     'about_title' => 'About Us — Findex',
     'about_description' => 'Learn about Findex\'s mission to make comparing banks, rates, insurance and travel packages in Armenia simple and transparent.',
     'team_title' => 'Our Team — Findex',

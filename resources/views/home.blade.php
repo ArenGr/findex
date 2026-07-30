@@ -5,9 +5,9 @@
 
 @section('content')
     <x-hero-carousel />
-    <x-partner-logos />
+    <x-services-grid />
     <x-rates-table />
-    <x-offers-table />
+    <x-trust-section />
     <x-top-rated-organizations />
     <x-news-section />
 @endsection

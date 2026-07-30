@@ -46,6 +46,17 @@ class AdSeeder extends Seeder
                 'href' => 'https://inecobank.am',
                 'sort_order' => 1,
             ],
+            [
+                'placement' => 'article_body',
+                'side' => 'right',
+                'advertiser' => 'ACBA Bank',
+                'initials' => 'AB',
+                'headline' => 'Compare travel insurance in 2 minutes',
+                'body' => 'Get covered for your next trip abroad with instant online approval.',
+                'cta_label' => 'Get a quote',
+                'href' => 'https://acba.am',
+                'sort_order' => 1,
+            ],
         ];
 
         foreach ($ads as $ad) {

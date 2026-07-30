@@ -15,6 +15,7 @@ Route::prefix('{locale}')
         // Public website
         require __DIR__.'/web/public/pages.php';
         require __DIR__.'/web/public/organizations.php';
+        require __DIR__.'/web/public/articles.php';
         require __DIR__.'/web/public/tourism.php';
         require __DIR__.'/web/public/insurance.php';
 

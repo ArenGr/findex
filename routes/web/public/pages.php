@@ -10,6 +10,9 @@ if (!app()->isProduction()) {
         return view('style-guide');
     })->name('style-guide');
 }
+Route::get('/offers', function () {
+    return view('offers');
+})->name('offers');
 Route::get('/about', function () {
     return view('about');
 })->name('about');

@@ -134,4 +134,103 @@ class ArticleTest extends TestCase
             ->post(route('writer.dashboard.articles.store', ['locale' => 'en']), [])
             ->assertSessionHasErrors(['title', 'language', 'body']);
     }
+
+    public function test_writer_can_edit_and_resubmit_a_rejected_article(): void
+    {
+        [$writer, $user] = $this->writerUser();
+        $article = $writer->articles()->create([
+            'title' => 'Rejected once', 'slug' => 'rejected-once-'.uniqid(), 'language' => 'en', 'body' => 'Body.',
+            'status' => Article::STATUS_REJECTED, 'rejection_reason' => 'Needs sources.',
+        ]);
+
+        $this->actingAs($user, 'writer')
+            ->put(route('writer.dashboard.articles.update', ['locale' => 'en', 'article' => $article->id]), [
+                'title' => 'Rejected once, now fixed',
+                'language' => 'en',
+                'body' => 'Updated body with sources.',
+            ])->assertRedirect();
+
+        $this->assertDatabaseHas('articles', ['id' => $article->id, 'title' => 'Rejected once, now fixed']);
+
+        $this->actingAs($user, 'writer')
+            ->post(route('writer.dashboard.articles.submit', ['locale' => 'en', 'article' => $article->id]))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('articles', ['id' => $article->id, 'status' => Article::STATUS_SUBMITTED]);
+    }
+
+    public function test_home_news_section_shows_only_approved_articles(): void
+    {
+        // Rendered in isolation via $this->blade() rather than a full GET to
+        // '/' - the home page also renders <x-top-rated-organizations />,
+        // whose HAVING-clause query is MySQL-only and errors under the
+        // SQLite test database, unrelated to anything article-related here.
+        // Mirrors what the 'setlocale' middleware does for a real request -
+        // route('articles.show', ...) needs a default {locale} to fill in
+        // since $this->blade() doesn't dispatch through the router.
+        app()->setLocale('en');
+        \Illuminate\Support\Facades\URL::defaults(['locale' => 'en']);
+
+        [$writer] = $this->writerUser();
+        $approved = $writer->articles()->create([
+            'title' => 'Visible article', 'slug' => 'visible-article-'.uniqid(), 'language' => 'en', 'body' => 'Body.',
+            'excerpt' => 'Teaser.', 'status' => Article::STATUS_APPROVED, 'published_at' => now(),
+        ]);
+        $writer->articles()->create([
+            'title' => 'Hidden draft', 'slug' => 'hidden-draft-'.uniqid(), 'language' => 'en', 'body' => 'Body.',
+            'status' => Article::STATUS_DRAFT,
+        ]);
+        $writer->articles()->create([
+            'title' => 'Hidden submitted', 'slug' => 'hidden-submitted-'.uniqid(), 'language' => 'en', 'body' => 'Body.',
+            'status' => Article::STATUS_SUBMITTED,
+        ]);
+
+        $html = $this->blade('<x-news-section />');
+
+        $html->assertSee($approved->title);
+        $html->assertDontSee('Hidden draft');
+        $html->assertDontSee('Hidden submitted');
+    }
+
+    public function test_article_links_use_the_slug_not_the_id(): void
+    {
+        \Illuminate\Support\Facades\URL::defaults(['locale' => 'en']);
+
+        [$writer] = $this->writerUser();
+        $article = $writer->articles()->create([
+            'title' => 'Readable URL', 'slug' => 'readable-url-'.uniqid(), 'language' => 'en', 'body' => 'Body.',
+            'status' => Article::STATUS_APPROVED, 'published_at' => now(),
+        ]);
+
+        $url = route('articles.show', $article);
+
+        $this->assertStringContainsString($article->slug, $url);
+        $this->assertStringNotContainsString('/'.$article->id, $url);
+    }
+
+    public function test_public_show_404s_for_a_non_approved_article(): void
+    {
+        [$writer] = $this->writerUser();
+        $article = $writer->articles()->create([
+            'title' => 'Not yet live', 'slug' => 'not-yet-live-'.uniqid(), 'language' => 'en', 'body' => 'Body.',
+            'status' => Article::STATUS_SUBMITTED,
+        ]);
+
+        $this->get(route('articles.show', ['locale' => 'en', 'article' => $article->slug]))
+            ->assertNotFound();
+    }
+
+    public function test_public_show_renders_an_approved_article(): void
+    {
+        [$writer] = $this->writerUser();
+        $article = $writer->articles()->create([
+            'title' => 'A published guide', 'slug' => 'a-published-guide-'.uniqid(), 'language' => 'en',
+            'body' => "First paragraph.\n\nSecond paragraph.",
+            'status' => Article::STATUS_APPROVED, 'published_at' => now(),
+        ]);
+
+        $this->get(route('articles.show', ['locale' => 'en', 'article' => $article->slug]))
+            ->assertOk()
+            ->assertSee($article->title);
+    }
 }

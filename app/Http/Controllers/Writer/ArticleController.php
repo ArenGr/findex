@@ -38,6 +38,10 @@ class ArticleController extends Controller
         $data['slug'] = $this->uniqueSlug($data['title'], Article::class);
         $data['status'] = Article::STATUS_DRAFT;
 
+        if ($request->hasFile('featured_image')) {
+            $data['featured_image'] = $request->file('featured_image')->store('articles', 'public');
+        }
+
         $writer->articles()->create($data);
 
         return redirect()->route('writer.dashboard.articles.index')->with('status', 'article-created');
@@ -54,7 +58,7 @@ class ArticleController extends Controller
     {
         $writer = Auth::guard('writer')->user()->writer;
         $article = $writer->articles()->findOrFail($article);
-        abort_unless($article->isDraft(), 403);
+        abort_unless($article->isDraft() || $article->isRejected(), 403);
 
         return view('writer.dashboard.articles.edit', [
             'article' => $article,
@@ -66,9 +70,19 @@ class ArticleController extends Controller
     {
         $writer = Auth::guard('writer')->user()->writer;
         $article = $writer->articles()->findOrFail($article);
-        abort_unless($article->isDraft(), 403);
+        abort_unless($article->isDraft() || $article->isRejected(), 403);
 
-        $article->update($this->validated($request));
+        $data = $this->validated($request);
+
+        // A validated-but-absent file input resolves to null - drop it so a
+        // save without picking a new image doesn't wipe out the existing one.
+        if ($request->hasFile('featured_image')) {
+            $data['featured_image'] = $request->file('featured_image')->store('articles', 'public');
+        } else {
+            unset($data['featured_image']);
+        }
+
+        $article->update($data);
 
         return redirect()->route('writer.dashboard.articles.index')->with('status', 'article-updated');
     }
@@ -90,7 +104,7 @@ class ArticleController extends Controller
     {
         $writer = Auth::guard('writer')->user()->writer;
         $article = $writer->articles()->findOrFail($article);
-        abort_unless($article->isDraft(), 403);
+        abort_unless($article->isDraft() || $article->isRejected(), 403);
 
         $article->update(['status' => Article::STATUS_SUBMITTED]);
 
@@ -102,7 +116,9 @@ class ArticleController extends Controller
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'language' => ['required', Rule::in(array_keys(config('localization.available')))],
+            'excerpt' => ['nullable', 'string', 'max:500'],
             'body' => ['required', 'string'],
+            'featured_image' => ['nullable', 'image', 'max:4096'],
         ]);
     }
 }
