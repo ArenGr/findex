@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmailPreviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -9,6 +10,9 @@ if (!app()->isProduction()) {
     Route::get('/style-guide', function () {
         return view('style-guide');
     })->name('style-guide');
+
+    Route::get('/email-preview', [EmailPreviewController::class, 'index'])->name('email-preview.index');
+    Route::get('/email-preview/{template}', [EmailPreviewController::class, 'show'])->name('email-preview.show');
 }
 Route::get('/offers', function () {
     return view('offers');

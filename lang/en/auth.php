@@ -33,10 +33,14 @@ return [
     'apple_failed' => 'Something went wrong signing in with Apple. Please try again.',
 
     'verify_email' => [
-        'subject' => 'Confirm your email address',
-        'heading' => 'One more step',
-        'body' => "Please confirm this is your email address by clicking the button below. This helps us make sure quote replies, alerts, and other account notifications actually reach you.",
-        'button' => 'Verify my email',
+        'subject' => 'Welcome to Findex — please confirm your email',
+        'heading' => 'Welcome to Findex!',
+        'body' => "You're receiving this email because you recently created a Findex account. Please confirm this is your email address by clicking the button below.",
+        'button' => 'Confirm my email',
+        'why' => "This step adds an extra layer of security to your account, and makes sure quote replies, rate alerts, and other notifications actually reach you.",
+        'help' => "If you have any questions about why you received this email, or you're having trouble confirming it, we're happy to help — just visit our :link.",
+        'help_link_text' => 'Contact page',
+        'signoff' => "Cheers,<br>The Findex team",
         'ignore_hint' => "If you didn't create an account, you can safely ignore this email.",
         'banner' => "Please confirm your email address - some actions are unavailable until you do.",
         'org_banner' => "Please confirm your email address - customer leads won't be sent to you until you do.",

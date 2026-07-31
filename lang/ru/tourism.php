@@ -234,6 +234,22 @@ return [
         'review_prompt_heading' => 'Как прошла ваша поездка в :destination?',
         'review_prompt_body' => 'Надеемся, вы отлично провели время! Если хотите, поделитесь впечатлениями - ваш отзыв поможет другим путешественникам выбрать подходящее агентство.',
         'review_prompt_button' => 'Оценить :organization',
+        'destination_available_unsubscribe' => 'Не хотите получать такие письма? :link',
+        'review_prompt_unsubscribe' => 'Не хотите получать запросы на отзыв о поездке? :link',
+        'unsubscribe_link_text' => 'Отписаться',
+    ],
+
+    'destination_alerts' => [
+        'unsubscribed_title' => 'Вы отписались',
+        'unsubscribed_heading' => 'Вы отписались',
+        'unsubscribed_body' => 'Мы удалили все ваши уведомления о направлениях. Вы больше не будете получать от нас письма о доступности направлений.',
+        'back_to_form' => 'Вернуться к заявкам на поездку',
+    ],
+
+    'review_prompts' => [
+        'unsubscribed_title' => 'Вы отписались',
+        'unsubscribed_heading' => 'Вы отписались',
+        'unsubscribed_body' => 'Мы больше не будем просить вас оценить поездку. Вы по-прежнему будете получать письма по своим действующим заявкам.',
     ],
 
     'telegram' => [

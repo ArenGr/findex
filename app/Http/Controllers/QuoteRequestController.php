@@ -8,6 +8,7 @@ use App\Mail\QuoteRequestSubmitted;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteSuggestion;
+use App\Models\User;
 use App\Services\CurrencyConverter;
 use App\Services\Notifications\PartnerNotifierInterface;
 use App\Services\TourismPriceData;
@@ -273,5 +274,17 @@ class QuoteRequestController extends Controller
         }
 
         return redirect()->route('tourism.show', $quoteRequest)->with('status', 'promo-claimed');
+    }
+
+    /**
+     * Reached from the signed unsubscribe link in TripReviewPrompt's email
+     * footer - see User::optOutOfReviewPrompts() and the exclusion in
+     * PromptTripReviews.
+     */
+    public function unsubscribeFromReviewPrompts(Request $request, string $locale): View
+    {
+        User::findOrFail($request->query('user'))->optOutOfReviewPrompts();
+
+        return view('tourism.review-prompts-unsubscribed');
     }
 }

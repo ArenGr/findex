@@ -29,6 +29,7 @@ class PromptTripReviews extends Command
         $quoteRequests = QuoteRequest::where('check_out', '<', now())
             ->whereNull('review_prompted_at')
             ->whereHas('responses', fn ($query) => $query->where('status', QuoteResponse::STATUS_RESPONDED))
+            ->whereDoesntHave('user', fn ($query) => $query->whereNotNull('review_prompts_opted_out_at'))
             ->with(['user', 'responses' => fn ($query) => $query->where('status', QuoteResponse::STATUS_RESPONDED)->with('organization')])
             ->get();
 

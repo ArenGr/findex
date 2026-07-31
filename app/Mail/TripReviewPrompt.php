@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\URL;
 
 class TripReviewPrompt extends Mailable
 {
@@ -27,11 +28,23 @@ class TripReviewPrompt extends Mailable
 
     public function build(): self
     {
+        // Only offered when this request belongs to a real account - a
+        // guest has nothing persistent to opt out on (see
+        // User::optOutOfReviewPrompts()), so there's no honest unsubscribe
+        // action to offer them here.
+        $unsubscribeUrl = $this->quoteRequest->user
+            ? URL::signedRoute('tourism.review-prompts.unsubscribe', [
+                'locale' => $this->quoteRequest->locale,
+                'user' => $this->quoteRequest->user->getKey(),
+            ])
+            : null;
+
         return $this
             ->subject(__('tourism.email.review_prompt_subject'))
             ->view('emails.trip-review-prompt', [
                 'quoteRequest' => $this->quoteRequest,
                 'organizations' => $this->organizations,
+                'unsubscribeUrl' => $unsubscribeUrl,
             ]);
     }
 }

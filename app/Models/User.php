@@ -36,6 +36,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'banned_at' => 'datetime',
+            'review_prompts_opted_out_at' => 'datetime',
             'role' => UserRole::class,
         ];
     }
@@ -125,6 +126,21 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function unban(): void
     {
         $this->forceFill(['banned_at' => null])->save();
+    }
+
+    public function hasOptedOutOfReviewPrompts(): bool
+    {
+        return $this->review_prompts_opted_out_at !== null;
+    }
+
+    /**
+     * Same forceFill-not-fillable reasoning as ban()/unban() above - reached
+     * only from the signed, one-click unsubscribe link in TripReviewPrompt's
+     * email footer (see TripReviewPromptController::unsubscribe()).
+     */
+    public function optOutOfReviewPrompts(): void
+    {
+        $this->forceFill(['review_prompts_opted_out_at' => now()])->save();
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\DestinationAlert;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Fired when a tourism org starts serving a destination (see
@@ -28,9 +29,14 @@ class NotifyDestinationAlertsJob implements ShouldQueue
         $alerts = DestinationAlert::where('destination_country', $this->countryCode)->get();
 
         foreach ($alerts as $alert) {
+            $unsubscribeUrl = URL::signedRoute('tourism.destination-alerts.unsubscribe', [
+                'locale' => $alert->locale,
+                'email' => $alert->email,
+            ]);
+
             Mail::to($alert->email)
                 ->locale($alert->locale)
-                ->send(new DestinationNowAvailable($alert->destination_country));
+                ->send(new DestinationNowAvailable($alert->destination_country, $alert->user?->name, $unsubscribeUrl));
         }
 
         DestinationAlert::where('destination_country', $this->countryCode)->delete();

@@ -78,6 +78,7 @@ return [
 
     'email' => [
         'interest_subject' => 'A customer is interested in your quote',
+        'interest_greeting' => 'Hi :organization team,',
         'interest_heading' => 'New interested customer',
         'interest_body' => ':name is interested in your :premium quote for vehicle :plate.',
         'interest_contact' => 'Reach out to them at :email.',

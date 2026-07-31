@@ -78,6 +78,7 @@ return [
 
     'email' => [
         'interest_subject' => 'Հաճախորդը հետաքրքրված է Ձեր առաջարկով',
+        'interest_greeting' => 'Բարև Ձեզ, :organization թիմ,',
         'interest_heading' => 'Նոր հետաքրքրված հաճախորդ',
         'interest_body' => ':name-ը հետաքրքրված է Ձեր :premium առաջարկով՝ :plate համարանիշով մեքենայի համար։',
         'interest_contact' => 'Կապվեք նրանց հետ՝ :email հասցեով։',

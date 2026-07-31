@@ -234,6 +234,22 @@ return [
         'review_prompt_heading' => 'How was your trip to :destination?',
         'review_prompt_body' => "We hope you had a great time! If you'd like, let others know how it went - your review helps other travelers choose the right agency.",
         'review_prompt_button' => 'Review :organization',
+        'destination_available_unsubscribe' => "Don't want these? :link",
+        'review_prompt_unsubscribe' => "Don't want trip review requests? :link",
+        'unsubscribe_link_text' => 'Unsubscribe',
+    ],
+
+    'destination_alerts' => [
+        'unsubscribed_title' => 'Unsubscribed',
+        'unsubscribed_heading' => "You're unsubscribed",
+        'unsubscribed_body' => "We've removed all of your destination alerts. You won't get any more \"now available\" emails from us.",
+        'back_to_form' => 'Back to trip requests',
+    ],
+
+    'review_prompts' => [
+        'unsubscribed_title' => 'Unsubscribed',
+        'unsubscribed_heading' => "You're unsubscribed",
+        'unsubscribed_body' => "We won't ask you to review a trip again. You'll still get emails about the requests you actually make.",
     ],
 
     'telegram' => [

@@ -35,4 +35,20 @@ class DestinationAlertController extends Controller
 
         return back()->with('status', 'destination-alert-created');
     }
+
+    /**
+     * Reached from the signed unsubscribe link in DestinationNowAvailable's
+     * email footer. Clears every destination alert for this email rather
+     * than just the one that triggered the send, since a guest with
+     * several alerts pending has no account to manage them individually
+     * from.
+     */
+    public function unsubscribe(Request $request, string $locale)
+    {
+        $email = $request->query('email');
+
+        DestinationAlert::where('email', $email)->delete();
+
+        return view('destination-alerts.unsubscribed');
+    }
 }

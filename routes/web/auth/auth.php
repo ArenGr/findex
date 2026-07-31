@@ -18,14 +18,14 @@ Route::get('/register', function () {
 // account type, handled by each guard's own group below.
 //
 // The 6/minute default below is overridable per-environment via
-// RATE_LIMIT_VERIFY_PER_MINUTE (same pattern as the named limiters in
-// AppServiceProvider) - prod's .env can raise this during the pre-launch
-// testing phase without changing the default or the tests that assert it.
-// Inlined at each of the 4 usages rather than a shared helper, since this
-// file gets require()'d more than once per process during testing and a
-// top-level named function would fatal on the second declaration.
+// RATE_LIMIT_VERIFY_PER_MINUTE (see config/rate-limits.php) - prod's .env
+// can raise this during the pre-launch testing phase without changing the
+// default or the tests that assert it. Read via config() rather than a
+// bare env() - the deploy pipeline runs `php artisan config:cache`, after
+// which .env is never loaded again, so a raw env() call here would keep
+// returning its hardcoded default regardless of what .env says.
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
-    ->middleware(['signed', 'throttle:'.((int) env('RATE_LIMIT_VERIFY_PER_MINUTE', 6)).',1'])
+    ->middleware(['signed', 'throttle:'.config('rate-limits.verify_per_minute').',1'])
     ->name('verification.verify');
 
 // Customer
@@ -38,7 +38,7 @@ Route::middleware(['auth', 'banned'])->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::post('/email/verification-notification', [VerifyEmailController::class, 'resendForCustomer'])
-        ->middleware('throttle:'.((int) env('RATE_LIMIT_VERIFY_PER_MINUTE', 6)).',1')
+        ->middleware('throttle:'.config('rate-limits.verify_per_minute').',1')
         ->name('verification.send');
 });
 
@@ -58,7 +58,7 @@ Route::prefix('org')->name('org.')->group(function () {
         Route::post('/logout', [OrganizationAuthenticatedSessionController::class, 'destroy'])->name('logout');
 
         Route::post('/email/verification-notification', [VerifyEmailController::class, 'resendForOrganization'])
-            ->middleware('throttle:'.((int) env('RATE_LIMIT_VERIFY_PER_MINUTE', 6)).',1')
+            ->middleware('throttle:'.config('rate-limits.verify_per_minute').',1')
             ->name('verification.send');
     });
 });
@@ -74,7 +74,7 @@ Route::prefix('writer')->name('writer.')->group(function () {
         Route::post('/logout', [WriterAuthenticatedSessionController::class, 'destroy'])->name('logout');
 
         Route::post('/email/verification-notification', [VerifyEmailController::class, 'resendForWriter'])
-            ->middleware('throttle:'.((int) env('RATE_LIMIT_VERIFY_PER_MINUTE', 6)).',1')
+            ->middleware('throttle:'.config('rate-limits.verify_per_minute').',1')
             ->name('verification.send');
     });
 });
