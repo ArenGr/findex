@@ -45,7 +45,7 @@ class OrganizationSendMessageActionTest extends TestCase
         // closure - the fromAddress/fromName constructor properties (set
         // directly from the selected "Send as" option) are the reliable
         // way to assert which identity was chosen.
-        Mail::assertSent(AdminMessageToOrganization::class, function (AdminMessageToOrganization $mail) use ($organization, $orgUser) {
+        Mail::assertQueued(AdminMessageToOrganization::class, function (AdminMessageToOrganization $mail) use ($organization, $orgUser) {
             return $mail->organization->is($organization)
                 && $mail->messageSubject === 'A quick update'
                 && $mail->fromAddress === 'support@findex.am'
@@ -71,6 +71,6 @@ class OrganizationSendMessageActionTest extends TestCase
                 'body' => 'Hello from the Findex team.',
             ]);
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 }

@@ -3,11 +3,12 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class QuoteRequestLinkResent extends Mailable
+class QuoteRequestLinkResent extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

@@ -47,7 +47,7 @@ class EmailVerificationTest extends TestCase
 
         $user = User::where('email', 'new-customer@example.com')->firstOrFail();
         $this->assertFalse($user->hasVerifiedEmail());
-        Mail::assertSent(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
+        Mail::assertQueued(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
     }
 
     public function test_registering_an_organization_sends_a_verification_email(): void
@@ -64,7 +64,7 @@ class EmailVerificationTest extends TestCase
 
         $user = User::where('email', 'new-org@example.com')->firstOrFail();
         $this->assertFalse($user->hasVerifiedEmail());
-        Mail::assertSent(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
+        Mail::assertQueued(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
     }
 
     public function test_a_valid_signed_link_marks_the_account_verified(): void
@@ -127,7 +127,7 @@ class EmailVerificationTest extends TestCase
             ->post(route('verification.send', ['locale' => 'en']))
             ->assertRedirect();
 
-        Mail::assertSent(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
+        Mail::assertQueued(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
     }
 
     public function test_organization_can_resend_their_verification_email(): void
@@ -143,7 +143,7 @@ class EmailVerificationTest extends TestCase
             ->post(route('org.verification.send', ['locale' => 'en']))
             ->assertRedirect();
 
-        Mail::assertSent(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
+        Mail::assertQueued(VerifyEmailAddress::class, fn ($mail) => $mail->user->is($user));
     }
 
     public function test_resend_is_a_no_op_once_already_verified(): void
@@ -153,7 +153,7 @@ class EmailVerificationTest extends TestCase
 
         $this->actingAs($user)->post(route('verification.send', ['locale' => 'en']));
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_an_organization_with_no_verified_team_member_is_still_matched(): void

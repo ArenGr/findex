@@ -70,7 +70,7 @@ class AutoInsuranceQuoteInterestTest extends TestCase
         $this->get($response->headers->get('Location'))->assertOk();
 
         $this->assertTrue($quote->fresh()->is_interested);
-        Mail::assertSent(AutoInsuranceQuoteInterest::class, fn ($mail) => $mail->hasTo('insurer@example.com') && $mail->quote->is($quote));
+        Mail::assertQueued(AutoInsuranceQuoteInterest::class, fn ($mail) => $mail->hasTo('insurer@example.com') && $mail->quote->is($quote));
     }
 
     public function test_marking_interest_twice_only_emails_once(): void
@@ -82,7 +82,7 @@ class AutoInsuranceQuoteInterestTest extends TestCase
         $this->post($this->interestUrl($quote));
         $this->post($this->interestUrl($quote));
 
-        Mail::assertSent(AutoInsuranceQuoteInterest::class, 1);
+        Mail::assertQueued(AutoInsuranceQuoteInterest::class, 1);
     }
 
     public function test_an_unsigned_request_is_rejected(): void

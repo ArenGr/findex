@@ -104,7 +104,7 @@ class OrganizationsTable
                         ));
 
                         Notification::make()
-                            ->title("Message sent to {$recipients->count()} recipient(s)")
+                            ->title("Message queued for {$recipients->count()} recipient(s)")
                             ->success()
                             ->send();
                     }),

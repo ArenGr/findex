@@ -115,7 +115,7 @@ class DestinationAlertTest extends TestCase
 
         (new NotifyDestinationAlertsJob('TH'))->handle();
 
-        Mail::assertSent(DestinationNowAvailable::class, 2);
+        Mail::assertQueued(DestinationNowAvailable::class, 2);
         $this->assertSame(0, DestinationAlert::where('destination_country', 'TH')->count());
         $this->assertSame(1, DestinationAlert::where('destination_country', 'GE')->count());
     }

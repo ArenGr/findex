@@ -5,10 +5,11 @@ namespace App\Mail;
 use App\Models\CurrencyRate;
 use App\Models\RateAlert;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class RateAlertTriggered extends Mailable
+class RateAlertTriggered extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

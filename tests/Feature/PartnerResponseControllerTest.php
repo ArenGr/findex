@@ -155,7 +155,7 @@ class PartnerResponseControllerTest extends TestCase
         $this->assertNotNull($suggestion->attachment_path);
         Storage::disk('public')->assertExists($suggestion->attachment_path);
 
-        Mail::assertSent(QuoteResponseReceived::class, fn ($mail) => $mail->quoteResponse->is($response));
+        Mail::assertQueued(QuoteResponseReceived::class, fn ($mail) => $mail->quoteResponse->is($response));
     }
 
     public function test_submitting_a_suggestion_with_a_promo_code_stores_it(): void
@@ -282,6 +282,6 @@ class PartnerResponseControllerTest extends TestCase
 
         $this->assertCount(1, $response->fresh()->suggestions);
         $this->assertSame('500.00', $response->fresh()->suggestions->first()->price_amount);
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 }

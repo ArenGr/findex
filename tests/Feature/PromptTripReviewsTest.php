@@ -49,7 +49,7 @@ class PromptTripReviewsTest extends TestCase
 
         Artisan::call('tourism:prompt-reviews');
 
-        Mail::assertSent(TripReviewPrompt::class, fn ($mail) => $mail->hasTo('guest@example.com')
+        Mail::assertQueued(TripReviewPrompt::class, fn ($mail) => $mail->hasTo('guest@example.com')
             && $mail->quoteRequest->is($quoteRequest));
         $this->assertNotNull($quoteRequest->fresh()->review_prompted_at);
     }
@@ -61,7 +61,7 @@ class PromptTripReviewsTest extends TestCase
 
         Artisan::call('tourism:prompt-reviews');
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_does_not_prompt_for_a_trip_with_no_responses(): void
@@ -76,7 +76,7 @@ class PromptTripReviewsTest extends TestCase
 
         Artisan::call('tourism:prompt-reviews');
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_does_not_re_prompt_an_already_prompted_trip(): void
@@ -87,7 +87,7 @@ class PromptTripReviewsTest extends TestCase
 
         Artisan::call('tourism:prompt-reviews');
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_logged_in_users_trip_uses_their_account_email(): void
@@ -98,6 +98,6 @@ class PromptTripReviewsTest extends TestCase
 
         Artisan::call('tourism:prompt-reviews');
 
-        Mail::assertSent(TripReviewPrompt::class, fn ($mail) => $mail->hasTo('account-holder@example.com'));
+        Mail::assertQueued(TripReviewPrompt::class, fn ($mail) => $mail->hasTo('account-holder@example.com'));
     }
 }

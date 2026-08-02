@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DestinationAlert;
 use App\Models\QuoteRequest;
+use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,7 +20,7 @@ class DestinationAlertController extends Controller
     {
         $validated = $request->validate([
             'destination_country' => ['required', 'string', Rule::in(QuoteRequest::DESTINATIONS)],
-            'email' => [Rule::requiredIf(!$request->user()), 'nullable', 'email', 'max:255'],
+            'email' => [Rule::requiredIf(!$request->user()), 'nullable', ValidationRules::email(), 'max:255'],
         ]);
 
         DestinationAlert::updateOrCreate(

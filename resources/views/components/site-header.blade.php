@@ -166,11 +166,17 @@
                 <button
                     type="button"
                     @click="open = !open"
-                    class="flex items-center gap-1 text-sm text-ink hover:text-primary"
+                    class="flex items-center gap-1.5 text-sm text-ink hover:text-primary"
                     :aria-expanded="open"
                     aria-label="Language"
                 >
-                    {{ strtoupper(app()->getLocale()) }}
+                    {{-- Flag only (no text) - was the raw locale code
+                    ("HY"/"EN"/"RU"), which a visitor who doesn't read
+                    Armenian can't recognize as a language switcher at all.
+                    The native label is kept for screen readers (sr-only)
+                    even though it's not shown visually. --}}
+                    <span class="text-base leading-none">{{ config('localization.available')[app()->getLocale()]['flag'] ?? '🌐' }}</span>
+                    <span class="sr-only">{{ config('localization.available')[app()->getLocale()]['native'] ?? strtoupper(app()->getLocale()) }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
                         <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
@@ -180,14 +186,15 @@
                     x-show="open"
                     x-transition
                     x-cloak
-                    class="absolute right-0 top-full z-20 mt-3 w-40 rounded-md border border-placeholder bg-white py-2 shadow-lg"
+                    class="absolute right-0 top-full z-20 mt-3 w-14 rounded-md border border-placeholder bg-white py-2 shadow-lg"
                 >
                     @foreach (config('localization.available') as $code => $locale)
                         <a
                             href="{{ route($currentRoute, array_merge($currentRouteParams, ['locale' => $code])) }}"
-                            class="block px-4 py-2 text-sm hover:bg-primary/5 hover:text-primary {{ $code === app()->getLocale() ? 'text-primary font-medium' : 'text-body-text' }}"
+                            class="flex items-center justify-center px-4 py-2 text-base hover:bg-primary/5 {{ $code === app()->getLocale() ? 'ring-1 ring-inset ring-primary/30' : '' }}"
                         >
-                            {{ $locale['native'] }}
+                            {{ $locale['flag'] }}
+                            <span class="sr-only">{{ $locale['native'] }}</span>
                         </a>
                     @endforeach
                 </div>
@@ -295,13 +302,14 @@
                 </div>
             @endif
 
-            <div class="mt-3 flex items-center gap-3 border-t border-placeholder pt-4">
+            <div class="mt-3 flex items-center gap-2 border-t border-placeholder pt-4">
                 @foreach (config('localization.available') as $code => $locale)
                     <a
                         href="{{ route($currentRoute, array_merge($currentRouteParams, ['locale' => $code])) }}"
-                        class="rounded-md px-2 py-1 text-sm {{ $code === app()->getLocale() ? 'text-primary font-medium' : 'text-body-text' }}"
+                        class="flex h-9 w-9 items-center justify-center rounded-md text-lg {{ $code === app()->getLocale() ? 'ring-1 ring-inset ring-primary/30' : '' }}"
                     >
-                        {{ strtoupper($code) }}
+                        {{ $locale['flag'] }}
+                        <span class="sr-only">{{ $locale['native'] }}</span>
                     </a>
                 @endforeach
             </div>

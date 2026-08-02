@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\CurrencyConverter;
 use App\Services\Notifications\PartnerNotifierInterface;
 use App\Services\TourismPriceData;
+use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -101,7 +102,7 @@ class QuoteRequestController extends Controller
         }
 
         $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', ValidationRules::email(), 'max:255'],
         ], attributes: [
             'email' => __('tourism.request.your_email'),
         ]);
@@ -152,7 +153,7 @@ class QuoteRequestController extends Controller
             'budget_min_amd' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'budget_max_amd' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'guest_name' => [Rule::requiredIf(! $request->user()), 'nullable', 'string', 'min:2', 'max:60'],
-            'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', 'email', 'max:255'],
+            'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', ValidationRules::email(), 'max:255'],
             'consent' => ['accepted'],
         ], attributes: [
             'guest_name' => __('tourism.request.your_name'),

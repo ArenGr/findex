@@ -6,6 +6,7 @@ use App\Mail\AutoInsuranceQuoteInterest;
 use App\Models\AutoInsuranceQuote;
 use App\Models\AutoInsuranceRequest;
 use App\Services\Insurance\AutoInsuranceQuoteService;
+use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +35,7 @@ class AutoInsuranceController extends Controller
             'owner_id_number' => ['required', 'string', 'max:20'],
             'contract_term_months' => ['required', 'integer', Rule::in(AutoInsuranceRequest::CONTRACT_TERMS)],
             'guest_name' => [Rule::requiredIf(! $request->user()), 'nullable', 'string', 'min:2', 'max:60'],
-            'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', 'email', 'max:255'],
+            'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', ValidationRules::email(), 'max:255'],
             'consent' => ['accepted'],
         ], attributes: [
             'guest_name' => __('tourism.request.your_name'),

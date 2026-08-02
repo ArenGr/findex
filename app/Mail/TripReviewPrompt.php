@@ -4,12 +4,13 @@ namespace App\Mail;
 
 use App\Models\QuoteRequest;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
 
-class TripReviewPrompt extends Mailable
+class TripReviewPrompt extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

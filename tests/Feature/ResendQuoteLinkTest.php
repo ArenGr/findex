@@ -45,7 +45,7 @@ class ResendQuoteLinkTest extends TestCase
         $response->assertRedirect(route('tourism.resend', ['locale' => 'en']));
         $response->assertSessionHas('status', 'resend-requested');
 
-        Mail::assertSent(QuoteRequestLinkResent::class, function ($mail) use ($quoteRequest) {
+        Mail::assertQueued(QuoteRequestLinkResent::class, function ($mail) use ($quoteRequest) {
             return $mail->hasTo('guest@example.com')
                 && $mail->quoteRequests->count() === 1
                 && $mail->quoteRequests->first()->is($quoteRequest);
@@ -62,7 +62,7 @@ class ResendQuoteLinkTest extends TestCase
 
         $response->assertRedirect(route('tourism.resend', ['locale' => 'en']));
         $response->assertSessionHas('status', 'resend-requested');
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_expired_requests_are_not_included(): void
@@ -74,7 +74,7 @@ class ResendQuoteLinkTest extends TestCase
             'email' => 'guest@example.com',
         ]);
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_all_open_requests_for_the_email_are_included_in_one_email(): void
@@ -87,7 +87,7 @@ class ResendQuoteLinkTest extends TestCase
             'email' => 'guest@example.com',
         ]);
 
-        Mail::assertSent(QuoteRequestLinkResent::class, function ($mail) use ($first, $second) {
+        Mail::assertQueued(QuoteRequestLinkResent::class, function ($mail) use ($first, $second) {
             $ids = $mail->quoteRequests->pluck('id')->all();
 
             return in_array($first->id, $ids, true) && in_array($second->id, $ids, true);
@@ -104,7 +104,7 @@ class ResendQuoteLinkTest extends TestCase
             'email' => 'guest@example.com',
         ]);
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_honeypot_field_silently_discards_the_submission(): void
@@ -118,7 +118,7 @@ class ResendQuoteLinkTest extends TestCase
         ]);
 
         $response->assertRedirect(route('tourism.resend', ['locale' => 'en']));
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_resend_requests_are_rate_limited_per_ip(): void

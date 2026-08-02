@@ -72,7 +72,7 @@ class CheckRateAlertsTest extends TestCase
 
         Artisan::call('alerts:check');
 
-        Mail::assertSent(RateAlertTriggered::class, 1);
+        Mail::assertQueued(RateAlertTriggered::class, 1);
         $alert->refresh();
         $this->assertTrue($alert->is_currently_met);
         $this->assertNotNull($alert->last_triggered_at);
@@ -84,11 +84,11 @@ class CheckRateAlertsTest extends TestCase
         $this->setSellRate(385);
         $this->createAlert();
         Artisan::call('alerts:check');
-        Mail::assertSent(RateAlertTriggered::class, 1);
+        Mail::assertQueued(RateAlertTriggered::class, 1);
 
         Artisan::call('alerts:check'); // rate unchanged, still below threshold
 
-        Mail::assertSent(RateAlertTriggered::class, 1); // still just the one
+        Mail::assertQueued(RateAlertTriggered::class, 1); // still just the one
     }
 
     public function test_alert_resets_and_can_refire_after_condition_clears(): void
@@ -97,18 +97,18 @@ class CheckRateAlertsTest extends TestCase
         $this->setSellRate(385);
         $alert = $this->createAlert();
         Artisan::call('alerts:check');
-        Mail::assertSent(RateAlertTriggered::class, 1);
+        Mail::assertQueued(RateAlertTriggered::class, 1);
 
         $this->setSellRate(395); // above threshold - condition no longer met
         Artisan::call('alerts:check');
         $alert->refresh();
         $this->assertFalse($alert->is_currently_met);
-        Mail::assertSent(RateAlertTriggered::class, 1); // no new mail for the reset itself
+        Mail::assertQueued(RateAlertTriggered::class, 1); // no new mail for the reset itself
 
         $this->setSellRate(385); // crosses below again
         Artisan::call('alerts:check');
 
-        Mail::assertSent(RateAlertTriggered::class, 2); // refired
+        Mail::assertQueued(RateAlertTriggered::class, 2); // refired
         $this->assertTrue($alert->refresh()->is_currently_met);
     }
 
@@ -128,7 +128,7 @@ class CheckRateAlertsTest extends TestCase
 
         Artisan::call('alerts:check');
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_failed_telegram_delivery_is_not_treated_as_success(): void

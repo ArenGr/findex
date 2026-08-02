@@ -67,7 +67,7 @@ class QuoteRequestSubmissionTest extends TestCase
         $this->assertSame('GE', $quoteRequest->destination_country);
         $this->assertSame(1, $quoteRequest->responses()->count());
 
-        Mail::assertSent(QuoteRequestSubmitted::class, function ($mail) use ($quoteRequest) {
+        Mail::assertQueued(QuoteRequestSubmitted::class, function ($mail) use ($quoteRequest) {
             return $mail->quoteRequest->is($quoteRequest) && $mail->hasTo('guest@example.com');
         });
     }

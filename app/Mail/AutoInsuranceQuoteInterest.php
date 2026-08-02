@@ -4,10 +4,11 @@ namespace App\Mail;
 
 use App\Models\AutoInsuranceQuote;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class AutoInsuranceQuoteInterest extends Mailable
+class AutoInsuranceQuoteInterest extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

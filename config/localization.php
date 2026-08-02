@@ -12,8 +12,8 @@ return [
      * is just: add an entry here + a matching lang/{locale} directory.
      */
     'available' => [
-        'hy' => ['native' => 'Հայերեն', 'label' => 'Armenian'],
-        'en' => ['native' => 'English', 'label' => 'English'],
-        'ru' => ['native' => 'Русский', 'label' => 'Russian'],
+        'hy' => ['native' => 'Հայերեն', 'label' => 'Armenian', 'flag' => '🇦🇲'],
+        'en' => ['native' => 'English', 'label' => 'English', 'flag' => '🇬🇧'],
+        'ru' => ['native' => 'Русский', 'label' => 'Russian', 'flag' => '🇷🇺'],
     ],
 ];
