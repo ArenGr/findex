@@ -92,6 +92,17 @@ return [
         'contact_whatsapp' => 'WhatsApp',
         'contact_telegram' => 'Telegram',
         'contact_instagram' => 'Instagram',
+        'filter_answered_only' => 'Только с ответом',
+        'filter_discount_only' => 'Со скидкой',
+        'sort_recent' => 'Сначала новые',
+        'sort_price_asc' => 'Цена: по возрастанию',
+        'sort_price_desc' => 'Цена: по убыванию',
+        'from_price' => 'От :price',
+        'best_price_badge' => 'Лучшая цена',
+        'discount_badge_short' => 'Скидка',
+        'no_matches_filtered' => 'Нет предложений по этим фильтрам. Попробуйте отключить один из них.',
+        'expand_hint' => 'Показать детали',
+        'collapse_hint' => 'Скрыть детали',
     ],
 
     'mine' => [

@@ -92,6 +92,17 @@ return [
         'contact_whatsapp' => 'WhatsApp',
         'contact_telegram' => 'Telegram',
         'contact_instagram' => 'Instagram',
+        'filter_answered_only' => 'Answered only',
+        'filter_discount_only' => 'With discount',
+        'sort_recent' => 'Most recent',
+        'sort_price_asc' => 'Price: low to high',
+        'sort_price_desc' => 'Price: high to low',
+        'from_price' => 'From :price',
+        'best_price_badge' => 'Best price',
+        'discount_badge_short' => 'Discount',
+        'no_matches_filtered' => 'No offers match these filters. Try turning one off.',
+        'expand_hint' => 'Show details',
+        'collapse_hint' => 'Hide details',
     ],
 
     'mine' => [

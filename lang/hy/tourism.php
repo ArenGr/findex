@@ -92,6 +92,17 @@ return [
         'contact_whatsapp' => 'WhatsApp',
         'contact_telegram' => 'Telegram',
         'contact_instagram' => 'Instagram',
+        'filter_answered_only' => 'Միայն պատասխանվածները',
+        'filter_discount_only' => 'Զեղչով',
+        'sort_recent' => 'Ամենավերջինը',
+        'sort_price_asc' => 'Գին՝ աճման կարգով',
+        'sort_price_desc' => 'Գին՝ նվազման կարգով',
+        'from_price' => 'Սկսած :price-ից',
+        'best_price_badge' => 'Լավագույն գին',
+        'discount_badge_short' => 'Զեղչ',
+        'no_matches_filtered' => 'Ոչ մի առաջարկ չի համապատասխանում այս ֆիլտրերին։ Փորձեք անջատել մեկը։',
+        'expand_hint' => 'Ցույց տալ մանրամասները',
+        'collapse_hint' => 'Թաքցնել մանրամասները',
     ],
 
     'mine' => [

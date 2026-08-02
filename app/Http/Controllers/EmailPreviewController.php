@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AdminMessageToOrganization;
 use App\Mail\AutoInsuranceQuoteInterest;
 use App\Mail\DestinationNowAvailable;
 use App\Mail\QuoteRequestLinkResent;
@@ -41,6 +42,7 @@ class EmailPreviewController extends Controller
             'rate-alert-triggered' => 'Rate alert triggered',
             'quote-request-link-resent' => 'Quote request link resent',
             'quote-response-received' => 'Quote response received',
+            'admin-message-to-organization' => 'Admin message to organization',
         ];
 
         return view('email-preview.index', ['templates' => $templates]);
@@ -57,6 +59,7 @@ class EmailPreviewController extends Controller
             'rate-alert-triggered' => $this->rateAlertTriggered(),
             'quote-request-link-resent' => $this->quoteRequestLinkResent(),
             'quote-response-received' => $this->quoteResponseReceived(),
+            'admin-message-to-organization' => $this->adminMessageToOrganization(),
             default => abort(404),
         };
 
@@ -222,5 +225,21 @@ class EmailPreviewController extends Controller
         $quoteResponse->setRelation('quoteRequest', $quoteRequest);
 
         return new QuoteResponseReceived($quoteResponse, url('/en/tourism/requests/1'));
+    }
+
+    private function adminMessageToOrganization(): AdminMessageToOrganization
+    {
+        $organization = $this->organization('Ameria Bank', 'ameria-bank');
+        $organization->id = 1;
+
+        $identity = config('mail-identities.findex-team');
+
+        return new AdminMessageToOrganization(
+            $organization,
+            'A quick update from the Findex team',
+            "Hi there,\n\nWe're rolling out a few changes to how bank offers are displayed next week. Nothing you need to do right now - just wanted to give you a heads up.\n\nLet us know if you have any questions.",
+            $identity['address'],
+            $identity['name'],
+        );
     }
 }

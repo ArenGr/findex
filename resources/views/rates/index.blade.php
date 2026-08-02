@@ -121,13 +121,13 @@
             <table class="w-full border-collapse text-sm">
                 <thead>
                     <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-subtle uppercase">
-                        <th class="px-6 py-3 text-left">{{ __('rates.filter_bank') }}</th>
-                        <th class="hidden px-4 py-3 text-right sm:table-cell">
+                        <th class="px-3 py-3 text-left sm:px-6">{{ __('rates.filter_bank') }}</th>
+                        <th class="px-2 py-3 text-right sm:px-4">
                             <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink">
                                 {{ __('organizations.buy') }} {{ $sortArrow('buy_rate') }}
                             </a>
                         </th>
-                        <th class="px-4 py-3 text-right">
+                        <th class="px-2 py-3 text-right sm:px-4">
                             <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink">
                                 {{ __('organizations.sell') }} {{ $sortArrow('sell_rate') }}
                             </a>
@@ -138,23 +138,25 @@
                             </a>
                         </th>
                         <th class="hidden px-4 py-3 text-left sm:table-cell">{{ __('rates.updated_column') }}</th>
-                        <th class="px-4 py-3 text-right">{{ __('rates.alert_column') }}</th>
+                        <th class="px-2 py-3 text-right sm:px-4">
+                            <span class="sr-only sm:not-sr-only">{{ __('rates.alert_column') }}</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($rates as $rate)
                         <tr class="border-b border-placeholder last:border-b-0">
-                            <td class="px-6 py-4">
-                                <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
+                            <td class="max-w-[104px] px-3 py-4 sm:max-w-none sm:px-6">
+                                <a href="{{ $rate->organization_url }}" class="flex items-center gap-2 sm:gap-3">
                                     @if ($rate->organization_logo)
-                                        <img src="{{ $rate->organization_logo }}" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
+                                        <img src="{{ $rate->organization_logo }}" alt="" class="h-7 w-7 shrink-0 rounded-full object-contain sm:h-8 sm:w-8">
                                     @else
-                                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary sm:h-8 sm:w-8">
                                             {{ Str::of($rate->organization_name)->substr(0, 1)->upper() }}
                                         </span>
                                     @endif
                                     <div class="min-w-0">
-                                        <span class="block font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
+                                        <span class="block truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
                                         @if ($rate->organization_reviews_count > 0)
                                             <span class="flex items-center gap-1">
                                                 <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
@@ -164,15 +166,15 @@
                                     </div>
                                 </a>
                             </td>
-                            <td class="hidden px-4 py-4 text-right font-heading font-bold text-primary sm:table-cell">{{ number_format($rate->buy_rate, 2) }}</td>
-                            <td class="px-4 py-4 text-right font-heading font-bold text-[#c25b6e]">{{ number_format($rate->sell_rate, 2) }}</td>
+                            <td class="px-2 py-4 text-right font-heading font-bold text-primary sm:px-4">{{ number_format($rate->buy_rate, 2) }}</td>
+                            <td class="px-2 py-4 text-right font-heading font-bold text-[#c25b6e] sm:px-4">{{ number_format($rate->sell_rate, 2) }}</td>
                             <td class="hidden px-4 py-4 text-right text-xs text-subtle md:table-cell">
                                 {{ number_format($rate->spread, 2) }}
                             </td>
                             <td class="hidden px-4 py-4 text-left text-xs text-subtle sm:table-cell">
                                 {{ $rate->scraped_at ? \Illuminate\Support\Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}
                             </td>
-                            <td class="px-4 py-4 text-right">
+                            <td class="px-2 py-4 text-right sm:px-4">
                                 <a
                                     href="{{ route('alerts.index', ['currency_id' => $selectedCurrency?->id, 'organization_id' => $rate->organization_id, 'rate_type' => $selectedType->value, 'rate_field' => 'sell_rate']) }}#create-alert"
                                     title="{{ __('rates.create_alert') }}"

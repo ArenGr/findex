@@ -51,10 +51,104 @@
             ];
         })
         ->values();
+
+    // Drives the filter/sort/collapse controls client-side (see the
+    // x-data on the section below) - everything needed is already loaded
+    // on this one page, so filtering happens instantly with no round
+    // trip. cheapestPriceConverted normalizes into the visitor's
+    // preferred currency purely for sorting - the price actually shown
+    // in each card still uses the suggestion's own native currency.
+    $responseStats = $sortedResponses
+        ->map(function ($response) use ($currencyConverter) {
+            $cheapest = $response->has_replied ? $response->cheapestSuggestion() : null;
+            $cheapestConverted = null;
+
+            if ($cheapest) {
+                // Normalized to AMD specifically (not the visitor's display
+                // currency, e.g. USD for English locales) - AMD is the
+                // common denominator CurrencyConverter's own rate data
+                // already pivots through, so suggestions already priced in
+                // AMD compare directly with zero conversion risk, and only
+                // genuinely foreign currencies depend on rate data being
+                // available. Left null (rather than falling back to the
+                // raw, un-converted amount) when conversion isn't possible -
+                // silently comparing "3 USD" as if it were "3 AMD" would be
+                // actively misleading for sorting/best-price, not just
+                // imprecise. A null here means this response is excluded
+                // from "best price" and sorts to the end under price sort.
+                $cheapestConverted = $cheapest->price_currency === 'AMD'
+                    ? (float) $cheapest->price_amount
+                    : $currencyConverter->convert((float) $cheapest->price_amount, $cheapest->price_currency, 'AMD');
+            }
+
+            return [
+                'id' => $response->id,
+                'hasReplied' => $response->has_replied,
+                'hasDiscount' => $response->has_replied && $response->suggestions->contains(fn ($s) => (bool) $s->promo_code),
+                'cheapestPrice' => $cheapestConverted,
+                'repliedAt' => $response->responded_at?->timestamp,
+            ];
+        })
+        ->values();
+
+    // The single cheapest reply overall - only meaningful once there are at
+    // least 2 responses with an actually comparable (same-currency-basis)
+    // price. A currency conversion can fail (missing rate data - see
+    // CurrencyConverter), leaving some responses with a null cheapestPrice;
+    // singling out "the best" from just one valid price, with nothing real
+    // to compare it against, would be as misleading as comparing across
+    // currencies directly.
+    $comparablePrices = $responseStats->where('hasReplied', true)->whereNotNull('cheapestPrice');
+    $best = $comparablePrices->count() >= 2 ? $comparablePrices->sortBy('cheapestPrice')->first() : null;
+    $bestResponseId = $best['id'] ?? null;
 @endphp
 
 @section('content')
-    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10" x-data="{ selected: [], comparable: @js($comparableData) }">
+    <section
+        class="mx-auto max-w-2xl px-6 py-16 lg:px-10"
+        x-data="{
+            selected: [],
+            comparable: @js($comparableData),
+            stats: @js($responseStats),
+            expanded: [],
+            {{-- Defaults to showing only answered orgs, but only when there's
+            at least one - otherwise a page loaded right after submission
+            (nobody's replied yet) would show an empty "no matches" state
+            instead of the reassuring waiting-for-replies list. --}}
+            filterAnswered: {{ $repliedCount > 0 ? 'true' : 'false' }},
+            filterDiscount: false,
+            sortBy: 'recent',
+            toggleExpand(id) {
+                this.expanded = this.expanded.includes(id) ? this.expanded.filter((x) => x !== id) : [...this.expanded, id];
+            },
+            statFor(id) {
+                return this.stats.find((s) => s.id === id) || {};
+            },
+            isVisible(id) {
+                const s = this.statFor(id);
+                if (this.filterAnswered && !s.hasReplied) return false;
+                if (this.filterDiscount && !s.hasDiscount) return false;
+                return true;
+            },
+            orderFor(id) {
+                // CSS order needs a plain integer - Infinity isn't a valid
+                // value and gets silently dropped, so unpriced items fall
+                // back to a large-but-finite number instead.
+                const s = this.statFor(id);
+                if (this.sortBy === 'price_asc') return s.cheapestPrice ?? 999999;
+                if (this.sortBy === 'price_desc') return -(s.cheapestPrice ?? -999999);
+                return -(s.repliedAt ?? 0);
+            },
+            get visibleCount() {
+                return this.stats.filter((s) => this.isVisible(s.id)).length;
+            },
+            get bestSelectedId() {
+                const priced = this.stats.filter((s) => this.selected.includes(s.id) && s.cheapestPrice !== null);
+                if (priced.length < 2) return null;
+                return priced.reduce((best, s) => (s.cheapestPrice < best.cheapestPrice ? s : best)).id;
+            },
+        }"
+    >
         @if (session('status') === 'quote-request-submitted')
             <div class="mb-8 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
                 {{-- session('contacted_count') is the real, synchronously-known
@@ -107,50 +201,138 @@
             </p>
         </div>
 
-        @if ($repliedCount >= 2)
-            <p class="mt-6 text-sm text-muted">{{ __('tourism.results.compare_hint') }}</p>
+        @if ($sortedResponses->isNotEmpty())
+            {{-- Filter/sort bar - purely client-side, everything needed is
+            already embedded in the Alpine state above. --}}
+            <div class="mt-6 flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    @click="filterAnswered = !filterAnswered"
+                    :class="filterAnswered ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink'"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium transition"
+                >
+                    {{ __('tourism.results.filter_answered_only') }}
+                </button>
+                <button
+                    type="button"
+                    @click="filterDiscount = !filterDiscount"
+                    :class="filterDiscount ? 'bg-primary text-white' : 'bg-placeholder/40 text-muted hover:text-ink'"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium transition"
+                >
+                    🎁 {{ __('tourism.results.filter_discount_only') }}
+                </button>
+
+                <span class="mx-1 h-4 w-px bg-placeholder"></span>
+
+                <select
+                    x-model="sortBy"
+                    class="rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+                >
+                    <option value="recent">{{ __('tourism.results.sort_recent') }}</option>
+                    <option value="price_asc">{{ __('tourism.results.sort_price_asc') }}</option>
+                    <option value="price_desc">{{ __('tourism.results.sort_price_desc') }}</option>
+                </select>
+            </div>
+
+            @if ($repliedCount >= 2)
+                <p class="mt-3 text-sm text-muted">{{ __('tourism.results.compare_hint') }}</p>
+            @endif
+
+            <div x-show="visibleCount === 0" x-cloak class="mt-4 rounded-2xl border border-dashed border-placeholder p-8 text-center">
+                <p class="text-sm text-muted">{{ __('tourism.results.no_matches_filtered') }}</p>
+            </div>
         @endif
 
-        <div class="mt-4 space-y-4">
+        <div class="mt-4 flex flex-col gap-4">
             @forelse ($sortedResponses as $response)
                 <div
-                    class="rounded-2xl border p-5 shadow-sm transition {{ $response->is_declined ? 'opacity-60' : '' }}"
+                    x-show="isVisible({{ $response->id }})"
+                    :style="{ order: orderFor({{ $response->id }}) }"
+                    x-cloak
+                    class="rounded-2xl border shadow-sm transition {{ $response->is_declined ? 'opacity-60' : '' }}"
                     @if ($response->has_replied)
-                        :class="selected.includes({{ $response->id }}) ? 'border-primary ring-2 ring-primary/20' : 'border-placeholder'"
+                        :class="selected.includes({{ $response->id }})
+                            ? 'border-primary ring-2 ring-primary/20'
+                            : ({{ $response->id === $bestResponseId ? 'true' : 'false' }} ? 'border-accent-yellow ring-1 ring-accent-yellow/40' : 'border-placeholder')"
                     @else
                         :class="'border-placeholder'"
                     @endif
                 >
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        @click="toggleExpand({{ $response->id }})"
+                        :aria-expanded="expanded.includes({{ $response->id }}).toString()"
+                        class="flex w-full items-center justify-between gap-4 p-5 text-left"
+                    >
+                        <div class="flex min-w-0 items-center gap-3">
                             @if ($response->organization->logo)
-                                <img src="{{ $response->organization->logo }}" alt="{{ $response->organization->name }}" class="h-10 w-10 rounded-full object-contain">
+                                <img src="{{ $response->organization->logo }}" alt="{{ $response->organization->name }}" class="h-10 w-10 shrink-0 rounded-full object-contain">
                             @else
                                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-heading text-sm font-bold text-white">
                                     {{ Str::of($response->organization->name)->substr(0, 2)->upper() }}
                                 </div>
                             @endif
-                            <span class="font-medium text-ink">{{ $response->organization->name }}</span>
+                            <div class="min-w-0">
+                                <span class="block truncate font-medium text-ink">{{ $response->organization->name }}</span>
+                                @if ($response->has_replied)
+                                    @php $cheapest = $response->cheapestSuggestion(); @endphp
+                                    @if ($cheapest)
+                                        <div class="mt-0.5 flex flex-wrap items-center gap-2">
+                                            <span class="font-heading text-sm font-bold text-primary">
+                                                {{ __('tourism.results.from_price', [
+                                                    'price' => rtrim(rtrim((string) $cheapest->price_amount, '0'), '.') . ' ' . $cheapest->price_currency,
+                                                ]) }}
+                                            </span>
+                                            @if ($response->id === $bestResponseId)
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-accent-yellow/30 px-2 py-0.5 text-xs font-semibold text-ink">
+                                                    🏆 {{ __('tourism.results.best_price_badge') }}
+                                                </span>
+                                            @endif
+                                            @if ($response->suggestions->contains(fn ($s) => (bool) $s->promo_code))
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-accent-yellow/20 px-2 py-0.5 text-xs font-medium text-ink">
+                                                    🎁 {{ __('tourism.results.discount_badge_short') }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
                         </div>
 
-                        @if ($response->has_replied)
-                            <span class="flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                                {{ __('tourism.results.replied_label', ['time' => $response->responded_at->diffForHumans()]) }}
-                            </span>
-                        @elseif ($response->is_declined)
-                            <span class="flex shrink-0 items-center gap-1.5 rounded-full bg-placeholder/40 px-3 py-1 text-xs font-semibold text-subtle">
-                                {{ __('tourism.results.declined_label') }}
-                            </span>
-                        @else
-                            <span class="flex shrink-0 items-center gap-1.5 rounded-full bg-placeholder/40 px-3 py-1 text-xs font-semibold text-muted">
-                                <span class="h-1.5 w-1.5 motion-safe:animate-pulse rounded-full bg-subtle"></span>
-                                {{ __('tourism.results.waiting_label') }}
-                            </span>
-                        @endif
-                    </div>
+                        <div class="flex shrink-0 items-center gap-3">
+                            @if ($response->has_replied)
+                                <span class="hidden shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary sm:flex">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                    {{ __('tourism.results.replied_label', ['time' => $response->responded_at->diffForHumans()]) }}
+                                </span>
+                            @elseif ($response->is_declined)
+                                <span class="flex shrink-0 items-center gap-1.5 rounded-full bg-placeholder/40 px-3 py-1 text-xs font-semibold text-subtle">
+                                    {{ __('tourism.results.declined_label') }}
+                                </span>
+                            @else
+                                <span class="flex shrink-0 items-center gap-1.5 rounded-full bg-placeholder/40 px-3 py-1 text-xs font-semibold text-muted">
+                                    <span class="h-1.5 w-1.5 motion-safe:animate-pulse rounded-full bg-subtle"></span>
+                                    {{ __('tourism.results.waiting_label') }}
+                                </span>
+                            @endif
 
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                class="h-5 w-5 shrink-0 text-subtle transition-transform"
+                                :class="expanded.includes({{ $response->id }}) ? 'rotate-180' : ''"
+                                :aria-label="expanded.includes({{ $response->id }}) ? '{{ __('tourism.results.collapse_hint') }}' : '{{ __('tourism.results.expand_hint') }}'"
+                            >
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <div x-show="expanded.includes({{ $response->id }})" x-cloak x-transition class="border-t border-placeholder px-5 pb-5">
                     @if ($response->has_replied)
+                        <p class="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary sm:hidden">
+                            <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                            {{ __('tourism.results.replied_label', ['time' => $response->responded_at->diffForHumans()]) }}
+                        </p>
                         @if ($response->reply_text)
                             <p class="mt-3 rounded-xl bg-primary/5 px-4 py-3 text-sm leading-relaxed text-ink">{{ $response->reply_text }}</p>
                         @endif
@@ -293,6 +475,7 @@
                     @else
                         <p class="mt-4 text-sm text-subtle">{{ __('tourism.results.no_reply_yet') }}</p>
                     @endif
+                    </div>
                 </div>
             @empty
                 <div class="rounded-2xl border border-dashed border-placeholder p-8 text-center">
@@ -335,7 +518,10 @@
                         <tr>
                             <th class="w-36 shrink-0"></th>
                             <template x-for="item in comparable.filter((c) => selected.includes(c.id))" :key="item.id">
-                                <th class="border-b border-placeholder bg-placeholder/10 px-4 py-4 text-left align-bottom">
+                                <th
+                                    class="border-b border-placeholder px-4 py-4 text-left align-bottom"
+                                    :class="item.id === bestSelectedId ? 'bg-accent-yellow/20' : 'bg-placeholder/10'"
+                                >
                                     <div class="flex items-center gap-2">
                                         <template x-if="item.logo">
                                             <img :src="item.logo" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
@@ -345,6 +531,9 @@
                                         </template>
                                         <span class="font-semibold text-ink" x-text="item.name"></span>
                                     </div>
+                                    <span x-show="item.id === bestSelectedId" x-cloak class="mt-1 inline-flex items-center gap-1 rounded-full bg-accent-yellow/30 px-2 py-0.5 text-xs font-semibold text-ink">
+                                        🏆 {{ __('tourism.results.best_price_badge') }}
+                                    </span>
                                 </th>
                             </template>
                         </tr>
@@ -355,7 +544,7 @@
                                 {{ __('tourism.results.compare_row_price') }}
                             </th>
                             <template x-for="item in comparable.filter((c) => selected.includes(c.id))" :key="item.id">
-                                <td class="border-t border-placeholder px-4 py-4">
+                                <td class="border-t border-placeholder px-4 py-4" :class="item.id === bestSelectedId ? 'bg-accent-yellow/10' : ''">
                                     <span x-show="item.price" class="font-heading text-lg font-bold text-primary" x-text="item.price"></span>
                                     <span x-show="!item.price" class="text-subtle">{{ __('tourism.results.compare_no_price') }}</span>
                                 </td>

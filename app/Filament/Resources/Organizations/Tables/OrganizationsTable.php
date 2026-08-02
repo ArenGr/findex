@@ -2,17 +2,23 @@
 
 namespace App\Filament\Resources\Organizations\Tables;
 
+use App\Mail\AdminMessageToOrganization;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Mail;
 
 class OrganizationsTable
 {
@@ -60,6 +66,48 @@ class OrganizationsTable
                     ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
                     ->requiresConfirmation()
                     ->action(fn ($record) => $record->update(['is_active' => !$record->is_active])),
+                // Matches ViewOrganization's header action - see the comment there.
+                Action::make('sendMessage')
+                    ->label('Message')
+                    ->icon('heroicon-o-envelope')
+                    ->color('gray')
+                    ->schema([
+                        Select::make('from')
+                            ->label('Send as')
+                            ->options(collect(config('mail-identities'))->map(fn ($identity) => $identity['label'].' <'.$identity['address'].'>'))
+                            ->default('findex-team')
+                            ->required(),
+                        TextInput::make('subject')->required()->maxLength(150),
+                        Textarea::make('body')->label('Message')->required()->rows(6),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $recipients = $record->users->pluck('email');
+
+                        if ($recipients->isEmpty()) {
+                            Notification::make()
+                                ->title('No recipients')
+                                ->body('This organization has no user accounts yet.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        $identity = config("mail-identities.{$data['from']}");
+
+                        Mail::to($recipients)->send(new AdminMessageToOrganization(
+                            $record,
+                            $data['subject'],
+                            $data['body'],
+                            $identity['address'],
+                            $identity['name'],
+                        ));
+
+                        Notification::make()
+                            ->title("Message sent to {$recipients->count()} recipient(s)")
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
