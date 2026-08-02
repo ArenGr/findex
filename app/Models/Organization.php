@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RateType;
 use App\Services\Cache\RateCache;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -201,6 +202,15 @@ class Organization extends Model
     }
 
     /**
+     * Currency exchange quote requests this organization has been asked to
+     * reply to.
+     */
+    public function exchangeQuoteResponses(): HasMany
+    {
+        return $this->hasMany(ExchangeQuoteResponse::class);
+    }
+
+    /**
      * Saved reply templates (see QuoteTemplate) this organization can
      * prefill the response form with instead of typing every offer from
      * scratch.
@@ -275,6 +285,26 @@ class Organization extends Model
                     $query->orWhere('min_lead_budget_amd', '<=', $budgetAmd);
                 }
             });
+    }
+
+    /**
+     * Active, Telegram-connected exchange offices currently publishing a
+     * CASH rate for this currency - the single source of truth for "is
+     * anyone available to negotiate this currency right now", shared by
+     * ExchangeQuoteController::store()'s pre-submit check and
+     * SendExchangeQuoteToPartnersJob's actual fan-out. Deliberately
+     * 'exchange' only, not the full RATES_TYPES list - banks don't
+     * negotiate walk-in cash exchanges the way exchange offices do.
+     */
+    #[Scope]
+    protected function exchangePartnersForCurrency(Builder $query, int $currencyId): Builder
+    {
+        return $query->active()
+            ->where('type', 'exchange')
+            ->whereNotNull('telegram_chat_id')
+            ->whereHas('currencyRates', fn ($query) => $query
+                ->where('currency_id', $currencyId)
+                ->where('rate_type', RateType::CASH));
     }
 
     public function hasRatesPage(): bool

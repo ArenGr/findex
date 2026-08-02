@@ -22,6 +22,22 @@
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
         <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
 
+        {{-- Large-amount exchange quote CTA - pre-fills the currency
+        currently being viewed on the request form. --}}
+        <a
+            href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code])) }}"
+            class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4 transition hover:border-primary/50"
+        >
+            <span class="flex items-center gap-3">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl">💱</span>
+                <span>
+                    <span class="block text-sm font-semibold text-ink">{{ __('exchange_quotes.request.badge') }}</span>
+                    <span class="block text-xs text-muted">{{ __('exchange_quotes.request.subheading') }}</span>
+                </span>
+            </span>
+            <span class="shrink-0 text-sm font-medium text-primary">{{ __('exchange_quotes.request.submit') }} &rarr;</span>
+        </a>
+
         {{-- Currency --}}
         <div class="mt-8 flex gap-1 overflow-x-auto border-b border-placeholder">
             @foreach ($currencies as $currency)

@@ -10,6 +10,7 @@ use App\Models\CurrencyRateHistory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -19,9 +20,31 @@ class CurrencyRateController extends Controller
     {
         $organization = Auth::guard('organization')->user()->organization;
 
+        // Only exchange offices take part in the currency exchange quote
+        // flow (see Organization::exchangePartnersForCurrency - deliberately
+        // 'exchange' only, not banks). A connect link is only useful before
+        // the org has linked their chat - generated lazily so the dashboard
+        // always has a live link to show, same pattern as
+        // Organization\TourismController::index().
+        if ($organization->type === 'exchange' && !$organization->telegram_chat_id && !$organization->telegram_connect_token) {
+            $organization->update(['telegram_connect_token' => Str::random(32)]);
+        }
+
         return view('organizations.dashboard.rates.index', [
+            'organization' => $organization,
+            'botUsername' => config('services.telegram.bot_username'),
             'rates' => $organization->currencyRates()->with('currency')->get(),
         ]);
+    }
+
+    public function refreshConnectLink(): RedirectResponse
+    {
+        Auth::guard('organization')->user()->organization->update([
+            'telegram_chat_id' => null,
+            'telegram_connect_token' => Str::random(32),
+        ]);
+
+        return redirect()->route('org.dashboard.rates.index')->with('status', 'rates-telegram-link-refreshed');
     }
 
     public function create(): View

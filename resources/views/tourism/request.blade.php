@@ -135,7 +135,11 @@
                     />
                 </div>
 
-                <div class="mt-5 grid grid-cols-2 gap-4">
+                {{-- grid-cols-1 below sm - the native date picker's placeholder
+                text and calendar icon crowd each other once a column drops
+                below ~155px, which happens on phone widths inside this
+                max-w-2xl form. --}}
+                <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <x-form-input type="date" name="check_in" :label="__('tourism.request.check_in')" required />
                     <x-form-input type="date" name="check_out" :label="__('tourism.request.check_out')" required />
                 </div>

@@ -252,7 +252,36 @@
         </div>
     </div>
 
-    <div x-show="mobileOpen" x-cloak x-transition class="border-t border-placeholder px-6 py-4 lg:hidden">
+    {{-- A full-screen overlay rather than an inline expanding panel - the
+    panel's content (nav + dropdowns + language + auth links) is taller than
+    many phone viewports, so an inline panel left page content peeking in
+    underneath it once scrolled. overflow-y-auto lets the overlay itself
+    scroll instead. It duplicates the Findex wordmark + a close button here
+    rather than relying on the header's own toggle button staying visible,
+    since the header isn't sticky - if the menu is opened after scrolling
+    down the page, the header (and its button) would already be scrolled
+    out of view while this fixed overlay stays put. --}}
+    <div
+        x-show="mobileOpen"
+        x-cloak
+        x-transition
+        @keydown.escape.window="mobileOpen = false"
+        role="dialog"
+        aria-modal="true"
+        class="fixed inset-0 z-50 overflow-y-auto bg-white lg:hidden"
+    >
+        <div class="flex items-center justify-between border-b border-placeholder px-6 py-5">
+            <a href="{{ route('home') }}" class="shrink-0 font-logo text-2xl text-primary" @click="mobileOpen = false">
+                Findex
+            </a>
+            <button type="button" @click="mobileOpen = false" class="text-ink" aria-label="{{ __('common.menu') }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 fill-none stroke-current">
+                    <path d="M6 6l12 12M18 6 6 18" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-4">
         <nav class="flex flex-col gap-1 text-sm text-ink">
             <a href="{{ route('home') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.home') }}</a>
 
@@ -331,5 +360,6 @@
                 @endauth
             </div>
         </nav>
+        </div>
     </div>
 </header>

@@ -12,4 +12,8 @@ Route::middleware('org.type:'.implode(',', Organization::RATES_TYPES))->group(fu
     Route::post('/rates', [CurrencyRateController::class, 'store'])->name('rates.store');
     Route::get('/rates/{rate}/edit', [CurrencyRateController::class, 'edit'])->name('rates.edit');
     Route::put('/rates/{rate}', [CurrencyRateController::class, 'update'])->name('rates.update');
+
+    // Telegram connect link for the currency exchange quote flow - see
+    // CurrencyRateController::index()/refreshConnectLink().
+    Route::post('/rates/refresh-connect-link', [CurrencyRateController::class, 'refreshConnectLink'])->name('rates.refresh-connect-link');
 });

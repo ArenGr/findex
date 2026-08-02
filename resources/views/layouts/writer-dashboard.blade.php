@@ -13,7 +13,9 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-white font-sans text-body-text antialiased">
+{{-- min-h-dvh, not min-h-screen - see layouts/app.blade.php's comment on
+the same class for why (iOS Safari's expanding/collapsing address bar). --}}
+<body class="min-h-dvh bg-white font-sans text-body-text antialiased">
     @php $writer = auth('writer')->user()->writer; @endphp
 
     <header class="border-b border-placeholder">

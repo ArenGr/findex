@@ -13,7 +13,9 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-white font-sans text-body-text antialiased">
+{{-- min-h-dvh, not min-h-screen - see layouts/app.blade.php's comment on
+the same class for why (iOS Safari's expanding/collapsing address bar). --}}
+<body class="min-h-dvh bg-white font-sans text-body-text antialiased">
     @php $organization = auth('organization')->user()->organization; @endphp
 
     <header class="border-b border-placeholder">
@@ -90,6 +92,7 @@
                     'destinations-saved' => __('tourism.dashboard.destinations_saved'),
                     'destination-pause-updated' => __('tourism.dashboard.destination_pause_updated'),
                     'telegram-link-refreshed' => __('tourism.dashboard.telegram_hint'),
+                    'rates-telegram-link-refreshed' => __('org.rates.telegram_hint'),
                     'teammate-added' => __('org.team.added'),
                     'teammate-removed' => __('org.team.removed'),
                     'teammate-remove-blocked' => __('org.team.remove_blocked'),

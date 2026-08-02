@@ -30,7 +30,12 @@
 
     @fonts
 </head>
-<body class="flex min-h-screen flex-col bg-white font-sans text-body-text antialiased">
+{{-- min-h-dvh, not min-h-screen (100vh) - iOS Safari's address bar
+expands/collapses as you scroll, and 100vh is measured against the
+LARGEST possible viewport (bar collapsed), so a short page can end up
+taller than what's actually visible, leaving a gap under the footer
+until you scroll. dvh tracks the real, current viewport instead. --}}
+<body class="flex min-h-dvh flex-col bg-white font-sans text-body-text antialiased">
     <x-site-header />
 
     @if (session('status') === 'email-verified')

@@ -13,7 +13,7 @@ return [
      */
     'available' => [
         'hy' => ['native' => 'Հայերեն', 'label' => 'Armenian', 'flag' => '🇦🇲'],
-        'en' => ['native' => 'English', 'label' => 'English', 'flag' => '🇬🇧'],
+        'en' => ['native' => 'English', 'label' => 'English', 'flag' => '🇺🇸'],
         'ru' => ['native' => 'Русский', 'label' => 'Russian', 'flag' => '🇷🇺'],
     ],
 ];

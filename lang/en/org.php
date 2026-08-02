@@ -131,6 +131,12 @@ return [
         'save' => 'Save',
         'no_rates' => 'No rates set yet.',
         'saved' => 'Rate saved.',
+        'telegram_heading' => 'Exchange Rate Requests',
+        'telegram_subheading' => 'Connect Telegram to receive customer requests for large-amount exchanges and negotiate your rate directly with them.',
+        'telegram_connected' => 'Connected - exchange requests will be sent to your Telegram.',
+        'telegram_not_connected' => "Not connected yet. Exchange requests can't reach you until you connect.",
+        'telegram_connect_button' => 'Connect Telegram',
+        'telegram_hint' => "Opens Telegram and starts a chat with our bot - that's how we'll send you requests, and how you'll reply.",
     ],
 
     'team' => [

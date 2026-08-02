@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Telegram\ExchangePartnerReplyHandler;
 use App\Services\Telegram\PartnerReplyHandler;
 use App\Services\Telegram\RatesBotHandler;
 use Illuminate\Http\Request;
@@ -17,8 +18,12 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class TelegramWebhookController extends Controller
 {
-    public function __invoke(Request $request, PartnerReplyHandler $partnerHandler, RatesBotHandler $ratesHandler): Response
-    {
+    public function __invoke(
+        Request $request,
+        PartnerReplyHandler $partnerHandler,
+        ExchangePartnerReplyHandler $exchangePartnerHandler,
+        RatesBotHandler $ratesHandler
+    ): Response {
         $secret = config('services.telegram.webhook_secret');
 
         if (!$secret || !hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token'))) {
@@ -29,9 +34,11 @@ class TelegramWebhookController extends Controller
             $update = $request->json()->all();
 
             // Tourism partner connect links and quote-request replies take
-            // priority; anything left over falls through to the general
-            // currency-rate assistant.
-            if (!$partnerHandler->handleUpdate($update)) {
+            // priority (connect is type-agnostic, so exchange orgs already
+            // go through it too); exchange quote declines are tried next;
+            // anything left over falls through to the general currency-rate
+            // assistant.
+            if (!$partnerHandler->handleUpdate($update) && !$exchangePartnerHandler->handleUpdate($update)) {
                 $ratesHandler->handleUpdate($update);
             }
         } catch (\Throwable $e) {

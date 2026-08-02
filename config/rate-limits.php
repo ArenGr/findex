@@ -15,4 +15,7 @@ return [
     'quote_requests_per_hour' => (int) env('RATE_LIMIT_QUOTE_REQUESTS_PER_HOUR', 5),
     'quote_link_resend_per_hour' => (int) env('RATE_LIMIT_QUOTE_LINK_RESEND_PER_HOUR', 5),
     'quote_response_submit_per_hour' => (int) env('RATE_LIMIT_QUOTE_RESPONSE_SUBMIT_PER_HOUR', 20),
+    'exchange_quote_requests_per_hour' => (int) env('RATE_LIMIT_EXCHANGE_QUOTE_REQUESTS_PER_HOUR', 5),
+    'exchange_quote_link_resend_per_hour' => (int) env('RATE_LIMIT_EXCHANGE_QUOTE_LINK_RESEND_PER_HOUR', 5),
+    'exchange_quote_response_submit_per_hour' => (int) env('RATE_LIMIT_EXCHANGE_QUOTE_RESPONSE_SUBMIT_PER_HOUR', 20),
 ];

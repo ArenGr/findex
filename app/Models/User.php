@@ -56,6 +56,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(QuoteRequest::class);
     }
 
+    public function exchangeQuoteRequests(): HasMany
+    {
+        return $this->hasMany(ExchangeQuoteRequest::class);
+    }
+
     /**
      * Only set when role is UserRole::ORGANIZATION - the business profile
      * this account logs in on behalf of (see Organization::users()).

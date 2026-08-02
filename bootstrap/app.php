@@ -30,6 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // for up to a full extra day before the next check.
         $schedule->command('tourism:remind-partners')->hourly()->withoutOverlapping();
 
+        // Same reasoning as tourism:remind-partners above.
+        $schedule->command('exchange:remind-partners')->hourly()->withoutOverlapping();
+
         $schedule->command('tourism:prompt-reviews')->dailyAt('09:00')->withoutOverlapping();
 
         // Report generation (GenerateReportJob) is queued rather than run

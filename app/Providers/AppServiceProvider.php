@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Services\Insurance\InsuranceQuoteProviderInterface;
 use App\Services\Insurance\MockInsuranceProvider;
+use App\Services\Notifications\ExchangeNotifierInterface;
 use App\Services\Notifications\PartnerNotifierInterface;
+use App\Services\Notifications\TelegramExchangeNotifier;
 use App\Services\Notifications\TelegramPartnerNotifier;
 use App\Services\Report\LlmReportAnalyzer;
 use App\Services\Report\ReportAnalyzerInterface;
@@ -36,6 +38,10 @@ class AppServiceProvider extends ServiceProvider
         // touching SendQuoteRequestToPartnersJob, which only knows about
         // the interface.
         $this->app->bind(PartnerNotifierInterface::class, TelegramPartnerNotifier::class);
+
+        // Same binding pattern, same Telegram bot, for the currency
+        // exchange quote flow - see SendExchangeQuoteToPartnersJob.
+        $this->app->bind(ExchangeNotifierInterface::class, TelegramExchangeNotifier::class);
 
         // Real per-partner insurance APIs don't exist yet - MockInsuranceProvider
         // stands in so the request/results flow can be demoed end to end.
@@ -123,6 +129,12 @@ class AppServiceProvider extends ServiceProvider
         // random string per partner per request) - this is just defense in
         // depth against brute-forcing or spamming the submit endpoint.
         RateLimiter::for('quote_response_submit', fn (Request $request) => Limit::perHour(config('rate-limits.quote_response_submit_per_hour'))->by($request->ip()));
+
+        // Same three limiters, same reasoning, for the currency exchange
+        // quote flow (see exchange.php).
+        RateLimiter::for('exchange_quote_requests', fn (Request $request) => Limit::perHour(config('rate-limits.exchange_quote_requests_per_hour'))->by($request->ip()));
+        RateLimiter::for('exchange_quote_link_resend', fn (Request $request) => Limit::perHour(config('rate-limits.exchange_quote_link_resend_per_hour'))->by($request->ip()));
+        RateLimiter::for('exchange_quote_response_submit', fn (Request $request) => Limit::perHour(config('rate-limits.exchange_quote_response_submit_per_hour'))->by($request->ip()));
 
         // Socialite ships Google/Facebook/GitHub/etc. natively but not Apple -
         // this registers the community socialiteproviders/apple driver so

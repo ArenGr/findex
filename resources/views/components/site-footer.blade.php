@@ -32,7 +32,7 @@
 
 <footer class="border-t border-placeholder">
     <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <div class="grid grid-cols-1 gap-12 lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
             <div>
                 <a href="{{ route('home') }}" class="font-logo text-2xl text-primary">Findex</a>
 

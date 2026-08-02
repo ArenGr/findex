@@ -8,6 +8,34 @@
 }
 
 /*
+ * iOS Safari zooms the whole page in when a focused form field's font-size
+ * is below 16px - it's not a rendering bug, it's deliberate "make this
+ * readable" behavior, but it feels broken to a user who didn't ask to
+ * zoom. Every text/number/date/select/textarea in this app uses text-sm
+ * (14px) for visual consistency with the rest of the UI, so this targets
+ * just the mobile width where the zoom actually triggers, rather than
+ * bumping the font-size (and disrupting the design) everywhere.
+ */
+@media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/*
+ * WebKit (iOS Safari, and Chrome on Android/iOS) shows a gray tap-flash on
+ * any tappable element by default - looks inconsistent against this app's
+ * own custom hover/active states (e.g. peer-checked pills, hover:bg-*),
+ * so it's turned off in favor of those.
+ */
+a,
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/*
  * FreeSans is self-hosted (not on Google/Bunny Fonts) - see the Findex
  * style guide ("Colors and fonts"): FreeSans for English/Armenian body
  * and UI text, Montserrat for decorative headings, Allerta Stencil for
