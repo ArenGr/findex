@@ -18,7 +18,7 @@
             @foreach ($articles as $article)
                 <a
                     href="{{ route('articles.show', $article) }}"
-                    class="group block overflow-hidden rounded-2xl border border-placeholder bg-white shadow-sm transition-colors duration-300 hover:border-primary"
+                    class="group block overflow-hidden rounded-2xl border border-placeholder bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg"
                 >
                     @if ($article->featured_image_url)
                         <div class="p-3">

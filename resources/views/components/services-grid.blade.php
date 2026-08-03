@@ -1,9 +1,14 @@
 @php
+    // Each category gets a soft/pastel tint (icon backdrop) and a matching
+    // border line - defined in resources/css/app.css so the hex values live
+    // in one place. Cards stay white by default (not fully colored) - the
+    // tinted icon backdrop is enough to read as distinct per category
+    // without turning the section into a rainbow.
     $services = [
-        ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.svg', 'href' => route('rates.index')],
-        ['key' => 'credit_card', 'image' => 'images/services/credit-card.png', 'href' => route('offers')],
-        ['key' => 'insurance', 'image' => 'images/services/insurance.png', 'href' => route('insurance.auto.request')],
-        ['key' => 'travel', 'image' => 'images/services/travel.svg', 'href' => route('tourism.request')],
+        ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.png', 'href' => route('rates.index'), 'border' => 'border-currency-line', 'tint' => 'bg-currency-tint'],
+        ['key' => 'credit_card', 'image' => 'images/services/credit-card.png', 'href' => route('offers'), 'border' => 'border-cards-line', 'tint' => 'bg-cards-tint'],
+        ['key' => 'insurance', 'image' => 'images/services/insurance.png', 'href' => route('insurance.auto.request'), 'border' => 'border-insurance-line', 'tint' => 'bg-insurance-tint'],
+        ['key' => 'travel', 'image' => 'images/services/travel.png', 'href' => route('tourism.request'), 'border' => 'border-travel-line', 'tint' => 'bg-travel-tint'],
     ];
 @endphp
 
@@ -19,11 +24,15 @@
 
         <div class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-4 lg:gap-6">
             @foreach ($services as $service)
-                <a href="{{ $service['href'] }}" class="group flex flex-col items-center justify-center gap-5 rounded-2xl border border-primary/20 bg-white px-6 py-10 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg">
-                    <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/5 transition duration-300 group-hover:bg-primary/10">
-                        <img src="{{ asset($service['image']) }}" alt="" class="h-14 w-14 object-contain">
+                <a href="{{ $service['href'] }}" class="group flex flex-col items-center justify-center gap-5 rounded-2xl border {{ $service['border'] }} bg-white px-6 py-10 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <span class="flex h-32 w-44 items-center justify-center rounded-2xl {{ $service['tint'] }}">
+                        <img src="{{ asset($service['image']) }}" alt="" class="h-25 w-40 object-contain transition duration-300 group-hover:scale-105">
                     </span>
-                    <span class="font-semibold text-ink">{{ __('home.services.' . $service['key']) }}</span>
+
+                    <div>
+                        <span class="font-semibold text-ink">{{ __('home.services.' . $service['key']) }}</span>
+                        <p class="mt-1.5 text-xs leading-relaxed text-muted">{{ __('home.services.' . $service['key'] . '_description') }}</p>
+                    </div>
                 </a>
             @endforeach
         </div>

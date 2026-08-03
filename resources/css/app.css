@@ -63,6 +63,18 @@ button {
     --color-slide-pink: #feb2b9;
     --color-slide-purple: #dcb0e9;
 
+    /* Services-grid category colors (resources/views/components/services-grid.blade.php) -
+       soft/pastel rather than saturated so they fit the khaki+yellow brand
+       without turning the homepage into a rainbow. */
+    --color-currency-tint: #eaf3ff;
+    --color-currency-line: #c7ddf7;
+    --color-cards-tint: #ecf7ef;
+    --color-cards-line: #cbe7d1;
+    --color-insurance-tint: #fff8e8;
+    --color-insurance-line: #f1e1a6;
+    --color-travel-tint: #eef5ff;
+    --color-travel-line: #c9dbf8;
+
     /* Neutrals */
     --color-ink: #161515;
     --color-body-text: #262626;

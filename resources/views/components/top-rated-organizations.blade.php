@@ -17,7 +17,7 @@
 
         <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ($topRated as $organization)
-                <a href="{{ route('organizations.show', $organization) }}" class="block border border-placeholder p-5 transition hover:border-primary">
+                <a href="{{ route('organizations.show', $organization) }}" class="block rounded-2xl border border-placeholder bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg">
                     <div class="flex items-center gap-3">
                         @if ($organization->logo)
                             <img src="{{ $organization->logo }}" alt="" class="h-10 w-10 shrink-0 rounded-full object-contain">
@@ -42,7 +42,7 @@
         </div>
 
         <div class="mt-10 text-center">
-            <a href="{{ route('organizations.index') }}" class="inline-block bg-primary px-8 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+            <a href="{{ route('organizations.index') }}" class="inline-block bg-primary px-8 py-3 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md">
                 {{ __('organizations.view_all') }}
             </a>
         </div>

@@ -42,8 +42,8 @@
 
             <div class="mt-8 grid grid-cols-3 gap-4">
                 @foreach ($stats as $stat)
-                    <div class="rounded-2xl border border-primary/20 bg-white px-4 py-5 text-center shadow-sm">
-                        <p class="font-heading text-xl font-bold text-primary">{{ $stat['value'] }}</p>
+                    <div class="rounded-2xl border border-primary/20 bg-white px-2 py-5 text-center shadow-sm sm:px-4">
+                        <p class="font-heading text-lg font-bold whitespace-nowrap text-primary sm:text-xl">{{ $stat['value'] }}</p>
                         <p class="mt-1 text-xs font-medium text-muted">{{ $stat['label'] }}</p>
                     </div>
                 @endforeach
