@@ -18,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
-#[Fillable(['name', 'email', 'password', 'google_id', 'avatar', 'apple_id'])]
+#[Fillable(['name', 'email', 'password', 'google_id', 'avatar', 'apple_id', 'telegram_chat_id', 'telegram_connect_token', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {

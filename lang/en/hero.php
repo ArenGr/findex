@@ -5,10 +5,10 @@ return [
 
     'slides' => [
         1 => [
-            'badge' => 'Bank Cards',
-            'heading' => 'Bank Card<br>Offers',
-            'paragraph' => "Compare credit and debit card offers from Armenia's banks side by side, and pick the one with the best perks for you.",
-            'cta' => 'See Card Offers',
+            'badge' => 'Bank Offers',
+            'heading' => 'Bank Offers,<br>Better Rates',
+            'paragraph' => "Compare mortgage rates, loan terms and savings offers from Armenia's banks side by side, and find the one that fits your goals.",
+            'cta' => 'See Bank Offers',
             'alt' => 'Woman holding a bank card',
         ],
         2 => [

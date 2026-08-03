@@ -30,9 +30,16 @@ return [
         'channel' => 'Ծանուցել ինձ',
         'channel_email' => 'Էլ. փոստով',
         'channel_telegram' => 'Telegram-ով',
-        'telegram_chat_id' => 'Telegram chat ID',
-        'telegram_help' => 'Գրեք :bot-ին Telegram-ում, ապա տեղադրեք այստեղ chat ID-ն, որով այն կպատասխանի։',
+        'telegram_not_connected_error' => 'Նախ միացրեք Ձեր Telegram հաշիվը, ապա նորից փորձեք։',
         'submit' => 'Ստեղծել ծանուցում',
+    ],
+
+    'telegram_connect' => [
+        'connected' => 'Telegram-ը միացված է. ծանուցումները կուղարկվեն այստեղ։',
+        'not_connected' => 'Դեռ միացված չէ. միացրեք Telegram-ը՝ այս ձևով ծանուցումներ ստանալու համար։',
+        'connect_button' => 'Միացնել Telegram',
+        'hint' => 'Բացում է Telegram-ը և սկսում զրույց մեր բոտի հետ. այսպես ենք ուղարկելու Ձեզ փոխարժեքի ծանուցումները։',
+        'connected_confirmation' => 'Դուք միացված եք։ Փոխարժեքի ծանուցումներն այսուհետ կժամանեն այստեղ՝ Telegram հաղորդագրությունների տեսքով։',
     ],
 
     'email' => [

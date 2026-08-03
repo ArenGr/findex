@@ -30,9 +30,16 @@ return [
         'channel' => 'Notify me via',
         'channel_email' => 'Email',
         'channel_telegram' => 'Telegram',
-        'telegram_chat_id' => 'Telegram chat ID',
-        'telegram_help' => 'Message :bot on Telegram, then paste the chat ID it replies with here.',
+        'telegram_not_connected_error' => 'Connect your Telegram account first, then try again.',
         'submit' => 'Create Alert',
+    ],
+
+    'telegram_connect' => [
+        'connected' => 'Telegram connected - alerts will be sent here.',
+        'not_connected' => "Not connected yet - connect Telegram to receive alerts this way.",
+        'connect_button' => 'Connect Telegram',
+        'hint' => "Opens Telegram and starts a chat with our bot - that's how we'll send you rate alerts.",
+        'connected_confirmation' => "You're connected! Rate alerts will now arrive here as Telegram messages.",
     ],
 
     'email' => [

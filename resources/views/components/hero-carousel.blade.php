@@ -1,8 +1,6 @@
 @php
     // One slide per top-level nav category (Finance/Insurance/Travel), each
-    // linking straight to that category's real page - previously slide 3
-    // pointed at a "mortgages" tab and slide 4 at a non-existent "insurance"
-    // tab with stale "coming soon" copy, from before auto insurance shipped.
+    // linking straight to that category's real page.
     $slides = [
         [
             'badge' => 'bg-slide-green/20 text-ink',
@@ -10,7 +8,11 @@
             'dot' => 'bg-slide-green',
             'blob' => 'bg-slide-green/20',
             'photo' => 'slide-1.jpg',
-            'href' => route('home') . '#offers',
+            // route('offers') on its own would land on the "credit-cards" tab
+            // (its default), which has no content built yet - deep-linking
+            // to "mortgages" sends visitors straight to the one tab on that
+            // page with a real, working comparison table behind it.
+            'href' => route('offers', ['tab' => 'mortgages']),
         ],
         [
             'badge' => 'bg-slide-blue text-ink',
@@ -74,7 +76,7 @@
                         <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md {{ $slide['button'] }}">
                             {{ __("hero.slides.$n.cta") }}
                         </a>
-                        <a href="{{ route('home') }}#rates" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition duration-300 hover:-translate-y-0.5 hover:bg-ink hover:text-white hover:shadow-md">
+                        <a href="{{ route('organizations.compare') }}" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition duration-300 hover:-translate-y-0.5 hover:bg-ink hover:text-white hover:shadow-md">
                             {{ __('common.compare_banks') }}
                         </a>
                     </div>

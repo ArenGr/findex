@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\RateAlert;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -15,7 +16,24 @@ class RateAlertController extends Controller
 {
     public function index(string $locale, Request $request): View
     {
-        $alerts = $request->user()->rateAlerts()
+        $user = $request->user();
+
+        // A connect link is only useful before the user has linked their
+        // chat - generate one lazily (same pattern as
+        // Organization\TourismController::index) so the page always has a
+        // live link to show, without a separate "generate" step for the
+        // common case. The locale is refreshed on every visit (not just set
+        // once) so the bot's eventual confirmation message matches whatever
+        // language they're browsing in *when they actually connect*, not
+        // whatever it was the first time this page happened to run.
+        if (!$user->telegram_chat_id) {
+            $user->update([
+                'telegram_connect_token' => $user->telegram_connect_token ?? Str::random(32),
+                'locale' => $locale,
+            ]);
+        }
+
+        $alerts = $user->rateAlerts()
             ->with(['currency', 'organization'])
             ->latest()
             ->get();
@@ -25,6 +43,7 @@ class RateAlertController extends Controller
             'currencies' => Currency::query()->where('is_active', true)->orderBy('sort_order')->get(),
             'organizations' => Organization::active()->orderBy('name')->get(),
             'rateTypes' => RateType::cases(),
+            'botUsername' => config('services.telegram.bot_username'),
         ]);
     }
 
@@ -43,8 +62,21 @@ class RateAlertController extends Controller
             'direction' => ['required', Rule::in(['above', 'below'])],
             'threshold' => ['required', 'numeric', 'min:0'],
             'channel' => ['required', Rule::in(['email', 'telegram'])],
-            'telegram_chat_id' => ['required_if:channel,telegram', 'nullable', 'string', 'max:64'],
         ]);
+
+        // The chat ID always comes from the user's own connected Telegram
+        // account (see index()'s connect-link generation), never typed into
+        // the form - a raw numeric chat ID isn't something a visitor could
+        // reasonably know, and a stale/mistyped one would silently break
+        // delivery. Guarded here too, not just hidden client-side in the
+        // view, since "connect first" is enforced server-side either way.
+        if ($validated['channel'] === 'telegram' && !$request->user()->telegram_chat_id) {
+            return back()->withInput()->withErrors([
+                'channel' => __('alerts.form.telegram_not_connected_error'),
+            ]);
+        }
+
+        $validated['telegram_chat_id'] = $validated['channel'] === 'telegram' ? $request->user()->telegram_chat_id : null;
 
         $request->user()->rateAlerts()->create($validated);
 

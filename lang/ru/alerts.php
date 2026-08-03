@@ -30,9 +30,16 @@ return [
         'channel' => 'Уведомлять меня через',
         'channel_email' => 'Email',
         'channel_telegram' => 'Telegram',
-        'telegram_chat_id' => 'Telegram chat ID',
-        'telegram_help' => 'Напишите :bot в Telegram, затем вставьте сюда chat ID, которым он ответит.',
+        'telegram_not_connected_error' => 'Сначала подключите свой аккаунт Telegram, затем попробуйте снова.',
         'submit' => 'Создать оповещение',
+    ],
+
+    'telegram_connect' => [
+        'connected' => 'Telegram подключён - оповещения будут приходить сюда.',
+        'not_connected' => 'Пока не подключён - подключите Telegram, чтобы получать оповещения этим способом.',
+        'connect_button' => 'Подключить Telegram',
+        'hint' => 'Откроет Telegram и начнёт чат с нашим ботом - так мы будем присылать вам оповещения по курсу.',
+        'connected_confirmation' => 'Вы подключены! Оповещения по курсу теперь будут приходить сюда в виде сообщений Telegram.',
     ],
 
     'email' => [

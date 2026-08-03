@@ -4,6 +4,7 @@ namespace App\Services\Telegram;
 
 use App\Models\Organization;
 use App\Models\QuoteResponse;
+use App\Models\User;
 
 /**
  * Handles the update shapes that belong to the tourism quote-request flow
@@ -13,6 +14,12 @@ use App\Models\QuoteResponse;
  * notification. Actually giving a quote happens on the secure web response
  * page (see PartnerResponseController), not by typing a reply in Telegram -
  * Telegram here is purely a notification channel plus a one-tap decline.
+ *
+ * The connect-token deep link is shared with rate alerts (see
+ * RateAlertController) - a customer connecting Telegram to receive rate
+ * alerts taps the exact same /start <token> link shape as a partner
+ * organization, just against users.telegram_connect_token instead of
+ * organizations.telegram_connect_token.
  */
 class PartnerReplyHandler
 {
@@ -52,18 +59,36 @@ class PartnerReplyHandler
     {
         $organization = Organization::query()->where('telegram_connect_token', $token)->first();
 
-        if (!$organization) {
-            $this->telegram->sendMessage($chatId, __('tourism.telegram.invalid_connect_token', [], 'hy'));
+        if ($organization) {
+            $organization->update([
+                'telegram_chat_id' => (string) $chatId,
+                'telegram_connect_token' => null,
+            ]);
+
+            $this->telegram->sendMessage($chatId, __('tourism.telegram.connected_confirmation', [], 'hy'));
 
             return;
         }
 
-        $organization->update([
-            'telegram_chat_id' => (string) $chatId,
-            'telegram_connect_token' => null,
-        ]);
+        // Partner orgs are always Armenian businesses, so their confirmation
+        // is hardcoded to 'hy' above - a customer connecting for rate alerts
+        // could be browsing in any of the site's locales, snapshotted onto
+        // their account when the connect link was generated (see
+        // RateAlertController), so the reply matches what they were reading.
+        $user = User::query()->where('telegram_connect_token', $token)->first();
 
-        $this->telegram->sendMessage($chatId, __('tourism.telegram.connected_confirmation', [], 'hy'));
+        if ($user) {
+            $user->update([
+                'telegram_chat_id' => (string) $chatId,
+                'telegram_connect_token' => null,
+            ]);
+
+            $this->telegram->sendMessage($chatId, __('alerts.telegram_connect.connected_confirmation', [], $user->locale ?? 'en'));
+
+            return;
+        }
+
+        $this->telegram->sendMessage($chatId, __('tourism.telegram.invalid_connect_token', [], 'hy'));
     }
 
     /**

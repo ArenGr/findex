@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
+use App\Models\User;
 use App\Services\Telegram\PartnerReplyHandler;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,6 +18,11 @@ use Tests\TestCase;
  * Interested" inline-button callback. Giving an actual quote happens on the
  * secure web response page (see PartnerResponseController), not by typing a
  * reply in Telegram - see that controller's tests for the response flow.
+ *
+ * The same /start <token> deep link also connects a customer's account for
+ * rate alerts (see RateAlertController, users.telegram_connect_token) -
+ * covered here too since it's the same handler and token space, just a
+ * different model.
  */
 class TelegramPartnerFlowTest extends TestCase
 {
@@ -63,6 +69,23 @@ class TelegramPartnerFlowTest extends TestCase
 
         $this->assertTrue($handled);
         $this->assertNull($organization->refresh()->telegram_chat_id);
+    }
+
+    public function test_start_command_with_valid_user_token_connects_the_user_in_their_own_locale(): void
+    {
+        $user = User::factory()->create(['telegram_connect_token' => 'user-token', 'locale' => 'ru']);
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->once()->with(777, \Mockery::type('string'))->andReturn(['ok' => true]);
+        });
+
+        $handled = app(PartnerReplyHandler::class)->handleUpdate([
+            'message' => ['chat' => ['id' => 777], 'text' => '/start user-token'],
+        ]);
+
+        $this->assertTrue($handled);
+        $user->refresh();
+        $this->assertSame('777', $user->telegram_chat_id);
+        $this->assertNull($user->telegram_connect_token);
     }
 
     public function test_plain_message_with_no_start_command_is_left_unhandled(): void
