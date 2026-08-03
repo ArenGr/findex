@@ -1,43 +1,38 @@
 @php
+    $currentRoute = Route::current() ? Route::currentRouteName() : 'home';
+    $currentRouteParams = Route::current() ? Route::current()->parameters() : [];
+
+    // A nav entry is "active" if the current route name starts with any of
+    // its prefixes - lets one entry own a whole family of routes (e.g.
+    // exchange.request/.show/.mine/.respond) without listing every route
+    // name individually.
+    $isActive = fn (array $prefixes) => collect($prefixes)->contains(
+        fn ($prefix) => str_starts_with($currentRoute, $prefix)
+    );
+
+    // Only real, shipped destinations - a "Loans"/"Flights"/"eSIM" link with
+    // nowhere to go isn't a menu, it's a promise. Insurance and Travel each
+    // only have one real page today, so they're plain links (below) rather
+    // than a dropdown with a single item in it.
     $dropdowns = [
         'finance' => [
             'label' => __('nav.finance.label'),
+            'active' => $isActive(['rates.', 'exchange.', 'organizations.compare', 'organizations.index', 'offers']),
             'items' => [
                 ['label' => __('nav.rates'), 'href' => route('rates.index')],
                 ['label' => __('nav.compare'), 'href' => route('organizations.compare')],
                 ['label' => __('nav.finance.items.banks'), 'href' => route('organizations.index')],
-                ['label' => __('nav.finance.items.loans'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.finance.items.deposits'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.finance.items.credit_cards'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.finance.items.investments'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.finance.items.money_transfers'), 'href' => '#', 'soon' => true],
-            ],
-        ],
-        'insurance' => [
-            'label' => __('nav.insurance.label'),
-            'items' => [
-                ['label' => __('nav.insurance.items.health'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.insurance.items.auto'), 'href' => route('insurance.auto.request')],
-                ['label' => __('nav.insurance.items.home'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.insurance.items.travel'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.insurance.items.life'), 'href' => '#', 'soon' => true],
-            ],
-        ],
-        'travel' => [
-            'label' => __('nav.travel.label'),
-            'items' => [
-                ['label' => __('nav.travel.items.tours'), 'href' => route('tourism.request')],
-                ['label' => __('nav.travel.items.flights'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.travel.items.hotels'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.travel.items.travel_insurance'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.travel.items.car_rental'), 'href' => '#', 'soon' => true],
-                ['label' => __('nav.travel.items.esim'), 'href' => '#', 'soon' => true],
+                ['label' => __('nav.finance.items.offers'), 'href' => route('offers')],
+                ['label' => __('exchange_quotes.nav_label'), 'href' => route('exchange.request')],
             ],
         ],
     ];
 
-    $currentRoute = Route::current() ? Route::currentRouteName() : 'home';
-    $currentRouteParams = Route::current() ? Route::current()->parameters() : [];
+    $navLinks = [
+        ['label' => __('nav.insurance.label'), 'href' => route('insurance.auto.request'), 'active' => $isActive(['insurance.'])],
+        ['label' => __('nav.travel.label'), 'href' => route('tourism.request'), 'active' => $isActive(['tourism.'])],
+        ['label' => __('nav.about'), 'href' => route('about'), 'active' => $currentRoute === 'about'],
+    ];
 
     // WhatsApp's real group link isn't set up yet - shown now with a
     // placeholder so the entry is visible, swapped in once WHATSAPP_GROUP_URL
@@ -72,7 +67,7 @@
                     <button
                         type="button"
                         @click="open = !open"
-                        class="flex items-center gap-1 whitespace-nowrap hover:text-primary"
+                        class="flex items-center gap-1 whitespace-nowrap hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}"
                         :aria-expanded="open"
                     >
                         {{ $dropdown['label'] }}
@@ -88,26 +83,19 @@
                         class="absolute left-0 top-full z-20 mt-3 w-72 rounded-2xl border border-placeholder bg-white p-2 shadow-lg ring-1 ring-placeholder/60"
                     >
                         @foreach ($dropdown['items'] as $item)
-                            @if ($item['divider'] ?? false)
-                                <hr class="-mx-2 my-2 border-placeholder">
-                            @elseif ($item['soon'] ?? false)
-                                {{-- whitespace-nowrap + shrink-0 keep the badge from squeezing the
-                                     label onto two lines in longer languages (Armenian, Russian). --}}
-                                <span class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm text-subtle" aria-disabled="true">
-                                    <span class="whitespace-nowrap">{{ $item['label'] }}</span>
-                                    <span class="shrink-0 rounded-full bg-placeholder/60 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-subtle uppercase">{{ __('nav.soon_badge') }}</span>
-                                </span>
-                            @else
-                                <a href="{{ $item['href'] }}" class="block rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary">
-                                    {{ $item['label'] }}
-                                </a>
-                            @endif
+                            <a href="{{ $item['href'] }}" class="block rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary">
+                                {{ $item['label'] }}
+                            </a>
                         @endforeach
                     </div>
                 </div>
             @endforeach
 
-            <a href="{{ route('about') }}" class="whitespace-nowrap hover:text-primary">{{ __('nav.about') }}</a>
+            @foreach ($navLinks as $link)
+                <a href="{{ $link['href'] }}" class="whitespace-nowrap hover:text-primary {{ $link['active'] ? 'font-semibold text-primary' : '' }}">
+                    {{ $link['label'] }}
+                </a>
+            @endforeach
         </nav>
 
         <div class="flex items-center gap-5">
@@ -287,7 +275,7 @@
 
             @foreach ($dropdowns as $dropdown)
                 <div x-data="{ open: false }">
-                    <button type="button" @click="open = !open" class="flex w-full items-center justify-between rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">
+                    <button type="button" @click="open = !open" class="flex w-full items-center justify-between rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}">
                         {{ $dropdown['label'] }}
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
                             <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -295,24 +283,19 @@
                     </button>
                     <div x-show="open" x-cloak class="ml-4 flex flex-col gap-1 border-l border-placeholder pl-4">
                         @foreach ($dropdown['items'] as $item)
-                            @if ($item['divider'] ?? false)
-                                <hr class="my-2 border-placeholder">
-                            @elseif ($item['soon'] ?? false)
-                                <span class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-subtle" aria-disabled="true">
-                                    <span class="whitespace-nowrap">{{ $item['label'] }}</span>
-                                    <span class="shrink-0 rounded-full bg-placeholder/60 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-subtle uppercase">{{ __('nav.soon_badge') }}</span>
-                                </span>
-                            @else
-                                <a href="{{ $item['href'] }}" class="rounded-lg px-3 py-2.5 whitespace-nowrap text-body-text hover:bg-primary/5 hover:text-primary">
-                                    {{ $item['label'] }}
-                                </a>
-                            @endif
+                            <a href="{{ $item['href'] }}" class="rounded-lg px-3 py-2.5 whitespace-nowrap text-body-text hover:bg-primary/5 hover:text-primary">
+                                {{ $item['label'] }}
+                            </a>
                         @endforeach
                     </div>
                 </div>
             @endforeach
 
-            <a href="{{ route('about') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.about') }}</a>
+            @foreach ($navLinks as $link)
+                <a href="{{ $link['href'] }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $link['active'] ? 'font-semibold text-primary' : '' }}">
+                    {{ $link['label'] }}
+                </a>
+            @endforeach
 
             @if ($joinLinks->isNotEmpty())
                 <div class="mt-1 border-t border-placeholder pt-3">
