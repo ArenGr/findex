@@ -99,13 +99,6 @@
         </nav>
 
         <div class="flex items-center gap-5">
-            <button type="button" aria-label="{{ __('common.search') }}" class="hidden text-ink hover:text-primary sm:block">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current">
-                    <circle cx="11" cy="11" r="7" stroke-width="1.6" />
-                    <path d="M20 20 16 16" stroke-width="1.6" stroke-linecap="round" />
-                </svg>
-            </button>
-
             @if ($joinLinks->isNotEmpty())
                 <div x-data="{ open: false }" class="relative hidden sm:block" @click.outside="open = false">
                     <button
