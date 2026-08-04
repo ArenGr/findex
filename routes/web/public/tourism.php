@@ -3,9 +3,17 @@
 use App\Http\Controllers\DestinationAlertController;
 use App\Http\Controllers\PartnerResponseController;
 use App\Http\Controllers\QuoteRequestController;
+use App\Http\Controllers\VoiceFillController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/tourism', [QuoteRequestController::class, 'create'])->name('tourism.request');
+
+// Open to guests, same as the request form itself - each hit is two paid
+// OpenAI calls, so it's throttled far tighter than the other tourism
+// endpoints (see the voice_fill limiter in AppServiceProvider).
+Route::middleware(['banned', 'throttle:voice_fill'])->group(function () {
+    Route::post('/tourism/voice-fill', [VoiceFillController::class, 'store'])->name('tourism.voice-fill');
+});
 
 // Registered before the {quoteRequest} wildcard below so "mine" and
 // "resend" aren't swallowed by it and treated as a request ID.

@@ -12,5 +12,18 @@ return [
         'USD' => 1000,
         'EUR' => 1000,
         'RUR' => 100000,
+        // Everything below is roughly scaled to "worth about as much as
+        // 1000 USD", same logic as the three above - not live-converted,
+        // just sensible round numbers so the bar for "worth renegotiating
+        // a rate over" stays consistent across currencies of very
+        // different unit value.
+        'GBP' => 800,
+        'CHF' => 1000,
+        'GEL' => 3000,
+        'AED' => 3500,
+        'CNY' => 7000,
+        'KZT' => 500000,
+        'CAD' => 1400,
+        'AUD' => 1500,
     ],
 ];

@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\RateAlert;
 use App\Models\User;
 use App\Services\Telegram\TelegramClient;
+use App\Services\Viber\ViberClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -153,6 +154,36 @@ class CheckRateAlertsTest extends TestCase
         });
         $this->setSellRate(385);
         $alert = $this->createAlert(['channel' => 'telegram', 'telegram_chat_id' => 'good-chat-id']);
+
+        Artisan::call('alerts:check');
+
+        $alert->refresh();
+        $this->assertTrue($alert->is_currently_met);
+        $this->assertNotNull($alert->last_triggered_at);
+    }
+
+    public function test_failed_viber_delivery_is_not_treated_as_success(): void
+    {
+        $this->mock(ViberClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->once()->andReturn(['ok' => false]);
+        });
+        $this->setSellRate(385);
+        $alert = $this->createAlert(['channel' => 'viber', 'viber_chat_id' => 'bad-chat-id']);
+
+        Artisan::call('alerts:check');
+
+        $alert->refresh();
+        $this->assertFalse($alert->is_currently_met);
+        $this->assertNull($alert->last_triggered_at);
+    }
+
+    public function test_successful_viber_delivery_marks_alert_as_met(): void
+    {
+        $this->mock(ViberClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->once()->andReturn(['ok' => true]);
+        });
+        $this->setSellRate(385);
+        $alert = $this->createAlert(['channel' => 'viber', 'viber_chat_id' => 'good-chat-id']);
 
         Artisan::call('alerts:check');
 

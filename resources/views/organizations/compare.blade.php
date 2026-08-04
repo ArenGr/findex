@@ -3,7 +3,7 @@
 @section('title', __('organizations.compare_heading') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-5xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('organizations.compare_heading') }}</h1>
         <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('organizations.compare_subtitle') }}</p>
 

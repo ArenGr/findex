@@ -18,7 +18,7 @@
 @endphp
 
 @section('content')
-    <section class="mx-auto max-w-6xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
         <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
 

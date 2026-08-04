@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\Intl\Countries;
 
 class QuoteRequestController extends Controller
 {
@@ -29,12 +30,80 @@ class QuoteRequestController extends Controller
     private const TYPICAL_PRICE_MIN_SUGGESTIONS = 3;
     private const TYPICAL_PRICE_MIN_ORGS = 2;
 
-    public function create(TourismPriceData $priceData): View
+    /**
+     * Currencies the budget slider lets a visitor think in, besides AMD
+     * (the only unit the backend actually stores or filters by - see
+     * store()'s budget_min_amd/budget_max_amd). Purely a display
+     * convenience: CurrencyConverter's own docblock already calls its
+     * rates "approximate... not financial-grade", exactly the bar a
+     * slider label needs to clear.
+     */
+    private const BUDGET_CURRENCIES = ['USD', 'EUR', 'RUR'];
+
+    public function create(TourismPriceData $priceData, CurrencyConverter $currencyConverter): View
     {
+        $currencyRates = $this->budgetCurrencyRates($currencyConverter);
+
+        $preferredCurrency = $currencyConverter->preferredCurrencyForLocale(app()->getLocale());
+
         return view('tourism.request', [
             'destinations' => QuoteRequest::DESTINATIONS,
+            'countries' => $this->worldCountries(),
             'typicalPrices' => $this->typicalPrices($priceData),
+            'currencyRates' => $currencyRates,
+            // Falls back to AMD if the locale's usual currency has no rate
+            // data at all today (e.g. a currency scrape gap) - the slider
+            // always has to open in something offered in $currencyRates.
+            'defaultBudgetCurrency' => array_key_exists($preferredCurrency, $currencyRates) ? $preferredCurrency : 'AMD',
         ]);
+    }
+
+    /**
+     * How many AMD one unit of each budget currency is worth right now, so
+     * the frontend can convert a purely AMD-denominated slider value into
+     * whichever currency the visitor picked without a round trip. AMD
+     * itself is always included (rate 1) as the guaranteed fallback; a
+     * foreign currency is only offered if a real rate could be computed
+     * for it (e.g. an empty CurrencyRate table in a fresh environment).
+     */
+    private function budgetCurrencyRates(CurrencyConverter $currencyConverter): array
+    {
+        $rates = ['AMD' => 1.0];
+
+        foreach (self::BUDGET_CURRENCIES as $code) {
+            $rate = $currencyConverter->convert(1, $code, 'AMD');
+
+            if ($rate !== null) {
+                $rates[$code] = $rate;
+            }
+        }
+
+        return $rates;
+    }
+
+    /**
+     * Every ISO-3166 country, translated and flagged, for the destination
+     * picker - not just QuoteRequest::DESTINATIONS (the curated set org
+     * dashboards can mark themselves as serving). Picking a country with no
+     * active partner today isn't blocked here; store() below still checks
+     * live partner availability and offers the "notify me" fallback for
+     * anything unmatched, exactly the same as it already did for a
+     * DESTINATIONS-listed country nobody currently serves. The flag emoji
+     * is derived from the ISO code itself (regional indicator symbols are
+     * just the two letters shifted into a Unicode block), not a hardcoded
+     * lookup table, so it's correct for any of the ~249 entries for free.
+     */
+    private function worldCountries(): array
+    {
+        return collect(Countries::getNames(app()->getLocale()))
+            ->map(fn ($name, $code) => [
+                'code' => $code,
+                'name' => $name,
+                'flag' => mb_chr(127462 + (ord($code[0]) - 65)) . mb_chr(127462 + (ord($code[1]) - 65)),
+            ])
+            ->sortBy('name')
+            ->values()
+            ->all();
     }
 
     /**
@@ -141,7 +210,10 @@ class QuoteRequestController extends Controller
         }
 
         $validated = $request->validate([
-            'destination_country' => ['required', 'string', Rule::in(QuoteRequest::DESTINATIONS)],
+            // Any real country, not just QuoteRequest::DESTINATIONS - the
+            // partner-availability check just below is what actually gates
+            // whether this destination can be fulfilled today.
+            'destination_country' => ['required', 'string', Rule::in(array_keys(Countries::getNames()))],
             'hotel_name' => ['nullable', 'string', 'max:255'],
             'check_in' => ['required', 'date', 'after_or_equal:today'],
             'check_out' => ['required', 'date', 'after:check_in'],

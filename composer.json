@@ -17,7 +17,8 @@
         "sentry/sentry-laravel": "^4.26",
         "socialiteproviders/apple": "^5.10",
         "symfony/css-selector": "^7.4",
-        "symfony/dom-crawler": "^7.4"
+        "symfony/dom-crawler": "^7.4",
+        "symfony/intl": "^7.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

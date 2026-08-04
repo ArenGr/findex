@@ -19,6 +19,7 @@ class RateAlert extends Model
         'threshold',
         'channel',
         'telegram_chat_id',
+        'viber_chat_id',
         'is_active',
     ];
 

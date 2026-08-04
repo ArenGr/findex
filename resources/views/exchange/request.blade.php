@@ -46,7 +46,7 @@
         </div>
     </section>
 
-    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         @if (session('status') === 'email-verification-required')
             <div class="mb-6 border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-ink">
                 {{ __('auth.verify_email.action_blocked') }}
@@ -68,6 +68,16 @@
                     direction: '{{ old('rate_field', 'buy_rate') }}',
                     minimums: @js($minimums),
                     directionLabels: @js($directionLabels),
+                    flags: @js($currencyFlags),
+                    // buy_rate = the bank buys your foreign currency (you
+                    // hand over :currency, receive AMD); sell_rate = the
+                    // reverse. Matches ExchangeQuoteController::store()'s
+                    // rate_field values exactly - this only relabels which
+                    // side AMD sits on for the preview below, it doesn't
+                    // change what gets submitted.
+                    swap() {
+                        this.direction = this.direction === 'buy_rate' ? 'sell_rate' : 'buy_rate';
+                    },
                 }"
             >
                 @csrf
@@ -81,6 +91,46 @@
                 <div>
                     <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('exchange_quotes.request.section_amount') }}</p>
 
+                    {{--
+                        AMD is always the other side of every quote here
+                        (see direction_buy_rate/direction_sell_rate in
+                        lang/*/exchange_quotes.php - "Exchange :currency for
+                        AMD" / "Exchange AMD for :currency"), but that was
+                        only spelled out in small text on the direction
+                        buttons below. This makes it visible up front as an
+                        actual From/To pair, with a swap button that just
+                        flips the same `direction` value the radio buttons
+                        already control - not a separate field.
+                    --}}
+                    <div class="mt-4 flex items-center gap-3">
+                        <div class="flex-1 rounded-xl border border-border-muted bg-placeholder/10 px-4 py-3">
+                            <p class="text-xs text-subtle">{{ __('exchange_quotes.request.from_label') }}</p>
+                            <p class="mt-0.5 flex items-center gap-1.5 text-sm font-semibold text-ink">
+                                <span x-text="direction === 'buy_rate' ? flags[currency] : flags['AMD']"></span>
+                                <span x-text="direction === 'buy_rate' ? currency : 'AMD'"></span>
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            @click="swap()"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-muted text-muted transition hover:border-primary hover:text-primary"
+                            :aria-label="@js(__('exchange_quotes.request.swap_direction'))"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
+                                <path d="M7 10h13l-4-4M17 14H4l4 4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+
+                        <div class="flex-1 rounded-xl border border-border-muted bg-placeholder/10 px-4 py-3">
+                            <p class="text-xs text-subtle">{{ __('exchange_quotes.request.to_label') }}</p>
+                            <p class="mt-0.5 flex items-center gap-1.5 text-sm font-semibold text-ink">
+                                <span x-text="direction === 'buy_rate' ? flags['AMD'] : flags[currency]"></span>
+                                <span x-text="direction === 'buy_rate' ? 'AMD' : currency"></span>
+                            </p>
+                        </div>
+                    </div>
+
                     <div class="mt-4">
                         <label for="currency_code" class="block text-sm font-medium text-ink">{{ __('exchange_quotes.request.currency') }}</label>
                         <select
@@ -92,7 +142,7 @@
                         >
                             @foreach ($currencies as $currencyOption)
                                 <option value="{{ $currencyOption->code }}" @selected(old('currency_code', $selectedCurrency->code) === $currencyOption->code)>
-                                    {{ $currencyOption->code }} — {{ $currencyOption->name }}
+                                    {{ $currencyFlags[$currencyOption->code] ?? '' }} {{ $currencyOption->code }} — {{ $currencyOption->name }}
                                 </option>
                             @endforeach
                         </select>

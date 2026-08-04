@@ -35,7 +35,7 @@
         </div>
     </section>
 
-    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <form
             method="POST"
             action="{{ route('insurance.auto.request.store') }}"

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="@yield('description', __('meta.home_description'))">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('meta.home_title'))</title>
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">

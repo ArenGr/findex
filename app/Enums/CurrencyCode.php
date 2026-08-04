@@ -15,6 +15,11 @@ enum CurrencyCode: string
     case CHF = 'CHF';
     case RUB = 'RUR';
     case GEL = 'GEL';
+    case AED = 'AED';
+    case CNY = 'CNY';
+    case KZT = 'KZT';
+    case CAD = 'CAD';
+    case AUD = 'AUD';
 
     /**
      * @return array<int, string>

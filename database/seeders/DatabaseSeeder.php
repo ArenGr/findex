@@ -23,6 +23,9 @@ class DatabaseSeeder extends Seeder
         $this->call(OrganizationSeeder::class);
         $this->call(AdminSeeder::class);
         $this->call(ArticleSeeder::class);
+        $this->call(ArticleDemoSeeder::class);
         $this->call(AdSeeder::class);
+        $this->call(AutoInsuranceDemoSeeder::class);
+        $this->call(ExchangeOrgSeeder::class);
     }
 }

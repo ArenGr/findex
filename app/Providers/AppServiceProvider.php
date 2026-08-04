@@ -136,6 +136,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('exchange_quote_link_resend', fn (Request $request) => Limit::perHour(config('rate-limits.exchange_quote_link_resend_per_hour'))->by($request->ip()));
         RateLimiter::for('exchange_quote_response_submit', fn (Request $request) => Limit::perHour(config('rate-limits.exchange_quote_response_submit_per_hour'))->by($request->ip()));
 
+        // Each hit makes two paid OpenAI calls (Whisper transcription + a
+        // GPT extraction pass) - see VoiceTripFillService.
+        RateLimiter::for('voice_fill', fn (Request $request) => Limit::perHour(config('rate-limits.voice_fill_per_hour'))->by($request->ip()));
+
         // Socialite ships Google/Facebook/GitHub/etc. natively but not Apple -
         // this registers the community socialiteproviders/apple driver so
         // Socialite::driver('apple') resolves (see AppleAuthController).

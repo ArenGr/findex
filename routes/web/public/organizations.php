@@ -16,6 +16,12 @@ Route::get('/organizations/{organization}', [OrganizationController::class, 'sho
 Route::get('/compare', [CompareController::class, 'show'])->name('organizations.compare');
 Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
 
+// Dedicated SEO landing pages for a single organization type - see
+// OrganizationController::categoryPage() for why these exist separately
+// from index()'s ?type= filter on the generic directory.
+Route::get('/banks', [OrganizationController::class, 'banks'])->name('banks');
+Route::get('/travel-agencies', [OrganizationController::class, 'travelAgencies'])->name('travel-agencies');
+
 // Open to guests (see ReviewController::store) - 'banned' still
 // blocks a signed-in banned user, it's simply a no-op for guests.
 Route::middleware(['banned', 'throttle:reviews'])->group(function () {

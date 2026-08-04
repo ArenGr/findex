@@ -19,6 +19,8 @@ return [
     'directory_subtitle' => 'Browse every organization on Findex, see their ratings, and read reviews from real customers.',
     'filter_all_types' => 'All',
     'no_organizations' => 'No organizations found.',
+    'search_placeholder' => 'Search by name...',
+    'search_button' => 'Search',
     'unrated' => 'Not yet rated',
 
     'compare_add' => 'Compare',

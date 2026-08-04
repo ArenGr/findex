@@ -23,6 +23,11 @@ class OrganizationSeeder extends Seeder
             ['code' => 'CHF', 'name' => 'Swiss Franc', 'symbol' => 'CHF'],
             ['code' => 'RUR', 'name' => 'Russian Ruble', 'symbol' => '₽'],
             ['code' => 'GEL', 'name' => 'Georgian Lari', 'symbol' => '₾'],
+            ['code' => 'AED', 'name' => 'UAE Dirham', 'symbol' => 'د.إ'],
+            ['code' => 'CNY', 'name' => 'Chinese Yuan', 'symbol' => '¥'],
+            ['code' => 'KZT', 'name' => 'Kazakhstani Tenge', 'symbol' => '₸'],
+            ['code' => 'CAD', 'name' => 'Canadian Dollar', 'symbol' => 'CA$'],
+            ['code' => 'AUD', 'name' => 'Australian Dollar', 'symbol' => 'A$'],
         ];
 
         foreach ($currencies as $index => $currency) {

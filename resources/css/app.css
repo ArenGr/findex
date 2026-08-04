@@ -62,6 +62,17 @@ button {
     --color-slide-yellow: #f8d97e;
     --color-slide-pink: #feb2b9;
     --color-slide-purple: #dcb0e9;
+    /* Solid equivalent of bg-slide-green/20 on white (#607e34 at 20% over
+       #fff) - the hero badge's little rotated "tail" square and the pill it
+       sits behind share the exact same badge color class, so where they
+       overlap needs to paint identically or the overlap shows through as a
+       darker patch. That's invisible with the other 3 slides' solid badge
+       colors (solid-over-solid of the same color is seamless), but slide-green
+       used the /20 opacity utility - two translucent layers of the same
+       color don't compound to themselves, so the tail's covered-by-the-pill
+       half showed as a visibly darker sliver. This is that same wash,
+       pre-mixed to a solid color instead. */
+    --color-slide-green-pastel: #dfe5d6;
 
     /* Services-grid category colors (resources/views/components/services-grid.blade.php) -
        soft/pastel rather than saturated so they fit the khaki+yellow brand
@@ -82,4 +93,31 @@ button {
     --color-subtle: #a6a6a6;
     --color-border-muted: #b3b3b3;
     --color-placeholder: #d9d9d9;
+
+    /* A sitewide bump over Tailwind's default type scale (text-xs was
+       12px, text-base was 16px, etc.) - the app read as cramped across
+       body copy, labels, and hints alike, and every text-* utility
+       already used everywhere means this one override reaches every page
+       at once rather than needing per-view edits. Only the sizes actually
+       used for reading (up through text-4xl, the largest h1 in the app)
+       are bumped - 5xl+ are unused display sizes, not worth touching.
+       (Revised up again - the first pass, ~6-8% over default, wasn't a
+       strong enough jump; this is roughly +25-30% over Tailwind's
+       defaults instead.) */
+    --text-xs: 0.9375rem;
+    --text-xs--line-height: 1.25rem;
+    --text-sm: 1rem;
+    --text-sm--line-height: 1.5rem;
+    --text-base: 1.125rem;
+    --text-base--line-height: 1.75rem;
+    --text-lg: 1.25rem;
+    --text-lg--line-height: 1.875rem;
+    --text-xl: 1.4375rem;
+    --text-xl--line-height: 2rem;
+    --text-2xl: 1.75rem;
+    --text-2xl--line-height: 2.25rem;
+    --text-3xl: 2.125rem;
+    --text-3xl--line-height: 2.5rem;
+    --text-4xl: 2.5rem;
+    --text-4xl--line-height: 2.75rem;
 }

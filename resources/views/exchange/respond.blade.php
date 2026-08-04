@@ -3,7 +3,7 @@
 @section('title', __('exchange_quotes.respond.title') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         @if (!$response)
             <div class="rounded-2xl border border-dashed border-placeholder p-8 text-center">
                 <h1 class="font-heading text-xl font-semibold text-ink">{{ __('exchange_quotes.respond.not_found_heading') }}</h1>

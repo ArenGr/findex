@@ -61,22 +61,30 @@ class RateAlertController extends Controller
             'rate_field' => ['required', Rule::in(['buy_rate', 'sell_rate'])],
             'direction' => ['required', Rule::in(['above', 'below'])],
             'threshold' => ['required', 'numeric', 'min:0'],
-            'channel' => ['required', Rule::in(['email', 'telegram'])],
+            'channel' => ['required', Rule::in(['email', 'telegram', 'viber'])],
         ]);
 
-        // The chat ID always comes from the user's own connected Telegram
-        // account (see index()'s connect-link generation), never typed into
-        // the form - a raw numeric chat ID isn't something a visitor could
-        // reasonably know, and a stale/mistyped one would silently break
-        // delivery. Guarded here too, not just hidden client-side in the
-        // view, since "connect first" is enforced server-side either way.
+        // The chat ID always comes from the user's own connected account
+        // (see index()'s connect-link generation for telegram,
+        // connectViber() for viber), never typed into the form - a raw chat
+        // ID isn't something a visitor could reasonably know, and a
+        // stale/mistyped one would silently break delivery. Guarded here
+        // too, not just hidden client-side in the view, since "connect
+        // first" is enforced server-side either way.
         if ($validated['channel'] === 'telegram' && !$request->user()->telegram_chat_id) {
             return back()->withInput()->withErrors([
                 'channel' => __('alerts.form.telegram_not_connected_error'),
             ]);
         }
 
+        if ($validated['channel'] === 'viber' && !$request->user()->viber_chat_id) {
+            return back()->withInput()->withErrors([
+                'channel' => __('alerts.form.viber_not_connected_error'),
+            ]);
+        }
+
         $validated['telegram_chat_id'] = $validated['channel'] === 'telegram' ? $request->user()->telegram_chat_id : null;
+        $validated['viber_chat_id'] = $validated['channel'] === 'viber' ? $request->user()->viber_chat_id : null;
 
         $request->user()->rateAlerts()->create($validated);
 
@@ -103,5 +111,40 @@ class RateAlertController extends Controller
         $alert->delete();
 
         return redirect()->route('alerts.index')->with('status', 'alert-deleted');
+    }
+
+    /**
+     * telegram_connect_token is deliberately left untouched here - index()'s
+     * lazy-generate block already issues a fresh one the next time this page
+     * loads once telegram_chat_id is null, so a working reconnect link
+     * appears immediately with no extra code.
+     */
+    public function disconnectTelegram(string $locale, Request $request): RedirectResponse
+    {
+        $request->user()->update(['telegram_chat_id' => null]);
+
+        return redirect()->route('alerts.index')->with('status', 'telegram-disconnected');
+    }
+
+    /**
+     * Viber has no self-service bot equivalent to Telegram's BotFather - a
+     * real integration needs a registered Viber Public Account and API
+     * access (see App\Services\Viber\ViberClient). Until that's in place,
+     * this simulates a successful connection directly rather than round-
+     * tripping through a deep link and a webhook that doesn't exist yet, so
+     * the channel is still selectable and demoable end to end.
+     */
+    public function connectViber(string $locale, Request $request): RedirectResponse
+    {
+        $request->user()->update(['viber_chat_id' => 'demo-viber-' . Str::random(12)]);
+
+        return redirect()->route('alerts.index')->with('status', 'viber-connected');
+    }
+
+    public function disconnectViber(string $locale, Request $request): RedirectResponse
+    {
+        $request->user()->update(['viber_chat_id' => null]);
+
+        return redirect()->route('alerts.index')->with('status', 'viber-disconnected');
     }
 }

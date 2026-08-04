@@ -3,7 +3,7 @@
 @section('title', __('alerts.heading') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-4xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('alerts.heading') }}</h1>
         <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('alerts.subtitle') }}</p>
 
@@ -14,6 +14,18 @@
         @elseif (session('status') === 'alert-deleted')
             <div class="mt-8 rounded-lg border border-placeholder bg-placeholder/20 px-4 py-3 text-sm text-muted">
                 {{ __('alerts.status_deleted') }}
+            </div>
+        @elseif (session('status') === 'telegram-disconnected')
+            <div class="mt-8 rounded-lg border border-placeholder bg-placeholder/20 px-4 py-3 text-sm text-muted">
+                {{ __('alerts.status_telegram_disconnected') }}
+            </div>
+        @elseif (session('status') === 'viber-connected')
+            <div class="mt-8 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+                {{ __('alerts.status_viber_connected') }}
+            </div>
+        @elseif (session('status') === 'viber-disconnected')
+            <div class="mt-8 rounded-lg border border-placeholder bg-placeholder/20 px-4 py-3 text-sm text-muted">
+                {{ __('alerts.status_viber_disconnected') }}
             </div>
         @endif
 
@@ -33,7 +45,7 @@
                         <p class="mt-1 text-xs text-subtle">
                             {{ $alert->organization?->name ?? __('alerts.any_organization') }}
                             · {{ __('organizations.rate_types.' . $alert->rate_type) }}
-                            · {{ $alert->channel === 'email' ? __('alerts.form.channel_email') : __('alerts.form.channel_telegram') }}
+                            · {{ __('alerts.form.channel_' . $alert->channel) }}
                             · <span class="{{ $alert->is_active ? 'text-primary' : 'text-subtle' }}">{{ $alert->is_active ? __('alerts.active') : __('alerts.paused') }}</span>
                         </p>
                     </div>
@@ -157,6 +169,7 @@
                 <select name="channel" x-model="channel" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
                     <option value="email">{{ __('alerts.form.channel_email') }}</option>
                     <option value="telegram">{{ __('alerts.form.channel_telegram') }}</option>
+                    <option value="viber">{{ __('alerts.form.channel_viber') }}</option>
                 </select>
                 @error('channel')
                     <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
@@ -174,11 +187,27 @@
             --}}
             <div class="sm:col-span-2" x-show="channel === 'telegram'" x-cloak>
                 @if (auth()->user()->telegram_chat_id)
-                    <div class="flex items-center gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">
-                            <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />
-                        </svg>
-                        {{ __('alerts.telegram_connect.connected') }}
+                    <div class="flex items-center justify-between gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+                        <span class="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">
+                                <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />
+                            </svg>
+                            {{ __('alerts.telegram_connect.connected') }}
+                        </span>
+
+                        {{--
+                            A plain nested <form> here would be inside the
+                            page's big "Create a New Alert" form - browsers
+                            silently drop a nested form's opening tag (HTML
+                            doesn't allow forms inside forms), which quietly
+                            turns the button into a no-op. The disconnect
+                            form is declared once, standalone, further down
+                            the page (see #disconnect-telegram-form) and this
+                            button targets it by id instead.
+                        --}}
+                        <button type="submit" form="disconnect-telegram-form" class="text-xs font-medium text-subtle hover:text-red-600">
+                            {{ __('alerts.telegram_connect.disconnect_button') }}
+                        </button>
                     </div>
                 @else
                     <div class="rounded-lg border border-placeholder bg-placeholder/10 px-4 py-4">
@@ -200,6 +229,43 @@
                 @endif
             </div>
 
+            {{--
+                Viber has no bot-token self-service flow like Telegram's, so
+                there's no deep link to open here - "Connect" is a plain
+                in-app action (see RateAlertController::connectViber()).
+            --}}
+            <div class="sm:col-span-2" x-show="channel === 'viber'" x-cloak>
+                @if (auth()->user()->viber_chat_id)
+                    <div class="flex items-center justify-between gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+                        <span class="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">
+                                <path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" />
+                            </svg>
+                            {{ __('alerts.viber_connect.connected') }}
+                        </span>
+
+                        {{-- Standalone form further down the page, same
+                        nested-form pitfall as the Telegram disconnect button
+                        above - see #disconnect-viber-form. --}}
+                        <button type="submit" form="disconnect-viber-form" class="text-xs font-medium text-subtle hover:text-red-600">
+                            {{ __('alerts.viber_connect.disconnect_button') }}
+                        </button>
+                    </div>
+                @else
+                    <div class="rounded-lg border border-placeholder bg-placeholder/10 px-4 py-4">
+                        <p class="text-sm text-ink">{{ __('alerts.viber_connect.not_connected') }}</p>
+
+                        <button type="submit" form="connect-viber-form" class="mt-3 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0">
+                                <path d="M10 2a7 7 0 0 0-6 10.6L3 18l5.5-1a7 7 0 1 0 1.5-15Zm3.6 10.1c-.2.5-1 1-1.5 1.1-.4.1-.9.1-1.4-.1-.3-.1-.8-.3-1.3-.6-2.3-1-3.8-3.4-3.9-3.5-.1-.2-.9-1.2-.9-2.3s.6-1.6.8-1.9c.2-.2.5-.3.6-.3h.5c.2 0 .4 0 .5.4l.7 1.7c.1.2.1.3 0 .5l-.3.4-.4.4c-.1.1-.2.3-.1.5.2.3.7 1.2 1.5 1.9.9.9 1.7 1.1 2 1.3.2.1.4.1.5-.1l.6-.7c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.2.4.3.1.1.1.6-.1 1.1Z" />
+                            </svg>
+                            {{ __('alerts.viber_connect.connect_button') }}
+                        </button>
+                        <p class="mt-2 text-xs text-subtle">{{ __('alerts.viber_connect.hint') }}</p>
+                    </div>
+                @endif
+            </div>
+
             <div class="sm:col-span-2">
                 <button
                     type="submit"
@@ -208,6 +274,18 @@
                     {{ __('alerts.form.submit') }}
                 </button>
             </div>
+        </form>
+
+        <form id="disconnect-telegram-form" method="POST" action="{{ route('alerts.telegram.disconnect') }}" class="hidden">
+            @csrf
+        </form>
+
+        <form id="connect-viber-form" method="POST" action="{{ route('alerts.viber.connect') }}" class="hidden">
+            @csrf
+        </form>
+
+        <form id="disconnect-viber-form" method="POST" action="{{ route('alerts.viber.disconnect') }}" class="hidden">
+            @csrf
         </form>
     </section>
 @endsection

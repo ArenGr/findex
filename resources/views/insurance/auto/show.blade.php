@@ -33,7 +33,7 @@
 @endphp
 
 @section('content')
-    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10" x-data="{ selected: [], comparable: @js($comparableData) }">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10" x-data="{ selected: [], comparable: @js($comparableData) }">
         @if (session('status') === 'insurance-request-submitted')
             <div class="mb-8 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
                 {{ __('auto_insurance.results.submitted', ['count' => $quotedCount]) }}

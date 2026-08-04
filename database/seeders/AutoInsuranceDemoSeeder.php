@@ -9,15 +9,15 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Local-testing data only - not called from DatabaseSeeder::run(), so it
- * never lands in a production seed run. Creates a few auto insurance
- * partners so the /insurance/auto request/results flow can be demoed:
- * unlike tourism partners, these don't need a telegram_chat_id - quotes
- * come from MockInsuranceProvider (see AutoInsuranceQuoteService), standing
- * in for the real per-partner APIs these organizations will eventually
- * provide.
+ * Called from DatabaseSeeder::run() - demo data, not production data, but
+ * kept in the default run so `migrate:fresh --seed` produces a fully working
+ * demo environment on its own. Creates a few auto insurance partners so the
+ * /insurance/auto request/results flow has something to show: unlike
+ * tourism partners, these don't need a telegram_chat_id - quotes come from
+ * MockInsuranceProvider (see AutoInsuranceQuoteService), standing in for the
+ * real per-partner APIs these organizations will eventually provide.
  *
- * Run with: php artisan db:seed --class=AutoInsuranceDemoSeeder
+ * Can still be run alone: php artisan db:seed --class=AutoInsuranceDemoSeeder
  */
 class AutoInsuranceDemoSeeder extends Seeder
 {

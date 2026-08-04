@@ -4,9 +4,18 @@
 @section('description', __('meta.contact_description'))
 
 @section('content')
-    <section class="mx-auto max-w-3xl px-6 py-16 lg:px-10">
-        <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('contact.heading') }}</h1>
-        <p class="mt-4 text-base leading-relaxed text-muted">{{ __('contact.intro') }}</p>
+    {{--
+        Outer section matches the home page's max-w-7xl. Unlike the other
+        static pages (faq/careers/team/company-news), the intro paragraph
+        is the only part kept in a narrower inner wrapper - the channel
+        grid below is genuine multi-column content that benefits from the
+        extra width instead of just padding it out with margin.
+    --}}
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+        <div class="mx-auto max-w-3xl">
+            <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('contact.heading') }}</h1>
+            <p class="mt-4 text-base leading-relaxed text-muted">{{ __('contact.intro') }}</p>
+        </div>
 
         <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
             @foreach (__('contact.channels') as $channel)

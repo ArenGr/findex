@@ -17,11 +17,11 @@
     $dropdowns = [
         'finance' => [
             'label' => __('nav.finance.label'),
-            'active' => $isActive(['rates.', 'exchange.', 'organizations.compare', 'organizations.index', 'offers']),
+            'active' => $isActive(['rates.', 'exchange.', 'organizations.compare', 'banks', 'offers']),
             'items' => [
                 ['label' => __('nav.rates'), 'href' => route('rates.index')],
                 ['label' => __('nav.compare'), 'href' => route('organizations.compare')],
-                ['label' => __('nav.finance.items.banks'), 'href' => route('organizations.index')],
+                ['label' => __('nav.finance.items.banks'), 'href' => route('banks')],
                 ['label' => __('nav.finance.items.offers'), 'href' => route('offers')],
                 ['label' => __('exchange_quotes.nav_label'), 'href' => route('exchange.request')],
             ],

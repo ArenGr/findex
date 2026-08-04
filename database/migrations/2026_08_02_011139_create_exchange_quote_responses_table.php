@@ -34,7 +34,10 @@ return new class extends Migration
             $table->timestamp('reminded_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['exchange_quote_request_id', 'organization_id']);
+            // Explicit short name - the auto-generated one
+            // ("exchange_quote_responses_exchange_quote_request_id_organization_id_unique")
+            // exceeds MySQL's 64-character identifier limit.
+            $table->unique(['exchange_quote_request_id', 'organization_id'], 'exchange_quote_responses_request_org_unique');
         });
     }
 

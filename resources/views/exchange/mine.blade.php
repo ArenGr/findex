@@ -3,7 +3,7 @@
 @section('title', __('exchange_quotes.mine.heading') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('exchange_quotes.mine.heading') }}</h1>

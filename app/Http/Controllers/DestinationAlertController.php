@@ -3,23 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\DestinationAlert;
-use App\Models\QuoteRequest;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\Intl\Countries;
 
 class DestinationAlertController extends Controller
 {
     /**
      * Reachable from the "no partner for this destination yet" state on
      * the trip request form - lets a visitor leave their email instead of
-     * just bouncing off the site.
+     * just bouncing off the site. Accepts any real country, not just
+     * QuoteRequest::DESTINATIONS, matching the request form's own picker
+     * (see QuoteRequestController::worldCountries()).
      */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'destination_country' => ['required', 'string', Rule::in(QuoteRequest::DESTINATIONS)],
+            'destination_country' => ['required', 'string', Rule::in(array_keys(Countries::getNames()))],
             'email' => [Rule::requiredIf(!$request->user()), 'nullable', ValidationRules::email(), 'max:255'],
         ]);
 

@@ -19,6 +19,8 @@ return [
     'directory_subtitle' => 'Просмотрите все организации на Findex, узнайте их рейтинги и прочитайте отзывы реальных клиентов.',
     'filter_all_types' => 'Все',
     'no_organizations' => 'Организации не найдены.',
+    'search_placeholder' => 'Поиск по названию...',
+    'search_button' => 'Найти',
     'unrated' => 'Пока без оценки',
 
     'compare_add' => 'Сравнить',

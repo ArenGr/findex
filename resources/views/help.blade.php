@@ -4,7 +4,7 @@
 @section('description', __('meta.help_description'))
 
 @section('content')
-    <section class="mx-auto max-w-5xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('help.heading') }}</h1>
         <p class="mt-4 max-w-2xl text-base leading-relaxed text-muted">{{ __('help.intro') }}</p>
 

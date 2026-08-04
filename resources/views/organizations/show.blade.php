@@ -3,7 +3,7 @@
 @section('title', $organization->name . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-4xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
 
         @if (session('status') === 'review-submitted')
             <div class="mb-8 border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
