@@ -29,11 +29,15 @@ class Branch extends Model
         'name',
         'address',
         'city',
+        'latitude',
+        'longitude',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -55,5 +59,30 @@ class Branch extends Model
     protected function active(Builder $query): Builder
     {
         return $query->where('is_active', 1);
+    }
+
+    /**
+     * Great-circle (haversine) distance to a point, in kilometers - null if
+     * this branch has no coordinates yet (an org that's only entered a city
+     * name, not pinned an exact location). Computed in PHP rather than raw
+     * SQL trig functions so RateController's "find nearby" sort works
+     * identically against both MySQL (production) and SQLite (tests)
+     * without a driver-specific query.
+     */
+    public function distanceInKmFrom(float $latitude, float $longitude): ?float
+    {
+        if ($this->latitude === null || $this->longitude === null) {
+            return null;
+        }
+
+        $earthRadiusKm = 6371;
+
+        $latDelta = deg2rad($latitude - $this->latitude);
+        $lngDelta = deg2rad($longitude - $this->longitude);
+
+        $a = sin($latDelta / 2) ** 2
+            + cos(deg2rad($this->latitude)) * cos(deg2rad($latitude)) * sin($lngDelta / 2) ** 2;
+
+        return $earthRadiusKm * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 }

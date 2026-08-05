@@ -18,7 +18,7 @@
                 {{ __('auto_insurance.request.badge') }}
             </span>
 
-            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink sm:text-4xl">{{ __('auto_insurance.request.heading') }}</h1>
+            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('auto_insurance.request.heading') }}</h1>
             <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted">{{ __('auto_insurance.request.subheading') }}</p>
 
             <div class="mx-auto mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
@@ -35,7 +35,7 @@
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
         <form
             method="POST"
             action="{{ route('insurance.auto.request.store') }}"

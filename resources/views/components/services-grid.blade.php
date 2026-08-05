@@ -22,7 +22,7 @@
             <p class="mt-3 text-sm leading-relaxed text-muted">{{ __('home.services.subtitle') }}</p>
         </div>
 
-        <div class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-4 lg:gap-6">
+        <div class="mt-12 grid grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-6">
             @foreach ($services as $service)
                 <a href="{{ $service['href'] }}" class="group relative flex flex-col items-center justify-center gap-5 rounded-2xl border {{ $service['border'] }} bg-white px-6 py-10 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <span class="flex h-32 w-44 items-center justify-center rounded-2xl {{ $service['tint'] }}">

@@ -27,5 +27,8 @@ class DatabaseSeeder extends Seeder
         $this->call(AdSeeder::class);
         $this->call(AutoInsuranceDemoSeeder::class);
         $this->call(ExchangeOrgSeeder::class);
+        // After both of the above - it seeds branches onto organizations
+        // created by each.
+        $this->call(BranchSeeder::class);
     }
 }

@@ -106,7 +106,7 @@
                                 <button
                                     type="button"
                                     @click="toggleSort('buy_rate')"
-                                    class="hidden w-20 items-center justify-end gap-1 text-right hover:text-ink sm:flex"
+                                    class="flex w-20 items-center justify-end gap-1 text-right hover:text-ink"
                                 >
                                     {{ __('organizations.buy') }}
                                     <span x-show="sortKey === 'buy_rate'" x-text="sortDir === 'asc' ? '▲' : '▼'"></span>
@@ -130,33 +130,37 @@
                                         x-text="index + 1"
                                     ></span>
 
-                                    <img
-                                        x-show="row.logo"
-                                        :src="row.logo"
-                                        :alt="row.name"
-                                        class="h-10 w-10 shrink-0 rounded-full object-contain"
-                                    >
-                                    <div
-                                        x-show="!row.logo"
-                                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-                                        x-text="row.initial"
-                                    ></div>
+                                    <a :href="row.url" class="block shrink-0" :aria-label="row.name">
+                                        <img
+                                            x-show="row.logo"
+                                            :src="row.logo"
+                                            :alt="row.name"
+                                            class="h-10 w-10 shrink-0 rounded-full object-contain"
+                                        >
+                                        <div
+                                            x-show="!row.logo"
+                                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+                                            x-text="row.initial"
+                                        ></div>
+                                    </a>
 
                                     <div class="min-w-0 flex-1 overflow-hidden">
-                                        <a
-                                            :href="row.url"
-                                            class="block truncate text-sm font-medium text-ink hover:text-primary"
-                                            x-text="row.name"
-                                        ></a>
-                                        <div x-show="row.reviews_count > 0" class="mt-0.5 flex min-w-0 items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 shrink-0 fill-accent-yellow">
-                                                <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
-                                            </svg>
-                                            <span class="truncate text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
+                                        <div class="hidden sm:block">
+                                            <a
+                                                :href="row.url"
+                                                class="block truncate text-sm font-medium text-ink hover:text-primary"
+                                                x-text="row.name"
+                                            ></a>
+                                            <div x-show="row.reviews_count > 0" class="mt-0.5 flex min-w-0 items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 shrink-0 fill-accent-yellow">
+                                                    <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
+                                                </svg>
+                                                <span class="truncate text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="hidden w-20 text-right sm:block">
+                                    <div class="w-20 text-right">
                                         <p class="font-heading text-lg font-bold text-primary" x-text="row.buy_rate.toFixed(2)"></p>
                                     </div>
 

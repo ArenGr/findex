@@ -34,7 +34,7 @@
                     {{ __('about.hero.title') }}
                 </span>
 
-                <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink sm:text-4xl">{{ __('about.hero.title') }}</h1>
+                <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('about.hero.title') }}</h1>
                 <p class="mt-4 max-w-md text-base leading-relaxed text-muted">{{ __('about.hero.subtitle') }}</p>
             </div>
 

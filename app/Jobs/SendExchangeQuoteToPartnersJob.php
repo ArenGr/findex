@@ -35,7 +35,10 @@ class SendExchangeQuoteToPartnersJob implements ShouldQueue
      */
     public function handle(ExchangeNotifierInterface $notifier): void
     {
-        $partners = Organization::exchangePartnersForCurrency($this->exchangeQuoteRequest->currency_id)
+        $partners = Organization::exchangePartnersForCurrency(
+            $this->exchangeQuoteRequest->currency_id,
+            $this->exchangeQuoteRequest->preferred_city
+        )
             ->with(['currencyRates' => fn ($query) => $query
                 ->where('currency_id', $this->exchangeQuoteRequest->currency_id)
                 ->where('rate_type', RateType::CASH)])

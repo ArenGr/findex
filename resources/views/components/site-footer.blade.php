@@ -32,8 +32,8 @@
 
 <footer class="border-t border-placeholder">
     <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <div class="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-12 lg:grid-cols-4">
+            <div class="col-span-2 sm:col-span-1">
                 <a href="{{ route('home') }}" class="font-logo text-2xl text-primary">Findex</a>
 
                 <p class="mt-6 text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('footer.download_app') }}</p>

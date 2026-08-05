@@ -26,7 +26,7 @@
                 {{ __('articles.back_to_home') }}
             </a>
 
-            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink lg:text-4xl">{{ $article->title }}</h1>
+            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink lg:text-4xl">{{ $article->title }}</h1>
 
             @if ($article->excerpt)
                 <p class="mt-4 text-lg leading-relaxed text-muted">{{ $article->excerpt }}</p>

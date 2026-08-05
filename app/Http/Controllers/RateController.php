@@ -9,6 +9,7 @@ use App\Models\CurrencyRate;
 use App\Models\Organization;
 use App\Services\Cache\OrgRatingsCache;
 use App\Services\Cache\RateCache;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
@@ -43,9 +44,18 @@ class RateController extends Controller
             fn (RateType $type) => $type->value === $request->query('type')
         ) ?? RateType::CASH;
 
-        $sort = in_array($request->query('sort'), ['buy_rate', 'sell_rate', 'spread'], true)
+        // "distance" only means anything once we actually have the
+        // visitor's coordinates - falls back to the normal default rather
+        // than erroring if the sort param is stale (e.g. a bookmarked link
+        // from when location sharing was on, tried again after browser
+        // permission was revoked).
+        [$latitude, $longitude] = $this->coordinatesFromQuery($request);
+        $hasLocation = $latitude !== null && $longitude !== null;
+
+        $sortOptions = $hasLocation ? ['buy_rate', 'sell_rate', 'spread', 'distance'] : ['buy_rate', 'sell_rate', 'spread'];
+        $sort = in_array($request->query('sort'), $sortOptions, true)
             ? $request->query('sort')
-            : 'sell_rate';
+            : ($hasLocation ? 'distance' : 'sell_rate');
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
 
         // Only "bank" and "exchange" organizations ever carry currency rates,
@@ -87,61 +97,16 @@ class RateController extends Controller
 
         $page = (int) $request->query('page', 1);
 
-        // Depends on both rate data and Organization::withRatingStats()
-        // (review counts/averages), so it needs both tags - a review write
-        // invalidates this without touching the simpler rate-only caches
-        // above, and vice versa. Keyed on every filter input plus the page
-        // and locale (row URLs like organizations.show are locale-prefixed,
-        // so a locale-less key would leak one locale's links into another's
-        // cached render - see rates-table.blade.php for the same caveat).
-        $cacheKey = 'rates.listing.'.md5(json_encode([
-            app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
-            $selectedOrgType, $selectedCity, $sort, $direction, $page,
-        ]));
+        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page');
 
-        $cached = Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
-            $cacheKey,
-            now()->addMinutes(30),
-            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page) {
-                $paginator = CurrencyRate::query()
-                    ->with(['organization' => fn ($query) => $query->withRatingStats(), 'currency'])
-                    ->whereHas('organization', fn ($query) => $query->active())
-                    ->when($selectedCurrency, fn ($query) => $query->where('currency_id', $selectedCurrency->id))
-                    ->where('rate_type', $selectedType)
-                    ->when($selectedOrganization, fn ($query) => $query->where('organization_id', $selectedOrganization->id))
-                    ->when($selectedOrgType, fn ($query) => $query->whereHas(
-                        'organization',
-                        fn ($org) => $org->where('type', $selectedOrgType)
-                    ))
-                    ->when($selectedCity, fn ($query) => $query->whereHas(
-                        'organization.branches',
-                        fn ($branches) => $branches->active()->where('city', $selectedCity)
-                    ))
-                    ->when(
-                        $sort === 'spread',
-                        fn ($query) => $query->orderByRaw("(sell_rate - buy_rate) {$direction}"),
-                        fn ($query) => $query->orderBy($sort, $direction)
-                    )
-                    ->paginate(20, page: $page);
-
-                return [
-                    'total' => $paginator->total(),
-                    'items' => $paginator->getCollection()->map(fn (CurrencyRate $rate) => [
-                        'id' => $rate->id,
-                        'buy_rate' => (string) $rate->buy_rate,
-                        'sell_rate' => (string) $rate->sell_rate,
-                        'spread' => $rate->getSpread(),
-                        'scraped_at' => $rate->scraped_at?->toIso8601String(),
-                        'organization_id' => $rate->organization_id,
-                        'organization_name' => $rate->organization->name,
-                        'organization_logo' => $rate->organization->logo,
-                        'organization_url' => route('organizations.show', $rate->organization),
-                        'organization_reviews_count' => $rate->organization->reviews_count,
-                        'organization_reviews_avg_rating' => $rate->organization->reviews_avg_rating,
-                    ])->all(),
-                ];
-            }
-        );
+        // Distance-sorted results are specific to wherever this one visitor
+        // happens to be standing - sharing them under the filter-only cache
+        // key below would leak one visitor's ranking to every other visitor
+        // hitting the same currency/type/city/sort combination. Computed
+        // fresh every time instead, on the same filtered query.
+        $cached = $hasLocation
+            ? $this->fetchNearbyRates($filters, $latitude, $longitude)
+            : $this->fetchCachedRates($filters);
 
         // Rebuilt fresh every request (cheap - it's just wrapping the small
         // cached array), not itself cached: LengthAwarePaginator is an
@@ -169,6 +134,160 @@ class RateController extends Controller
             'sort' => $sort,
             'direction' => $direction,
             'rates' => $rates,
+            'hasLocation' => $hasLocation,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
         ]);
+    }
+
+    /**
+     * Rounded to ~11m precision (5 decimal places) - plenty for "which
+     * branch is closest", and short/stable enough to sit in a bookmarkable
+     * URL without looking like raw sensor noise. Silently dropped (both or
+     * neither) rather than rejected outright if out of range or malformed -
+     * a bad/tampered coordinate just means the page falls back to its
+     * normal non-location behavior instead of erroring.
+     *
+     * @return array{0: ?float, 1: ?float}
+     */
+    private function coordinatesFromQuery(Request $request): array
+    {
+        $latitude = $request->query('lat');
+        $longitude = $request->query('lng');
+
+        if (! is_numeric($latitude) || ! is_numeric($longitude)) {
+            return [null, null];
+        }
+
+        $latitude = round((float) $latitude, 5);
+        $longitude = round((float) $longitude, 5);
+
+        if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+            return [null, null];
+        }
+
+        return [$latitude, $longitude];
+    }
+
+    /**
+     * The normal, shared-across-every-visitor path - identical to how this
+     * controller worked before "find nearby" existed.
+     *
+     * @return array{total: int, items: array}
+     */
+    private function fetchCachedRates(array $filters): array
+    {
+        ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
+            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page] = $filters;
+
+        // Depends on both rate data and Organization::withRatingStats()
+        // (review counts/averages), so it needs both tags - a review write
+        // invalidates this without touching the simpler rate-only caches
+        // above, and vice versa. Keyed on every filter input plus the page
+        // and locale (row URLs like organizations.show are locale-prefixed,
+        // so a locale-less key would leak one locale's links into another's
+        // cached render - see rates-table.blade.php for the same caveat).
+        $cacheKey = 'rates.listing.'.md5(json_encode([
+            app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
+            $selectedOrgType, $selectedCity, $sort, $direction, $page,
+        ]));
+
+        return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
+            $cacheKey,
+            now()->addMinutes(30),
+            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page) {
+                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity)
+                    ->when(
+                        $sort === 'spread',
+                        fn ($query) => $query->orderByRaw("(sell_rate - buy_rate) {$direction}"),
+                        fn ($query) => $query->orderBy($sort, $direction)
+                    )
+                    ->paginate(20, page: $page);
+
+                return [
+                    'total' => $paginator->total(),
+                    'items' => $paginator->getCollection()->map(fn (CurrencyRate $rate) => $this->rateRow($rate))->all(),
+                ];
+            }
+        );
+    }
+
+    /**
+     * Distance can't be computed in the database portably (MySQL in
+     * production, SQLite in tests use different trig-function syntax), so
+     * this loads every row matching the current filters, computes each
+     * one's distance to the visitor in PHP (Branch::distanceInKmFrom(),
+     * the same haversine formula either way), sorts/paginates on that, and
+     * skips the shared cache entirely - see index()'s comment on why a
+     * location-specific result can't be cached under the shared key.
+     * Acceptable at this app's data volume; would need a real spatial
+     * index or precomputed geohash bucketing to stay fast at a much larger
+     * scale.
+     *
+     * @return array{total: int, items: array}
+     */
+    private function fetchNearbyRates(array $filters, float $latitude, float $longitude): array
+    {
+        ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
+            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page] = $filters;
+
+        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity)
+            ->with('organization.branches')
+            ->get()
+            ->map(function (CurrencyRate $rate) use ($latitude, $longitude) {
+                $distanceKm = $rate->organization->branches
+                    ->filter(fn (Branch $branch) => $branch->is_active)
+                    ->map(fn (Branch $branch) => $branch->distanceInKmFrom($latitude, $longitude))
+                    ->filter(fn (?float $km) => $km !== null)
+                    ->min();
+
+                return [...$this->rateRow($rate), 'distance_km' => $distanceKm];
+            });
+
+        $sorted = $sort === 'distance'
+            ? $rows->sortBy(fn (array $row) => $row['distance_km'] ?? INF, descending: $direction === 'desc')
+            : ($sort === 'spread'
+                ? $rows->sortBy('spread', descending: $direction === 'desc')
+                : $rows->sortBy($sort, descending: $direction === 'desc'));
+
+        return [
+            'total' => $sorted->count(),
+            'items' => $sorted->values()->slice(($page - 1) * 20, 20)->all(),
+        ];
+    }
+
+    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity): Builder
+    {
+        return CurrencyRate::query()
+            ->with(['organization' => fn ($query) => $query->withRatingStats(), 'currency'])
+            ->whereHas('organization', fn ($query) => $query->active())
+            ->when($selectedCurrency, fn ($query) => $query->where('currency_id', $selectedCurrency->id))
+            ->where('rate_type', $selectedType)
+            ->when($selectedOrganization, fn ($query) => $query->where('organization_id', $selectedOrganization->id))
+            ->when($selectedOrgType, fn ($query) => $query->whereHas(
+                'organization',
+                fn ($org) => $org->where('type', $selectedOrgType)
+            ))
+            ->when($selectedCity, fn ($query) => $query->whereHas(
+                'organization.branches',
+                fn ($branches) => $branches->active()->where('city', $selectedCity)
+            ));
+    }
+
+    private function rateRow(CurrencyRate $rate): array
+    {
+        return [
+            'id' => $rate->id,
+            'buy_rate' => (string) $rate->buy_rate,
+            'sell_rate' => (string) $rate->sell_rate,
+            'spread' => $rate->getSpread(),
+            'scraped_at' => $rate->scraped_at?->toIso8601String(),
+            'organization_id' => $rate->organization_id,
+            'organization_name' => $rate->organization->name,
+            'organization_logo' => $rate->organization->logo,
+            'organization_url' => route('organizations.show', $rate->organization),
+            'organization_reviews_count' => $rate->organization->reviews_count,
+            'organization_reviews_avg_rating' => $rate->organization->reviews_avg_rating,
+        ];
     }
 }

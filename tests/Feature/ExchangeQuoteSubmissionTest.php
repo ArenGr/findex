@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\RateType;
 use App\Mail\ExchangeQuoteRequestSubmitted;
+use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\ExchangeQuoteRequest;
@@ -28,7 +29,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
      * for USD - the baseline "matches" case every test builds on or
      * deviates from.
      */
-    private function exchangePartner(array $overrides = []): Organization
+    private function exchangePartner(array $overrides = [], ?string $branchCity = null): Organization
     {
         $organization = Organization::create(array_merge([
             'name' => 'Test Exchange',
@@ -47,6 +48,15 @@ class ExchangeQuoteSubmissionTest extends TestCase
             'sell_rate' => '388.5000',
             'scraped_at' => now(),
         ]);
+
+        if ($branchCity) {
+            Branch::create([
+                'organization_id' => $organization->id,
+                'name' => 'Test Branch',
+                'city' => $branchCity,
+                'is_active' => true,
+            ]);
+        }
 
         User::factory()->organization($organization)->create();
 
@@ -196,5 +206,66 @@ class ExchangeQuoteSubmissionTest extends TestCase
         ]))->assertStatus(429);
 
         $this->assertSame(5, ExchangeQuoteRequest::count());
+    }
+
+    public function test_preferred_city_only_matches_offices_with_a_branch_there(): void
+    {
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->once()->andReturn(['ok' => true, 'result' => ['message_id' => 1]]);
+        });
+        $yerevanOffice = $this->exchangePartner(['slug' => 'yerevan-office-'.uniqid()], 'Yerevan');
+        $this->exchangePartner(['slug' => 'gyumri-office-'.uniqid()], 'Gyumri');
+
+        $response = $this->post(route('exchange.request.store', ['locale' => 'en']), $this->validPayload([
+            'preferred_city' => 'Yerevan',
+        ]));
+
+        $exchangeQuoteRequest = ExchangeQuoteRequest::sole();
+        $response->assertRedirect($exchangeQuoteRequest->signedResultsUrl());
+        $this->assertSame('Yerevan', $exchangeQuoteRequest->preferred_city);
+        $this->assertSame(1, $exchangeQuoteRequest->responses()->count());
+        $this->assertSame($yerevanOffice->id, $exchangeQuoteRequest->responses->first()->organization_id);
+    }
+
+    public function test_preferred_city_with_no_matching_offices_is_rejected_with_a_region_specific_error(): void
+    {
+        // Gyumri is a valid, selectable region (an exchange office has a
+        // branch there) but that office doesn't publish a USD rate -
+        // distinct from "unrecognized region", which Rule::in would catch
+        // during validation before this is ever reached.
+        $this->exchangePartner(['slug' => 'yerevan-office-'.uniqid()], 'Yerevan');
+        $gyumriOffice = Organization::create([
+            'name' => 'Gyumri Only Exchange',
+            'slug' => 'gyumri-only-exchange-'.uniqid(),
+            'type' => 'exchange',
+            'country_code' => 'AM',
+            'is_active' => true,
+            'telegram_chat_id' => '654321',
+        ]);
+        Branch::create([
+            'organization_id' => $gyumriOffice->id,
+            'name' => 'Gyumri Branch',
+            'city' => 'Gyumri',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post(route('exchange.request.store', ['locale' => 'en']), $this->validPayload([
+            'preferred_city' => 'Gyumri',
+        ]));
+
+        $response->assertSessionHasErrors('preferred_city');
+        $this->assertSame(0, ExchangeQuoteRequest::count());
+    }
+
+    public function test_an_unrecognized_preferred_city_is_rejected_by_validation(): void
+    {
+        $this->exchangePartner(['slug' => 'yerevan-office-'.uniqid()], 'Yerevan');
+
+        $response = $this->post(route('exchange.request.store', ['locale' => 'en']), $this->validPayload([
+            'preferred_city' => 'Not A Real City',
+        ]));
+
+        $response->assertSessionHasErrors('preferred_city');
+        $this->assertSame(0, ExchangeQuoteRequest::count());
     }
 }

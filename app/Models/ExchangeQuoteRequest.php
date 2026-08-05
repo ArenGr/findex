@@ -17,6 +17,7 @@ class ExchangeQuoteRequest extends Model
         'currency_id',
         'amount',
         'rate_field',
+        'preferred_city',
         'notes',
         'expires_at',
     ];

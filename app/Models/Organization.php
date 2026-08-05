@@ -268,16 +268,23 @@ class Organization extends Model
      * SendExchangeQuoteToPartnersJob's actual fan-out. Deliberately
      * 'exchange' only, not the full RATES_TYPES list - banks don't
      * negotiate walk-in cash exchanges the way exchange offices do.
+     * $city optionally narrows this to offices with an active branch in
+     * that city, for a visitor who only wants to be contacted by offices
+     * near a preferred region.
      */
     #[Scope]
-    protected function exchangePartnersForCurrency(Builder $query, int $currencyId): Builder
+    protected function exchangePartnersForCurrency(Builder $query, int $currencyId, ?string $city = null): Builder
     {
         return $query->active()
             ->where('type', 'exchange')
             ->whereNotNull('telegram_chat_id')
             ->whereHas('currencyRates', fn ($query) => $query
                 ->where('currency_id', $currencyId)
-                ->where('rate_type', RateType::CASH));
+                ->where('rate_type', RateType::CASH))
+            ->when($city, fn ($query) => $query->whereHas(
+                'branches',
+                fn ($branches) => $branches->active()->where('city', $city)
+            ));
     }
 
     public function hasRatesPage(): bool

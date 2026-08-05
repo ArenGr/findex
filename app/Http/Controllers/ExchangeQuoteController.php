@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Jobs\SendExchangeQuoteToPartnersJob;
 use App\Mail\ExchangeQuoteLinkResent;
 use App\Mail\ExchangeQuoteRequestSubmitted;
+use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\ExchangeQuoteRequest;
 use App\Models\Organization;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -66,7 +68,26 @@ class ExchangeQuoteController extends Controller
             'minimums' => $minimums,
             'selectedCurrency' => $selectedCurrency,
             'currencyFlags' => self::CURRENCY_FLAGS,
+            'cities' => $this->exchangeCities(),
         ]);
+    }
+
+    /**
+     * Cities where at least one exchange office has an active branch - the
+     * optional "preferred region" a visitor can restrict their request to.
+     * Scoped to exchange-type organizations specifically, since those are
+     * the only ones this form ever contacts (see
+     * Organization::exchangePartnersForCurrency).
+     */
+    private function exchangeCities(): Collection
+    {
+        return Branch::active()
+            ->whereHas('organization', fn ($query) => $query->where('type', 'exchange'))
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
     }
 
     public function resendForm(): View
@@ -141,11 +162,13 @@ class ExchangeQuoteController extends Controller
         }
 
         $minimums = config('exchange-quotes.minimum_amounts');
+        $cities = $this->exchangeCities();
 
         $validated = $request->validate([
             'currency_code' => ['required', 'string', Rule::in(array_keys($minimums))],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
             'rate_field' => ['required', 'string', Rule::in(['buy_rate', 'sell_rate'])],
+            'preferred_city' => ['nullable', 'string', Rule::in($cities)],
             'notes' => ['nullable', 'string', 'max:1000'],
             'guest_name' => [Rule::requiredIf(! $request->user()), 'nullable', 'string', 'min:2', 'max:60'],
             'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', ValidationRules::email(), 'max:255'],
@@ -166,10 +189,14 @@ class ExchangeQuoteController extends Controller
             ]);
         }
 
-        $partners = Organization::exchangePartnersForCurrency($currency->id)->get();
+        $preferredCity = $validated['preferred_city'] ?? null;
+
+        $partners = Organization::exchangePartnersForCurrency($currency->id, $preferredCity)->get();
 
         if ($partners->isEmpty()) {
-            return back()->withInput()->withErrors([
+            return back()->withInput()->withErrors($preferredCity ? [
+                'preferred_city' => __('exchange_quotes.request.no_partners_for_region'),
+            ] : [
                 'currency_code' => __('exchange_quotes.request.no_partners_for_currency'),
             ]);
         }
@@ -182,6 +209,7 @@ class ExchangeQuoteController extends Controller
             'currency_id' => $currency->id,
             'amount' => $validated['amount'],
             'rate_field' => $validated['rate_field'],
+            'preferred_city' => $preferredCity,
             'notes' => $validated['notes'] ?? null,
             // Shorter than travel's 14 days - exchange rates move day to
             // day, a 2-week-old "offer" would be meaningless.

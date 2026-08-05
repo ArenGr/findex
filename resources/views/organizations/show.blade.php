@@ -69,7 +69,7 @@
         @endif
 
         {{-- Facts --}}
-        <dl class="mt-8 grid grid-cols-1 gap-4 border-y border-placeholder py-6 sm:grid-cols-3">
+        <dl class="mt-8 grid grid-cols-2 gap-4 border-y border-placeholder py-6 sm:grid-cols-3">
             <div>
                 <dt class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('organizations.website') }}</dt>
                 <dd class="mt-1 text-sm text-ink">
@@ -98,7 +98,7 @@
         <form
             method="POST"
             action="{{ route('reviews.store', $organization) }}"
-            class="mt-6 border border-placeholder p-6"
+            class="mt-6 max-w-2xl border border-placeholder p-6"
             x-data="{ rating: {{ old('rating', $myReview->rating ?? 0) }} }"
         >
             @csrf
@@ -178,7 +178,7 @@
                 @endguest
         </form>
 
-        <div class="mt-8 divide-y divide-placeholder border-t border-placeholder">
+        <div class="mt-8 max-w-2xl divide-y divide-placeholder border-t border-placeholder">
             @forelse ($organization->reviews as $review)
                 <div class="py-6">
                     <div class="flex items-center justify-between">

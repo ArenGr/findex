@@ -24,7 +24,7 @@
                         <span class="flex h-10 w-10 items-center justify-center rounded-full bg-placeholder/20">
                             <span class="h-4 w-4 rounded-full" style="background-color: var(--color-{{ $pillar['color'] }})"></span>
                         </span>
-                        <p class="mt-3 text-sm font-semibold text-ink">{{ $pillar['label'] }}</p>
+                        <p class="mt-3 text-sm font-semibold break-words text-ink">{{ $pillar['label'] }}</p>
                     </div>
                 @endforeach
             </div>

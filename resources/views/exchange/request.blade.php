@@ -29,7 +29,7 @@
                 {{ __('exchange_quotes.request.badge') }}
             </span>
 
-            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink sm:text-4xl">{{ __('exchange_quotes.request.heading') }}</h1>
+            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('exchange_quotes.request.heading') }}</h1>
             <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted">{{ __('exchange_quotes.request.subheading') }}</p>
 
             <div class="mx-auto mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
@@ -46,7 +46,7 @@
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
         @if (session('status') === 'email-verification-required')
             <div class="mb-6 border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-ink">
                 {{ __('auth.verify_email.action_blocked') }}
@@ -169,6 +169,27 @@
                             <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    @if ($cities->isNotEmpty())
+                        <div class="mt-4">
+                            <label for="preferred_city" class="block text-sm font-medium text-ink">{{ __('exchange_quotes.request.preferred_city') }}</label>
+                            <select
+                                name="preferred_city"
+                                id="preferred_city"
+                                class="mt-1.5 block w-full rounded-md border px-3 py-2 text-sm text-ink focus:outline-none {{ $errors->has('preferred_city') ? 'border-red-400 focus:border-red-500' : 'border-border-muted focus:border-primary' }}"
+                            >
+                                <option value="">{{ __('exchange_quotes.request.preferred_city_all') }}</option>
+                                @foreach ($cities as $city)
+                                    <option value="{{ $city }}" @selected(old('preferred_city') === $city)>{{ $city }}</option>
+                                @endforeach
+                            </select>
+                            @error('preferred_city')
+                                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                            @else
+                                <p class="mt-1.5 text-xs text-subtle">{{ __('exchange_quotes.request.preferred_city_hint') }}</p>
+                            @enderror
+                        </div>
+                    @endif
                 </div>
 
                 <div class="border-t border-placeholder pt-6">

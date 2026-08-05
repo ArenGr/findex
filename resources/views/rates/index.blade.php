@@ -12,9 +12,11 @@
         'city' => $selectedCity,
         'sort' => $sort,
         'direction' => $direction,
+        'lat' => $latitude,
+        'lng' => $longitude,
     ];
 
-    $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH || $selectedOrgType || $selectedOrganization || $selectedCity;
+    $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation;
 @endphp
 
 @section('content')
@@ -124,6 +126,57 @@
                 @endif
             </form>
 
+            {{--
+                Client-side only - the server has no way to know the
+                visitor's coordinates until the browser's own geolocation
+                prompt hands them over, so this can't be a plain link like
+                the filters above. Once granted, redirects to the current
+                URL with lat/lng merged in (every other active filter stays
+                intact, since they're already in the query string).
+            --}}
+            <div x-data="{
+                state: 'idle',
+                findNearby() {
+                    if (!navigator.geolocation) {
+                        this.state = 'error';
+                        return;
+                    }
+                    this.state = 'locating';
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('lat', position.coords.latitude);
+                            url.searchParams.set('lng', position.coords.longitude);
+                            url.searchParams.set('sort', 'distance');
+                            url.searchParams.set('direction', 'asc');
+                            window.location.href = url.toString();
+                        },
+                        () => { this.state = 'error'; },
+                    );
+                },
+            }">
+                @if ($hasLocation)
+                    <a
+                        href="{{ route('rates.index', array_filter([...$baseParams, 'currency' => $selectedCurrency?->code, 'lat' => null, 'lng' => null, 'sort' => null, 'direction' => null])) }}"
+                        class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary"
+                    >
+                        📍 {{ __('rates.nearby_active') }}
+                        <span aria-hidden="true">&times;</span>
+                    </a>
+                @else
+                    <button
+                        type="button"
+                        @click="findNearby()"
+                        :disabled="state === 'locating'"
+                        class="inline-flex items-center gap-1 rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink hover:border-primary disabled:opacity-60"
+                    >
+                        <span x-show="state !== 'locating'">📍 {{ __('rates.find_nearby') }}</span>
+                        <span x-show="state === 'locating'" x-cloak>{{ __('rates.locating') }}</span>
+                    </button>
+                    <p x-show="state === 'error'" x-cloak class="mt-1 text-xs text-red-600">{{ __('rates.location_error') }}</p>
+                @endif
+            </div>
+
             @if ($hasNonDefaultFilter)
                 <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="text-xs text-muted hover:text-ink">
                     {{ __('rates.reset_filters') }}
@@ -169,6 +222,13 @@
                             </a>
                         </th>
                         <th class="hidden px-4 py-3 text-left sm:table-cell">{{ __('rates.updated_column') }}</th>
+                        @if ($hasLocation)
+                            <th class="hidden px-4 py-3 text-right lg:table-cell">
+                                <a href="{{ $sortLink('distance') }}" class="inline-flex items-center gap-1 hover:text-ink">
+                                    {{ __('rates.distance_column') }} {{ $sortArrow('distance') }}
+                                </a>
+                            </th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -202,10 +262,15 @@
                             <td class="hidden px-4 py-4 text-left text-xs text-subtle sm:table-cell">
                                 {{ $rate->scraped_at ? \Illuminate\Support\Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}
                             </td>
+                            @if ($hasLocation)
+                                <td class="hidden px-4 py-4 text-right text-xs text-subtle lg:table-cell">
+                                    {{ isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : '—' }}
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-16 text-center text-sm text-muted">
+                            <td colspan="{{ $hasLocation ? 6 : 5 }}" class="px-6 py-16 text-center text-sm text-muted">
                                 {{ __('rates.no_rates_match') }}
                             </td>
                         </tr>

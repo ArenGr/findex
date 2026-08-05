@@ -23,7 +23,7 @@
                 {{ __('tourism.request.badge') }}
             </span>
 
-            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold text-ink sm:text-4xl">{{ __('tourism.request.heading') }}</h1>
+            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('tourism.request.heading') }}</h1>
             <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted">{{ __('tourism.request.subheading') }}</p>
 
             <div class="mx-auto mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
