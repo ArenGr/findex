@@ -23,8 +23,7 @@ class AdminMessageToOrganization extends Mailable implements ShouldQueue
         public readonly string $messageBody,
         public readonly string $fromAddress,
         public readonly string $fromName,
-    ) {
-    }
+    ) {}
 
     public function build(): self
     {

@@ -10,15 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramPartnerNotifier implements PartnerNotifierInterface
 {
-    public function __construct(private readonly TelegramClient $telegram)
-    {
-    }
+    public function __construct(private readonly TelegramClient $telegram) {}
 
     public function notify(QuoteResponse $response): bool
     {
         $organization = $response->organization;
 
-        if (!$organization->telegram_chat_id) {
+        if (! $organization->telegram_chat_id) {
             return false;
         }
 
@@ -27,7 +25,7 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
             $this->buildMessage($response),
             inlineKeyboard: [[
                 ['text' => __('tourism.telegram.view_and_respond_button', [], 'hy'), 'url' => $response->secureRespondUrl()],
-                ['text' => __('tourism.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'decline:' . $response->id],
+                ['text' => __('tourism.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'decline:'.$response->id],
             ]]
         );
 
@@ -50,7 +48,7 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
     {
         $organization = $response->organization;
 
-        if (!$organization->telegram_chat_id) {
+        if (! $organization->telegram_chat_id) {
             return false;
         }
 
@@ -59,7 +57,7 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
             __('tourism.telegram.reminder_message', [], 'hy'),
             inlineKeyboard: [[
                 ['text' => __('tourism.telegram.view_and_respond_button', [], 'hy'), 'url' => $response->secureRespondUrl()],
-                ['text' => __('tourism.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'decline:' . $response->id],
+                ['text' => __('tourism.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'decline:'.$response->id],
             ]]
         );
 
@@ -80,7 +78,7 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
     {
         $organization = $suggestion->response->organization;
 
-        if (!$organization->telegram_chat_id) {
+        if (! $organization->telegram_chat_id) {
             return false;
         }
 
@@ -123,7 +121,7 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
         ])->filter()->implode(', ');
 
         return __('tourism.telegram.request_message', [
-            'destination' => __('destinations.' . $r->destination_country, [], 'hy'),
+            'destination' => __('destinations.'.$r->destination_country, [], 'hy'),
             'hotel' => $r->hotel_name ?: __('tourism.telegram.any_hotel', [], 'hy'),
             'check_in' => $r->check_in->locale('hy')->translatedFormat('d F Y'),
             'check_out' => $r->check_out->locale('hy')->translatedFormat('d F Y'),

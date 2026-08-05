@@ -26,7 +26,7 @@ class MortgageParserFactory
     {
         $slug = $organization->slug;
 
-        if (!isset($this->parsers[$slug])) {
+        if (! isset($this->parsers[$slug])) {
             throw new \InvalidArgumentException("No mortgage parser configured for organization '{$slug}'.");
         }
 

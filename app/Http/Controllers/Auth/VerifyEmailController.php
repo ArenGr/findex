@@ -29,7 +29,7 @@ class VerifyEmailController extends Controller
 
         abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), 403);
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
         }
 
@@ -59,7 +59,7 @@ class VerifyEmailController extends Controller
 
     private function resend(User $user): RedirectResponse
     {
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             $user->sendEmailVerificationNotification();
         }
 

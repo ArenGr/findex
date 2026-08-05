@@ -22,12 +22,12 @@ class IdbankRateParser implements RateParser
      * number.
      */
     private const ROW_PATTERN = '/<div class="m-exchange__table-row">\s*<div class="m-exchange__table-cell">.*?(?:\d+)\s+([A-Z]{3,4}).*?<\/div>\s*'
-        . '<div class="m-exchange__table-cell">\s*(?:<svg.*?<\/svg>)?\s*([\d.]+)\s*<\/div>\s*'
-        . '<div class="m-exchange__table-cell">\s*(?:<svg.*?<\/svg>)?\s*([\d.]+)\s*<\/div>/s';
+        .'<div class="m-exchange__table-cell">\s*(?:<svg.*?<\/svg>)?\s*([\d.]+)\s*<\/div>\s*'
+        .'<div class="m-exchange__table-cell">\s*(?:<svg.*?<\/svg>)?\s*([\d.]+)\s*<\/div>/s';
 
     public function parse(string $html): array
     {
-        if (!preg_match(
+        if (! preg_match(
             '/<div class="m-exchange__table-row m-exchange__table-row--header">.*?<\/div>\s*<\/div>(.*?)<div class="m-exchange__table-actions">/s',
             $html,
             $tableMatch

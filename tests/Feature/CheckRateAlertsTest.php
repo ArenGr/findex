@@ -27,7 +27,9 @@ class CheckRateAlertsTest extends TestCase
     use RefreshDatabase;
 
     private Currency $currency;
+
     private Organization $organization;
+
     private User $user;
 
     protected function setUp(): void

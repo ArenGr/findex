@@ -44,16 +44,7 @@
         </div>
     </section>
 
-    {{--
-        max-w-7xl, matching the home page's own container width - this form
-        outgrew the max-w-2xl every "request a quote" page started from
-        once it picked up the voice concierge, a budget slider, and a live
-        summary: on a real desktop viewport it read as a thin column of
-        stacked fields lost in a sea of blank margin. The extra room below
-        is spent on a two-column layout (form left, a sticky
-        summary+submit sidebar right) rather than just making the same
-        single column wider.
-    --}}
+    {{-- max-w-7xl to match the home page - the extra room goes to a two-column layout (form left, sticky summary+submit sidebar right), not just a wider single column. --}}
     <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         @if (session('status') === 'destination-alert-created')
             <div class="mx-auto mb-6 max-w-3xl rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
@@ -67,18 +58,7 @@
             </div>
         @endif
 
-        {{--
-            One shared x-data for the whole form (not several disconnected
-            scopes) so the voice concierge, the destination picker, the
-            budget slider, and the live trip-summary card can all read and
-            write the same underlying state directly - see
-            resources/views/components/loan-affordability-calculator.blade.php
-            for the same single-x-data-per-form convention used elsewhere in
-            this codebase. Only fields the summary card actually needs to
-            reflect are Alpine-bound (destination, dates, travelers,
-            preferences, budget); hotel name and notes stay plain inputs,
-            same as before.
-        --}}
+        {{-- One shared x-data for the whole form (see loan-affordability-calculator.blade.php for the same convention) so the voice concierge, destination picker, budget slider, and summary card all read/write the same state. --}}
         <form
             method="POST"
             action="{{ route('tourism.request.store') }}"
@@ -112,8 +92,11 @@
                 insurance: {{ old('insurance') ? 'true' : 'false' }},
 
                 budgetSliderMax: {{ $budgetSliderMax }},
-                budgetMin: {{ old('budget_min_amd') ? (int) old('budget_min_amd') : 0 }},
-                budgetMax: {{ old('budget_max_amd') ? (int) old('budget_max_amd') : $budgetSliderMax }},
+                {{-- min() against $budgetSliderMax - the DB column (and so
+                old()) allows a far larger value than this UI's slider
+                does; same reasoning as applyVoiceFields() below. --}}
+                budgetMin: {{ old('budget_min_amd') ? min((int) old('budget_min_amd'), $budgetSliderMax) : 0 }},
+                budgetMax: {{ old('budget_max_amd') ? min((int) old('budget_max_amd'), $budgetSliderMax) : $budgetSliderMax }},
                 budgetTouched: {{ (old('budget_min_amd') || old('budget_max_amd')) ? 'true' : 'false' }},
                 // The slider itself always drags in AMD (matching what
                 // store() actually validates/saves) - budgetCurrency only
@@ -290,7 +273,8 @@
                     if (data.check_out) this.checkOut = data.check_out;
                     if (data.adults !== null && data.adults !== undefined) this.adults = data.adults;
                     if (data.children !== null && data.children !== undefined) this.children = data.children;
-                    if (typeof data.budget_min_amd === 'number') { this.budgetMin = data.budget_min_amd; this.budgetTouched = true; }
+                    {{-- Both clamped to budgetSliderMax - the extraction service allows values above the slider's own cap, which would otherwise desync the filled-track percentage from the pinned thumb. --}}
+                    if (typeof data.budget_min_amd === 'number') { this.budgetMin = Math.min(data.budget_min_amd, this.budgetSliderMax); this.budgetTouched = true; }
                     if (typeof data.budget_max_amd === 'number') { this.budgetMax = Math.min(data.budget_max_amd, this.budgetSliderMax); this.budgetTouched = true; }
                     if (data.notes) document.getElementById('notes').value = data.notes;
                     if (typeof data.all_inclusive === 'boolean') this.allInclusive = data.all_inclusive;
@@ -325,29 +309,10 @@
                 <input type="text" name="company" id="company" tabindex="-1" autocomplete="off">
             </div>
 
-            {{--
-                Two columns on large screens: the form on the left, a sticky
-                summary+consent+submit sidebar on the right that stays in
-                view while filling in the fields to its left - so finishing
-                the form never means scrolling back down through five
-                sections to find the submit button. items-start keeps the
-                (much taller) left column from stretching the sidebar to
-                match its height, which would break the sticky effect.
-                Below lg, the grid collapses to a single column and both
-                sides simply stack in source order, matching how this page
-                already worked before.
-            --}}
+            {{-- Two columns on large screens: form left, sticky summary+consent+submit sidebar right (items-start stops the taller left column from stretching it). Collapses to one column below lg. --}}
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
                 <div class="space-y-8">
-            {{--
-                Voice concierge, promoted to its own prominent card above the
-                numbered form sections rather than a small inline widget -
-                mirrors the recording flow only, everything it fills in
-                writes to the same x-data now, so applyVoiceFields() just
-                assigns properties directly instead of the DOM-event hack an
-                earlier version needed when the picker had its own separate
-                scope.
-            --}}
+            {{-- Voice concierge card - writes into the same x-data as the rest of the form via applyVoiceFields(). --}}
             <div class="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm sm:p-6">
                 <div class="flex items-start gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
@@ -448,15 +413,7 @@
                             <p class="text-sm font-semibold text-ink">{{ __('tourism.request.section_trip') }}</p>
                         </div>
 
-                        {{--
-                            A searchable dropdown over every ISO country (see
-                            QuoteRequestController::worldCountries()), not a flag
-                            grid limited to a handful of destinations - picking a
-                            country with no active partner today isn't blocked
-                            client-side, store() still checks live availability and
-                            offers the "notify me" fallback below for anything
-                            unmatched.
-                        --}}
+                        {{-- Searchable dropdown over every ISO country, not just curated destinations - store() still checks live partner availability and offers the "notify me" fallback below for anything unmatched. --}}
                         <div class="mt-4" @click.outside="destOpen = false">
                             <label class="block text-sm font-medium text-ink">{{ __('tourism.request.destination') }}</label>
 
@@ -546,7 +503,7 @@
 
                             <div x-show="typicalPrices[destination]" x-cloak class="mt-2 flex items-center gap-1.5 rounded-lg bg-primary/5 px-3 py-2 text-xs text-ink">
                                 <span>💡 {{ __('tourism.request.typical_price_label') }}</span>
-                                {{-- Converted through the same formatBudget() helper as the budget slider (see its definition above) - reuses whatever currency the visitor already picked there, and keeps both "here's a price" callouts on this page the same text-sm font-semibold size/weight instead of this one quietly inheriting the surrounding hint's text-xs. --}}
+                                {{-- Uses the same formatBudget() helper as the budget slider, for consistent currency and sizing. --}}
                                 <span
                                     class="text-sm font-semibold text-primary"
                                     x-text="typicalPrices[destination] ? formatBudget(typicalPrices[destination]) : ''"
@@ -614,13 +571,7 @@
                                 <p class="text-sm font-semibold text-ink">{{ __('tourism.request.section_budget') }}</p>
                             </div>
 
-                            {{--
-                                Purely a display preference (see
-                                formatBudget()) - the slider itself always
-                                drags in AMD underneath, so switching
-                                currency here never changes what gets
-                                submitted or how partners are matched.
-                            --}}
+                            {{-- Display-only (see formatBudget()) - the slider still drags in AMD underneath regardless of the currency shown here. --}}
                             <label class="flex items-center gap-1.5 text-xs text-muted">
                                 {{ __('tourism.request.budget_currency_label') }}
                                 <select x-model="budgetCurrency" class="rounded-md border border-border-muted bg-white px-2 py-1 text-xs font-medium text-ink focus:border-primary focus:outline-none">
@@ -632,20 +583,7 @@
                         </div>
                         <p class="mt-1 text-xs text-muted">{{ __('tourism.request.budget_hint') }}</p>
 
-                        {{--
-                            Two overlapping range inputs with a transparent
-                            track and pointer-events re-enabled only on the
-                            thumb (the standard dual-range-slider trick) -
-                            lets either handle be grabbed independently
-                            regardless of DOM stacking order. Both handles
-                            stay optional exactly like the two number inputs
-                            this replaces: budgetTouched only flips true once
-                            the visitor actually drags one, so an untouched
-                            slider still submits no budget filter at all.
-                            Dragging the max handle all the way to the cap is
-                            treated as "no upper limit" (disables the max
-                            hidden input) rather than a hard 3M ceiling.
-                        --}}
+                        {{-- Two overlapping range inputs, pointer-events re-enabled only on the thumb (standard dual-range-slider trick). Untouched = no budget filter submitted; max dragged to the cap = "no upper limit" (max hidden input disabled) rather than a hard ceiling. --}}
                         <div class="mt-5">
                             <div class="relative py-2">
                                 <div class="relative h-1.5 rounded-full bg-placeholder/50">
@@ -673,15 +611,7 @@
                                     class="pointer-events-none absolute inset-x-0 top-0 h-1.5 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-[18px] [&::-moz-range-thumb]:w-[18px] [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:shadow-md [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
                                 >
                             </div>
-                            {{--
-                                Same text-sm font-semibold text-primary
-                                treatment as the "typical price" figure
-                                above the destination field - both are
-                                "here's a highlighted amount" callouts, and
-                                previously used two different sizes (this
-                                one bold at text-sm, that one inheriting a
-                                plain text-xs), which read as inconsistent.
-                            --}}
+                            {{-- Same treatment as the "typical price" figure above, for consistent sizing between highlighted-amount callouts. --}}
                             <div class="mt-1 flex items-center justify-between text-sm font-semibold text-primary">
                                 <span x-text="formatBudget(budgetMin)"></span>
                                 <span x-text="budgetMax >= budgetSliderMax ? formatBudget(budgetSliderMax) + '+' : formatBudget(budgetMax)"></span>
@@ -738,19 +668,7 @@
             </div>
                 </div>
 
-                {{--
-                    Sticky on large screens (see the grid wrapper's comment
-                    above) so the summary and the submit button stay in view
-                    the whole time the visitor is filling in the section to
-                    its left, instead of only appearing after scrolling all
-                    the way past five sections. Below lg it just renders in
-                    normal flow, after the form sections, same position it
-                    held before this layout existed. The summary fields
-                    stay a single stacked column (not 2-up) since this
-                    sidebar is a fixed ~380px regardless of viewport width -
-                    a 2-column grid would only have applied correctly in the
-                    old single-column layout.
-                --}}
+                {{-- Sticky on large screens; single stacked column (not 2-up) since this sidebar is a fixed ~380px regardless of viewport width. --}}
                 <div class="lg:sticky lg:top-24">
                     <div class="rounded-2xl border-2 border-primary/20 bg-primary/5 p-5 sm:p-6">
                         <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('tourism.request.summary_heading') }}</p>
@@ -811,16 +729,7 @@
             </div>
         </form>
 
-        {{--
-            Standalone, outside the main form - a <form> nested inside
-            another <form> is invalid HTML, and the browser silently drops
-            the inner opening tag on parse (no console error), which turns
-            its submit button into a dead no-op. The visible "notify me"
-            controls above live inside the main form for layout purposes
-            and target this one via their form="" attribute instead of DOM
-            nesting - see RateAlertController's Telegram/Viber disconnect
-            buttons for the same established pattern.
-        --}}
+        {{-- Standalone, outside the main form - a nested <form> is invalid HTML and gets silently dropped on parse. The visible "notify me" controls above target this one via form="" instead. --}}
         @error('destination_country')
             <form id="notify-me-form" method="POST" action="{{ route('tourism.destination-alerts.store') }}" class="hidden">
                 @csrf

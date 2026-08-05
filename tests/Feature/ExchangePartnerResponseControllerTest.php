@@ -25,7 +25,7 @@ class ExchangePartnerResponseControllerTest extends TestCase
     {
         return Organization::create(array_merge([
             'name' => 'Test Exchange',
-            'slug' => 'test-exchange-' . uniqid(),
+            'slug' => 'test-exchange-'.uniqid(),
             'type' => 'exchange',
             'country_code' => 'AM',
             'is_active' => true,

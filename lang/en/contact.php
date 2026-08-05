@@ -17,11 +17,11 @@ return [
         ],
         [
             'title' => 'Careers',
-            'body' => "Interested in working with us? See our Careers page first.",
+            'body' => 'Interested in working with us? See our Careers page first.',
             'email' => 'careers@findex.am',
         ],
     ],
     'business_heading' => 'Banks & Travel Agencies',
-    'business_body' => "Want to list your organization on Findex? Register directly - no email needed.",
+    'business_body' => 'Want to list your organization on Findex? Register directly - no email needed.',
     'business_link' => 'Register your organization',
 ];

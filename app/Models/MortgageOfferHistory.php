@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MortgageOfferHistory extends Model
 {
@@ -27,14 +26,6 @@ class MortgageOfferHistory extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
-    /**
-     * Get the mortgage offer this history belongs to.
-     */
-    public function mortgageOffer(): BelongsTo
-    {
-        return $this->belongsTo(MortgageOffer::class);
-    }
 
     /**
      * Scanned by the scheduled `model:prune` command - see

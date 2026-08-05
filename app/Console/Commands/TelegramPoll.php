@@ -33,7 +33,7 @@ class TelegramPoll extends Command
      */
     public function handle(TelegramClient $telegram, PartnerReplyHandler $partnerHandler, RatesBotHandler $ratesHandler): int
     {
-        if (!config('services.telegram.bot_token')) {
+        if (! config('services.telegram.bot_token')) {
             $this->error('TELEGRAM_BOT_TOKEN is not set in .env.');
 
             return self::FAILURE;
@@ -54,7 +54,7 @@ class TelegramPoll extends Command
                     // take priority; anything left over falls through to the
                     // general currency-rate assistant - mirrors
                     // TelegramWebhookController's routing.
-                    if (!$partnerHandler->handleUpdate($update)) {
+                    if (! $partnerHandler->handleUpdate($update)) {
                         $ratesHandler->handleUpdate($update);
                     }
                 } catch (\Throwable $e) {

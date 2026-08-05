@@ -88,7 +88,7 @@ return new class extends Migration
             ->unique();
 
         if ($collisions->isNotEmpty()) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'Cannot migrate organizations/admins into users: email(s) already in use - '
                 .$collisions->implode(', ').'. Resolve manually (rename one side\'s email) and re-run.'
             );

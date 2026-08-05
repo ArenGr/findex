@@ -16,8 +16,7 @@ class ExchangeQuoteRequestSubmitted extends Mailable implements ShouldQueue
         public readonly ExchangeQuoteRequest $exchangeQuoteRequest,
         public readonly string $resultsUrl,
         public readonly int $partnerCount
-    ) {
-    }
+    ) {}
 
     public function build(): self
     {

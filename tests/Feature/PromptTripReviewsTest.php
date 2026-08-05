@@ -20,7 +20,7 @@ class PromptTripReviewsTest extends TestCase
     private function respondedTrip(array $quoteRequestOverrides = []): QuoteRequest
     {
         $organization = Organization::create([
-            'name' => 'Review Prompt Agency', 'slug' => 'review-prompt-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Review Prompt Agency', 'slug' => 'review-prompt-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
 

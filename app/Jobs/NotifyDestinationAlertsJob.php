@@ -20,9 +20,7 @@ class NotifyDestinationAlertsJob implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public string $countryCode)
-    {
-    }
+    public function __construct(public string $countryCode) {}
 
     public function handle(): void
     {

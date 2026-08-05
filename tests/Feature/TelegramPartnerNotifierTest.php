@@ -26,7 +26,7 @@ class TelegramPartnerNotifierTest extends TestCase
     {
         return Organization::create(array_merge([
             'name' => 'Test Travel Co',
-            'slug' => 'test-travel-co-' . uniqid(),
+            'slug' => 'test-travel-co-'.uniqid(),
             'type' => 'tourism',
             'country_code' => 'AM',
             'is_active' => true,
@@ -83,7 +83,7 @@ class TelegramPartnerNotifierTest extends TestCase
                         $buttons = $inlineKeyboard[0] ?? [];
 
                         return ($buttons[0]['url'] ?? null) === $response->secureRespondUrl()
-                            && ($buttons[1]['callback_data'] ?? null) === 'decline:' . $response->id;
+                            && ($buttons[1]['callback_data'] ?? null) === 'decline:'.$response->id;
                     })
                 )
                 ->andReturn(['ok' => true, 'result' => ['message_id' => 4321]]);

@@ -23,7 +23,7 @@ class OrganizationInsuranceDashboardTest extends TestCase
     private function insuranceOrg(array $overrides = []): Organization
     {
         return Organization::create(array_merge([
-            'name' => 'Dashboard Test Insurer', 'slug' => 'dashboard-test-insurer-' . uniqid(), 'type' => 'insurance',
+            'name' => 'Dashboard Test Insurer', 'slug' => 'dashboard-test-insurer-'.uniqid(), 'type' => 'insurance',
             'country_code' => 'AM', 'is_active' => true,
         ], $overrides));
     }
@@ -92,7 +92,7 @@ class OrganizationInsuranceDashboardTest extends TestCase
         $insuranceUser = User::factory()->organization($insuranceOrg)->create();
 
         $bankOrg = Organization::create([
-            'name' => 'Some Bank', 'slug' => 'some-bank-' . uniqid(), 'type' => 'bank',
+            'name' => 'Some Bank', 'slug' => 'some-bank-'.uniqid(), 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true,
         ]);
         $bankUser = User::factory()->organization($bankOrg)->create();

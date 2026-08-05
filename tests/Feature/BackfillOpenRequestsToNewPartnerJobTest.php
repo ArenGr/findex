@@ -40,7 +40,7 @@ class BackfillOpenRequestsToNewPartnerJobTest extends TestCase
     private function newPartner(array $overrides = []): Organization
     {
         $organization = Organization::create(array_merge([
-            'name' => 'New Thailand Agency', 'slug' => 'new-thailand-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'New Thailand Agency', 'slug' => 'new-thailand-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '777',
         ], $overrides));
         $organization->tourismDestinations()->create(['country_code' => 'TH']);

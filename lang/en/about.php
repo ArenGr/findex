@@ -15,7 +15,7 @@ return [
 
     'mission' => [
         'title' => 'Why We Built Findex',
-        'body' => "Every bank in Armenia publishes its rates, fees and terms differently — a table here, a PDF there, sometimes only at a branch. Findex pulls it all into one place and keeps it current automatically, so comparing your options takes minutes instead of an afternoon of tab-switching.",
+        'body' => 'Every bank in Armenia publishes its rates, fees and terms differently — a table here, a PDF there, sometimes only at a branch. Findex pulls it all into one place and keeps it current automatically, so comparing your options takes minutes instead of an afternoon of tab-switching.',
     ],
 
     'values' => [

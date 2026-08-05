@@ -26,7 +26,7 @@ class CurrencyRateController extends Controller
         // the org has linked their chat - generated lazily so the dashboard
         // always has a live link to show, same pattern as
         // Organization\TourismController::index().
-        if ($organization->type === 'exchange' && !$organization->telegram_chat_id && !$organization->telegram_connect_token) {
+        if ($organization->type === 'exchange' && ! $organization->telegram_chat_id && ! $organization->telegram_connect_token) {
             $organization->update(['telegram_connect_token' => Str::random(32)]);
         }
 

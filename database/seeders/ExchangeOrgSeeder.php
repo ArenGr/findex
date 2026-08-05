@@ -101,7 +101,7 @@ class ExchangeOrgSeeder extends Seeder
         ];
 
         foreach ($partners as $partner) {
-            $email = $partner['slug'] . '@example.com';
+            $email = $partner['slug'].'@example.com';
 
             // Organization (business profile) and User (login, role=organization)
             // are two separate rows since the accounts-unification migration -
@@ -134,7 +134,7 @@ class ExchangeOrgSeeder extends Seeder
             foreach ($partner['rates'] as $currencyCode => [$buyRate, $sellRate]) {
                 $currency = Currency::where('code', $currencyCode)->first();
 
-                if (!$currency) {
+                if (! $currency) {
                     continue;
                 }
 
@@ -153,6 +153,6 @@ class ExchangeOrgSeeder extends Seeder
             }
         }
 
-        $this->command?->info('Demo exchange office partners ready: ' . collect($partners)->pluck('name')->implode(', ') . '.');
+        $this->command?->info('Demo exchange office partners ready: '.collect($partners)->pluck('name')->implode(', ').'.');
     }
 }

@@ -28,7 +28,7 @@ class ApproveOrganization extends Command
     {
         $organization = Organization::where('slug', $this->argument('slug'))->first();
 
-        if (!$organization) {
+        if (! $organization) {
             $this->error("Organization with slug '{$this->argument('slug')}' not found.");
 
             return self::FAILURE;

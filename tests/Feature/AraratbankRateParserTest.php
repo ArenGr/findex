@@ -12,7 +12,7 @@ class AraratbankRateParserTest extends TestCase
         // Trimmed real structure: a "cash" wrapper table, a decoy gold-price
         // table (reusing the same cell markup) that must NOT be swept in,
         // then the "not-cash" wrapper table.
-        return <<<HTML
+        return <<<'HTML'
         <div class="exchange__wrapper cash">
             <table class="exchange__table"><tbody>
                 <tr>
@@ -49,7 +49,7 @@ class AraratbankRateParserTest extends TestCase
 
     public function test_parses_cash_and_non_cash_rows_with_a_central_bank_rate(): void
     {
-        $rates = (new AraratbankRateParser())->parse($this->fixture());
+        $rates = (new AraratbankRateParser)->parse($this->fixture());
 
         $byKey = [];
         foreach ($rates as $rate) {
@@ -65,7 +65,7 @@ class AraratbankRateParserTest extends TestCase
 
     public function test_ignores_the_gold_table_between_the_two_wrappers(): void
     {
-        $rates = (new AraratbankRateParser())->parse($this->fixture());
+        $rates = (new AraratbankRateParser)->parse($this->fixture());
 
         $codes = array_unique(array_column($rates, 'code'));
 
@@ -74,7 +74,7 @@ class AraratbankRateParserTest extends TestCase
 
     public function test_returns_empty_when_the_not_cash_wrapper_is_missing(): void
     {
-        $rates = (new AraratbankRateParser())->parse('<html><body>no rates here</body></html>');
+        $rates = (new AraratbankRateParser)->parse('<html><body>no rates here</body></html>');
 
         $this->assertSame([], $rates);
     }

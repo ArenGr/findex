@@ -37,7 +37,7 @@ class AcbaMortgageParser implements MortgageParser
         $offers = [];
 
         foreach (self::TIER_PATTERNS as $pattern => $rateType) {
-            if (!preg_match('/' . $pattern . '/i', $html, $anchor, PREG_OFFSET_CAPTURE)) {
+            if (! preg_match('/'.$pattern.'/i', $html, $anchor, PREG_OFFSET_CAPTURE)) {
                 continue;
             }
 
@@ -62,7 +62,7 @@ class AcbaMortgageParser implements MortgageParser
             }
 
             foreach (self::CURRENCY_ORDER as $index => $currency) {
-                if (!isset($rates[1][$index])) {
+                if (! isset($rates[1][$index])) {
                     continue;
                 }
 
@@ -102,7 +102,7 @@ class AcbaMortgageParser implements MortgageParser
      */
     private function extractTermRange(string $html): array
     {
-        if (!preg_match('/(\d+)\s*[\x{2013}\x{2014}-]\s*(\d+)\s*months/u', $html, $m)) {
+        if (! preg_match('/(\d+)\s*[\x{2013}\x{2014}-]\s*(\d+)\s*months/u', $html, $m)) {
             return [null, null];
         }
 
@@ -114,7 +114,7 @@ class AcbaMortgageParser implements MortgageParser
      */
     private function extractAmountRange(string $html): array
     {
-        if (!preg_match('/AMD\s*([\d,]+)\s*[\x{2013}\x{2014}-]\s*([\d,]+)/u', $html, $m)) {
+        if (! preg_match('/AMD\s*([\d,]+)\s*[\x{2013}\x{2014}-]\s*([\d,]+)/u', $html, $m)) {
             return [null, null];
         }
 
@@ -126,7 +126,7 @@ class AcbaMortgageParser implements MortgageParser
 
     private function extractMinDownPayment(string $html): ?float
     {
-        if (!preg_match('/minimum prepayment is set at (?:at least )?(\d+(?:\.\d+)?)%/i', $html, $m)) {
+        if (! preg_match('/minimum prepayment is set at (?:at least )?(\d+(?:\.\d+)?)%/i', $html, $m)) {
             return null;
         }
 

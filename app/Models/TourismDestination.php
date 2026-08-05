@@ -32,7 +32,7 @@ class TourismDestination extends Model
      */
     public function isActive(): bool
     {
-        if (!$this->is_paused) {
+        if (! $this->is_paused) {
             return true;
         }
 

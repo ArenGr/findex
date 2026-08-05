@@ -6,7 +6,6 @@ use App\Enums\RateType;
 use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CurrencyRate extends Model
 {
@@ -52,30 +51,10 @@ class CurrencyRate extends Model
     }
 
     /**
-     * Get the historical records for this rate.
-     */
-    public function history(): HasMany
-    {
-        return $this->hasMany(CurrencyRateHistory::class);
-    }
-
-    /**
      * Calculate the spread between buy and sell rates.
      */
     public function getSpread(): float
     {
         return (float) ($this->sell_rate - $this->buy_rate);
-    }
-
-    /**
-     * Calculate the spread percentage.
-     */
-    public function getSpreadPercentage(): float
-    {
-        if ($this->buy_rate == 0) {
-            return 0;
-        }
-
-        return round(($this->getSpread() / $this->buy_rate) * 100, 2);
     }
 }

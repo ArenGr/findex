@@ -16,9 +16,7 @@ use App\Models\Organization;
  */
 class AutoInsuranceQuoteService
 {
-    public function __construct(private readonly InsuranceQuoteProviderInterface $provider)
-    {
-    }
+    public function __construct(private readonly InsuranceQuoteProviderInterface $provider) {}
 
     public function requestQuotes(AutoInsuranceRequest $request): void
     {

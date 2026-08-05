@@ -42,8 +42,8 @@ class SendQuoteRequestToPartnersJobTest extends TestCase
     private function partner(string $countryCode, array $overrides = []): Organization
     {
         $organization = Organization::create(array_merge([
-            'name' => 'Partner ' . $countryCode,
-            'slug' => 'partner-' . strtolower($countryCode) . '-' . uniqid(),
+            'name' => 'Partner '.$countryCode,
+            'slug' => 'partner-'.strtolower($countryCode).'-'.uniqid(),
             'type' => 'tourism',
             'country_code' => 'AM',
             'is_active' => true,
@@ -62,11 +62,11 @@ class SendQuoteRequestToPartnersJobTest extends TestCase
         $wrongDestination = $this->partner('EG');
         $inactive = $this->partner('GE', ['is_active' => false]);
         $notTourism = Organization::create([
-            'name' => 'Bank', 'slug' => 'bank-' . uniqid(), 'type' => 'bank',
+            'name' => 'Bank', 'slug' => 'bank-'.uniqid(), 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '222',
         ]);
         $notConnected = Organization::create([
-            'name' => 'Not Connected', 'slug' => 'not-connected-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Not Connected', 'slug' => 'not-connected-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
         $notConnected->tourismDestinations()->create(['country_code' => 'GE']);

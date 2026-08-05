@@ -18,7 +18,7 @@ class RemindPartnersOfPendingQuotesTest extends TestCase
     private function pendingResponse(array $overrides = []): QuoteResponse
     {
         $organization = Organization::create([
-            'name' => 'Reminder Test Agency', 'slug' => 'reminder-test-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Reminder Test Agency', 'slug' => 'reminder-test-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '999',
         ]);
         $quoteRequest = QuoteRequest::create(array_merge([

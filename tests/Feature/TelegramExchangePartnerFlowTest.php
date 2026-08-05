@@ -27,7 +27,7 @@ class TelegramExchangePartnerFlowTest extends TestCase
     {
         $organization = Organization::create([
             'name' => 'Test Exchange',
-            'slug' => 'test-exchange-' . uniqid(),
+            'slug' => 'test-exchange-'.uniqid(),
             'type' => 'exchange',
             'country_code' => 'AM',
             'is_active' => true,
@@ -64,7 +64,7 @@ class TelegramExchangePartnerFlowTest extends TestCase
         });
 
         $handled = app(ExchangePartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-1', 'data' => 'exchange_decline:' . $response->id],
+            'callback_query' => ['id' => 'cbq-1', 'data' => 'exchange_decline:'.$response->id],
         ]);
 
         $this->assertTrue($handled);
@@ -81,7 +81,7 @@ class TelegramExchangePartnerFlowTest extends TestCase
         });
 
         app(ExchangePartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-2', 'data' => 'exchange_decline:' . $response->id],
+            'callback_query' => ['id' => 'cbq-2', 'data' => 'exchange_decline:'.$response->id],
         ]);
 
         $this->assertSame(ExchangeQuoteResponse::STATUS_RESPONDED, $response->fresh()->status);

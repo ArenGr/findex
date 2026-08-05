@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ScraperLog extends Model
 {
@@ -21,12 +20,4 @@ class ScraperLog extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
-    /**
-     * Get the scraping job this log belongs to.
-     */
-    public function scrapingJob(): BelongsTo
-    {
-        return $this->belongsTo(ScrapingJob::class, 'scraping_job_id');
-    }
 }

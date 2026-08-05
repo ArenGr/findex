@@ -48,7 +48,7 @@ class WritersTable
                     ->icon(fn ($record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
                     ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['is_active' => !$record->is_active])),
+                    ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

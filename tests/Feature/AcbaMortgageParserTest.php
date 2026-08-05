@@ -28,7 +28,7 @@ class AcbaMortgageParserTest extends TestCase
     {
         $html = $this->tierHtml('Fixed annual interest rate', ['10.5', '9.5', '9.0']);
 
-        $offers = (new AcbaMortgageParser())->parse($html);
+        $offers = (new AcbaMortgageParser)->parse($html);
 
         $this->assertSame('AMD', $offers[0]['currency']);
         $this->assertSame(10.5, $offers[0]['rate_min']);
@@ -46,14 +46,14 @@ class AcbaMortgageParserTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
 
-        (new AcbaMortgageParser())->parse($html);
+        (new AcbaMortgageParser)->parse($html);
     }
 
     public function test_ignores_tiers_that_are_not_present_on_the_page(): void
     {
         $html = $this->tierHtml('Fixed annual interest rate', ['10.5', '9.5', '9.0']);
 
-        $offers = (new AcbaMortgageParser())->parse($html);
+        $offers = (new AcbaMortgageParser)->parse($html);
 
         // Only the one tier present in the fixture should produce offers -
         // the two floating-rate tiers aren't in this HTML at all.

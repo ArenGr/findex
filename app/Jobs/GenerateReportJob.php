@@ -16,9 +16,7 @@ class GenerateReportJob implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public ReportRequest $reportRequest)
-    {
-    }
+    public function __construct(public ReportRequest $reportRequest) {}
 
     public function backoff(): array
     {

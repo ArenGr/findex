@@ -18,7 +18,7 @@ class OrganizationController extends Controller
         $type = $request->string('type')->value();
         $types = array_keys(__('organizations.types'));
 
-        if (!in_array($type, $types, true)) {
+        if (! in_array($type, $types, true)) {
             $type = null;
         }
 
@@ -27,7 +27,7 @@ class OrganizationController extends Controller
         $organizations = Organization::active()
             ->withRatingStats()
             ->when($type, fn ($query) => $query->where('type', $type))
-            ->when($search, fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->when($search, fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
             ->orderByDesc('reviews_avg_rating')
             ->orderByDesc('reviews_count')
             ->orderBy('name')
@@ -98,7 +98,7 @@ class OrganizationController extends Controller
         $organizations = Organization::active()
             ->withRatingStats()
             ->where('type', $type)
-            ->when($search, fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->when($search, fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
             ->orderByDesc('reviews_avg_rating')
             ->orderByDesc('reviews_count')
             ->orderBy('name')

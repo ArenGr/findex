@@ -18,7 +18,7 @@ class OrganizationBadgesTest extends TestCase
     private function organization(): Organization
     {
         return Organization::create([
-            'name' => 'Badge Test Bank', 'slug' => 'badge-test-bank-' . uniqid(), 'type' => 'bank',
+            'name' => 'Badge Test Bank', 'slug' => 'badge-test-bank-'.uniqid(), 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true,
         ]);
     }
@@ -31,7 +31,7 @@ class OrganizationBadgesTest extends TestCase
                 'organization_id' => $organization->id,
                 'user_id' => User::factory()->create()->id,
                 'rating' => 5,
-                'comment' => 'Great service ' . $i,
+                'comment' => 'Great service '.$i,
             ]);
         }
 
@@ -59,7 +59,7 @@ class OrganizationBadgesTest extends TestCase
                 'organization_id' => $organization->id,
                 'user_id' => User::factory()->create()->id,
                 'rating' => 3,
-                'comment' => 'Okay ' . $i,
+                'comment' => 'Okay '.$i,
             ]);
         }
 
@@ -102,7 +102,7 @@ class OrganizationBadgesTest extends TestCase
                 'organization_id' => $organization->id,
                 'user_id' => User::factory()->create()->id,
                 'rating' => 5,
-                'comment' => 'Great service ' . $i,
+                'comment' => 'Great service '.$i,
             ]);
         }
 

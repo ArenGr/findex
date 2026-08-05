@@ -24,8 +24,8 @@ class VtbRateParser implements RateParser
      * whichever trailing </svg> immediately precedes the number.
      */
     private const ITEM_PATTERN = '/<div class="wrapper-item">\s*<div class="wrapper-currency">.*?(?:\d+)\s+([A-Z]{3,4})\s*<\/strong>'
-        . '.*?<div class="wrapper-purchase">.*?<\/svg>\s*([\d.]+)\s*<\/strong>'
-        . '.*?<div class="wrapper-sale">.*?<\/svg>\s*([\d.]+)\s*<\/strong>/s';
+        .'.*?<div class="wrapper-purchase">.*?<\/svg>\s*([\d.]+)\s*<\/strong>'
+        .'.*?<div class="wrapper-sale">.*?<\/svg>\s*([\d.]+)\s*<\/strong>/s';
 
     public function parse(string $html): array
     {

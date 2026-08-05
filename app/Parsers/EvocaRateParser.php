@@ -29,7 +29,7 @@ class EvocaRateParser implements RateParser
      */
     public function parse(string $html): array
     {
-        if (!preg_match('/var\s+currency\s*=\s*\{(.*?)\n\s*\};/s', $html, $match)) {
+        if (! preg_match('/var\s+currency\s*=\s*\{(.*?)\n\s*\};/s', $html, $match)) {
             return [];
         }
 
@@ -67,8 +67,8 @@ class EvocaRateParser implements RateParser
     }
 
     /**
-     * @param array<string, float|null> $buy
-     * @param array<string, float|null> $sell
+     * @param  array<string, float|null>  $buy
+     * @param  array<string, float|null>  $sell
      */
     private function buildRates(array $buy, array $sell, RateType $rateType): array
     {

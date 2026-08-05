@@ -34,7 +34,7 @@ class ExchangePartnerResponseController extends Controller
     {
         $response = ExchangeQuoteResponse::query()->where('response_token', $token)->with('exchangeQuoteRequest')->firstOrFail();
 
-        if ($response->status !== ExchangeQuoteResponse::STATUS_PENDING || !$response->exchangeQuoteRequest->is_open) {
+        if ($response->status !== ExchangeQuoteResponse::STATUS_PENDING || ! $response->exchangeQuoteRequest->is_open) {
             return redirect()->route('exchange.respond', ['locale' => $locale, 'token' => $token]);
         }
 
@@ -42,7 +42,7 @@ class ExchangePartnerResponseController extends Controller
             // Never below what was already posted - this form is strictly
             // "keep it or improve it", not a way to quote a worse rate than
             // what's already public on /rates.
-            'offered_rate' => ['required', 'numeric', 'min:' . $response->posted_rate, 'max:99999999.9999'],
+            'offered_rate' => ['required', 'numeric', 'min:'.$response->posted_rate, 'max:99999999.9999'],
             'reply_text' => ['nullable', 'string', 'max:2000'],
         ]);
 

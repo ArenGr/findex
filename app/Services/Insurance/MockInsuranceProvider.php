@@ -59,6 +59,7 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
      * capped so a lifetime of clean driving doesn't imply a free policy.
      */
     private const ACCIDENT_FREE_DISCOUNT_PER_YEAR = 0.03;
+
     private const ACCIDENT_FREE_MAX_YEARS = 5;
 
     public function quote(AutoInsuranceRequest $request, Organization $partner): array

@@ -15,9 +15,9 @@ class AraratbankRateParser implements RateParser
      * present in the static markup either way.
      */
     private const ROW_PATTERN = '/<td class="exchange__table-cell fb fs20">([A-Z]{3,4})<\/td>\s*'
-        . '<td class="exchange__table-cell fs20">([\d.]+)<\/td>\s*'
-        . '<td class="exchange__table-cell fs20">([\d.]+)<\/td>\s*'
-        . '<td class="exchange__table-cell fs20">([\d.]+)<\/td>/';
+        .'<td class="exchange__table-cell fs20">([\d.]+)<\/td>\s*'
+        .'<td class="exchange__table-cell fs20">([\d.]+)<\/td>\s*'
+        .'<td class="exchange__table-cell fs20">([\d.]+)<\/td>/';
 
     public function parse(string $html): array
     {
@@ -70,7 +70,7 @@ class AraratbankRateParser implements RateParser
     }
 
     /**
-     * @param array<int, array{0: string, 1: string, 2: string, 3: string, 4: string}> $rows
+     * @param  array<int, array{0: string, 1: string, 2: string, 3: string, 4: string}>  $rows
      */
     private function buildRates(array $rows, RateType $rateType): array
     {

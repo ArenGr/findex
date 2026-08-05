@@ -41,7 +41,7 @@ class RemindPartnersOfPendingQuotes extends Command
             ->get();
 
         foreach ($responses as $response) {
-            if (!$notifier->remind($response)) {
+            if (! $notifier->remind($response)) {
                 Log::warning('Quote request partner reminder failed', [
                     'quote_response_id' => $response->id,
                     'organization_id' => $response->organization_id,

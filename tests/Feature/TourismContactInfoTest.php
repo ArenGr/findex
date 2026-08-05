@@ -23,7 +23,7 @@ class TourismContactInfoTest extends TestCase
     private function respondedRequest(array $contactOverrides = []): QuoteRequest
     {
         $organization = Organization::create([
-            'name' => 'Contact Test Agency', 'slug' => 'contact-test-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Contact Test Agency', 'slug' => 'contact-test-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
 

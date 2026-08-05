@@ -136,7 +136,7 @@ class ExchangeQuoteController extends Controller
             return redirect()->route('exchange.request');
         }
 
-        if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+        if ($request->user() && ! $request->user()->hasVerifiedEmail()) {
             return redirect()->route('exchange.request')->with('status', 'email-verification-required');
         }
 

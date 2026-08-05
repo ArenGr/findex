@@ -23,7 +23,7 @@ class TourismPriceBenchmarkTest extends TestCase
     private function orgWithSuggestion(string $name, string $countryCode, float $amount): Organization
     {
         $organization = Organization::create([
-            'name' => $name, 'slug' => Str::slug($name) . '-' . uniqid(), 'type' => 'tourism',
+            'name' => $name, 'slug' => Str::slug($name).'-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
         $organization->tourismDestinations()->create(['country_code' => $countryCode]);

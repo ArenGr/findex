@@ -78,18 +78,6 @@ class ScrapingJob extends Model
     }
 
     /**
-     * Get the duration of the job in seconds.
-     */
-    public function getDuration(): ?int
-    {
-        if (!$this->started_at || !$this->finished_at) {
-            return null;
-        }
-
-        return $this->finished_at->diffInSeconds($this->started_at);
-    }
-
-    /**
      * Add a log entry.
      */
     public function log(string $level, string $message, array $context = []): void
@@ -97,7 +85,7 @@ class ScrapingJob extends Model
         $this->logs()->create([
             'level' => $level,
             'message' => $message,
-            'context' => !empty($context) ? $context : null,
+            'context' => ! empty($context) ? $context : null,
         ]);
     }
 }

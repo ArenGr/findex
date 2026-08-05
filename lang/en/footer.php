@@ -6,7 +6,7 @@ return [
     'copyright' => '© :year Findex. All rights reserved.',
 
     'disclaimer' => 'Findex strives to keep its information accurate and up to date. However, terms published by '
-        . 'financial institutions can change - always verify the final terms on the institution\'s own official sources.',
+        .'financial institutions can change - always verify the final terms on the institution\'s own official sources.',
 
     'columns' => [
         'company' => [

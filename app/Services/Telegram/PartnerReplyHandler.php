@@ -23,13 +23,11 @@ use App\Models\User;
  */
 class PartnerReplyHandler
 {
-    public function __construct(private readonly TelegramClient $telegram)
-    {
-    }
+    public function __construct(private readonly TelegramClient $telegram) {}
 
     /**
      * @return bool True if this update belonged to the partner flow and was
-     *               fully handled - the caller should not process it further.
+     *              fully handled - the caller should not process it further.
      */
     public function handleUpdate(array $update): bool
     {
@@ -39,7 +37,7 @@ class PartnerReplyHandler
 
         $message = $update['message'] ?? null;
 
-        if (!is_array($message)) {
+        if (! is_array($message)) {
             return false;
         }
 
@@ -102,7 +100,7 @@ class PartnerReplyHandler
         $callbackId = $callbackQuery['id'] ?? null;
         $data = $callbackQuery['data'] ?? '';
 
-        if (!$callbackId || !str_starts_with($data, 'decline:')) {
+        if (! $callbackId || ! str_starts_with($data, 'decline:')) {
             return false;
         }
 

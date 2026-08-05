@@ -38,14 +38,14 @@ class AcbaRateParser implements RateParser
         foreach ($matches[0] as $json) {
             $data = json_decode($json, true);
 
-            if (!is_array($data) || empty($data['currency'])) {
+            if (! is_array($data) || empty($data['currency'])) {
                 continue;
             }
 
             $code = strtoupper($data['currency']);
 
             foreach (self::RATE_TYPE_FIELDS as $rateType => [$buyKey, $sellKey]) {
-                if (!isset($data[$buyKey], $data[$sellKey])) {
+                if (! isset($data[$buyKey], $data[$sellKey])) {
                     continue;
                 }
 

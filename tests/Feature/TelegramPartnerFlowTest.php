@@ -32,7 +32,7 @@ class TelegramPartnerFlowTest extends TestCase
     {
         return Organization::create(array_merge([
             'name' => 'Test Travel Co',
-            'slug' => 'test-travel-co-' . uniqid(),
+            'slug' => 'test-travel-co-'.uniqid(),
             'type' => 'tourism',
             'country_code' => 'AM',
             'is_active' => true,
@@ -128,7 +128,7 @@ class TelegramPartnerFlowTest extends TestCase
         });
 
         $handled = app(PartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-1', 'data' => 'decline:' . $response->id],
+            'callback_query' => ['id' => 'cbq-1', 'data' => 'decline:'.$response->id],
         ]);
 
         $this->assertTrue($handled);
@@ -145,7 +145,7 @@ class TelegramPartnerFlowTest extends TestCase
         });
 
         app(PartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-2', 'data' => 'decline:' . $response->id],
+            'callback_query' => ['id' => 'cbq-2', 'data' => 'decline:'.$response->id],
         ]);
 
         $this->assertSame(QuoteResponse::STATUS_RESPONDED, $response->fresh()->status);

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CurrencyRateHistory extends Model
 {
@@ -27,14 +26,6 @@ class CurrencyRateHistory extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
-    /**
-     * Get the currency rate this history belongs to.
-     */
-    public function currencyRate(): BelongsTo
-    {
-        return $this->belongsTo(CurrencyRate::class);
-    }
 
     /**
      * Scanned by the scheduled `model:prune` command - see

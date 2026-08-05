@@ -12,9 +12,7 @@ class AutoInsuranceQuoteInterest extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public readonly AutoInsuranceQuote $quote)
-    {
-    }
+    public function __construct(public readonly AutoInsuranceQuote $quote) {}
 
     public function build(): self
     {

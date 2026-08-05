@@ -103,7 +103,7 @@ class AutoInsuranceController extends Controller
 
         abort_if($quote->is_declined, 404);
 
-        if (!$quote->is_interested) {
+        if (! $quote->is_interested) {
             $quote->markInterested();
             $quote->load('organization.users', 'autoInsuranceRequest');
 

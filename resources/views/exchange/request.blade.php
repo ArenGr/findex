@@ -69,12 +69,7 @@
                     minimums: @js($minimums),
                     directionLabels: @js($directionLabels),
                     flags: @js($currencyFlags),
-                    // buy_rate = the bank buys your foreign currency (you
-                    // hand over :currency, receive AMD); sell_rate = the
-                    // reverse. Matches ExchangeQuoteController::store()'s
-                    // rate_field values exactly - this only relabels which
-                    // side AMD sits on for the preview below, it doesn't
-                    // change what gets submitted.
+                    // buy_rate = bank buys your currency, you get AMD; sell_rate = reverse. Only relabels the From/To preview, doesn't change what's submitted.
                     swap() {
                         this.direction = this.direction === 'buy_rate' ? 'sell_rate' : 'buy_rate';
                     },
@@ -91,17 +86,7 @@
                 <div>
                     <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('exchange_quotes.request.section_amount') }}</p>
 
-                    {{--
-                        AMD is always the other side of every quote here
-                        (see direction_buy_rate/direction_sell_rate in
-                        lang/*/exchange_quotes.php - "Exchange :currency for
-                        AMD" / "Exchange AMD for :currency"), but that was
-                        only spelled out in small text on the direction
-                        buttons below. This makes it visible up front as an
-                        actual From/To pair, with a swap button that just
-                        flips the same `direction` value the radio buttons
-                        already control - not a separate field.
-                    --}}
+                    {{-- AMD is always the other side of every quote - shown here as a From/To pair with a swap button that flips the same `direction` the radio buttons below also control. --}}
                     <div class="mt-4 flex items-center gap-3">
                         <div class="flex-1 rounded-xl border border-border-muted bg-placeholder/10 px-4 py-3">
                             <p class="text-xs text-subtle">{{ __('exchange_quotes.request.from_label') }}</p>

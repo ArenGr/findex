@@ -17,9 +17,7 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public QuoteRequest $quoteRequest)
-    {
-    }
+    public function __construct(public QuoteRequest $quoteRequest) {}
 
     public function backoff(): array
     {
@@ -52,7 +50,7 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
             $response->setRelation('organization', $partner);
             $response->setRelation('quoteRequest', $this->quoteRequest);
 
-            if (!$notifier->notify($response)) {
+            if (! $notifier->notify($response)) {
                 Log::warning('Quote request partner notification failed', [
                     'quote_request_id' => $this->quoteRequest->id,
                     'organization_id' => $partner->id,

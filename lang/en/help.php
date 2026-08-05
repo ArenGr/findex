@@ -7,7 +7,7 @@ return [
     'topics' => [
         [
             'title' => 'Comparing Rates & Cards',
-            'body' => "Browse live currency, mortgage and bank card offers side by side, ranked so the best option is obvious.",
+            'body' => 'Browse live currency, mortgage and bank card offers side by side, ranked so the best option is obvious.',
             'link_label' => 'Browse rates',
             'route' => 'rates.index',
         ],

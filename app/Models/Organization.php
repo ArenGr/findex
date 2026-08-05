@@ -109,30 +109,6 @@ class Organization extends Model
     }
 
     /**
-     * Get all scraping jobs for this organization.
-     */
-    public function scrapingJobs(): HasMany
-    {
-        return $this->hasMany(ScrapingJob::class);
-    }
-
-    /**
-     * Get the active sources for this organization.
-     */
-    public function activeSources(): HasMany
-    {
-        return $this->sources()->where('is_active', true);
-    }
-
-    /**
-     * Get the latest currency rates.
-     */
-    public function latestCurrencyRates(): HasMany
-    {
-        return $this->currencyRates()->where('scraped_at', '>=', now()->subHours(24));
-    }
-
-    /**
      * Get all reviews for this organization.
      */
     public function reviews(): HasMany
@@ -202,15 +178,6 @@ class Organization extends Model
     }
 
     /**
-     * Currency exchange quote requests this organization has been asked to
-     * reply to.
-     */
-    public function exchangeQuoteResponses(): HasMany
-    {
-        return $this->hasMany(ExchangeQuoteResponse::class);
-    }
-
-    /**
      * Saved reply templates (see QuoteTemplate) this organization can
      * prefill the response form with instead of typing every offer from
      * scratch.
@@ -266,6 +233,12 @@ class Organization extends Model
     #[Scope]
     protected function tourismPartnersForDestination(Builder $query, string $countryCode, ?int $partySize = null, ?float $budgetAmd = null): Builder
     {
+        // $partySize/$budgetAmd === null deliberately still excludes any
+        // partner who's set a minimum, rather than skipping the filter -
+        // see LeadQualityFilterTest: a lead with no info at all is treated
+        // as unqualified. Callers needing "no ceiling" (a stated minimum,
+        // no maximum) must not collapse that to bare null - see
+        // QuoteRequestController::budgetCeilingForMatching().
         return $query->active()
             ->where('type', 'tourism')
             ->whereNotNull('telegram_chat_id')

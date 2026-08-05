@@ -15,8 +15,7 @@ class ExchangeQuoteResponseReceived extends Mailable implements ShouldQueue
     public function __construct(
         public readonly ExchangeQuoteResponse $exchangeQuoteResponse,
         public readonly string $resultsUrl
-    ) {
-    }
+    ) {}
 
     public function build(): self
     {

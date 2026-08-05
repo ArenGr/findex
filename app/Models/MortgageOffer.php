@@ -6,7 +6,6 @@ use App\Enums\MortgageRateType;
 use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MortgageOffer extends Model
 {
@@ -50,13 +49,5 @@ class MortgageOffer extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
-    }
-
-    /**
-     * Get the historical records for this offer.
-     */
-    public function history(): HasMany
-    {
-        return $this->hasMany(MortgageOfferHistory::class);
     }
 }

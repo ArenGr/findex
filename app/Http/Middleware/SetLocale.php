@@ -19,7 +19,7 @@ class SetLocale
     {
         $locale = $request->route('locale');
 
-        if (!array_key_exists($locale, config('localization.available'))) {
+        if (! array_key_exists($locale, config('localization.available'))) {
             abort(404);
         }
 

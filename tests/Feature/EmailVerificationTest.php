@@ -104,7 +104,7 @@ class EmailVerificationTest extends TestCase
     {
         $user = User::factory()->unverified()->create();
 
-        $this->get("/en/email/verify/{$user->id}/" . sha1($user->email))->assertForbidden();
+        $this->get("/en/email/verify/{$user->id}/".sha1($user->email))->assertForbidden();
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
 

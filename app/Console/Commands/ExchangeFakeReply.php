@@ -42,7 +42,7 @@ class ExchangeFakeReply extends Command
     {
         $organization = Organization::where('slug', $this->argument('organization_slug'))->first();
 
-        if (!$organization) {
+        if (! $organization) {
             $this->error("Organization with slug '{$this->argument('organization_slug')}' not found.");
 
             return self::FAILURE;
@@ -52,7 +52,7 @@ class ExchangeFakeReply extends Command
             ->where('organization_id', $organization->id)
             ->first();
 
-        if (!$response) {
+        if (! $response) {
             $this->error("No pending response found for exchange quote request #{$this->argument('exchange_quote_request_id')} and organization '{$organization->slug}'. Run SendExchangeQuoteToPartnersJob for that request first.");
 
             return self::FAILURE;
@@ -85,7 +85,7 @@ class ExchangeFakeReply extends Command
         ]);
 
         $this->info("Recorded {$organization->name}'s offer ({$offeredRate}) for exchange quote request #{$response->exchange_quote_request_id}.");
-        $this->line('View it at: ' . $response->exchangeQuoteRequest->signedResultsUrl());
+        $this->line('View it at: '.$response->exchangeQuoteRequest->signedResultsUrl());
 
         return self::SUCCESS;
     }

@@ -49,7 +49,7 @@ class PartnerResponseController extends Controller
     {
         $response = QuoteResponse::query()->where('response_token', $token)->with('quoteRequest')->firstOrFail();
 
-        if ($response->status !== QuoteResponse::STATUS_PENDING || !$response->quoteRequest->is_open) {
+        if ($response->status !== QuoteResponse::STATUS_PENDING || ! $response->quoteRequest->is_open) {
             return redirect()->route('tourism.respond', ['locale' => $locale, 'token' => $token]);
         }
 

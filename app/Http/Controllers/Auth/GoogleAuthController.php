@@ -38,7 +38,7 @@ class GoogleAuthController extends Controller
 
         $user = User::where('google_id', $googleUser->getId())->first();
 
-        if (!$user) {
+        if (! $user) {
             $user = User::where('email', $googleUser->getEmail())->first();
 
             // Bail before the "link existing account" branch below rotates
@@ -47,14 +47,14 @@ class GoogleAuthController extends Controller
             // email collision could otherwise silently break a non-customer
             // account's password just by someone attempting Google login
             // with their email, even though the login itself is rejected.
-            if ($user && !$user->isCustomer()) {
+            if ($user && ! $user->isCustomer()) {
                 return redirect()->route('login', ['locale' => $locale])
                     ->withErrors(['email' => __('auth.failed')]);
             }
 
-            $isNew = !$user;
+            $isNew = ! $user;
 
-            if (!$user) {
+            if (! $user) {
                 $user = new User([
                     'name' => $googleUser->getName() ?: $googleUser->getNickname(),
                     'email' => $googleUser->getEmail(),
@@ -104,7 +104,7 @@ class GoogleAuthController extends Controller
         // organization/admin account whose email happens to match - now
         // that all three roles share one users table, matching by email
         // alone (the $user lookups above) isn't enough on its own.
-        if (!$user->isCustomer()) {
+        if (! $user->isCustomer()) {
             return redirect()->route('login', ['locale' => $locale])
                 ->withErrors(['email' => __('auth.failed')]);
         }

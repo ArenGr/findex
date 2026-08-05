@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\OrganizationSource;
-use App\Models\Currency;
 use Illuminate\Database\Seeder;
 
 class OrganizationSeeder extends Seeder

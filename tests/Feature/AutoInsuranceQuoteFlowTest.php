@@ -24,8 +24,8 @@ class AutoInsuranceQuoteFlowTest extends TestCase
         $unique = uniqid();
 
         return Organization::create(array_merge([
-            'name' => 'Test Insurance Co ' . $unique,
-            'slug' => 'test-insurance-co-' . $unique,
+            'name' => 'Test Insurance Co '.$unique,
+            'slug' => 'test-insurance-co-'.$unique,
             'type' => 'insurance',
             'country_code' => 'AM',
             'is_active' => true,
@@ -57,7 +57,7 @@ class AutoInsuranceQuoteFlowTest extends TestCase
         $matching2 = $this->insurancePartner();
         $inactive = $this->insurancePartner(['is_active' => false]);
         $wrongType = Organization::create([
-            'name' => 'Some Bank', 'slug' => 'some-bank-' . uniqid(), 'type' => 'bank',
+            'name' => 'Some Bank', 'slug' => 'some-bank-'.uniqid(), 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true,
         ]);
 

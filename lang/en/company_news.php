@@ -18,7 +18,7 @@ return [
         [
             'status' => 'live',
             'title' => 'Rate Alerts',
-            'body' => "Set a target buy or sell rate for any currency and get notified by email or Telegram the moment a bank crosses it.",
+            'body' => 'Set a target buy or sell rate for any currency and get notified by email or Telegram the moment a bank crosses it.',
         ],
         [
             'status' => 'live',

@@ -30,13 +30,13 @@ class UnibankRateParser implements RateParser
      */
     public function parse(string $html): array
     {
-        if (!preg_match('/currencies-converter\'\);\s*const\s+jsonData\s*=\s*\'(.*?)\'\s*;\s*BX\.CreoExchange\.init/s', $html, $match)) {
+        if (! preg_match('/currencies-converter\'\);\s*const\s+jsonData\s*=\s*\'(.*?)\'\s*;\s*BX\.CreoExchange\.init/s', $html, $match)) {
             return [];
         }
 
         $data = json_decode($match[1], true);
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             return [];
         }
 
@@ -44,7 +44,7 @@ class UnibankRateParser implements RateParser
 
         foreach (self::GROUP_RATE_TYPES as $group => $rateType) {
             foreach ($data[$group]['EXCHANGE_RATES'] ?? [] as $row) {
-                if (empty($row['CURRENCY']) || !isset($row['BUY'], $row['SELL'])) {
+                if (empty($row['CURRENCY']) || ! isset($row['BUY'], $row['SELL'])) {
                     continue;
                 }
 

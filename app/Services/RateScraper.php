@@ -4,10 +4,10 @@ namespace App\Services;
 
 use App\Enums\CurrencyCode;
 use App\Enums\RateType;
-use App\Models\Organization;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\CurrencyRateHistory;
+use App\Models\Organization;
 use App\Models\ScrapingJob;
 use App\Parsers\RateParserFactory;
 use GuzzleHttp\Client;
@@ -119,7 +119,7 @@ class RateScraper
                 ->where('is_active', true)
                 ->first();
 
-            if (!$source) {
+            if (! $source) {
                 throw new \RuntimeException("Source '{$sourceType}' not found for {$organization->name}");
             }
 
@@ -191,8 +191,9 @@ class RateScraper
 
                 // Enforced for every organization, regardless of what its
                 // parser extracted - only these currencies are tracked.
-                if (!in_array($currencyCode, CurrencyCode::codes(), true)) {
+                if (! in_array($currencyCode, CurrencyCode::codes(), true)) {
                     $job->log('debug', "Skipping untracked currency: {$currencyCode}");
+
                     continue;
                 }
 

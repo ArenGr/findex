@@ -32,7 +32,7 @@ class ReviewController extends Controller
         // only blocks a logged-in customer whose own account email isn't
         // confirmed yet, since a review is public content attributed to
         // that account.
-        if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+        if ($request->user() && ! $request->user()->hasVerifiedEmail()) {
             return redirect()
                 ->route('organizations.show', $organization)
                 ->with('status', 'email-verification-required');

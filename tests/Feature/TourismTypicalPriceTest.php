@@ -22,7 +22,7 @@ class TourismTypicalPriceTest extends TestCase
     private function respondedSuggestion(string $countryCode, float $amount): void
     {
         $organization = Organization::create([
-            'name' => 'Typical Price Agency ' . uniqid(), 'slug' => 'typical-price-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Typical Price Agency '.uniqid(), 'slug' => 'typical-price-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
 
@@ -59,7 +59,7 @@ class TourismTypicalPriceTest extends TestCase
     public function test_hides_the_teaser_when_fewer_than_two_orgs_have_responded(): void
     {
         $organization = Organization::create([
-            'name' => 'Solo Agency', 'slug' => 'solo-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Solo Agency', 'slug' => 'solo-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
         $quoteRequest = QuoteRequest::create([

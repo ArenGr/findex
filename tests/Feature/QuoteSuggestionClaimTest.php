@@ -25,7 +25,7 @@ class QuoteSuggestionClaimTest extends TestCase
     private function respondedRequestWithPromo(array $suggestionOverrides = []): QuoteRequest
     {
         $organization = Organization::create([
-            'name' => 'Promo Agency', 'slug' => 'promo-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Promo Agency', 'slug' => 'promo-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '555',
         ]);
 

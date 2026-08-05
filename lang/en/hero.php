@@ -14,14 +14,14 @@ return [
         2 => [
             'badge' => 'Live Rates',
             'heading' => 'Best Exchange Rates Today',
-            'paragraph' => "See which bank offers the best buy and sell rate for your currency, kept current automatically.",
+            'paragraph' => 'See which bank offers the best buy and sell rate for your currency, kept current automatically.',
             'cta' => "Check Today's Rates",
             'alt' => 'Smiling man in a blue shirt',
         ],
         3 => [
             'badge' => 'Auto Insurance',
             'heading' => 'Compare Auto Insurance Quotes Instantly',
-            'paragraph' => "Enter your plate number once, and get real quotes from our partner insurers in seconds - no phone calls, no waiting.",
+            'paragraph' => 'Enter your plate number once, and get real quotes from our partner insurers in seconds - no phone calls, no waiting.',
             'cta' => 'Get Insurance Quotes',
             'alt' => 'Woman holding a phone and a bank card',
         ],

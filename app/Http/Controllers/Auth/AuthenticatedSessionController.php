@@ -24,7 +24,7 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt([...$credentials, 'banned_at' => null, 'role' => UserRole::CUSTOMER], $request->boolean('remember'))) {
+        if (! Auth::attempt([...$credentials, 'banned_at' => null, 'role' => UserRole::CUSTOMER], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

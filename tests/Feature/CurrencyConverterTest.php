@@ -19,7 +19,7 @@ class CurrencyConverterTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->converter = new CurrencyConverter();
+        $this->converter = new CurrencyConverter;
     }
 
     public function test_locale_maps_to_the_expected_currency(): void
@@ -85,7 +85,7 @@ class CurrencyConverterTest extends TestCase
         $orgCount++;
 
         $organization = Organization::create([
-            'name' => 'Rate Bank ' . $orgCount, 'slug' => 'rate-bank-' . $orgCount, 'type' => 'bank',
+            'name' => 'Rate Bank '.$orgCount, 'slug' => 'rate-bank-'.$orgCount, 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true,
         ]);
 

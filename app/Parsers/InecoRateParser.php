@@ -24,7 +24,7 @@ class InecoRateParser implements RateParser
         $codes = implode('|', CurrencyCode::codes());
 
         preg_match_all(
-            '/\b(' . $codes . ')\b\s+([0-9,.]+)\s+([0-9,.]+)/i',
+            '/\b('.$codes.')\b\s+([0-9,.]+)\s+([0-9,.]+)/i',
             $text,
             $matches,
             PREG_SET_ORDER
@@ -36,7 +36,7 @@ class InecoRateParser implements RateParser
             $rates[] = [
                 'code' => strtoupper($match[1]),
                 'rate_type' => RateType::CASH->value,
-                'buy'  => (float) str_replace(',', '.', $match[2]),
+                'buy' => (float) str_replace(',', '.', $match[2]),
                 'sell' => (float) str_replace(',', '.', $match[3]),
             ];
         }

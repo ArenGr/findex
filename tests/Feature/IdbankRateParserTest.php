@@ -13,7 +13,7 @@ class IdbankRateParserTest extends TestCase
         // leading trend-arrow SVG on its cells, one without), then the
         // "table-actions" boundary that must stop the row scan before a
         // banner further down the page that could otherwise look similar.
-        return <<<HTML
+        return <<<'HTML'
         <div class="m-exchange">
             <div class="m-exchange__table">
                 <div class="m-exchange__table-row m-exchange__table-row--header">
@@ -41,7 +41,7 @@ class IdbankRateParserTest extends TestCase
 
     public function test_parses_the_cash_rate_table(): void
     {
-        $rates = (new IdbankRateParser())->parse($this->fixture());
+        $rates = (new IdbankRateParser)->parse($this->fixture());
 
         $this->assertCount(2, $rates);
         $this->assertSame('USD', $rates[0]['code']);
@@ -53,7 +53,7 @@ class IdbankRateParserTest extends TestCase
 
     public function test_returns_empty_when_the_table_header_is_missing(): void
     {
-        $rates = (new IdbankRateParser())->parse('<div>no rates here</div>');
+        $rates = (new IdbankRateParser)->parse('<div>no rates here</div>');
 
         $this->assertSame([], $rates);
     }

@@ -27,7 +27,7 @@ class PartnerResponseControllerTest extends TestCase
     {
         return Organization::create(array_merge([
             'name' => 'Test Travel Co',
-            'slug' => 'test-travel-co-' . uniqid(),
+            'slug' => 'test-travel-co-'.uniqid(),
             'type' => 'tourism',
             'country_code' => 'AM',
             'is_active' => true,

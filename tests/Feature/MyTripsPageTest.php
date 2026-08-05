@@ -23,7 +23,7 @@ class MyTripsPageTest extends TestCase
     {
         $organization = Organization::create([
             'name' => 'Test Travel Co',
-            'slug' => 'test-travel-co-' . uniqid(),
+            'slug' => 'test-travel-co-'.uniqid(),
             'type' => 'tourism',
             'country_code' => 'AM',
             'is_active' => true,

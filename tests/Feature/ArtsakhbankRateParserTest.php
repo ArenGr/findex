@@ -13,7 +13,7 @@ class ArtsakhbankRateParserTest extends TestCase
         // names appear twice - once as a tab button's data-tab attribute,
         // once as the actual content div's class - the parser must land on
         // the latter, not stop at the button.
-        return <<<HTML
+        return <<<'HTML'
         <ul class="tab_buttons">
             <li><a data-tab="cash_section">Cash</a></li>
             <li><a data-tab="non_cash_section">Non cash</a></li>
@@ -35,7 +35,7 @@ class ArtsakhbankRateParserTest extends TestCase
 
     public function test_parses_cash_and_non_cash_sections_separately(): void
     {
-        $rates = (new ArtsakhbankRateParser())->parse($this->fixture());
+        $rates = (new ArtsakhbankRateParser)->parse($this->fixture());
 
         $byKey = [];
         foreach ($rates as $rate) {
@@ -51,7 +51,7 @@ class ArtsakhbankRateParserTest extends TestCase
         // If the parser incorrectly anchored on the tab button's
         // data-tab="non_cash_section" (which appears before the cash
         // table), it would capture the cash table's values for non_cash too.
-        $rates = (new ArtsakhbankRateParser())->parse($this->fixture());
+        $rates = (new ArtsakhbankRateParser)->parse($this->fixture());
 
         $byKey = [];
         foreach ($rates as $rate) {

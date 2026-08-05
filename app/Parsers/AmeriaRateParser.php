@@ -41,7 +41,7 @@ class AmeriaRateParser implements RateParser
 
             $code = strtoupper(trim($cells->eq(0)->text()));
 
-            if (!in_array($code, CurrencyCode::codes(), true)) {
+            if (! in_array($code, CurrencyCode::codes(), true)) {
                 return;
             }
 

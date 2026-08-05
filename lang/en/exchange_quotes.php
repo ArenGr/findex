@@ -31,9 +31,9 @@ return [
         'your_name' => 'Your name',
         'your_email' => 'Your email',
         'your_email_hint' => "We'll send your results link here.",
-        'consent' => "I agree that my details will be shared with matching exchange offices so they can respond to this request.",
+        'consent' => 'I agree that my details will be shared with matching exchange offices so they can respond to this request.',
         'submit' => 'Request Better Rates',
-        'no_partners_for_currency' => "No exchange offices currently take large-amount requests for this currency. Try a different currency, or check back later.",
+        'no_partners_for_currency' => 'No exchange offices currently take large-amount requests for this currency. Try a different currency, or check back later.',
         'amd' => 'AMD',
     ],
 
@@ -133,6 +133,6 @@ return [
         'not_interested_button' => 'Not Interested',
         'direction_buy_rate' => 'customer is selling',
         'direction_sell_rate' => 'customer is buying',
-        'declined_confirmation' => "Got it - marked as not interested. Thanks for letting us know.",
+        'declined_confirmation' => 'Got it - marked as not interested. Thanks for letting us know.',
     ],
 ];

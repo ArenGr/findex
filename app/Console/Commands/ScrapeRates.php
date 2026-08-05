@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Organization;
-use App\Models\ScrapingJob;
 use App\Services\RateScraper;
+use Illuminate\Console\Command;
 
 class ScrapeRates extends Command
 {
@@ -37,6 +36,7 @@ class ScrapeRates extends Command
 
             if ($organizations->isEmpty()) {
                 $this->error("Organization '{$organizationSlug}' not found or inactive.");
+
                 return self::FAILURE;
             }
         } else {
@@ -44,6 +44,7 @@ class ScrapeRates extends Command
 
             if ($organizations->isEmpty()) {
                 $this->error('No active organizations found.');
+
                 return self::FAILURE;
             }
         }
@@ -72,9 +73,8 @@ class ScrapeRates extends Command
 
         $this->info("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         $this->info("Success: $successCount | Failed: $failureCount");
-        $this->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         return $failureCount === 0 ? self::SUCCESS : self::FAILURE;
     }
 }
-

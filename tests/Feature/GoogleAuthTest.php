@@ -22,7 +22,7 @@ class GoogleAuthTest extends TestCase
 
     private function fakeGoogleUser(string $id, string $email, string $name = 'Real Owner'): void
     {
-        $socialiteUser = (new SocialiteUser())->map([
+        $socialiteUser = (new SocialiteUser)->map([
             'id' => $id,
             'nickname' => null,
             'name' => $name,

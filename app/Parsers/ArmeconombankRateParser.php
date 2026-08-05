@@ -40,7 +40,7 @@ class ArmeconombankRateParser implements RateParser
         foreach ($matches[0] as $json) {
             $data = json_decode($json, true);
 
-            if (!is_array($data) || empty($data['currency'])) {
+            if (! is_array($data) || empty($data['currency'])) {
                 continue;
             }
 
@@ -59,7 +59,7 @@ class ArmeconombankRateParser implements RateParser
                 ];
             }
 
-            if (!empty($data['cbRate'])) {
+            if (! empty($data['cbRate'])) {
                 $rates[] = [
                     'code' => $code,
                     'rate_type' => RateType::CENTRAL_BANK->value,

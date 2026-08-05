@@ -19,7 +19,7 @@ class OrganizationTeamTest extends TestCase
     private function organizationOwner(): array
     {
         $organization = Organization::create([
-            'name' => 'Team Test Bank', 'slug' => 'team-test-bank-' . uniqid(), 'type' => 'bank',
+            'name' => 'Team Test Bank', 'slug' => 'team-test-bank-'.uniqid(), 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true,
         ]);
         $owner = User::factory()->organization($organization)->create();

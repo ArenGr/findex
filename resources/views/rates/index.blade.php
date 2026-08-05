@@ -19,8 +19,23 @@
 
 @section('content')
     <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
-        <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
+        {{-- One alert entry point for the whole table (not one per row), following the currently-selected currency - same idea as rates-table.blade.php's header CTA. --}}
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
+                <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
+            </div>
+
+            <a
+                href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
+                class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-[#D4A72C]">
+                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                </svg>
+                {{ __('rates.alert_cta') }}
+            </a>
+        </div>
 
         {{-- Large-amount exchange quote CTA - pre-fills the currency
         currently being viewed on the request form. --}}
@@ -154,9 +169,6 @@
                             </a>
                         </th>
                         <th class="hidden px-4 py-3 text-left sm:table-cell">{{ __('rates.updated_column') }}</th>
-                        <th class="px-2 py-3 text-right sm:px-4">
-                            <span class="sr-only sm:not-sr-only">{{ __('rates.alert_column') }}</span>
-                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -190,21 +202,10 @@
                             <td class="hidden px-4 py-4 text-left text-xs text-subtle sm:table-cell">
                                 {{ $rate->scraped_at ? \Illuminate\Support\Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}
                             </td>
-                            <td class="px-2 py-4 text-right sm:px-4">
-                                <a
-                                    href="{{ route('alerts.index', ['currency_id' => $selectedCurrency?->id, 'organization_id' => $rate->organization_id, 'rate_type' => $selectedType->value, 'rate_field' => 'sell_rate']) }}#create-alert"
-                                    title="{{ __('rates.create_alert') }}"
-                                    class="inline-flex text-subtle hover:text-primary"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
-                                        <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-16 text-center text-sm text-muted">
+                            <td colspan="5" class="px-6 py-16 text-center text-sm text-muted">
                                 {{ __('rates.no_rates_match') }}
                             </td>
                         </tr>

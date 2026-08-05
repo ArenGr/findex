@@ -22,7 +22,7 @@ class DestinationAlertController extends Controller
     {
         $validated = $request->validate([
             'destination_country' => ['required', 'string', Rule::in(array_keys(Countries::getNames()))],
-            'email' => [Rule::requiredIf(!$request->user()), 'nullable', ValidationRules::email(), 'max:255'],
+            'email' => [Rule::requiredIf(! $request->user()), 'nullable', ValidationRules::email(), 'max:255'],
         ]);
 
         DestinationAlert::updateOrCreate(

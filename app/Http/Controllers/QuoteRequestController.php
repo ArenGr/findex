@@ -28,6 +28,7 @@ class QuoteRequestController extends Controller
      * de-anonymization risk on top.
      */
     private const TYPICAL_PRICE_MIN_SUGGESTIONS = 3;
+
     private const TYPICAL_PRICE_MIN_ORGS = 2;
 
     /**
@@ -99,7 +100,7 @@ class QuoteRequestController extends Controller
             ->map(fn ($name, $code) => [
                 'code' => $code,
                 'name' => $name,
-                'flag' => mb_chr(127462 + (ord($code[0]) - 65)) . mb_chr(127462 + (ord($code[1]) - 65)),
+                'flag' => mb_chr(127462 + (ord($code[0]) - 65)).mb_chr(127462 + (ord($code[1]) - 65)),
             ])
             ->sortBy('name')
             ->values()
@@ -205,7 +206,7 @@ class QuoteRequestController extends Controller
         // only blocks a logged-in customer whose own account email isn't
         // confirmed yet, since replies and the results link both depend on
         // that address actually being reachable.
-        if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+        if ($request->user() && ! $request->user()->hasVerifiedEmail()) {
             return redirect()->route('tourism.request')->with('status', 'email-verification-required');
         }
 
@@ -242,7 +243,7 @@ class QuoteRequestController extends Controller
         }
 
         $partySize = $validated['adults'] + ($validated['children'] ?? 0);
-        $budgetForFiltering = $validated['budget_max_amd'] ?? $validated['budget_min_amd'] ?? null;
+        $budgetForFiltering = $this->budgetCeilingForMatching($validated);
 
         $partners = Organization::tourismPartnersForDestination(
             $validated['destination_country'],
@@ -298,6 +299,29 @@ class QuoteRequestController extends Controller
     }
 
     /**
+     * The budget ceiling for the live, submit-time partner match -
+     * deliberately not reused for QuoteRequest::budget_for_filtering
+     * (used later by SendQuoteRequestToPartnersJob/
+     * BackfillOpenRequestsToNewPartnerJob), since null means two different
+     * things depending on how it got here: neither field submitted at all
+     * is a genuine "no budget signal", which tourismPartnersForDestination()
+     * intentionally treats as a low-quality lead (see LeadQualityFilterTest)
+     * - but a min-only submission means the visitor dragged the slider's
+     * max handle to its cap ("no upper limit", not "no info"), so it must
+     * NOT collapse to null or pass the min through as if it were a
+     * ceiling. PHP_FLOAT_MAX guarantees every partner's threshold clears
+     * it, correctly reading as "at least this much, no real ceiling".
+     */
+    private function budgetCeilingForMatching(array $validated): ?float
+    {
+        if (isset($validated['budget_max_amd'])) {
+            return (float) $validated['budget_max_amd'];
+        }
+
+        return isset($validated['budget_min_amd']) ? PHP_FLOAT_MAX : null;
+    }
+
+    /**
      * Resolved manually rather than via implicit route-model binding to keep
      * the same convention as Organization\BranchController - and because
      * access here is also gated on either being the owning user or holding a
@@ -341,7 +365,7 @@ class QuoteRequestController extends Controller
 
         abort_unless($suggestion->promo_code, 404);
 
-        if (!$suggestion->is_claimed) {
+        if (! $suggestion->is_claimed) {
             $suggestion->claim($request->user());
             app(PartnerNotifierInterface::class)->notifyClaim($suggestion);
         }

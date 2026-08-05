@@ -30,8 +30,8 @@ class TelegramClient
      * button silently notifies our webhook instead of sending any text).
      * Telegram allows only one or the other per message.
      *
-     * @param array<int, array<int, string>>|null $keyboard Rows of button labels.
-     * @param array<int, array<int, array{text: string, url?: string, callback_data?: string}>>|null $inlineKeyboard Rows of inline buttons.
+     * @param  array<int, array<int, string>>|null  $keyboard  Rows of button labels.
+     * @param  array<int, array<int, array{text: string, url?: string, callback_data?: string}>>|null  $inlineKeyboard  Rows of inline buttons.
      */
     public function sendMessage(int|string $chatId, string $text, ?array $keyboard = null, ?array $inlineKeyboard = null): array
     {

@@ -21,14 +21,14 @@ class LlmReportAnalyzer implements ReportAnalyzerInterface
      * request. The report view already hides the summary/themes sections
      * when they're empty.
      *
-     * @param string[] $comments
+     * @param  string[]  $comments
      * @return array{summary: string, themes: array<int, string>}
      */
     public function analyze(array $comments): array
     {
         $endpoint = config('services.llm.url');
 
-        if (!$endpoint || !config('services.llm.key')) {
+        if (! $endpoint || ! config('services.llm.key')) {
             return ['summary' => '', 'themes' => []];
         }
 

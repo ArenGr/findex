@@ -29,7 +29,7 @@ class ViewOrganization extends ViewRecord
                 ->requiresConfirmation()
                 ->action(function () {
                     $record = $this->getRecord();
-                    $record->update(['is_active' => !$record->is_active]);
+                    $record->update(['is_active' => ! $record->is_active]);
 
                     Notification::make()
                         ->title($record->is_active ? 'Organization approved' : 'Organization suspended')

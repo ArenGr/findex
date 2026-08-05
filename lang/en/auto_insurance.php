@@ -10,7 +10,7 @@ return [
         'step_1_title' => 'Tell us once',
         'step_1_body' => 'Your plate number, owner ID, and the contract term you want.',
         'step_2_title' => 'We ask insurers',
-        'step_2_body' => "Every partner insurer is asked for a quote through their API - no waiting for a callback.",
+        'step_2_body' => 'Every partner insurer is asked for a quote through their API - no waiting for a callback.',
         'step_3_title' => 'You compare instantly',
         'step_3_body' => 'Quotes land on one page the moment you submit.',
         'section_vehicle' => 'Vehicle & owner',

@@ -19,7 +19,7 @@ class TelegramWebhook extends Command
 
     public function handle(TelegramClient $telegram): int
     {
-        if (!config('services.telegram.bot_token')) {
+        if (! config('services.telegram.bot_token')) {
             $this->error('TELEGRAM_BOT_TOKEN is not set in .env.');
 
             return self::FAILURE;
@@ -37,7 +37,7 @@ class TelegramWebhook extends Command
     {
         $secret = config('services.telegram.webhook_secret');
 
-        if (!$secret) {
+        if (! $secret) {
             $this->error('TELEGRAM_WEBHOOK_SECRET is not set in .env - generate one first (e.g. `php artisan tinker --execute="echo Str::random(32);"`).');
 
             return self::FAILURE;
@@ -45,7 +45,7 @@ class TelegramWebhook extends Command
 
         $url = route('telegram.webhook');
 
-        if (!str_starts_with($url, 'https://')) {
+        if (! str_starts_with($url, 'https://')) {
             $this->error("Telegram requires an HTTPS webhook URL, got: {$url}. Check APP_URL.");
 
             return self::FAILURE;
@@ -53,8 +53,8 @@ class TelegramWebhook extends Command
 
         $response = $telegram->setWebhook($url, $secret);
 
-        if (!($response['ok'] ?? false)) {
-            $this->error('Telegram rejected the webhook: ' . ($response['description'] ?? 'unknown error'));
+        if (! ($response['ok'] ?? false)) {
+            $this->error('Telegram rejected the webhook: '.($response['description'] ?? 'unknown error'));
 
             return self::FAILURE;
         }

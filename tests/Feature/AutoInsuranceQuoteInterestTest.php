@@ -25,7 +25,7 @@ class AutoInsuranceQuoteInterestTest extends TestCase
     private function quoteWithRequest(array $organizationOverrides = []): AutoInsuranceQuote
     {
         $organization = Organization::create(array_merge([
-            'name' => 'Interest Test Insurer', 'slug' => 'interest-test-insurer-' . uniqid(), 'type' => 'insurance',
+            'name' => 'Interest Test Insurer', 'slug' => 'interest-test-insurer-'.uniqid(), 'type' => 'insurance',
             'country_code' => 'AM', 'is_active' => true,
         ], $organizationOverrides));
 

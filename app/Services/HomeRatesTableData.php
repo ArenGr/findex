@@ -63,18 +63,10 @@ class HomeRatesTableData
                         'initial' => mb_strtoupper(mb_substr($rate->organization->name, 0, 1)),
                         'buy_rate' => (float) $rate->buy_rate,
                         'sell_rate' => (float) $rate->sell_rate,
+                        'spread' => round($rate->getSpread(), 2),
+                        'updated' => $rate->scraped_at?->diffForHumans(),
                         'rating' => (float) ($ratingsByOrgId[$rate->organization_id]->reviews_avg_rating ?? 0),
                         'reviews_count' => (int) ($ratingsByOrgId[$rate->organization_id]->reviews_count ?? 0),
-                        // Pre-fills the alert-creation form (see alerts/index.blade.php)
-                        // so a visitor doesn't have to re-enter what they're already
-                        // looking at - defaults to the sell rate, the one most
-                        // relevant when buying foreign currency with AMD.
-                        'alertUrl' => route('alerts.index', [
-                            'currency_id' => $currency->id,
-                            'organization_id' => $rate->organization_id,
-                            'rate_type' => $rateType->value,
-                            'rate_field' => 'sell_rate',
-                        ]).'#create-alert',
                     ])
                     ->values()
                     ->all();
@@ -94,11 +86,20 @@ class HomeRatesTableData
             ? RateType::CASH->value
             : ($defaultCurrency ? array_key_first($ratesByCurrency[$defaultCurrency] ?? []) : null);
 
+        // One alert-creation link per currency (not per row/bank/rate-type
+        // anymore - see rates-table.blade.php's single header CTA) so
+        // switching currency tabs still points the visitor at the right
+        // currency without needing a row-specific deep link.
+        $alertUrlByCurrency = $currencies->mapWithKeys(
+            fn ($currency) => [$currency->code => route('alerts.index', ['currency_id' => $currency->id]).'#create-alert']
+        )->all();
+
         return [
             'currencies' => $currencyCodes,
             'ratesByCurrency' => $ratesByCurrency,
             'defaultCurrency' => $defaultCurrency,
             'defaultRateType' => $defaultRateType,
+            'alertUrlByCurrency' => $alertUrlByCurrency,
         ];
     }
 }

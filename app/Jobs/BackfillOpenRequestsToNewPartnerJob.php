@@ -26,15 +26,13 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public int $organizationId, public string $countryCode)
-    {
-    }
+    public function __construct(public int $organizationId, public string $countryCode) {}
 
     public function handle(PartnerNotifierInterface $notifier): void
     {
         $organization = Organization::find($this->organizationId);
 
-        if (!$organization) {
+        if (! $organization) {
             return;
         }
 
@@ -55,7 +53,7 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
                 $quoteRequest->budget_for_filtering,
             )->whereKey($organization->id)->exists();
 
-            if (!$qualifies) {
+            if (! $qualifies) {
                 continue;
             }
 
@@ -69,7 +67,7 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
             $response->setRelation('organization', $organization);
             $response->setRelation('quoteRequest', $quoteRequest);
 
-            if (!$notifier->notify($response)) {
+            if (! $notifier->notify($response)) {
                 Log::warning('Backfilled quote request partner notification failed', [
                     'quote_request_id' => $quoteRequest->id,
                     'organization_id' => $organization->id,

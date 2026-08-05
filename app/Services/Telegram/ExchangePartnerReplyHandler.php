@@ -17,18 +17,16 @@ use App\Models\ExchangeQuoteResponse;
  */
 class ExchangePartnerReplyHandler
 {
-    public function __construct(private readonly TelegramClient $telegram)
-    {
-    }
+    public function __construct(private readonly TelegramClient $telegram) {}
 
     /**
      * @return bool True if this update belonged to the exchange decline
-     *               flow and was fully handled - the caller should not
-     *               process it further.
+     *              flow and was fully handled - the caller should not
+     *              process it further.
      */
     public function handleUpdate(array $update): bool
     {
-        if (!isset($update['callback_query'])) {
+        if (! isset($update['callback_query'])) {
             return false;
         }
 
@@ -36,7 +34,7 @@ class ExchangePartnerReplyHandler
         $callbackId = $callbackQuery['id'] ?? null;
         $data = $callbackQuery['data'] ?? '';
 
-        if (!$callbackId || !str_starts_with($data, 'exchange_decline:')) {
+        if (! $callbackId || ! str_starts_with($data, 'exchange_decline:')) {
             return false;
         }
 

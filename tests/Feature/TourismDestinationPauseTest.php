@@ -23,7 +23,7 @@ class TourismDestinationPauseTest extends TestCase
     {
         $organization = Organization::create([
             'name' => 'Pause Test Agency',
-            'slug' => 'pause-test-agency-' . uniqid(),
+            'slug' => 'pause-test-agency-'.uniqid(),
             'type' => 'tourism',
             'country_code' => 'AM',
             'is_active' => true,

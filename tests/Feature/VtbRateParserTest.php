@@ -47,7 +47,7 @@ class VtbRateParserTest extends TestCase
 
     public function test_parses_cash_and_non_cash_tabs_separately(): void
     {
-        $rates = (new VtbRateParser())->parse($this->fixture());
+        $rates = (new VtbRateParser)->parse($this->fixture());
 
         $byKey = [];
         foreach ($rates as $rate) {
@@ -60,7 +60,7 @@ class VtbRateParserTest extends TestCase
 
     public function test_ignores_the_decoy_converter_widget_after_the_real_table(): void
     {
-        $rates = (new VtbRateParser())->parse($this->fixture());
+        $rates = (new VtbRateParser)->parse($this->fixture());
 
         $codes = array_unique(array_column($rates, 'code'));
 

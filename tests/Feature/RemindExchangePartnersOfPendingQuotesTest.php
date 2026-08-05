@@ -19,7 +19,7 @@ class RemindExchangePartnersOfPendingQuotesTest extends TestCase
     private function pendingResponse(array $overrides = []): ExchangeQuoteResponse
     {
         $organization = Organization::create([
-            'name' => 'Reminder Test Exchange', 'slug' => 'reminder-test-exchange-' . uniqid(), 'type' => 'exchange',
+            'name' => 'Reminder Test Exchange', 'slug' => 'reminder-test-exchange-'.uniqid(), 'type' => 'exchange',
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '999',
         ]);
         $usd = Currency::firstOrCreate(['code' => 'USD'], ['name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);

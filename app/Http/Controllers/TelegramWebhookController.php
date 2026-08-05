@@ -26,7 +26,7 @@ class TelegramWebhookController extends Controller
     ): Response {
         $secret = config('services.telegram.webhook_secret');
 
-        if (!$secret || !hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token'))) {
+        if (! $secret || ! hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token'))) {
             abort(HttpResponse::HTTP_NOT_FOUND);
         }
 
@@ -38,14 +38,14 @@ class TelegramWebhookController extends Controller
             // go through it too); exchange quote declines are tried next;
             // anything left over falls through to the general currency-rate
             // assistant.
-            if (!$partnerHandler->handleUpdate($update) && !$exchangePartnerHandler->handleUpdate($update)) {
+            if (! $partnerHandler->handleUpdate($update) && ! $exchangePartnerHandler->handleUpdate($update)) {
                 $ratesHandler->handleUpdate($update);
             }
         } catch (\Throwable $e) {
             // Always acknowledge with 2xx regardless: a non-2xx response
             // makes Telegram retry the same update, and repeated failures
             // can get the webhook auto-disabled.
-            Log::error('Telegram webhook handling failed: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Telegram webhook handling failed: '.$e->getMessage(), ['exception' => $e]);
         }
 
         return response()->noContent();

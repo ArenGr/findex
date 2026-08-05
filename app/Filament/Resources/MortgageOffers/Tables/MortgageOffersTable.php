@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MortgageOffers\Tables;
 
 use App\Enums\MortgageRateType;
+use App\Models\MortgageOffer;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -63,11 +64,11 @@ class MortgageOffersTable
                     ->relationship('organization', 'name')
                     ->searchable(),
                 SelectFilter::make('currency')
-                    ->options(fn () => \App\Models\MortgageOffer::query()->distinct()->pluck('currency', 'currency')->all()),
+                    ->options(fn () => MortgageOffer::query()->distinct()->pluck('currency', 'currency')->all()),
                 SelectFilter::make('rate_type')
                     ->options(MortgageRateType::class),
                 SelectFilter::make('category')
-                    ->options(fn () => \App\Models\MortgageOffer::query()->distinct()->pluck('category', 'category')->filter()->all()),
+                    ->options(fn () => MortgageOffer::query()->distinct()->pluck('category', 'category')->filter()->all()),
             ])
             ->recordActions([
                 ViewAction::make(),

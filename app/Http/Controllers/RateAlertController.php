@@ -26,7 +26,7 @@ class RateAlertController extends Controller
         // once) so the bot's eventual confirmation message matches whatever
         // language they're browsing in *when they actually connect*, not
         // whatever it was the first time this page happened to run.
-        if (!$user->telegram_chat_id) {
+        if (! $user->telegram_chat_id) {
             $user->update([
                 'telegram_connect_token' => $user->telegram_connect_token ?? Str::random(32),
                 'locale' => $locale,
@@ -71,13 +71,13 @@ class RateAlertController extends Controller
         // stale/mistyped one would silently break delivery. Guarded here
         // too, not just hidden client-side in the view, since "connect
         // first" is enforced server-side either way.
-        if ($validated['channel'] === 'telegram' && !$request->user()->telegram_chat_id) {
+        if ($validated['channel'] === 'telegram' && ! $request->user()->telegram_chat_id) {
             return back()->withInput()->withErrors([
                 'channel' => __('alerts.form.telegram_not_connected_error'),
             ]);
         }
 
-        if ($validated['channel'] === 'viber' && !$request->user()->viber_chat_id) {
+        if ($validated['channel'] === 'viber' && ! $request->user()->viber_chat_id) {
             return back()->withInput()->withErrors([
                 'channel' => __('alerts.form.viber_not_connected_error'),
             ]);
@@ -100,7 +100,7 @@ class RateAlertController extends Controller
     public function toggle(string $locale, Request $request, string $rateAlert): RedirectResponse
     {
         $alert = RateAlert::where('id', $rateAlert)->where('user_id', $request->user()->id)->firstOrFail();
-        $alert->update(['is_active' => !$alert->is_active]);
+        $alert->update(['is_active' => ! $alert->is_active]);
 
         return redirect()->route('alerts.index');
     }
@@ -136,7 +136,7 @@ class RateAlertController extends Controller
      */
     public function connectViber(string $locale, Request $request): RedirectResponse
     {
-        $request->user()->update(['viber_chat_id' => 'demo-viber-' . Str::random(12)]);
+        $request->user()->update(['viber_chat_id' => 'demo-viber-'.Str::random(12)]);
 
         return redirect()->route('alerts.index')->with('status', 'viber-connected');
     }

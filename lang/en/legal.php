@@ -9,7 +9,7 @@ return [
         'sections' => [
             [
                 'title' => 'What Findex is',
-                'body' => "Findex is an independent comparison service for bank cards, currency rates, loans, insurance and travel packages in Armenia. We are not a bank, lender, insurer or travel agency, and using Findex does not create a financial relationship between you and Findex.",
+                'body' => 'Findex is an independent comparison service for bank cards, currency rates, loans, insurance and travel packages in Armenia. We are not a bank, lender, insurer or travel agency, and using Findex does not create a financial relationship between you and Findex.',
             ],
             [
                 'title' => 'Accuracy of information',
@@ -21,7 +21,7 @@ return [
             ],
             [
                 'title' => 'Accounts and reviews',
-                'body' => "When you create an account or submit a review, you agree that the information you provide is accurate and that the review reflects your own genuine experience. Reviews submitted without an account are still subject to these terms.",
+                'body' => 'When you create an account or submit a review, you agree that the information you provide is accurate and that the review reflects your own genuine experience. Reviews submitted without an account are still subject to these terms.',
             ],
             [
                 'title' => "What you won't do",
@@ -33,7 +33,7 @@ return [
             ],
             [
                 'title' => 'Changes to these terms',
-                'body' => "We may update these terms as the service evolves. Material changes will be reflected by the date at the top of this page.",
+                'body' => 'We may update these terms as the service evolves. Material changes will be reflected by the date at the top of this page.',
             ],
         ],
     ],
@@ -43,7 +43,7 @@ return [
         'sections' => [
             [
                 'title' => 'What we collect',
-                'body' => "Account details (name and email) if you register; the rating, comment and optional branch you attach to a review, plus a display name if you leave a review without an account; trip details (destination, dates, travelers, hotel and your contact details) if you submit a travel quote request; and basic usage data such as your language preference and rate-alert subscriptions.",
+                'body' => 'Account details (name and email) if you register; the rating, comment and optional branch you attach to a review, plus a display name if you leave a review without an account; trip details (destination, dates, travelers, hotel and your contact details) if you submit a travel quote request; and basic usage data such as your language preference and rate-alert subscriptions.',
             ],
             [
                 'title' => 'How we use it',
@@ -59,11 +59,11 @@ return [
             ],
             [
                 'title' => 'Cookies',
-                'body' => "Findex uses cookies to keep you signed in and remember your language preference. See our Cookie Policy for details.",
+                'body' => 'Findex uses cookies to keep you signed in and remember your language preference. See our Cookie Policy for details.',
             ],
             [
                 'title' => 'Your rights',
-                'body' => "You can ask us to show you, correct, or delete the personal data we hold about you at any time by contacting us below.",
+                'body' => 'You can ask us to show you, correct, or delete the personal data we hold about you at any time by contacting us below.',
             ],
         ],
     ],
@@ -73,7 +73,7 @@ return [
         'sections' => [
             [
                 'title' => 'What cookies do here',
-                'body' => "A cookie is a small file stored in your browser. Findex uses them to keep you signed in between visits and to remember choices like your preferred language.",
+                'body' => 'A cookie is a small file stored in your browser. Findex uses them to keep you signed in between visits and to remember choices like your preferred language.',
             ],
             [
                 'title' => 'Essential cookies',
@@ -81,7 +81,7 @@ return [
             ],
             [
                 'title' => 'Managing cookies',
-                'body' => "Most browsers let you block or delete cookies in their settings. Blocking essential cookies will sign you out and reset your comparison list.",
+                'body' => 'Most browsers let you block or delete cookies in their settings. Blocking essential cookies will sign you out and reset your comparison list.',
             ],
         ],
     ],

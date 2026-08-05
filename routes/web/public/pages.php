@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('home');
 })->name('home');
-if (!app()->isProduction()) {
+if (! app()->isProduction()) {
     Route::get('/style-guide', function () {
         return view('style-guide');
     })->name('style-guide');

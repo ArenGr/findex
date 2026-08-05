@@ -80,16 +80,6 @@ class Article extends Model
         return $this->status === ArticleStatus::DRAFT;
     }
 
-    public function isSubmitted(): bool
-    {
-        return $this->status === ArticleStatus::SUBMITTED;
-    }
-
-    public function isApproved(): bool
-    {
-        return $this->status === ArticleStatus::APPROVED;
-    }
-
     public function isRejected(): bool
     {
         return $this->status === ArticleStatus::REJECTED;

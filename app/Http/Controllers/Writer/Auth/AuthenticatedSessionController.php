@@ -24,7 +24,7 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::guard('writer')->attempt([...$credentials, 'role' => UserRole::WRITER], $request->boolean('remember'))) {
+        if (! Auth::guard('writer')->attempt([...$credentials, 'role' => UserRole::WRITER], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

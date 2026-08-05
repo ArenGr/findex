@@ -22,11 +22,11 @@ class ReportRequestForm
                 DatePicker::make('period_to'),
                 Select::make('status')
                     ->options([
-            'pending' => 'Pending',
-            'processing' => 'Processing',
-            'completed' => 'Completed',
-            'failed' => 'Failed',
-        ])
+                        'pending' => 'Pending',
+                        'processing' => 'Processing',
+                        'completed' => 'Completed',
+                        'failed' => 'Failed',
+                    ])
                     ->default('pending')
                     ->required(),
                 Textarea::make('error_message')

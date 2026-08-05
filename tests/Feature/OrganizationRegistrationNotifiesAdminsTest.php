@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Filament\Notifications\Livewire\DatabaseNotifications;
+use Filament\Notifications\Notification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -57,11 +58,11 @@ class OrganizationRegistrationNotifiesAdminsTest extends TestCase
         $admin = User::factory()->admin()->create(['name' => 'Test Admin', 'email' => 'test-admin@example.com']);
         $this->actingAs($admin, 'admin');
 
-        \Filament\Notifications\Notification::make()
+        Notification::make()
             ->title('New organization awaiting approval')
             ->body('Pending Bank just registered.')
             ->sendToDatabase($admin);
-        \Filament\Notifications\Notification::make()
+        Notification::make()
             ->title('Another organization awaiting approval')
             ->body('Another Bank just registered.')
             ->sendToDatabase($admin);

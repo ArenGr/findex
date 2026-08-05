@@ -25,7 +25,9 @@ class QuoteResponse extends Model
     public const MAX_SUGGESTIONS = 5;
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_RESPONDED = 'responded';
+
     public const STATUS_DECLINED = 'declined';
 
     protected $fillable = [

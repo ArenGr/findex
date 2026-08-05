@@ -45,7 +45,7 @@ class ArticleDemoSeeder extends Seeder
         );
 
         $admin = User::firstOrNew(['email' => 'admin@findex.test']);
-        if (!$admin->exists) {
+        if (! $admin->exists) {
             $admin->forceFill([
                 'name' => 'Admin',
                 'password' => Hash::make('password'),

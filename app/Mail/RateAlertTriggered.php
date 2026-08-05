@@ -16,8 +16,7 @@ class RateAlertTriggered extends Mailable implements ShouldQueue
     public function __construct(
         public readonly RateAlert $alert,
         public readonly CurrencyRate $rate
-    ) {
-    }
+    ) {}
 
     public function build(): self
     {

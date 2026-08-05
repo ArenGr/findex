@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\User;
 use App\Models\Writer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class ArticleTest extends TestCase
@@ -169,7 +170,7 @@ class ArticleTest extends TestCase
         // route('articles.show', ...) needs a default {locale} to fill in
         // since $this->blade() doesn't dispatch through the router.
         app()->setLocale('en');
-        \Illuminate\Support\Facades\URL::defaults(['locale' => 'en']);
+        URL::defaults(['locale' => 'en']);
 
         [$writer] = $this->writerUser();
         $approved = $writer->articles()->create([
@@ -194,7 +195,7 @@ class ArticleTest extends TestCase
 
     public function test_article_links_use_the_slug_not_the_id(): void
     {
-        \Illuminate\Support\Facades\URL::defaults(['locale' => 'en']);
+        URL::defaults(['locale' => 'en']);
 
         [$writer] = $this->writerUser();
         $article = $writer->articles()->create([

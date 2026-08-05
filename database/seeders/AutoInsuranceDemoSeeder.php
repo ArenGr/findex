@@ -70,7 +70,7 @@ class AutoInsuranceDemoSeeder extends Seeder
         ];
 
         foreach ($partners as $partner) {
-            $email = $partner['slug'] . '@example.com';
+            $email = $partner['slug'].'@example.com';
 
             // Organization (business profile) and User (login, role=organization)
             // are two separate rows since the accounts-unification migration -
@@ -100,6 +100,6 @@ class AutoInsuranceDemoSeeder extends Seeder
             ])->save();
         }
 
-        $this->command?->info('Demo auto insurance partners ready: ' . collect($partners)->pluck('name')->implode(', ') . '.');
+        $this->command?->info('Demo auto insurance partners ready: '.collect($partners)->pluck('name')->implode(', ').'.');
     }
 }

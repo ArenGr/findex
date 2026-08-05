@@ -34,7 +34,7 @@ class CheckRateAlerts extends Command
             $matchingRate = $this->findMatchingRate($alert);
             $isMet = $matchingRate !== null;
 
-            if ($isMet && !$alert->is_currently_met) {
+            if ($isMet && ! $alert->is_currently_met) {
                 try {
                     $this->notify($telegram, $viber, $alert, $matchingRate);
                     $alert->last_triggered_at = now();
@@ -42,7 +42,7 @@ class CheckRateAlerts extends Command
                 } catch (\Throwable $e) {
                     $this->error("Failed to notify alert #{$alert->id}: {$e->getMessage()}");
                 }
-            } elseif (!$isMet) {
+            } elseif (! $isMet) {
                 $alert->is_currently_met = false;
             }
 
@@ -105,14 +105,14 @@ class CheckRateAlerts extends Command
         $fieldLabel = $alert->rate_field === 'buy_rate' ? 'Buy' : 'Sell';
         $value = $rate->{$alert->rate_field};
 
-        if (!$html) {
+        if (! $html) {
             return "Findex rate alert\n"
-                . "{$alert->currency->code} {$fieldLabel} rate is now {$value} at {$rate->organization->name}\n"
-                . "Your alert: {$fieldLabel} {$alert->direction} {$alert->threshold}";
+                ."{$alert->currency->code} {$fieldLabel} rate is now {$value} at {$rate->organization->name}\n"
+                ."Your alert: {$fieldLabel} {$alert->direction} {$alert->threshold}";
         }
 
         return "<b>Findex rate alert</b>\n"
-            . "{$alert->currency->code} {$fieldLabel} rate is now <b>{$value}</b> at {$rate->organization->name}\n"
-            . "<i>Your alert: {$fieldLabel} {$alert->direction} {$alert->threshold}</i>";
+            ."{$alert->currency->code} {$fieldLabel} rate is now <b>{$value}</b> at {$rate->organization->name}\n"
+            ."<i>Your alert: {$fieldLabel} {$alert->direction} {$alert->threshold}</i>";
     }
 }

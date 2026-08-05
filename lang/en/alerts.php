@@ -41,7 +41,7 @@ return [
 
     'telegram_connect' => [
         'connected' => 'Telegram connected - alerts will be sent here.',
-        'not_connected' => "Not connected yet - connect Telegram to receive alerts this way.",
+        'not_connected' => 'Not connected yet - connect Telegram to receive alerts this way.',
         'connect_button' => 'Connect Telegram',
         'disconnect_button' => 'Disconnect',
         'hint' => "Opens Telegram and starts a chat with our bot - that's how we'll send you rate alerts.",
@@ -53,7 +53,7 @@ return [
         'not_connected' => 'Not connected yet - connect Viber to receive alerts this way.',
         'connect_button' => 'Connect Viber',
         'disconnect_button' => 'Disconnect',
-        'hint' => "Links your account so we can send you rate alerts on Viber.",
+        'hint' => 'Links your account so we can send you rate alerts on Viber.',
     ],
 
     'email' => [

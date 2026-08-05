@@ -17,7 +17,7 @@ class QuoteTemplateTest extends TestCase
     private function tourismOrgUser(): array
     {
         $organization = Organization::create([
-            'name' => 'Template Test Agency', 'slug' => 'template-test-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Template Test Agency', 'slug' => 'template-test-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true,
         ]);
         $user = User::factory()->organization($organization)->create();

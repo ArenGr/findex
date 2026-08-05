@@ -32,7 +32,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
     {
         $organization = Organization::create(array_merge([
             'name' => 'Test Exchange',
-            'slug' => 'test-exchange-' . uniqid(),
+            'slug' => 'test-exchange-'.uniqid(),
             'type' => 'exchange',
             'country_code' => 'AM',
             'is_active' => true,
@@ -99,7 +99,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
         // A bank publishes the same currency but isn't an 'exchange' -
         // Organization::exchangePartnersForCurrency is deliberately
         // exchange-only (banks don't negotiate walk-in cash exchanges).
-        $this->exchangePartner(['type' => 'bank', 'slug' => 'test-bank-' . uniqid()]);
+        $this->exchangePartner(['type' => 'bank', 'slug' => 'test-bank-'.uniqid()]);
 
         $response = $this->post(route('exchange.request.store', ['locale' => 'en']), $this->validPayload());
 

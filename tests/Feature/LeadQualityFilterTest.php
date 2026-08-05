@@ -17,7 +17,7 @@ class LeadQualityFilterTest extends TestCase
     private function partner(array $overrides = []): Organization
     {
         $organization = Organization::create(array_merge([
-            'name' => 'Filter Test Agency', 'slug' => 'filter-test-agency-' . uniqid(), 'type' => 'tourism',
+            'name' => 'Filter Test Agency', 'slug' => 'filter-test-agency-'.uniqid(), 'type' => 'tourism',
             'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '111',
         ], $overrides));
         $organization->tourismDestinations()->create(['country_code' => 'GE']);

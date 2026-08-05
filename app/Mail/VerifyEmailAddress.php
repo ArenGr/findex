@@ -12,9 +12,7 @@ class VerifyEmailAddress extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public readonly User $user, public readonly string $verificationUrl)
-    {
-    }
+    public function __construct(public readonly User $user, public readonly string $verificationUrl) {}
 
     public function build(): self
     {

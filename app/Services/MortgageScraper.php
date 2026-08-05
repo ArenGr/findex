@@ -101,7 +101,7 @@ class MortgageScraper
                 ->where('is_active', true)
                 ->first();
 
-            if (!$source) {
+            if (! $source) {
                 throw new \RuntimeException("Source '{$sourceType}' not found for {$organization->name}");
             }
 

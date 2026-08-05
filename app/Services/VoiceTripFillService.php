@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,8 +21,11 @@ use Throwable;
 class VoiceTripFillService
 {
     private const TRANSCRIBE_URL = 'https://api.openai.com/v1/audio/transcriptions';
+
     private const CHAT_URL = 'https://api.openai.com/v1/chat/completions';
+
     private const TRANSCRIBE_MODEL = 'whisper-1';
+
     private const EXTRACT_MODEL = 'gpt-4o-mini';
 
     /**
@@ -50,8 +52,8 @@ class VoiceTripFillService
      * claiming the form was filled in when nothing was.
      *
      * @throws RuntimeException on any transcription/extraction failure - the
-     * controller turns this into a generic "couldn't understand that, try
-     * again" response rather than leaking API internals to the browser.
+     *                          controller turns this into a generic "couldn't understand that, try
+     *                          again" response rather than leaking API internals to the browser.
      */
     public function fillFromAudio(UploadedFile $audio): array
     {
@@ -63,14 +65,6 @@ class VoiceTripFillService
 
         $fields = $this->extract($transcript);
         $found = collect($fields)->filter(fn ($value) => $value !== null)->isNotEmpty();
-
-        if (!$found) {
-            // Temporary debug aid - lets us tell a genuinely silent/unusable
-            // recording apart from a transcript that came through fine but
-            // the extraction pass failed to parse. Remove once the "nothing
-            // found" reports are diagnosed.
-            Log::info('Voice fill found nothing', ['transcript' => $transcript]);
-        }
 
         return array_merge(['transcript' => $transcript, 'found' => $found], $fields);
     }
@@ -165,27 +159,31 @@ class VoiceTripFillService
             'children' => isset($raw['children']) ? max(0, min(20, (int) $raw['children'])) : null,
             'all_inclusive' => is_bool($raw['all_inclusive'] ?? null) ? $raw['all_inclusive'] : null,
             'insurance' => is_bool($raw['insurance'] ?? null) ? $raw['insurance'] : null,
-            'hotel_name' => !empty($raw['hotel_name']) ? mb_substr((string) $raw['hotel_name'], 0, 255) : null,
+            'hotel_name' => ! empty($raw['hotel_name']) ? mb_substr((string) $raw['hotel_name'], 0, 255) : null,
             // Clamped to the same ceiling QuoteRequestController::store()
             // validates against, so a voice-filled value can never trip a
             // confusing "invalid" error on the field the visitor never
             // touched by hand.
             'budget_min_amd' => isset($raw['budget_min_amd']) ? max(0, min(99999999, (int) $raw['budget_min_amd'])) : null,
             'budget_max_amd' => isset($raw['budget_max_amd']) ? max(0, min(99999999, (int) $raw['budget_max_amd'])) : null,
-            'notes' => !empty($raw['notes']) ? mb_substr((string) $raw['notes'], 0, 1000) : null,
+            'notes' => ! empty($raw['notes']) ? mb_substr((string) $raw['notes'], 0, 1000) : null,
         ];
     }
 
     private function dateOrNull(?string $date): ?string
     {
-        if (!$date) {
+        // checkdate(), not a Carbon::createFromFormat() try/catch - Carbon
+        // silently rolls a calendrically-invalid date over into a real one
+        // instead of throwing (e.g. "2026-02-30" parses to "2026-03-02"
+        // with no exception), so a hallucinated date from the extraction
+        // model would have silently landed in the form under a different
+        // date than what was actually said, instead of being dropped.
+        if (! $date || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $parts)) {
             return null;
         }
 
-        try {
-            return Carbon::createFromFormat('Y-m-d', $date)->toDateString();
-        } catch (Throwable) {
-            return null;
-        }
+        [, $year, $month, $day] = $parts;
+
+        return checkdate((int) $month, (int) $day, (int) $year) ? $date : null;
     }
 }

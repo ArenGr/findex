@@ -65,28 +65,15 @@
                     </span>
 
                     {{--
-                        text-3xl/lg:text-4xl, not text-4xl/lg:text-5xl - at
-                        the larger size the Armenian and Russian headings
-                        (longer than their English equivalents for the same
-                        copy) wrapped to 3-4 lines and pushed the CTA
-                        buttons toward/past the bottom of the hero on
-                        desktop. One size down fits every locale
-                        comfortably without a per-language override.
-
-                        break-words matters more than it looks like it
-                        should: the lang/*/hero.php strings used to force a
-                        line break with a hardcoded <br> (removed - it
-                        doesn't adapt to viewport width or how long the
-                        translated text actually is). Without it, plain
-                        word-wrapping alone still wasn't enough on its own -
-                        Armenian's "Ավտոապահովագրության" (~20 characters,
-                        one word) is wider than the whole narrow-viewport
-                        column by itself, and a browser won't break inside a
-                        word unless told to, so it overflowed the card and
-                        the page instead of wrapping. break-words lets a
-                        single too-long word wrap mid-word as a last resort,
-                        which no per-string manual line-break edit can
-                        cover for every language.
+                        text-3xl/lg:text-4xl (not larger) so Armenian/Russian
+                        headings, longer than their English equivalents,
+                        don't wrap to 3-4 lines and push the CTAs off-screen.
+                        break-words handles single long words (e.g.
+                        Armenian's ~20-char "Ավտոապահովագրության") that are
+                        wider than the column even with normal wrapping -
+                        the lang/*/hero.php strings used to force a break
+                        with a hardcoded <br>, which doesn't adapt per
+                        language/viewport, so it's gone in favor of this.
                     --}}
                     <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink lg:text-4xl">
                         {!! __("hero.slides.$n.heading") !!}

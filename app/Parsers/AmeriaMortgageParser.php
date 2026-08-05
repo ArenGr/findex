@@ -47,7 +47,7 @@ class AmeriaMortgageParser implements MortgageParser
         $offers = [];
 
         foreach (self::CURRENCY_ORDER as $index => $currency) {
-            if (!isset($rates[$index])) {
+            if (! isset($rates[$index])) {
                 continue;
             }
 
@@ -85,7 +85,7 @@ class AmeriaMortgageParser implements MortgageParser
         $amounts = [];
 
         foreach (self::CURRENCY_ORDER as $currency) {
-            if (preg_match('/' . $currency . '\s*([\d,]+)\s*-\s*' . $currency . '\s*([\d,]+)/', $text, $m)) {
+            if (preg_match('/'.$currency.'\s*([\d,]+)\s*-\s*'.$currency.'\s*([\d,]+)/', $text, $m)) {
                 $amounts[$currency] = [
                     (float) str_replace(',', '', $m[1]),
                     (float) str_replace(',', '', $m[2]),
@@ -98,7 +98,7 @@ class AmeriaMortgageParser implements MortgageParser
 
     private function extractShortTermMonths(string $text): ?int
     {
-        if (!preg_match('/3\.3\.\s*Term \(months\)\s*\n+3\.3\.1\.\s*(\d+)/', $text, $m)) {
+        if (! preg_match('/3\.3\.\s*Term \(months\)\s*\n+3\.3\.1\.\s*(\d+)/', $text, $m)) {
             return null;
         }
 
@@ -123,7 +123,7 @@ class AmeriaMortgageParser implements MortgageParser
 
     private function extractMinDownPayment(string $text): ?float
     {
-        if (!preg_match('/[Aa]t least (\d+(?:\.\d+)?)% of the purchase price/', $text, $m)) {
+        if (! preg_match('/[Aa]t least (\d+(?:\.\d+)?)% of the purchase price/', $text, $m)) {
             return null;
         }
 

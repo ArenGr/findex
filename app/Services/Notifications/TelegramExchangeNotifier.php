@@ -8,15 +8,13 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramExchangeNotifier implements ExchangeNotifierInterface
 {
-    public function __construct(private readonly TelegramClient $telegram)
-    {
-    }
+    public function __construct(private readonly TelegramClient $telegram) {}
 
     public function notify(ExchangeQuoteResponse $response): bool
     {
         $organization = $response->organization;
 
-        if (!$organization->telegram_chat_id) {
+        if (! $organization->telegram_chat_id) {
             return false;
         }
 
@@ -25,7 +23,7 @@ class TelegramExchangeNotifier implements ExchangeNotifierInterface
             $this->buildMessage($response),
             inlineKeyboard: [[
                 ['text' => __('exchange_quotes.telegram.view_and_respond_button', [], 'hy'), 'url' => $response->secureRespondUrl()],
-                ['text' => __('exchange_quotes.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'exchange_decline:' . $response->id],
+                ['text' => __('exchange_quotes.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'exchange_decline:'.$response->id],
             ]]
         );
 
@@ -48,7 +46,7 @@ class TelegramExchangeNotifier implements ExchangeNotifierInterface
     {
         $organization = $response->organization;
 
-        if (!$organization->telegram_chat_id) {
+        if (! $organization->telegram_chat_id) {
             return false;
         }
 
@@ -57,7 +55,7 @@ class TelegramExchangeNotifier implements ExchangeNotifierInterface
             __('exchange_quotes.telegram.reminder_message', [], 'hy'),
             inlineKeyboard: [[
                 ['text' => __('exchange_quotes.telegram.view_and_respond_button', [], 'hy'), 'url' => $response->secureRespondUrl()],
-                ['text' => __('exchange_quotes.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'exchange_decline:' . $response->id],
+                ['text' => __('exchange_quotes.telegram.not_interested_button', [], 'hy'), 'callback_data' => 'exchange_decline:'.$response->id],
             ]]
         );
 
@@ -87,7 +85,7 @@ class TelegramExchangeNotifier implements ExchangeNotifierInterface
         return __('exchange_quotes.telegram.request_message', [
             'amount' => number_format((float) $request->amount, 2),
             'currency' => $currency->code,
-            'direction' => __('exchange_quotes.telegram.direction_' . $request->rate_field, [], 'hy'),
+            'direction' => __('exchange_quotes.telegram.direction_'.$request->rate_field, [], 'hy'),
             'rate' => number_format((float) $response->posted_rate, 2),
         ], 'hy');
     }

@@ -35,7 +35,7 @@ class ArticleSeeder extends Seeder
         // The admin who "reviewed" the approved/rejected demo articles -
         // reuses AdminSeeder's account rather than minting a new one.
         $admin = User::firstOrNew(['email' => 'admin@findex.test']);
-        if (!$admin->exists) {
+        if (! $admin->exists) {
             $admin->forceFill([
                 'name' => 'Admin',
                 'password' => Hash::make('password'),
@@ -59,7 +59,7 @@ class ArticleSeeder extends Seeder
             [
                 'slug' => 'five-ways-to-get-a-better-currency-exchange-rate',
                 'title' => '5 Ways to Get a Better Currency Exchange Rate',
-                'excerpt' => "Small habits that add up: timing, bank choice, and the one common mistake that quietly costs you money on every exchange.",
+                'excerpt' => 'Small habits that add up: timing, bank choice, and the one common mistake that quietly costs you money on every exchange.',
                 'body' => "Exchange rates move throughout the day and vary more between banks than most people realize. A little attention to timing and where you exchange can meaningfully change how much you walk away with.\n\nFirst, always compare buy and sell rates across at least three banks before a large exchange - the spread between the best and worst rate in the market is often wider than people expect, especially for less common currencies.\n\nSecond, avoid airport and hotel exchange counters entirely if you can. Their rates are built around convenience, not competitiveness, and the difference compared to a bank branch can be substantial.\n\nThird, larger amounts sometimes qualify for a better rate - it can be worth asking a branch directly if you're exchanging a significant sum, since posted rates aren't always the final word.\n\nFourth, avoid exchanging on weekends or holidays when spreads tend to widen due to lower liquidity in the market.\n\nFinally, track rates for a few days before a planned exchange rather than reacting to a single day's number - currency rates are noisy day to day, and a short delay can meaningfully improve your outcome.",
             ],
             [

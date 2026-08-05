@@ -32,7 +32,7 @@ class TourismController extends Controller
         // A connect link is only useful before the partner has linked their
         // chat - generate one lazily so the dashboard always has a live link
         // to show, without a separate "generate" step for the common case.
-        if (!$organization->telegram_chat_id && !$organization->telegram_connect_token) {
+        if (! $organization->telegram_chat_id && ! $organization->telegram_connect_token) {
             $organization->update(['telegram_connect_token' => Str::random(32)]);
         }
 

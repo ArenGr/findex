@@ -7,6 +7,7 @@ return [
     'create_alert' => 'Get notified when this rate changes',
     'alert_column' => 'Alert',
     'alert_short' => 'Alert me',
+    'alert_cta' => 'Set a rate alert',
     'view_all' => 'View all rates',
 
     'all_heading' => 'All Exchange Rates',
@@ -20,7 +21,7 @@ return [
     'spread_hint' => 'The gap between buy and sell - a tighter spread means a better deal.',
     'updated_column' => 'Updated',
     'updated_relative' => 'Updated :time',
-    'no_rates_match' => "No rates match these filters. Try a different currency, type, or bank.",
+    'no_rates_match' => 'No rates match these filters. Try a different currency, type, or bank.',
     'reset_filters' => 'Reset filters',
     'results_count' => '{0} No rates|{1} 1 rate|[2,*] :count rates',
 ];

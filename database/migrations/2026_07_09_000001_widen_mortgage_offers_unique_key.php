@@ -26,7 +26,7 @@ return new class extends Migration
             Schema::table('mortgage_offers', function (Blueprint $table) {
                 $table->dropUnique(['organization_id', 'currency', 'rate_type']);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Already missing on at least one real environment despite its
             // creating migration being marked as run - nothing to drop.
         }
