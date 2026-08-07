@@ -2,17 +2,15 @@
 
 return [
     'home' => 'Home',
-    'rates' => 'Rates',
-    'reviews' => 'Reviews',
-    'compare' => 'Compare Banks',
     'about' => 'About Us',
     'get_updates' => 'Get Updates',
 
-    'finance' => [
-        'label' => 'Finance',
+    'banking' => [
+        'label' => 'Banking',
         'items' => [
-            'banks' => 'Banks',
-            'offers' => 'Offers',
+            'loans' => 'Loans',
+            'mortgage' => 'Mortgage',
+            'cards' => 'Cards',
         ],
     ],
 

@@ -7,10 +7,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Covers the dedicated /banks and /travel-agencies SEO landing pages (see
- * OrganizationController::categoryPage()) - each is scoped to a single
- * organization type, unlike the generic /organizations directory's ?type=
- * filter.
+ * Covers the dedicated /banks/all, /travel-agencies, and /insurance/companies
+ * SEO landing pages (see OrganizationController::categoryPage()) - each is
+ * scoped to a single organization type, unlike the generic /organizations
+ * directory's ?type= filter.
  */
 class OrganizationCategoryPagesTest extends TestCase
 {
@@ -22,7 +22,7 @@ class OrganizationCategoryPagesTest extends TestCase
         Organization::create(['name' => 'Inactive Bank', 'slug' => 'inactive-bank', 'type' => 'bank', 'country_code' => 'AM', 'is_active' => false]);
         Organization::create(['name' => 'Some Agency', 'slug' => 'some-agency', 'type' => 'tourism', 'country_code' => 'AM', 'is_active' => true]);
 
-        $response = $this->get('/en/banks');
+        $response = $this->get('/en/banks/all');
 
         $response->assertOk();
         $response->assertSee('Real Bank');
@@ -44,7 +44,7 @@ class OrganizationCategoryPagesTest extends TestCase
 
     public function test_banks_page_has_its_own_meta_title_distinct_from_the_generic_directory(): void
     {
-        $response = $this->get('/en/banks');
+        $response = $this->get('/en/banks/all');
 
         $response->assertOk();
         $response->assertSee(__('meta.banks_title'));
@@ -56,5 +56,27 @@ class OrganizationCategoryPagesTest extends TestCase
 
         $response->assertOk();
         $response->assertSee(__('meta.travel_agencies_title'));
+    }
+
+    public function test_insurance_companies_page_lists_only_active_insurance_organizations(): void
+    {
+        Organization::create(['name' => 'Real Insurer', 'slug' => 'real-insurer', 'type' => 'insurance', 'country_code' => 'AM', 'is_active' => true]);
+        Organization::create(['name' => 'Inactive Insurer', 'slug' => 'inactive-insurer', 'type' => 'insurance', 'country_code' => 'AM', 'is_active' => false]);
+        Organization::create(['name' => 'Real Bank', 'slug' => 'real-bank', 'type' => 'bank', 'country_code' => 'AM', 'is_active' => true]);
+
+        $response = $this->get('/en/insurance/companies');
+
+        $response->assertOk();
+        $response->assertSee('Real Insurer');
+        $response->assertDontSee('Inactive Insurer');
+        $response->assertDontSee('Real Bank');
+    }
+
+    public function test_insurance_companies_page_has_its_own_meta_title(): void
+    {
+        $response = $this->get('/en/insurance/companies');
+
+        $response->assertOk();
+        $response->assertSee(__('meta.insurance_companies_title'));
     }
 }
