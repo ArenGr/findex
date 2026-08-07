@@ -7,9 +7,8 @@ return [
 
     'banking' => [
         'label' => 'Բանկեր',
-        'items' => [
+        'groups' => [
             'loans' => 'Վարկեր',
-            'mortgage' => 'Հիփոթեք',
             'cards' => 'Քարտեր',
         ],
     ],

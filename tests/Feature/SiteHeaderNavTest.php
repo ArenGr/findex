@@ -14,14 +14,29 @@ class SiteHeaderNavTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_banking_dropdown_links_to_loans_mortgage_and_cards(): void
+    /**
+     * Banking groups its products into Loans and Cards submenus. The leaf
+     * links are derived from OfferController::CATEGORIES rather than
+     * hardcoded in the view, so this also pins that wiring.
+     */
+    public function test_the_banking_menu_links_to_every_grouped_bank_product(): void
     {
         $response = $this->get('/en');
 
         $response->assertOk();
-        $response->assertSee(route('banks.show', ['locale' => 'en', 'category' => 'personal-loans']), false);
-        $response->assertSee(route('banks.show', ['locale' => 'en', 'category' => 'mortgages']), false);
-        $response->assertSee(route('banks.show', ['locale' => 'en', 'category' => 'credit-cards']), false);
+
+        foreach (['mortgages', 'personal-loans', 'business-loans', 'student-loans', 'credit-cards', 'banking', 'investing'] as $category) {
+            $response->assertSee(route('banks.show', ['locale' => 'en', 'category' => $category]), false);
+        }
+    }
+
+    public function test_the_banking_menu_shows_the_group_labels(): void
+    {
+        $response = $this->get('/en');
+
+        $response->assertOk();
+        $response->assertSee(__('nav.banking.groups.loans'));
+        $response->assertSee(__('nav.banking.groups.cards'));
     }
 
     public function test_insurance_is_a_plain_link_straight_to_the_auto_insurance_quote_form(): void

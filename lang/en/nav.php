@@ -7,9 +7,8 @@ return [
 
     'banking' => [
         'label' => 'Banking',
-        'items' => [
+        'groups' => [
             'loans' => 'Loans',
-            'mortgage' => 'Mortgage',
             'cards' => 'Cards',
         ],
     ],

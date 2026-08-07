@@ -10,21 +10,38 @@
         fn ($prefix) => str_starts_with($currentRoute, $prefix)
     );
 
-    // Deliberately narrow - three real, high-intent destinations rather
-    // than an exhaustive list of every page that exists (Rates, Compare,
-    // the bank directory, the other 4 coming-soon product categories are
-    // all still reachable, just not from here - see banks.index for the
-    // full picture). Insurance/Travel/About are plain links (below), not
-    // dropdowns - each has exactly one real destination today, and a
-    // dropdown with one item is a click with nothing behind it.
+    // Label/URL/availability for one bank product, read straight from
+    // OfferController::CATEGORIES - the same source /banks renders from, so
+    // adding a category there surfaces it here too. Only the grouping below
+    // is nav-specific. 'soon' drives the same badge the hub page shows, so
+    // the menu doesn't promise a page that's still empty.
+    $product = fn (string $slug) => [
+        'label' => __('offers.categories.'.$slug.'.title'),
+        'href' => route('banks.show', $slug),
+        'soon' => ! (\App\Http\Controllers\OfferController::CATEGORIES[$slug] ?? false),
+    ];
+
+    // Insurance/Travel/About are plain links (below), not dropdowns - each
+    // has exactly one real destination today, and a dropdown with a single
+    // item is a click with nothing behind it. Rates, Compare Banks and the
+    // bank directory stay reachable by URL, just not from this menu.
     $dropdowns = [
         'banking' => [
             'label' => __('nav.banking.label'),
             'active' => $isActive(['banks.']),
             'items' => [
-                ['label' => __('nav.banking.items.loans'), 'href' => route('banks.show', 'personal-loans')],
-                ['label' => __('nav.banking.items.mortgage'), 'href' => route('banks.show', 'mortgages')],
-                ['label' => __('nav.banking.items.cards'), 'href' => route('banks.show', 'credit-cards')],
+                [
+                    'label' => __('nav.banking.groups.loans'),
+                    'children' => array_map($product, ['mortgages', 'personal-loans', 'business-loans', 'student-loans']),
+                ],
+                [
+                    'label' => __('nav.banking.groups.cards'),
+                    'children' => array_map($product, ['credit-cards']),
+                ],
+                // Neither a loan nor a card - kept at the top level rather
+                // than forced into a group of one.
+                $product('banking'),
+                $product('investing'),
             ],
         ],
     ];
@@ -84,9 +101,61 @@
                         class="absolute left-0 top-full z-20 mt-3 w-56 rounded-2xl border border-placeholder bg-white p-2 shadow-lg ring-1 ring-placeholder/60"
                     >
                         @foreach ($dropdown['items'] as $item)
-                            <a href="{{ $item['href'] }}" class="block rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary">
-                                {{ $item['label'] }}
-                            </a>
+                            @if (!empty($item['children']))
+                                {{--
+                                    @click sets (not toggles) subOpen - with
+                                    @mouseenter also opening it, a toggle
+                                    would immediately re-close the flyout on
+                                    a real mouse click, since moving the
+                                    pointer onto the button fires mouseenter
+                                    (opening it) right before the click's own
+                                    toggle fires (closing it again). Closing
+                                    is left to mouseleave/outside/escape.
+                                --}}
+                                <div
+                                    x-data="{ subOpen: false }"
+                                    class="relative"
+                                    @mouseleave="subOpen = false"
+                                    @click.outside="subOpen = false"
+                                    @keydown.escape="subOpen = false"
+                                >
+                                    <button
+                                        type="button"
+                                        @click="subOpen = true"
+                                        @mouseenter="subOpen = true"
+                                        class="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary"
+                                        :aria-expanded="subOpen"
+                                    >
+                                        {{ $item['label'] }}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 12" class="h-3 w-2 shrink-0 fill-none stroke-current">
+                                            <path d="M1.5 1 6.5 6 1.5 11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+
+                                    <div
+                                        x-show="subOpen"
+                                        x-transition
+                                        x-cloak
+                                        class="absolute left-full top-0 z-30 ml-1 w-60 rounded-2xl border border-placeholder bg-white p-2 shadow-lg ring-1 ring-placeholder/60"
+                                    >
+                                        @foreach ($item['children'] as $child)
+                                            <a href="{{ $child['href'] }}" class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary">
+                                                {{ $child['label'] }}
+                                                @if (!empty($child['soon']))
+                                                    <x-nav-soon-badge />
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                <a href="{{ $item['href'] }}" class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary">
+                                    {{ $item['label'] }}
+                                    @if (!empty($item['soon']))
+                                        <x-nav-soon-badge />
+                                    @endif
+                                </a>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -277,9 +346,38 @@
                     </button>
                     <div x-show="open" x-cloak class="ml-4 flex flex-col gap-1 border-l border-placeholder pl-4">
                         @foreach ($dropdown['items'] as $item)
-                            <a href="{{ $item['href'] }}" class="rounded-lg px-3 py-2.5 whitespace-nowrap text-body-text hover:bg-primary/5 hover:text-primary">
-                                {{ $item['label'] }}
-                            </a>
+                            @if (!empty($item['children']))
+                                <div x-data="{ subOpen: false }">
+                                    <button
+                                        type="button"
+                                        @click="subOpen = !subOpen"
+                                        class="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left whitespace-nowrap text-body-text hover:bg-primary/5 hover:text-primary"
+                                        :aria-expanded="subOpen"
+                                    >
+                                        {{ $item['label'] }}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 shrink-0 fill-none stroke-current" :class="{ 'rotate-180': subOpen }">
+                                            <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+                                    <div x-show="subOpen" x-cloak class="ml-4 flex flex-col gap-1 border-l border-placeholder pl-4">
+                                        @foreach ($item['children'] as $child)
+                                            <a href="{{ $child['href'] }}" class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 whitespace-nowrap text-body-text hover:bg-primary/5 hover:text-primary">
+                                                {{ $child['label'] }}
+                                                @if (!empty($child['soon']))
+                                                    <x-nav-soon-badge />
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                <a href="{{ $item['href'] }}" class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 whitespace-nowrap text-body-text hover:bg-primary/5 hover:text-primary">
+                                    {{ $item['label'] }}
+                                    @if (!empty($item['soon']))
+                                        <x-nav-soon-badge />
+                                    @endif
+                                </a>
+                            @endif
                         @endforeach
                     </div>
                 </div>
