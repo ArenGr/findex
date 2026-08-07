@@ -8,11 +8,11 @@
             'dot' => 'bg-slide-green',
             'blob' => 'bg-slide-green/20',
             'photo' => 'slide-1.jpg',
-            // route('offers') on its own would land on the "credit-cards" tab
-            // (its default), which has no content built yet - deep-linking
-            // to "mortgages" sends visitors straight to the one tab on that
-            // page with a real, working comparison table behind it.
-            'href' => route('offers', ['tab' => 'mortgages']),
+            // route('banks.index') would land on the category hub rather
+            // than a real comparison - deep-linking straight to "mortgages"
+            // sends visitors to the one category with a real, working
+            // comparison table behind it.
+            'href' => route('banks.show', 'mortgages'),
         ],
         [
             'badge' => 'bg-slide-blue text-ink',

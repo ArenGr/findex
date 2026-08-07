@@ -81,7 +81,7 @@
             method="POST"
             action="{{ route('alerts.store') }}"
             class="mt-6 grid grid-cols-1 gap-5 rounded-2xl border border-placeholder bg-white p-6 shadow-sm sm:grid-cols-2 sm:p-8"
-            x-data="{ channel: '{{ old('channel', 'email') }}' }"
+            x-data="{ channel: @js(old('channel', 'email')) }"
         >
             @csrf
 

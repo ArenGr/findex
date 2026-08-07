@@ -38,15 +38,29 @@ class ExchangePartnerReplyHandler
             return false;
         }
 
+        // Scoped to the organization whose chat this callback came from -
+        // callback_data is client-supplied, so without this any connected
+        // partner could decline a competitor's response by guessing the
+        // (sequential) id and knock them out of the customer's results.
+        // A callback with no identifiable chat declines nothing.
+        $chatId = $callbackQuery['message']['chat']['id'] ?? null;
         $responseId = (int) substr($data, strlen('exchange_decline:'));
-        $response = ExchangeQuoteResponse::query()
-            ->where('id', $responseId)
-            ->where('status', ExchangeQuoteResponse::STATUS_PENDING)
-            ->first();
+
+        $response = $chatId
+            ? ExchangeQuoteResponse::query()
+                ->where('id', $responseId)
+                ->where('status', ExchangeQuoteResponse::STATUS_PENDING)
+                ->whereHas('organization', fn ($query) => $query->where('telegram_chat_id', (string) $chatId))
+                ->first()
+            : null;
 
         if ($response) {
             $response->update(['status' => ExchangeQuoteResponse::STATUS_DECLINED]);
         }
+
+        // Answered either way (and the update is still "handled"): Telegram
+        // spins the button until it gets an answer, and a decline we
+        // rejected shouldn't fall through to the general rates assistant.
 
         $this->telegram->answerCallbackQuery($callbackId, __('exchange_quotes.telegram.declined_confirmation', [], 'hy'));
 

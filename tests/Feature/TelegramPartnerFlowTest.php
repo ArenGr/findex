@@ -28,6 +28,9 @@ class TelegramPartnerFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** The chat the decline button's message was delivered to. */
+    private const PARTNER_CHAT_ID = '555000';
+
     private function organization(array $overrides = []): Organization
     {
         return Organization::create(array_merge([
@@ -113,7 +116,7 @@ class TelegramPartnerFlowTest extends TestCase
 
         return QuoteResponse::create([
             'quote_request_id' => $quoteRequest->id,
-            'organization_id' => $this->organization()->id,
+            'organization_id' => $this->organization(['telegram_chat_id' => self::PARTNER_CHAT_ID])->id,
             'response_token' => Str::random(40),
             'status' => QuoteResponse::STATUS_PENDING,
         ]);
@@ -128,7 +131,11 @@ class TelegramPartnerFlowTest extends TestCase
         });
 
         $handled = app(PartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-1', 'data' => 'decline:'.$response->id],
+            'callback_query' => [
+                'id' => 'cbq-1',
+                'data' => 'decline:'.$response->id,
+                'message' => ['chat' => ['id' => self::PARTNER_CHAT_ID]],
+            ],
         ]);
 
         $this->assertTrue($handled);
@@ -145,10 +152,37 @@ class TelegramPartnerFlowTest extends TestCase
         });
 
         app(PartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-2', 'data' => 'decline:'.$response->id],
+            'callback_query' => [
+                'id' => 'cbq-2',
+                'data' => 'decline:'.$response->id,
+                'message' => ['chat' => ['id' => self::PARTNER_CHAT_ID]],
+            ],
         ]);
 
         $this->assertSame(QuoteResponse::STATUS_RESPONDED, $response->fresh()->status);
+    }
+
+    public function test_a_decline_from_another_organizations_chat_is_ignored(): void
+    {
+        // callback_data is client-supplied, so the response id alone can't
+        // authorize the decline - it must come from the chat that actually
+        // received the message, or a partner could knock a competitor out
+        // of the traveler's results by guessing the (sequential) id.
+        $response = $this->pendingResponse();
+
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('answerCallbackQuery')->once()->andReturn(['ok' => true]);
+        });
+
+        app(PartnerReplyHandler::class)->handleUpdate([
+            'callback_query' => [
+                'id' => 'cbq-attacker',
+                'data' => 'decline:'.$response->id,
+                'message' => ['chat' => ['id' => '999999']],
+            ],
+        ]);
+
+        $this->assertSame(QuoteResponse::STATUS_PENDING, $response->fresh()->status);
     }
 
     public function test_callback_query_with_unrecognized_data_is_left_unhandled(): void

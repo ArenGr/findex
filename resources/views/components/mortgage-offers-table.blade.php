@@ -69,7 +69,7 @@
 @if ($availableCurrencies->isNotEmpty())
     <div
         x-data="{
-            currencyTab: '{{ $defaultCurrency }}',
+            currencyTab: @js($defaultCurrency),
             propertyPrice: @js($defaultPropertyPrice),
             downPaymentPercent: 20,
             termMonths: 60,
@@ -119,8 +119,8 @@
             @foreach ($availableCurrencies as $currency)
                 <button
                     type="button"
-                    @click="currencyTab = '{{ $currency }}'"
-                    :class="currencyTab === '{{ $currency }}' ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink'"
+                    @click="currencyTab = @js($currency)"
+                    :class="currencyTab === @js($currency) ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink'"
                     class="rounded-full px-3 py-1.5 text-xs font-medium transition"
                 >
                     {{ $currency }}
@@ -166,7 +166,7 @@
         </p>
 
         @foreach ($availableCurrencies as $currency)
-            <div x-show="currencyTab === '{{ $currency }}'" @if ($currency !== $defaultCurrency) x-cloak @endif>
+            <div x-show="currencyTab === @js($currency)" @if ($currency !== $defaultCurrency) x-cloak @endif>
                 <template x-if="ranked.length === 0">
                     <p class="px-6 py-16 text-center text-sm text-muted">{{ __('offers.mortgage_table.no_eligible') }}</p>
                 </template>

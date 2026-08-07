@@ -1,20 +1,48 @@
 <?php
 
 return [
-    'heading' => 'Best Bank Card Offers — :date',
+    'heading' => 'Compare Bank Offers',
+    'intro' => "Cards, loans, mortgages and more - see what's available to compare today, all in one place.",
+    'back_to_all' => 'Back to all banks',
+    'compare_link' => 'Compare offers',
+    'soon_link' => 'Learn more',
+    'explore_mortgages' => 'Explore Mortgage Offers',
+    'all_banks_title' => 'All Banks',
+    'all_banks_body' => 'Browse every bank Findex tracks - ratings, reviews and contact details, side by side.',
+    'all_banks_link' => 'View all banks',
     'coming_soon' => 'This section will be available soon.',
     'soon_badge' => 'Soon',
     'per_month' => 'mo',
 
-    'tabs' => [
-        'credit_cards' => 'Credit Cards',
-        'insurance' => 'Insurance',
-        'mortgages' => 'Mortgages',
-        'personal_loans' => 'Personal Loans',
-        'business_loans' => 'Business Loans',
-        'banking' => 'Banking',
-        'investing' => 'Investing',
-        'student_loans' => 'Student Loans',
+    'categories' => [
+        'mortgages' => [
+            'title' => 'Mortgages',
+            'body' => "Compare real mortgage rates, monthly payments and total costs across Armenia's banks.",
+        ],
+        'personal-loans' => [
+            'title' => 'Personal Loans',
+            'body' => 'Estimate how much you could borrow and what a personal loan might cost you each month.',
+        ],
+        'banking' => [
+            'title' => 'Savings & Deposits',
+            'body' => 'Project how a bank deposit could grow over time and compare it against your savings goals.',
+        ],
+        'credit-cards' => [
+            'title' => 'Credit Cards',
+            'body' => "Compare cashback, annual fees and perks across Armenia's credit cards.",
+        ],
+        'business-loans' => [
+            'title' => 'Business Loans',
+            'body' => 'Financing options for growing a business in Armenia.',
+        ],
+        'investing' => [
+            'title' => 'Investing',
+            'body' => "Compare investment and brokerage products from Armenia's banks.",
+        ],
+        'student-loans' => [
+            'title' => 'Student Loans',
+            'body' => 'Financing options for education costs in Armenia.',
+        ],
     ],
 
     'columns' => [

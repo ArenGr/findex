@@ -10,20 +10,21 @@
         fn ($prefix) => str_starts_with($currentRoute, $prefix)
     );
 
-    // Only real, shipped destinations - a "Loans"/"Flights"/"eSIM" link with
-    // nowhere to go isn't a menu, it's a promise. Insurance and Travel each
-    // only have one real page today, so they're plain links (below) rather
-    // than a dropdown with a single item in it.
+    // Deliberately narrow - three real, high-intent destinations rather
+    // than an exhaustive list of every page that exists (Rates, Compare,
+    // the bank directory, the other 4 coming-soon product categories are
+    // all still reachable, just not from here - see banks.index for the
+    // full picture). Insurance/Travel/About are plain links (below), not
+    // dropdowns - each has exactly one real destination today, and a
+    // dropdown with one item is a click with nothing behind it.
     $dropdowns = [
-        'finance' => [
-            'label' => __('nav.finance.label'),
-            'active' => $isActive(['rates.', 'exchange.', 'organizations.compare', 'banks', 'offers']),
+        'banking' => [
+            'label' => __('nav.banking.label'),
+            'active' => $isActive(['banks.']),
             'items' => [
-                ['label' => __('nav.rates'), 'href' => route('rates.index')],
-                ['label' => __('nav.compare'), 'href' => route('organizations.compare')],
-                ['label' => __('nav.finance.items.banks'), 'href' => route('banks')],
-                ['label' => __('nav.finance.items.offers'), 'href' => route('offers')],
-                ['label' => __('exchange_quotes.nav_label'), 'href' => route('exchange.request')],
+                ['label' => __('nav.banking.items.loans'), 'href' => route('banks.show', 'personal-loans')],
+                ['label' => __('nav.banking.items.mortgage'), 'href' => route('banks.show', 'mortgages')],
+                ['label' => __('nav.banking.items.cards'), 'href' => route('banks.show', 'credit-cards')],
             ],
         ],
     ];
@@ -58,9 +59,9 @@
             Findex
         </a>
 
-        {{-- "Home" is deliberately omitted here - the logo already links there,
-             and every label saved keeps this row from wrapping in Armenian/Russian.
-             Rates lives inside the Finance dropdown rather than as its own item. --}}
+        {{-- "Home" is deliberately omitted here - the logo already links
+             there, and every label saved keeps this row from wrapping in
+             Armenian/Russian. --}}
         <nav class="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink lg:flex">
             @foreach ($dropdowns as $key => $dropdown)
                 <div x-data="{ open: false }" class="relative" @click.outside="open = false">
@@ -80,7 +81,7 @@
                         x-show="open"
                         x-transition
                         x-cloak
-                        class="absolute left-0 top-full z-20 mt-3 w-72 rounded-2xl border border-placeholder bg-white p-2 shadow-lg ring-1 ring-placeholder/60"
+                        class="absolute left-0 top-full z-20 mt-3 w-56 rounded-2xl border border-placeholder bg-white p-2 shadow-lg ring-1 ring-placeholder/60"
                     >
                         @foreach ($dropdown['items'] as $item)
                             <a href="{{ $item['href'] }}" class="block rounded-lg px-3 py-2.5 text-sm whitespace-nowrap text-body-text transition hover:bg-primary/5 hover:text-primary">

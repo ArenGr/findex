@@ -3,6 +3,13 @@
 return [
     'nav_label' => 'Auto Insurance',
 
+    'companies' => [
+        'heading' => 'Insurance Companies in Armenia',
+        'subtitle' => 'Every insurance company Findex tracks, in one place. Read reviews from real customers before you request a quote.',
+        'stat_count' => 'Companies listed',
+        'cta_quote' => 'Get an Auto Insurance Quote',
+    ],
+
     'request' => [
         'heading' => 'Compare Auto Insurance Quotes',
         'subheading' => "Enter your vehicle's plate number once, and we'll fetch live quotes from our partner insurers - compare them side by side in seconds.",

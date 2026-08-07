@@ -99,7 +99,7 @@
             method="POST"
             action="{{ route('reviews.store', $organization) }}"
             class="mt-6 max-w-2xl border border-placeholder p-6"
-            x-data="{ rating: {{ old('rating', $myReview->rating ?? 0) }} }"
+            x-data="{ rating: @js((int) old('rating', $myReview->rating ?? 0)) }"
         >
             @csrf
 

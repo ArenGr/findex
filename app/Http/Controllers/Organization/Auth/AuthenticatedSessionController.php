@@ -24,7 +24,11 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::guard('organization')->attempt([...$credentials, 'role' => UserRole::ORGANIZATION], $request->boolean('remember'))) {
+        // banned_at is part of the credentials (not a post-login check) so a
+        // banned org can't authenticate at all - same shape as the customer
+        // guard's login. EnsureUserIsNotBanned then cuts off any session
+        // that was already open when the ban landed.
+        if (! Auth::guard('organization')->attempt([...$credentials, 'banned_at' => null, 'role' => UserRole::ORGANIZATION], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

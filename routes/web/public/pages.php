@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EmailPreviewController;
+use App\Http\Controllers\OfferController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,9 +15,14 @@ if (! app()->isProduction()) {
     Route::get('/email-preview', [EmailPreviewController::class, 'index'])->name('email-preview.index');
     Route::get('/email-preview/{template}', [EmailPreviewController::class, 'show'])->name('email-preview.show');
 }
-Route::get('/offers', function () {
-    return view('offers');
-})->name('offers');
+Route::get('/banks', [OfferController::class, 'index'])->name('banks.index');
+// Regex-whitelisted to OfferController's known category slugs so an
+// unrelated sibling route (/banks/all, the bank directory - see
+// organizations.php) is never swallowed by this wildcard regardless of
+// which file happens to register first.
+Route::get('/banks/{category}', [OfferController::class, 'show'])
+    ->name('banks.show')
+    ->where('category', implode('|', array_map('preg_quote', array_keys(OfferController::CATEGORIES))));
 Route::get('/about', function () {
     return view('about');
 })->name('about');

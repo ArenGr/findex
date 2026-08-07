@@ -18,9 +18,15 @@ Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
 
 // Dedicated SEO landing pages for a single organization type - see
 // OrganizationController::categoryPage() for why these exist separately
-// from index()'s ?type= filter on the generic directory.
-Route::get('/banks', [OrganizationController::class, 'banks'])->name('banks');
+// from index()'s ?type= filter on the generic directory. /banks/all (not
+// bare /banks) since that URL now belongs to the bank-products hub - see
+// pages.php's banks.index/banks.show.
+Route::get('/banks/all', [OrganizationController::class, 'banks'])->name('banks.all');
 Route::get('/travel-agencies', [OrganizationController::class, 'travelAgencies'])->name('travel-agencies');
+// /insurance/companies, not /insurance/all - "companies" is the label
+// actually used in the Insurance nav menu (see site-header.blade.php),
+// and reads more naturally than "all" does for insurance specifically.
+Route::get('/insurance/companies', [OrganizationController::class, 'insuranceCompanies'])->name('insurance.companies');
 
 // Open to guests (see ReviewController::store) - 'banned' still
 // blocks a signed-in banned user, it's simply a no-op for guests.

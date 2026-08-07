@@ -11,6 +11,13 @@
 return [
     'login_per_minute' => (int) env('RATE_LIMIT_LOGIN_PER_MINUTE', 5),
     'verify_per_minute' => (int) env('RATE_LIMIT_VERIFY_PER_MINUTE', 6),
+
+    // Shared across all three account types (customer/organization/writer).
+    // Each registration writes a user row and sends a verification email,
+    // so an unlimited endpoint is both a mail-reputation and an
+    // account-enumeration lever (the unique:users,email rule makes a
+    // validation error confirm an address is registered).
+    'register_per_hour' => (int) env('RATE_LIMIT_REGISTER_PER_HOUR', 10),
     'reviews_per_hour' => (int) env('RATE_LIMIT_REVIEWS_PER_HOUR', 5),
     'quote_requests_per_hour' => (int) env('RATE_LIMIT_QUOTE_REQUESTS_PER_HOUR', 5),
     'quote_link_resend_per_hour' => (int) env('RATE_LIMIT_QUOTE_LINK_RESEND_PER_HOUR', 5),

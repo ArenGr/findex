@@ -81,6 +81,22 @@ class OrganizationController extends Controller
         );
     }
 
+    public function insuranceCompanies(Request $request): View
+    {
+        return $this->categoryPage(
+            request: $request,
+            type: 'insurance',
+            heading: __('auto_insurance.companies.heading'),
+            subtitle: __('auto_insurance.companies.subtitle'),
+            metaTitle: __('meta.insurance_companies_title'),
+            metaDescription: __('meta.insurance_companies_description'),
+            statLabel: __('auto_insurance.companies.stat_count'),
+            ctaLabel: __('auto_insurance.companies.cta_quote'),
+            ctaRoute: route('insurance.auto.request'),
+            showCompare: false,
+        );
+    }
+
     private function categoryPage(
         Request $request,
         string $type,

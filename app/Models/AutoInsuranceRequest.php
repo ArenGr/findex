@@ -50,17 +50,25 @@ class AutoInsuranceRequest extends Model
     }
 
     /**
+     * How long a results link stays valid. Unlike a tourism/exchange quote
+     * request there's no natural expiry here (quotes are generated once,
+     * synchronously, and don't change afterward) - but the URL is a bearer
+     * credential for the plate number and every insurer's premium, and it
+     * lives on in mailbox history, so it still gets a bounded window rather
+     * than being valid forever.
+     */
+    private const RESULTS_LINK_DAYS = 30;
+
+    /**
      * A guest has no account to log back into, so this signed link is their
-     * only way back to the results page - unlike a tourism quote request,
-     * there's no natural expiry (quotes are generated once, synchronously,
-     * and don't change afterward), so this is signed without a time limit.
+     * only way back to the results page.
      */
     public function signedResultsUrl(): string
     {
         return URL::signedRoute('insurance.auto.show', [
             'locale' => $this->locale,
             'autoInsuranceRequest' => $this->id,
-        ]);
+        ], ($this->created_at ?? now())->copy()->addDays(self::RESULTS_LINK_DAYS));
     }
 
     public function user(): BelongsTo

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureOrganizationType;
 use App\Http\Middleware\EnsureUserIsNotBanned;
 use App\Http\Middleware\EnsureUserRole;
@@ -70,6 +71,12 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // Applied to every web response (see AddSecurityHeaders for why
+        // there's no CSP yet).
+        $middleware->web(append: [
+            AddSecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'setlocale' => SetLocale::class,
             'banned' => EnsureUserIsNotBanned::class,
