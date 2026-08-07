@@ -8,7 +8,7 @@ use App\Http\Controllers\Organization\ReviewReplyController;
 use App\Http\Controllers\Organization\TeamController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('org')->name('org.')->middleware('auth:organization')->group(function () {
+Route::prefix('org')->name('org.')->middleware(['auth:organization', 'banned'])->group(function () {
     // The role:organization middleware is scoped to this dashboard group
     // only - see auth/auth.php's /org logout route for why it's kept off
     // there (a wrong-role session, though it shouldn't happen, should
