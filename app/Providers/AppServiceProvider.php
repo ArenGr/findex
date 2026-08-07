@@ -111,6 +111,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(config('rate-limits.login_per_minute'))
             ->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
 
+        // Keyed on IP alone (unlike 'login', which also keys on the
+        // submitted email): the point here is to cap how many accounts one
+        // source can create, and an attacker picks a fresh email every
+        // time, so including it would defeat the limit entirely.
+        RateLimiter::for('register', fn (Request $request) => Limit::perHour(config('rate-limits.register_per_hour'))->by($request->ip()));
+
         // Logged-in reviews are already capped at one per organization by a
         // DB constraint - this mainly guards against a guest submitting
         // reviews across many organizations from a single IP.
