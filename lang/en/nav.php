@@ -10,6 +10,7 @@ return [
         'groups' => [
             'loans' => 'Loans',
             'cards' => 'Cards',
+            'saving' => 'Saving & Investing',
         ],
     ],
 
