@@ -200,18 +200,84 @@
             $sortArrow = fn (string $column) => $sort === $column ? ($direction === 'asc' ? '▲' : '▼') : '';
         @endphp
 
+        {{--
+            Below sm, a <table> has no room left for a readable bank name
+            once Buy/Sell need their own space too - it was truncating
+            names down to 3-4 characters. A plain row list reads better at
+            that width; the full table (with Spread/Updated/Distance) takes
+            over at sm and up where there's room for it.
+        --}}
+        <div class="mt-4 border border-placeholder sm:hidden">
+            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-placeholder bg-placeholder/20 px-4 py-2 text-xs font-semibold text-subtle uppercase">
+                <span>{{ __('rates.filter_bank') }}</span>
+                <div class="flex items-center gap-3">
+                    @if ($hasLocation)
+                        <a href="{{ $sortLink('distance') }}" class="inline-flex items-center gap-1 hover:text-ink">
+                            {{ __('rates.distance_column') }} {{ $sortArrow('distance') }}
+                        </a>
+                    @endif
+                    <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink">
+                        {{ __('organizations.buy') }} {{ $sortArrow('buy_rate') }}
+                    </a>
+                    <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink">
+                        {{ __('organizations.sell') }} {{ $sortArrow('sell_rate') }}
+                    </a>
+                </div>
+            </div>
+
+            <div class="divide-y divide-placeholder">
+                @forelse ($rates as $rate)
+                    <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4">
+                        @if ($rate->organization_logo)
+                            <img src="{{ $rate->organization_logo }}" alt="" class="h-9 w-9 shrink-0 rounded-full object-contain">
+                        @else
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                {{ Str::of($rate->organization_name)->substr(0, 1)->upper() }}
+                            </span>
+                        @endif
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-medium text-ink">{{ $rate->organization_name }}</p>
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                @if ($rate->organization_reviews_count > 0)
+                                    <span class="flex items-center gap-1">
+                                        <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
+                                        <span class="text-xs text-subtle">({{ $rate->organization_reviews_count }})</span>
+                                    </span>
+                                @endif
+                                @if ($hasLocation && isset($rate->distance_km))
+                                    <span class="text-xs text-subtle">{{ __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="flex shrink-0 gap-3 text-right">
+                            <div>
+                                <p class="text-[10px] font-semibold tracking-wide text-subtle uppercase">{{ __('organizations.buy') }}</p>
+                                <p class="font-heading font-bold text-primary">{{ number_format($rate->buy_rate, 2) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-semibold tracking-wide text-subtle uppercase">{{ __('organizations.sell') }}</p>
+                                <p class="font-heading font-bold text-[#c25b6e]">{{ number_format($rate->sell_rate, 2) }}</p>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <p class="px-6 py-16 text-center text-sm text-muted">{{ __('rates.no_rates_match') }}</p>
+                @endforelse
+            </div>
+        </div>
+
         {{-- Table --}}
-        <div class="mt-4 overflow-x-auto border border-placeholder">
+        <div class="mt-4 hidden overflow-x-auto border border-placeholder sm:block">
             <table class="w-full border-collapse text-sm">
                 <thead>
                     <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-subtle uppercase">
-                        <th class="px-3 py-3 text-left sm:px-6">{{ __('rates.filter_bank') }}</th>
-                        <th class="px-2 py-3 text-right sm:px-4">
+                        <th class="px-6 py-3 text-left">{{ __('rates.filter_bank') }}</th>
+                        <th class="px-4 py-3 text-right">
                             <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink">
                                 {{ __('organizations.buy') }} {{ $sortArrow('buy_rate') }}
                             </a>
                         </th>
-                        <th class="px-2 py-3 text-right sm:px-4">
+                        <th class="px-4 py-3 text-right">
                             <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink">
                                 {{ __('organizations.sell') }} {{ $sortArrow('sell_rate') }}
                             </a>
@@ -221,7 +287,7 @@
                                 {{ __('rates.spread_column') }} {{ $sortArrow('spread') }}
                             </a>
                         </th>
-                        <th class="hidden px-4 py-3 text-left sm:table-cell">{{ __('rates.updated_column') }}</th>
+                        <th class="px-4 py-3 text-left">{{ __('rates.updated_column') }}</th>
                         @if ($hasLocation)
                             <th class="hidden px-4 py-3 text-right lg:table-cell">
                                 <a href="{{ $sortLink('distance') }}" class="inline-flex items-center gap-1 hover:text-ink">
@@ -234,12 +300,12 @@
                 <tbody>
                     @forelse ($rates as $rate)
                         <tr class="border-b border-placeholder last:border-b-0">
-                            <td class="max-w-[104px] px-3 py-4 sm:max-w-none sm:px-6">
-                                <a href="{{ $rate->organization_url }}" class="flex items-center gap-2 sm:gap-3">
+                            <td class="px-6 py-4">
+                                <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
                                     @if ($rate->organization_logo)
-                                        <img src="{{ $rate->organization_logo }}" alt="" class="h-7 w-7 shrink-0 rounded-full object-contain sm:h-8 sm:w-8">
+                                        <img src="{{ $rate->organization_logo }}" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
                                     @else
-                                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary sm:h-8 sm:w-8">
+                                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                                             {{ Str::of($rate->organization_name)->substr(0, 1)->upper() }}
                                         </span>
                                     @endif
@@ -254,12 +320,12 @@
                                     </div>
                                 </a>
                             </td>
-                            <td class="px-2 py-4 text-right font-heading font-bold text-primary sm:px-4">{{ number_format($rate->buy_rate, 2) }}</td>
-                            <td class="px-2 py-4 text-right font-heading font-bold text-[#c25b6e] sm:px-4">{{ number_format($rate->sell_rate, 2) }}</td>
+                            <td class="px-4 py-4 text-right font-heading font-bold text-primary">{{ number_format($rate->buy_rate, 2) }}</td>
+                            <td class="px-4 py-4 text-right font-heading font-bold text-[#c25b6e]">{{ number_format($rate->sell_rate, 2) }}</td>
                             <td class="hidden px-4 py-4 text-right text-xs text-subtle md:table-cell">
                                 {{ number_format($rate->spread, 2) }}
                             </td>
-                            <td class="hidden px-4 py-4 text-left text-xs text-subtle sm:table-cell">
+                            <td class="px-4 py-4 text-left text-xs text-subtle">
                                 {{ $rate->scraped_at ? \Illuminate\Support\Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}
                             </td>
                             @if ($hasLocation)
