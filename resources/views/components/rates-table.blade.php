@@ -13,7 +13,7 @@
 @if (!empty($currencies))
     <section
         id="rates"
-        x-data="{ tab: '{{ $defaultCurrency }}', rateTab: '{{ $defaultRateType }}', alertUrlByCurrency: @js($alertUrlByCurrency) }"
+        x-data="{ tab: @js($defaultCurrency), rateTab: @js($defaultRateType), alertUrlByCurrency: @js($alertUrlByCurrency) }"
         class="mx-auto max-w-7xl px-6 py-16 lg:px-10 scroll-mt-24"
     >
         <div class="lg:flex lg:items-start lg:gap-10">
@@ -45,8 +45,8 @@
             @foreach ($currencies as $currency)
                 <button
                     type="button"
-                    @click="tab = '{{ $currency }}'"
-                    :class="tab === '{{ $currency }}' ? 'bg-primary text-white' : 'text-muted hover:text-ink'"
+                    @click="tab = @js($currency)"
+                    :class="tab === @js($currency) ? 'bg-primary text-white' : 'text-muted hover:text-ink'"
                     class="shrink-0 px-4 py-3 text-xs font-semibold tracking-wide whitespace-nowrap uppercase transition"
                 >
                     {{ $currency }}
@@ -57,7 +57,7 @@
         {{-- Per-currency panels --}}
         @foreach ($currencies as $currency)
             <div
-                x-show="tab === '{{ $currency }}'"
+                x-show="tab === @js($currency)"
                 @if ($currency !== $defaultCurrency) x-cloak @endif
                 class="border border-t-0 border-placeholder"
             >
@@ -69,8 +69,8 @@
                         @foreach ($ratesByCurrency[$currency] as $rateTypeValue => $rows)
                             <button
                                 type="button"
-                                @click="rateTab = '{{ $rateTypeValue }}'"
-                                :class="rateTab === '{{ $rateTypeValue }}' ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink'"
+                                @click="rateTab = @js($rateTypeValue)"
+                                :class="rateTab === @js($rateTypeValue) ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink'"
                                 class="rounded-full px-3 py-1.5 text-xs font-medium transition"
                             >
                                 {{ __('organizations.rate_types.' . $rateTypeValue) }}
@@ -80,7 +80,7 @@
 
                     @foreach ($ratesByCurrency[$currency] as $rateTypeValue => $rows)
                         <div
-                            x-show="rateTab === '{{ $rateTypeValue }}'"
+                            x-show="rateTab === @js($rateTypeValue)"
                             @if (!($currency === $defaultCurrency && $rateTypeValue === $defaultRateType)) x-cloak @endif
                             x-data="{
                                 rows: @js($rows),
