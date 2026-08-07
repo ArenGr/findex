@@ -64,7 +64,11 @@ class TelegramExchangePartnerFlowTest extends TestCase
         });
 
         $handled = app(ExchangePartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-1', 'data' => 'exchange_decline:'.$response->id],
+            'callback_query' => [
+                'id' => 'cbq-1',
+                'data' => 'exchange_decline:'.$response->id,
+                'message' => ['chat' => ['id' => '999']],
+            ],
         ]);
 
         $this->assertTrue($handled);
@@ -81,10 +85,36 @@ class TelegramExchangePartnerFlowTest extends TestCase
         });
 
         app(ExchangePartnerReplyHandler::class)->handleUpdate([
-            'callback_query' => ['id' => 'cbq-2', 'data' => 'exchange_decline:'.$response->id],
+            'callback_query' => [
+                'id' => 'cbq-2',
+                'data' => 'exchange_decline:'.$response->id,
+                'message' => ['chat' => ['id' => '999']],
+            ],
         ]);
 
         $this->assertSame(ExchangeQuoteResponse::STATUS_RESPONDED, $response->fresh()->status);
+    }
+
+    public function test_a_decline_from_another_organizations_chat_is_ignored(): void
+    {
+        // See the tourism handler's equivalent test - callback_data is
+        // client-supplied, so the decline must come from the chat that
+        // actually received the message.
+        $response = $this->pendingResponse();
+
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('answerCallbackQuery')->once()->andReturn(['ok' => true]);
+        });
+
+        app(ExchangePartnerReplyHandler::class)->handleUpdate([
+            'callback_query' => [
+                'id' => 'cbq-attacker',
+                'data' => 'exchange_decline:'.$response->id,
+                'message' => ['chat' => ['id' => '888888']],
+            ],
+        ]);
+
+        $this->assertSame(ExchangeQuoteResponse::STATUS_PENDING, $response->fresh()->status);
     }
 
     public function test_tourism_decline_prefix_is_left_unhandled_by_the_exchange_handler(): void
