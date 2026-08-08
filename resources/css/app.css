@@ -97,12 +97,12 @@ button {
     --color-market-exchange-line: #e3c9ee;
     --color-market-exchange-ink: #6d3487;
 
-    /* Podium for the three best rates. Brand green leads, then the accent
-       yellow and the carousel's soft blue - all three take ink or white text
-       at a readable contrast. */
-    --color-rank-1: #607e34;
-    --color-rank-2: #f1cb40;
-    --color-rank-3: #87b8f5;
+    /* Podium for the three best rates - gold, silver, bronze. All three carry
+       ink text rather than white: bronze against white is only ~3.5:1, which
+       fails at badge size, while ink clears 5:1 on all three. */
+    --color-rank-1: #f1cb40;
+    --color-rank-2: #a7a9ac;
+    --color-rank-3: #cd7f32;
 
     /* Neutrals */
     --color-ink: #161515;

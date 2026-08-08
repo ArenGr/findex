@@ -55,9 +55,9 @@
         default => 'border-border-muted text-muted',
     };
 
-    // Podium: brand green, accent yellow, soft blue. Only the top three get
-    // one - beyond that a badge stops meaning "worth your attention".
-    $rankBadge = [1 => 'bg-rank-1 text-white', 2 => 'bg-rank-2 text-ink', 3 => 'bg-rank-3 text-ink'];
+    // Podium: gold, silver, bronze. Only the top three get one - beyond that a
+    // badge stops meaning "worth your attention".
+    $rankBadge = [1 => 'bg-rank-1 text-ink', 2 => 'bg-rank-2 text-ink', 3 => 'bg-rank-3 text-ink'];
     // Equal rates share a rank, and with this data several banks routinely tie
     // for second - tinting each of them floods the table, so only the outright
     // winner gets a row tint. The badge still carries the podium colour.
@@ -370,7 +370,7 @@
                 <div class="mt-3 border border-placeholder sm:hidden">
                     <div class="flex items-center justify-between gap-3 border-b border-placeholder bg-placeholder/20 px-4 py-2 text-xs font-semibold text-subtle uppercase">
                         <span>{{ __('rates.provider_column') }}</span>
-                        <span>{{ $isBuying ? __('rates.you_buy_at') : __('rates.you_sell_at') }}</span>
+                        <span>{{ $isBuying ? __('rates.sell_column') : __('rates.buy_column') }}</span>
                     </div>
 
                     <div class="divide-y divide-placeholder">
@@ -393,7 +393,7 @@
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         @if ($rank <= 3)
                                             <span class="rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide uppercase {{ $rankBadge[$rank] }}">
-                                                {{ $rank === 1 ? __('rates.best_badge') : '#'.$rank }}
+                                                {{ $rank }}
                                             </span>
                                         @endif
                                         @if ($showMarket)
@@ -438,13 +438,13 @@
                             <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-subtle uppercase">
                                 <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
                                 <th class="px-4 py-3 text-right">
-                                    <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.you_sell_at_hint') }}">
-                                        {{ __('rates.you_sell_at') }} {{ $sortArrow('buy_rate') }}
+                                    <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.buy_hint') }}">
+                                        {{ __('rates.buy_column') }} {{ $sortArrow('buy_rate') }}
                                     </a>
                                 </th>
                                 <th class="px-4 py-3 text-right">
-                                    <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.you_buy_at_hint') }}">
-                                        {{ __('rates.you_buy_at') }} {{ $sortArrow('sell_rate') }}
+                                    <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.sell_hint') }}">
+                                        {{ __('rates.sell_column') }} {{ $sortArrow('sell_rate') }}
                                     </a>
                                 </th>
                                 @if ($amount !== null)
@@ -490,7 +490,7 @@
                                                     <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
                                                     @if ($rank <= 3)
                                                         <span class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase {{ $rankBadge[$rank] }}">
-                                                            {{ $rank === 1 ? __('rates.best_badge') : '#'.$rank }}
+                                                            {{ $rank }}
                                                         </span>
                                                     @endif
                                                     @if ($showMarket)
@@ -508,10 +508,10 @@
                                             </div>
                                         </a>
                                     </td>
-                                    <td class="px-4 py-4 text-right font-heading font-bold {{ $isBuying ? 'text-subtle' : 'text-primary' }}">
+                                    <td class="px-4 py-4 text-right font-heading font-bold text-primary {{ $isBuying ? 'opacity-60' : 'text-base' }}">
                                         {{ number_format($rate->buy_rate, 2) }}
                                     </td>
-                                    <td class="px-4 py-4 text-right font-heading font-bold {{ $isBuying ? 'text-[#c25b6e]' : 'text-subtle' }}">
+                                    <td class="px-4 py-4 text-right font-heading font-bold text-[#c25b6e] {{ $isBuying ? 'text-base' : 'opacity-60' }}">
                                         {{ number_format($rate->sell_rate, 2) }}
                                     </td>
                                     @if ($total !== null)
