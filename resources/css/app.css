@@ -97,14 +97,9 @@ button {
     --color-market-exchange-line: #e3c9ee;
     --color-market-exchange-ink: #6d3487;
 
-    /* Best-rate row on /rates. The accent yellow washed right back so body text
-       stays readable across the whole row, with a deeper gold for the edge bar
-       and badge - full-strength #f1cb40 takes neither white nor ink cleanly at
-       badge size, but this one clears 6:1 on ink. */
-    --color-best-row: #fdf0cd;
-    --color-best-edge: #d4a72c;
-    /* The badge carries white text, so it needs a deeper gold than the bar:
-       white on #d4a72c is 2.26:1 and fails AA, this clears 4.5:1. */
+    /* Best-rate badge on /rates. Deep enough that its white star and label
+       clear 4.5:1 - the accent yellow itself only reaches 2.26:1 against white
+       and fails AA at badge size. */
     --color-best-badge: #9a7016;
 
     /* Neutrals */

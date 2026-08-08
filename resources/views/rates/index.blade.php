@@ -55,12 +55,9 @@
         default => 'border-border-muted text-muted',
     };
 
-    // One winner, marked hard: a yellow row wash plus a left bar, so it reads
-    // as the answer at a glance rather than as one highlighted line among
-    // several. Ranks 2 and 3 get nothing - with this data several banks tie for
-    // second, and badging them all drained the badge of meaning.
-    $bestRow = 'bg-best-row';
-    $bestBar = fn (bool $isBest) => $isBest ? 'border-l-4 border-best-edge' : 'border-l-4 border-transparent';
+    // Only the winner is marked, and only by its badge - ranks 2 and 3 get
+    // nothing, since with this data several banks tie for second and badging
+    // them all drained the badge of meaning.
 
     // With an amount this is real money; without one it is the per-unit gap,
     // which is still worth showing rather than hiding savings entirely.
@@ -92,15 +89,29 @@
                 <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
             </div>
 
-            <a
-                href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
-                class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-[#D4A72C]">
-                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                </svg>
-                {{ __('rates.alert_cta') }}
-            </a>
+            {{-- The one thing here a competitor cannot offer, so it takes the
+            prime slot beside the heading. Still says who it is for: below the
+            configured minimum an exchange office will not renegotiate. --}}
+            @if ($quoteMinimum !== null)
+                @php $qualifies = $amount !== null && $amount >= $quoteMinimum; @endphp
+                <div class="w-full sm:w-auto sm:shrink-0">
+                    <a
+                        href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md sm:inline-flex sm:w-auto"
+                    >
+                        <span aria-hidden="true">💱</span>
+                        <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
+                        <span aria-hidden="true">&rarr;</span>
+                    </a>
+                    <p class="mt-2 text-xs break-words text-muted sm:max-w-[19rem]">
+                        @if ($qualifies)
+                            {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                        @else
+                            {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                        @endif
+                    </p>
+                </div>
+            @endif
         </div>
 
         {{-- Currency: the primary axis, so it stays a scannable tab strip
@@ -181,50 +192,6 @@
                 @endif
             </div>
         </form>
-
-        {{--
-            Large-amount negotiation. This is the one thing here a visitor
-            cannot get from a competitor, and at the foot of a long table
-            nobody reached it. Sits directly under the intent bar instead, and
-            states the qualifying amount rather than inviting everyone to ask -
-            below the threshold an exchange office won't renegotiate, so a
-            request would only waste the visitor's time.
-        --}}
-        @if ($quoteMinimum !== null)
-            @php $qualifies = $amount !== null && $amount >= $quoteMinimum; @endphp
-            {{-- Compact on mobile: the heading and button carry the offer on
-            their own, and the supporting copy would otherwise push the results
-            the visitor came for below the fold. --}}
-            <div class="mt-5 rounded-2xl border-2 {{ $qualifies ? 'border-primary bg-primary/5' : 'border-placeholder bg-white' }} px-4 py-4 sm:px-6 sm:py-5">
-                <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
-                    <div class="flex min-w-[14rem] flex-1 items-center gap-3 sm:gap-4">
-                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl sm:h-14 sm:w-14 sm:text-2xl">💱</span>
-
-                        <div class="min-w-0">
-                            <p class="font-heading text-base font-bold break-words text-ink lg:text-lg">
-                                @if ($qualifies)
-                                    {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
-                                @else
-                                    {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
-                                @endif
-                            </p>
-                            <p class="mt-1 hidden text-sm break-words text-muted sm:block">{{ __('rates.cta_body') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="w-full shrink-0 sm:w-auto">
-                        <a
-                            href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-7 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md sm:w-auto"
-                        >
-                            {{ __('rates.cta_button') }}
-                            <span aria-hidden="true">&rarr;</span>
-                        </a>
-                        <p class="mt-2 hidden max-w-[16rem] text-xs break-words text-muted sm:block">{{ __('rates.cta_note') }}</p>
-                    </div>
-                </div>
-            </div>
-        @endif
 
         {{-- Market tabs. Banks and exchange offices quote very different
         levels, so they are separated rather than interleaved. --}}
@@ -440,7 +407,7 @@
                                 $isBest = $rate->rank === 1;
                                 $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                             @endphp
-                            <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 py-4 pr-4 pl-3 {{ $bestBar($isBest) }} {{ $isBest ? $bestRow : '' }}">
+                            <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4">
                                 @if ($rate->organization_logo)
                                     <img src="{{ $rate->organization_logo }}" alt="" class="h-9 w-9 shrink-0 rounded-full object-contain">
                                 @else
@@ -539,8 +506,8 @@
                                     $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                                     $stale = $isStale($rate->scraped_at);
                                 @endphp
-                                <tr class="border-b border-placeholder last:border-b-0 {{ $isBest ? $bestRow : '' }}">
-                                    <td class="py-4 pr-6 pl-5 {{ $bestBar($isBest) }}">
+                                <tr class="border-b border-placeholder last:border-b-0">
+                                    <td class="px-6 py-4">
                                         <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
                                             @if ($rate->organization_logo)
                                                 <img src="{{ $rate->organization_logo }}" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
@@ -628,5 +595,19 @@
             </div>
         @endif
 
+        {{-- Follows the results rather than heading them: setting an alert is
+        what you do when nothing on the page is good enough yet. --}}
+        <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-3">
+            <a
+                href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
+                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-placeholder bg-white px-6 py-3 text-base font-semibold text-ink transition hover:border-primary hover:text-primary sm:inline-flex sm:w-auto"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-[#D4A72C]">
+                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                </svg>
+                <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
+            </a>
+            <p class="max-w-md text-sm break-words text-muted">{{ __('rates.alert_hint') }}</p>
+        </div>
     </section>
 @endsection

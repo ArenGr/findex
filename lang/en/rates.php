@@ -7,6 +7,7 @@ return [
     'create_alert' => 'Get notified when this rate changes',
     'alert_column' => 'Alert',
     'alert_short' => 'Alert me',
+    'alert_hint' => 'We will email you when this rate moves, so you do not have to keep checking.',
     'alert_cta' => 'Set a rate alert',
     'view_all' => 'View all rates',
 
@@ -22,7 +23,7 @@ return [
     'cta_heading' => 'Exchanging more than :amount :code?',
     'cta_body' => 'Partner exchange offices will often beat their posted rate on a large amount. Tell us once and we ask them for you.',
     'cta_heading_qualified' => 'You are exchanging :amount :code - you can ask for a better rate',
-    'cta_button' => 'Request better rates',
+    'cta_button' => 'Negotiate your rate',
     'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
 
     'best_badge' => 'Best',

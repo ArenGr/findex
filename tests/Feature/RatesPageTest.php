@@ -290,7 +290,7 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=JPY')
             ->assertOk()
             ->assertViewHas('quoteMinimum', null)
-            ->assertDontSee('Request better rates');
+            ->assertDontSee('Negotiate your rate');
     }
 
     public function test_rates_from_inactive_organizations_are_never_listed(): void
