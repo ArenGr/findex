@@ -55,10 +55,6 @@
         default => 'border-border-muted text-muted',
     };
 
-    // Only the winner is marked, and only by its badge - ranks 2 and 3 get
-    // nothing, since with this data several banks tie for second and badging
-    // them all drained the badge of meaning.
-
     // With an amount this is real money; without one it is the per-unit gap,
     // which is still worth showing rather than hiding savings entirely.
     $savingFor = fn ($row) => $amount !== null
@@ -98,7 +94,7 @@
                 <div class="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
                     <a
                         href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
-                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md sm:inline-flex sm:flex-none"
+                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-blue-dark hover:shadow-md sm:inline-flex sm:flex-none"
                     >
                         <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0" aria-hidden="true">
                             <path d="M13.2 2.24a.75.75 0 00.04 1.06l2.1 1.95H6.75a.75.75 0 000 1.5h8.59l-2.1 1.95a.75.75 0 101.02 1.1l3.5-3.25a.75.75 0 000-1.1l-3.5-3.25a.75.75 0 00-1.06.04zm-6.4 8a.75.75 0 00-1.06-.04l-3.5 3.25a.75.75 0 000 1.1l3.5 3.25a.75.75 0 101.02-1.1l-2.1-1.95h8.59a.75.75 0 000-1.5H4.66l2.1-1.95a.75.75 0 00.04-1.06z" />
@@ -129,8 +125,9 @@
                 @foreach ($currencies as $currency)
                     <a
                         href="{{ $link(['currency' => $currency->code]) }}"
-                        class="shrink-0 px-4 py-3 text-sm font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-primary text-white' : 'text-muted hover:text-ink' }}"
+                        class="flex shrink-0 items-center gap-1.5 px-4 py-3 text-sm font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-ink text-white' : 'text-muted hover:text-ink' }}"
                     >
+                        <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
                         {{ $currency->code }}
                     </a>
                 @endforeach
@@ -164,7 +161,7 @@
                                     class="peer sr-only" @checked($intent === $option)
                                     onchange="this.form.submit()"
                                 >
-                                <span class="block rounded-full px-4 py-1.5 text-sm font-medium text-muted transition peer-checked:bg-primary peer-checked:text-white">
+                                <span class="block rounded-full px-4 py-1.5 text-sm font-medium text-muted transition peer-checked:bg-ink peer-checked:text-white">
                                     {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
                                 </span>
                             </label>
@@ -232,7 +229,7 @@
                 @foreach ($availableTypes as $typeValue)
                     <a
                         href="{{ $link(['type' => $typeValue]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'bg-primary text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
                     >
                         {{ __('organizations.rate_types.' . $typeValue) }}
                     </a>
@@ -269,22 +266,29 @@
                         <input type="hidden" name="lng" value="{{ $longitude }}">
                     @endif
 
-                    <div>
-                        <label for="filter-organization" class="{{ $labelClass }}">{{ __('rates.filter_bank') }}</label>
-                        <select
-                            name="organization"
-                            id="filter-organization"
-                            onchange="this.form.submit()"
-                            class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
-                        >
-                            <option value="">{{ __('rates.filter_bank_all') }}</option>
-                            @foreach ($organizations as $organization)
-                                <option value="{{ $organization->slug }}" @selected($selectedOrganization?->id === $organization->id)>
-                                    {{ $organization->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- Only once a market is chosen. Under "All" the list mixes
+                    banks and exchange offices, and no single label is honest about
+                    what it contains. --}}
+                    @if ($selectedOrgType !== null)
+                        <div>
+                            <label for="filter-organization" class="{{ $labelClass }}">
+                                {{ __('rates.filter_org.'.$selectedOrgType) }}
+                            </label>
+                            <select
+                                name="organization"
+                                id="filter-organization"
+                                onchange="this.form.submit()"
+                                class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
+                            >
+                                <option value="">{{ __('rates.filter_org_all.'.$selectedOrgType) }}</option>
+                                @foreach ($organizations as $organization)
+                                    <option value="{{ $organization->slug }}" @selected($selectedOrganization?->id === $organization->id)>
+                                        {{ $organization->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     @if ($cities->isNotEmpty())
                         <div>

@@ -58,6 +58,14 @@ return [
     'try_other_type' => 'Show :type rates instead',
     'all_heading' => 'All Exchange Rates',
     'all_subheading' => 'Every rate we track, updated as banks publish new ones. Filter and sort to find the best deal.',
+    'filter_org' => [
+        'bank' => 'Bank',
+        'exchange' => 'Exchange office',
+    ],
+    'filter_org_all' => [
+        'bank' => 'All banks',
+        'exchange' => 'All exchange offices',
+    ],
     'filter_bank' => 'Bank',
     'filter_bank_all' => 'All banks',
     'filter_city' => 'City',

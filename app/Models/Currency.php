@@ -8,6 +8,35 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Currency extends Model
 {
+    /**
+     * A currency code has no country of its own to derive a flag from the way
+     * QuoteRequestController::worldCountries() does for ISO-3166 countries
+     * (that trick needs a 2-letter country code, not a 3-letter currency one) -
+     * so this is a small hand-picked map to one representative country/region
+     * per currency, the same convention used by most currency-converter apps.
+     * EUR gets the real EU flag rather than any single member state's.
+     */
+    public const FLAGS = [
+        'AMD' => '🇦🇲',
+        'USD' => '🇺🇸',
+        'EUR' => '🇪🇺',
+        'GBP' => '🇬🇧',
+        'CHF' => '🇨🇭',
+        'RUR' => '🇷🇺',
+        'GEL' => '🇬🇪',
+        'AED' => '🇦🇪',
+        'CNY' => '🇨🇳',
+        'KZT' => '🇰🇿',
+        'CAD' => '🇨🇦',
+        'AUD' => '🇦🇺',
+    ];
+
+    /** Empty for a currency with no mapped flag, so callers can print it blind. */
+    public static function flag(?string $code): string
+    {
+        return self::FLAGS[$code] ?? '';
+    }
+
     protected static function booted(): void
     {
         static::saved(fn () => RateCache::invalidate());

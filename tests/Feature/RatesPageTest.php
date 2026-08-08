@@ -293,6 +293,40 @@ class RatesPageTest extends TestCase
             ->assertDontSee('Negotiate your rate');
     }
 
+    public function test_the_organization_filter_names_the_market_it_lists(): void
+    {
+        $this->seedMarket();
+
+        // Under "All" the list would mix banks and exchange offices, and no
+        // single label describes what it contains - so it is not offered.
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertDontSee('All banks')
+            ->assertDontSee('All exchange offices');
+
+        $this->get('/en/rates?currency=USD&org_type=bank')
+            ->assertOk()
+            ->assertSee('All banks')
+            ->assertDontSee('All exchange offices');
+
+        // The label used to say "All banks" here while listing exchange offices.
+        $this->get('/en/rates?currency=USD&org_type=exchange')
+            ->assertOk()
+            ->assertSee('All exchange offices')
+            ->assertDontSee('All banks');
+    }
+
+    public function test_switching_market_clears_a_now_impossible_organization(): void
+    {
+        $this->seedMarket();
+
+        // Otherwise "Corner exchange" would survive a jump to Banks and every
+        // filter combination would return nothing.
+        $this->get('/en/rates?currency=USD&org_type=exchange&organization=corner-exchange')
+            ->assertOk()
+            ->assertDontSee('org_type=bank&amp;organization=corner-exchange');
+    }
+
     public function test_rates_from_inactive_organizations_are_never_listed(): void
     {
         $usd = $this->seedMarket();

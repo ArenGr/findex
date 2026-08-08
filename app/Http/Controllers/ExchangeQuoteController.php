@@ -19,30 +19,6 @@ use Illuminate\View\View;
 
 class ExchangeQuoteController extends Controller
 {
-    /**
-     * A currency code has no country of its own to derive a flag from the
-     * way QuoteRequestController::worldCountries() does for ISO-3166
-     * countries (that trick needs a 2-letter country code, not a 3-letter
-     * currency one) - so this is a small hand-picked map to one
-     * representative country/region per currency, the same convention
-     * used by most currency-converter apps. EUR gets the real EU flag
-     * rather than any single member state's.
-     */
-    private const CURRENCY_FLAGS = [
-        'AMD' => '🇦🇲',
-        'USD' => '🇺🇸',
-        'EUR' => '🇪🇺',
-        'GBP' => '🇬🇧',
-        'CHF' => '🇨🇭',
-        'RUR' => '🇷🇺',
-        'GEL' => '🇬🇪',
-        'AED' => '🇦🇪',
-        'CNY' => '🇨🇳',
-        'KZT' => '🇰🇿',
-        'CAD' => '🇨🇦',
-        'AUD' => '🇦🇺',
-    ];
-
     public function create(Request $request): View
     {
         $minimums = config('exchange-quotes.minimum_amounts');
@@ -67,7 +43,7 @@ class ExchangeQuoteController extends Controller
             'currencies' => $currencies,
             'minimums' => $minimums,
             'selectedCurrency' => $selectedCurrency,
-            'currencyFlags' => self::CURRENCY_FLAGS,
+            'currencyFlags' => Currency::FLAGS,
             'cities' => $this->exchangeCities(),
         ]);
     }
