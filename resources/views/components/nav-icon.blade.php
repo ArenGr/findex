@@ -23,7 +23,9 @@
         'insurance' => 'var(--color-accent-yellow)',
         'insuranceMark' => 'var(--color-primary)',
         'travel' => 'var(--color-slide-blue)',
-        'about' => 'var(--color-slide-purple)',
+        // Neutral rather than a hue: About Us isn't a product area, so it
+        // sits back from the four that are.
+        'about' => 'var(--color-muted)',
     ];
 @endphp
 

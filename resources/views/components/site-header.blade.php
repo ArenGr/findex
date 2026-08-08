@@ -103,7 +103,7 @@
         <nav class="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink lg:flex">
             @foreach ($navItems as $navItem)
                 @if (empty($navItem['columns']))
-                    <a href="{{ $navItem['href'] }}" class="flex items-center gap-1.5 whitespace-nowrap hover:text-primary {{ $navItem['active'] ? 'font-semibold text-primary' : '' }}">
+                    <a href="{{ $navItem['href'] }}" class="flex items-center gap-1.5 whitespace-nowrap hover:text-primary {{ $navItem['active'] ? 'text-primary' : '' }}">
                         <x-nav-icon :name="$navItem['icon']" />
                         {{ $navItem['label'] }}
                     </a>
@@ -113,7 +113,7 @@
                     <button
                         type="button"
                         @click="open = !open"
-                        class="flex items-center gap-1.5 whitespace-nowrap hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}"
+                        class="flex items-center gap-1.5 whitespace-nowrap hover:text-primary {{ $dropdown['active'] ? 'text-primary' : '' }}"
                         :aria-expanded="open"
                     >
                         <x-nav-icon :name="$dropdown['icon']" />
@@ -322,14 +322,14 @@
 
             @foreach ($navItems as $navItem)
                 @if (empty($navItem['columns']))
-                    <a href="{{ $navItem['href'] }}" class="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $navItem['active'] ? 'font-semibold text-primary' : '' }}">
+                    <a href="{{ $navItem['href'] }}" class="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $navItem['active'] ? 'text-primary' : '' }}">
                         <x-nav-icon :name="$navItem['icon']" />
                         {{ $navItem['label'] }}
                     </a>
                 @else
                 @php($dropdown = $navItem)
                 <div x-data="{ open: false }">
-                    <button type="button" @click="open = !open" class="flex w-full items-center justify-between rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}">
+                    <button type="button" @click="open = !open" class="flex w-full items-center justify-between rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $dropdown['active'] ? 'text-primary' : '' }}">
                         <span class="flex items-center gap-2">
                             <x-nav-icon :name="$dropdown['icon']" />
                             {{ $dropdown['label'] }}
