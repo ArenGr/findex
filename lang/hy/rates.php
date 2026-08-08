@@ -48,6 +48,8 @@ return [
     'you_get_total' => 'ստանում եք :amount :currency',
     'market_all' => 'Բոլորը',
     'market_saving' => 'Մինչև :amount :currency տարբերություն լավագույնի և վատագույնի միջև։',
+    'currency_label' => 'Արժույթ',
+    'market_label' => 'Որտեղ փոխանակել',
     'type_label' => 'Գործարքի տեսակ',
     'more_filters' => 'Այլ զտիչներ',
     'all_stale_notice' => 'Այս փոխարժեքները մեկ օրից ավելի հին են։',

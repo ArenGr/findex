@@ -48,6 +48,8 @@ return [
     'you_get_total' => 'получаете :amount :currency',
     'market_all' => 'Все',
     'market_saving' => 'До :amount :currency разницы между лучшим и худшим здесь.',
+    'currency_label' => 'Валюта',
+    'market_label' => 'Где обменять',
     'type_label' => 'Тип операции',
     'more_filters' => 'Ещё фильтры',
     'all_stale_notice' => 'Эти курсы старше одного дня.',

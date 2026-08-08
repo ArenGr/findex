@@ -48,6 +48,8 @@ return [
     'you_get_total' => 'get :amount :currency',
     'market_all' => 'All',
     'market_saving' => 'Up to :amount :currency difference between the best and worst here.',
+    'currency_label' => 'Currency',
+    'market_label' => 'Where to exchange',
     'type_label' => 'Transaction type',
     'more_filters' => 'More filters',
     'all_stale_notice' => 'These rates are more than a day old.',

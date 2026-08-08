@@ -78,6 +78,8 @@
     // Sub-1 AMD "savings" are noise.
     $hasSaving = fn ($row) => $savingFor($row) >= ($amount !== null ? 1 : 0.01);
 
+    $labelClass = 'block text-xs font-semibold tracking-wider text-subtle uppercase';
+
     $activeFilterCount = collect([$selectedOrganization, $selectedCity, $hasLocation ?: null])
         ->filter()->count();
 @endphp
@@ -103,15 +105,18 @@
 
         {{-- Currency: the primary axis, so it stays a scannable tab strip
         rather than another dropdown. --}}
-        <div class="mt-8 flex gap-1 overflow-x-auto border-b border-placeholder [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="mt-8">
+            <span class="{{ $labelClass }}">{{ __('rates.currency_label') }}</span>
+            <div class="mt-2 flex gap-1 overflow-x-auto border-b border-placeholder [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             @foreach ($currencies as $currency)
                 <a
                     href="{{ $link(['currency' => $currency->code]) }}"
                     class="shrink-0 px-4 py-3 text-xs font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-primary text-white' : 'text-muted hover:text-ink' }}"
                 >
                     {{ $currency->code }}
-                </a>
-            @endforeach
+                    </a>
+                @endforeach
+            </div>
         </div>
 
         {{--
@@ -130,7 +135,7 @@
 
             <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
                 <div>
-                    <span class="block text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('rates.intent_label') }}</span>
+                    <span class="{{ $labelClass }}">{{ __('rates.intent_label') }}</span>
                     <div class="mt-1.5 inline-flex rounded-full border border-border-muted bg-white p-0.5">
                         @foreach (['buy', 'sell'] as $option)
                             <label class="cursor-pointer">
@@ -150,7 +155,7 @@
                 </div>
 
                 <div>
-                    <label for="amount" class="block text-xs font-semibold tracking-wider text-subtle uppercase">
+                    <label for="amount" class="{{ $labelClass }}">
                         {{ __('rates.amount_label') }}
                     </label>
                     <div class="mt-1.5 flex items-center gap-2">
@@ -180,7 +185,9 @@
         {{-- Market tabs. Banks and exchange offices quote very different
         levels, so they are separated rather than interleaved. --}}
         @if ($orgTypes->count() > 1)
-            <div class="mt-6 flex flex-wrap gap-2">
+            <div class="mt-6">
+                <span class="{{ $labelClass }}">{{ __('rates.market_label') }}</span>
+                <div class="mt-2 flex flex-wrap gap-2">
                 <a
                     href="{{ $link(['org_type' => null, 'organization' => null]) }}"
                     class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
@@ -193,15 +200,16 @@
                         class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
                     >
                         {{ __('rates.markets.' . $orgType) }}
-                    </a>
-                @endforeach
+                        </a>
+                    @endforeach
+                </div>
             </div>
         @endif
 
         {{-- Transaction type: only the ones this currency actually has, so a
         pill never leads to an empty table. --}}
         <div class="mt-5">
-            <span class="block text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('rates.type_label') }}</span>
+            <span class="{{ $labelClass }}">{{ __('rates.type_label') }}</span>
             <div class="mt-2 flex flex-wrap gap-2">
                 @foreach ($availableTypes as $typeValue)
                     <a
@@ -229,7 +237,7 @@
                 </svg>
             </button>
 
-            <div x-show="open" x-cloak class="mt-3 flex flex-wrap items-center gap-2 sm:!flex sm:mt-0">
+            <div x-show="open" x-cloak class="mt-3 flex flex-wrap items-end gap-x-3 gap-y-3 sm:!flex sm:mt-0">
                 <form method="GET" action="{{ route('rates.index') }}" class="contents">
                     <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
                     <input type="hidden" name="type" value="{{ $selectedType->value }}">
@@ -243,31 +251,39 @@
                         <input type="hidden" name="lng" value="{{ $longitude }}">
                     @endif
 
-                    <select
-                        name="organization"
-                        onchange="this.form.submit()"
-                        class="rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
-                    >
-                        <option value="">{{ __('rates.filter_bank_all') }}</option>
-                        @foreach ($organizations as $organization)
-                            <option value="{{ $organization->slug }}" @selected($selectedOrganization?->id === $organization->id)>
-                                {{ $organization->name }}
-                            </option>
-                        @endforeach
-                    </select>
-
-                    @if ($cities->isNotEmpty())
+                    <div>
+                        <label for="filter-organization" class="{{ $labelClass }}">{{ __('rates.filter_bank') }}</label>
                         <select
-                            name="city"
+                            name="organization"
+                            id="filter-organization"
                             onchange="this.form.submit()"
-                            title="{{ __('rates.filter_city_hint') }}"
-                            class="rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+                            class="mt-2 rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
                         >
-                            <option value="">{{ __('rates.filter_city_all') }}</option>
-                            @foreach ($cities as $city)
-                                <option value="{{ $city }}" @selected($selectedCity === $city)>{{ $city }}</option>
+                            <option value="">{{ __('rates.filter_bank_all') }}</option>
+                            @foreach ($organizations as $organization)
+                                <option value="{{ $organization->slug }}" @selected($selectedOrganization?->id === $organization->id)>
+                                    {{ $organization->name }}
+                                </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    @if ($cities->isNotEmpty())
+                        <div>
+                            <label for="filter-city" class="{{ $labelClass }}">{{ __('rates.filter_city') }}</label>
+                            <select
+                                name="city"
+                                id="filter-city"
+                                onchange="this.form.submit()"
+                                title="{{ __('rates.filter_city_hint') }}"
+                                class="mt-2 rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+                            >
+                                <option value="">{{ __('rates.filter_city_all') }}</option>
+                                @foreach ($cities as $city)
+                                    <option value="{{ $city }}" @selected($selectedCity === $city)>{{ $city }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     @endif
                 </form>
 
@@ -318,7 +334,9 @@
                 </div>
 
                 @if ($hasNonDefaultFilter)
-                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="text-xs text-muted hover:text-ink">
+                    {{-- Bottom-aligned with the pills, so the padding optically
+                    centres this bare text against them. --}}
+                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="pb-1.5 text-xs text-muted hover:text-ink">
                         {{ __('rates.reset_filters') }}
                     </a>
                 @endif
