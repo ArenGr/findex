@@ -78,7 +78,7 @@
     // Sub-1 AMD "savings" are noise.
     $hasSaving = fn ($row) => $savingFor($row) >= ($amount !== null ? 1 : 0.01);
 
-    $labelClass = 'block text-xs font-semibold tracking-wider text-subtle uppercase';
+    $labelClass = 'block text-xs font-semibold tracking-wider text-muted uppercase';
 
     $activeFilterCount = collect([$selectedOrganization, $selectedCity, $hasLocation ?: null])
         ->filter()->count();
@@ -108,12 +108,12 @@
         <div class="mt-8">
             <span class="{{ $labelClass }}">{{ __('rates.currency_label') }}</span>
             <div class="mt-2 flex gap-1 overflow-x-auto border-b border-placeholder [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            @foreach ($currencies as $currency)
-                <a
-                    href="{{ $link(['currency' => $currency->code]) }}"
-                    class="shrink-0 px-4 py-3 text-xs font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-primary text-white' : 'text-muted hover:text-ink' }}"
-                >
-                    {{ $currency->code }}
+                @foreach ($currencies as $currency)
+                    <a
+                        href="{{ $link(['currency' => $currency->code]) }}"
+                        class="shrink-0 px-4 py-3 text-sm font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-primary text-white' : 'text-muted hover:text-ink' }}"
+                    >
+                        {{ $currency->code }}
                     </a>
                 @endforeach
             </div>
@@ -182,6 +182,50 @@
             </div>
         </form>
 
+        {{--
+            Large-amount negotiation. This is the one thing here a visitor
+            cannot get from a competitor, and at the foot of a long table
+            nobody reached it. Sits directly under the intent bar instead, and
+            states the qualifying amount rather than inviting everyone to ask -
+            below the threshold an exchange office won't renegotiate, so a
+            request would only waste the visitor's time.
+        --}}
+        @if ($quoteMinimum !== null)
+            @php $qualifies = $amount !== null && $amount >= $quoteMinimum; @endphp
+            {{-- Compact on mobile: the heading and button carry the offer on
+            their own, and the supporting copy would otherwise push the results
+            the visitor came for below the fold. --}}
+            <div class="mt-5 rounded-2xl border-2 {{ $qualifies ? 'border-primary bg-primary/5' : 'border-placeholder bg-white' }} px-4 py-4 sm:px-6 sm:py-5">
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+                    <div class="flex min-w-[14rem] flex-1 items-center gap-3 sm:gap-4">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl sm:h-14 sm:w-14 sm:text-2xl">💱</span>
+
+                        <div class="min-w-0">
+                            <p class="font-heading text-base font-bold break-words text-ink lg:text-lg">
+                                @if ($qualifies)
+                                    {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                                @else
+                                    {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                                @endif
+                            </p>
+                            <p class="mt-1 hidden text-sm break-words text-muted sm:block">{{ __('rates.cta_body') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full shrink-0 sm:w-auto">
+                        <a
+                            href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-7 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md sm:w-auto"
+                        >
+                            {{ __('rates.cta_button') }}
+                            <span aria-hidden="true">&rarr;</span>
+                        </a>
+                        <p class="mt-2 hidden max-w-[16rem] text-xs break-words text-muted sm:block">{{ __('rates.cta_note') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Market tabs. Banks and exchange offices quote very different
         levels, so they are separated rather than interleaved. --}}
         @if ($orgTypes->count() > 1)
@@ -214,7 +258,7 @@
                 @foreach ($availableTypes as $typeValue)
                     <a
                         href="{{ $link(['type' => $typeValue]) }}"
-                        class="rounded-full px-3 py-1.5 text-xs font-medium transition {{ $selectedType->value === $typeValue ? 'bg-primary text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'bg-primary text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
                     >
                         {{ __('organizations.rate_types.' . $typeValue) }}
                     </a>
@@ -228,7 +272,7 @@
             <button
                 type="button"
                 @click="open = !open"
-                class="flex items-center gap-2 text-xs font-semibold tracking-wider text-subtle uppercase sm:hidden"
+                class="flex items-center gap-2 text-xs font-semibold tracking-wider text-muted uppercase sm:hidden"
                 :aria-expanded="open"
             >
                 {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }}) @endif
@@ -257,7 +301,7 @@
                             name="organization"
                             id="filter-organization"
                             onchange="this.form.submit()"
-                            class="mt-2 rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+                            class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
                         >
                             <option value="">{{ __('rates.filter_bank_all') }}</option>
                             @foreach ($organizations as $organization)
@@ -276,7 +320,7 @@
                                 id="filter-city"
                                 onchange="this.form.submit()"
                                 title="{{ __('rates.filter_city_hint') }}"
-                                class="mt-2 rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+                                class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
                             >
                                 <option value="">{{ __('rates.filter_city_all') }}</option>
                                 @foreach ($cities as $city)
@@ -324,7 +368,7 @@
                             type="button"
                             @click="findNearby()"
                             :disabled="state === 'locating'"
-                            class="inline-flex items-center gap-1 rounded-full border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink hover:border-primary disabled:opacity-60"
+                            class="inline-flex items-center gap-1 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink hover:border-primary disabled:opacity-60"
                         >
                             <span x-show="state !== 'locating'">📍 {{ __('rates.find_nearby') }}</span>
                             <span x-show="state === 'locating'" x-cloak>{{ __('rates.locating') }}</span>
@@ -336,7 +380,7 @@
                 @if ($hasNonDefaultFilter)
                     {{-- Bottom-aligned with the pills, so the padding optically
                     centres this bare text against them. --}}
-                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="pb-1.5 text-xs text-muted hover:text-ink">
+                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="pb-2 text-sm text-muted hover:text-ink">
                         {{ __('rates.reset_filters') }}
                     </a>
                 @endif
@@ -344,7 +388,7 @@
         </div>
 
         <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <p class="text-xs text-subtle">
+            <p class="text-xs text-muted">
                 {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
             </p>
             @if ($allStale)
@@ -385,7 +429,7 @@
                 {{-- Mobile: a row list. A table has no room for a readable name
                 once both rate columns need space. --}}
                 <div class="mt-3 border border-placeholder sm:hidden">
-                    <div class="flex items-center justify-between gap-3 border-b border-placeholder bg-placeholder/20 px-4 py-2 text-xs font-semibold text-subtle uppercase">
+                    <div class="flex items-center justify-between gap-3 border-b border-placeholder bg-placeholder/20 px-4 py-2 text-xs font-semibold text-muted uppercase">
                         <span>{{ __('rates.provider_column') }}</span>
                         <span>{{ $isBuying ? __('rates.sell_column') : __('rates.buy_column') }}</span>
                     </div>
@@ -409,7 +453,10 @@
                                     <p class="font-medium break-words text-ink">{{ $rate->organization_name }}</p>
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         @if ($isBest)
-                                            <span class="rounded-full bg-best-edge px-2 py-0.5 text-[9px] font-semibold tracking-wide text-ink uppercase">
+                                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-edge px-2.5 py-1 text-xs font-semibold text-ink">
+                                                <svg viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3 shrink-0" aria-hidden="true">
+                                                    <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
+                                                </svg>
                                                 {{ __('rates.best_badge') }}
                                             </span>
                                         @endif
@@ -419,7 +466,7 @@
                                             </span>
                                         @endif
                                         @if ($hasLocation && isset($rate->distance_km))
-                                            <span class="text-xs text-subtle">{{ __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) }}</span>
+                                            <span class="text-xs text-muted">{{ __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) }}</span>
                                         @endif
                                         @if ($isStale($rate->scraped_at))
                                             <span class="text-xs text-[#B4791F]">{{ Carbon::parse($rate->scraped_at)->diffForHumans() }}</span>
@@ -432,7 +479,7 @@
                                         {{ number_format($rate->{$rateField}, 2) }}
                                     </p>
                                     @if ($total !== null)
-                                        <p class="text-xs text-subtle">
+                                        <p class="text-xs text-muted">
                                             {{ __($isBuying ? 'rates.you_pay_total' : 'rates.you_get_total', [
                                                 'amount' => number_format($total),
                                                 'currency' => __('exchange_quotes.request.amd'),
@@ -452,7 +499,7 @@
                 <div class="mt-3 hidden overflow-x-auto border border-placeholder sm:block">
                     <table class="w-full border-collapse text-sm">
                         <thead>
-                            <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-subtle uppercase">
+                            <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-muted uppercase">
                                 <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
                                 <th class="px-4 py-3 text-right">
                                     <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.buy_hint') }}">
@@ -506,7 +553,10 @@
                                                 <span class="flex items-center gap-2">
                                                     <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
                                                     @if ($isBest)
-                                                        <span class="shrink-0 rounded-full bg-best-edge px-2 py-0.5 text-[9px] font-semibold tracking-wide text-ink uppercase">
+                                                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-edge px-2.5 py-1 text-xs font-semibold text-ink">
+                                                            <svg viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3 shrink-0" aria-hidden="true">
+                                                                <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
+                                                            </svg>
                                                             {{ __('rates.best_badge') }}
                                                         </span>
                                                     @endif
@@ -519,7 +569,7 @@
                                                 @if ($rate->organization_reviews_count > 0)
                                                     <span class="flex items-center gap-1">
                                                         <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
-                                                        <span class="text-xs text-subtle">({{ $rate->organization_reviews_count }})</span>
+                                                        <span class="text-xs text-muted">({{ $rate->organization_reviews_count }})</span>
                                                     </span>
                                                 @endif
                                             </div>
@@ -534,20 +584,20 @@
                                     @if ($total !== null)
                                         <td class="px-4 py-4 text-right font-heading font-bold whitespace-nowrap text-ink">
                                             {{ number_format($total) }}
-                                            <span class="text-xs font-normal text-subtle">{{ __('exchange_quotes.request.amd') }}</span>
+                                            <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                         </td>
                                     @endif
-                                    <td class="px-4 py-4 text-right text-sm font-semibold whitespace-nowrap {{ $hasSaving($rate) ? 'text-primary' : 'text-subtle' }}">
+                                    <td class="px-4 py-4 text-right text-sm font-semibold whitespace-nowrap {{ $hasSaving($rate) ? 'text-primary' : 'text-muted' }}">
                                         {{ $hasSaving($rate) ? $savingCell($rate) : '—' }}
                                     </td>
-                                    <td class="hidden px-4 py-4 text-right text-xs text-subtle lg:table-cell">
+                                    <td class="hidden px-4 py-4 text-right text-xs text-muted lg:table-cell">
                                         {{ number_format($rate->spread, 2) }}
                                     </td>
-                                    <td class="px-4 py-4 text-left text-xs {{ $stale ? 'text-[#B4791F]' : 'text-subtle' }}">
+                                    <td class="px-4 py-4 text-left text-xs {{ $stale ? 'text-[#B4791F]' : 'text-muted' }}">
                                         {{ $rate->scraped_at ? Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}
                                     </td>
                                     @if ($hasLocation)
-                                        <td class="hidden px-4 py-4 text-right text-xs text-subtle lg:table-cell">
+                                        <td class="hidden px-4 py-4 text-right text-xs text-muted lg:table-cell">
                                             {{ isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : '—' }}
                                         </td>
                                     @endif
@@ -578,30 +628,5 @@
             </div>
         @endif
 
-        {{-- Large-amount negotiation. The posted rates above are the whole point
-        of the page, so this sits after them - but it is the one thing here a
-        visitor cannot get from a competitor, and it was being read as a footnote
-        at link size. Given real space and a real button instead. --}}
-        <div class="mt-14 rounded-2xl border border-primary/30 bg-primary/5 px-6 py-10 text-center sm:px-10 lg:py-12">
-            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl">💱</span>
-
-            <h2 class="mt-5 font-heading text-xl font-bold break-words text-ink lg:text-2xl">
-                {{ __('rates.cta_heading') }}
-            </h2>
-
-            <p class="mx-auto mt-3 max-w-2xl text-sm leading-relaxed break-words text-muted">
-                {{ __('rates.cta_body') }}
-            </p>
-
-            <a
-                href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
-                class="mt-7 inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md"
-            >
-                {{ __('rates.cta_button') }}
-                <span aria-hidden="true">&rarr;</span>
-            </a>
-
-            <p class="mt-4 text-xs break-words text-subtle">{{ __('rates.cta_note') }}</p>
-        </div>
     </section>
 @endsection

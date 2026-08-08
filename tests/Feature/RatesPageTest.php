@@ -260,6 +260,39 @@ class RatesPageTest extends TestCase
         $this->assertSame(2, substr_count($html, 'name="lng" value="44.4991"'), 'every GET form must carry lng');
     }
 
+    public function test_the_quote_cta_states_the_amount_that_qualifies(): void
+    {
+        $this->seedMarket();
+
+        // config('exchange-quotes.minimum_amounts.USD') is 1000.
+        $this->get('/en/rates?currency=USD&amount=500')
+            ->assertOk()
+            ->assertSee('Exchanging more than 1,000 USD?');
+    }
+
+    public function test_the_quote_cta_changes_once_the_amount_qualifies(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&amount=5000')
+            ->assertOk()
+            ->assertSee('You are exchanging 5,000 USD')
+            ->assertDontSee('Exchanging more than 1,000 USD?');
+    }
+
+    public function test_the_quote_cta_is_hidden_for_a_currency_with_no_minimum(): void
+    {
+        // A currency the quote form does not accept would otherwise send the
+        // visitor to a request they cannot complete.
+        $jpy = Currency::create(['code' => 'JPY', 'name' => 'Yen', 'symbol' => '¥', 'sort_order' => 2, 'is_active' => true]);
+        $this->rate($this->organization('jpy-bank'), $jpy, 2.4, 2.6);
+
+        $this->get('/en/rates?currency=JPY')
+            ->assertOk()
+            ->assertViewHas('quoteMinimum', null)
+            ->assertDontSee('Request better rates');
+    }
+
     public function test_rates_from_inactive_organizations_are_never_listed(): void
     {
         $usd = $this->seedMarket();

@@ -19,8 +19,9 @@ return [
         'bank' => 'Bank',
         'exchange' => 'Exchange office',
     ],
-    'cta_heading' => 'Exchanging a large amount?',
-    'cta_body' => 'Posted rates are for everyday amounts. Tell us how much you need once, and we will ask our partner exchange offices whether they will beat their posted rate for you.',
+    'cta_heading' => 'Exchanging more than :amount :code?',
+    'cta_body' => 'Partner exchange offices will often beat their posted rate on a large amount. Tell us once and we ask them for you.',
+    'cta_heading_qualified' => 'You are exchanging :amount :code - you can ask for a better rate',
     'cta_button' => 'Request better rates',
     'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
 

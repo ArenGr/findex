@@ -197,6 +197,10 @@ class RateController extends Controller
             // has the best rate" outright. Same rows as $rates, with the winner
             // and the best-to-worst gap resolved.
             'ranked' => $this->rankRows($rates->items(), $intent),
+            // Below this the transaction isn't large enough for an exchange
+            // office to renegotiate, so the CTA states the bar instead of
+            // inviting everyone to ask.
+            'quoteMinimum' => config('exchange-quotes.minimum_amounts')[$selectedCurrency?->code] ?? null,
             'hasLocation' => $hasLocation,
             'latitude' => $latitude,
             'longitude' => $longitude,
