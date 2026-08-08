@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
 
 /**
@@ -12,7 +13,13 @@ use Tests\TestCase;
  */
 class SiteHeaderNavTest extends TestCase
 {
-    use RefreshDatabase;
+    use EnablesBankProducts, RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->enableBankProducts();
+    }
 
     /**
      * Banking groups its products into Loans and Cards submenus. The leaf

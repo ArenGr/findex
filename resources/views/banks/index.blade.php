@@ -44,27 +44,20 @@
                 </span>
             </a>
 
-            @foreach ($categories as $slug => $available)
+            @foreach ($categories as $slug)
                 <a
                     href="{{ route('banks.show', $slug) }}"
                     class="group block rounded-2xl border border-placeholder p-6 shadow-sm transition hover:border-primary/40 hover:shadow-md"
                 >
-                    <div class="flex items-start justify-between gap-3">
-                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-placeholder/20 text-2xl">
-                            {{ $icons[$slug] }}
-                        </span>
-                        @unless ($available)
-                            <span class="shrink-0 rounded-full bg-placeholder/60 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-subtle uppercase">
-                                {{ __('offers.soon_badge') }}
-                            </span>
-                        @endunless
-                    </div>
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-placeholder/20 text-2xl">
+                        {{ $icons[$slug] }}
+                    </span>
 
                     <h2 class="mt-4 font-heading text-base font-semibold text-ink">{{ __('offers.categories.'.$slug.'.title') }}</h2>
                     <p class="mt-2 text-sm leading-relaxed text-body-text">{{ __('offers.categories.'.$slug.'.body') }}</p>
 
                     <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                        {{ $available ? __('offers.compare_link') : __('offers.soon_link') }}
+                        {{ __('offers.compare_link') }}
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current transition-transform duration-300 group-hover:translate-x-1">
                             <path d="M5 12h14M13 6l6 6-6 6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>

@@ -22,7 +22,7 @@ Route::get('/banks', [OfferController::class, 'index'])->name('banks.index');
 // which file happens to register first.
 Route::get('/banks/{category}', [OfferController::class, 'show'])
     ->name('banks.show')
-    ->where('category', implode('|', array_map('preg_quote', array_keys(OfferController::CATEGORIES))));
+    ->where('category', implode('|', array_map('preg_quote', OfferController::CATEGORIES)));
 Route::get('/about', function () {
     return view('about');
 })->name('about');

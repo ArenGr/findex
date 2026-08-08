@@ -3,11 +3,18 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
 
 class OfferPagesTest extends TestCase
 {
-    use RefreshDatabase;
+    use EnablesBankProducts, RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->enableBankProducts();
+    }
 
     public function test_the_index_page_lists_every_category(): void
     {

@@ -5,13 +5,9 @@ return [
     'intro' => "Cards, loans, mortgages and more - see what's available to compare today, all in one place.",
     'back_to_all' => 'Back to all banks',
     'compare_link' => 'Compare offers',
-    'soon_link' => 'Learn more',
-    'explore_mortgages' => 'Explore Mortgage Offers',
     'all_banks_title' => 'All Banks',
     'all_banks_body' => 'Browse every bank Findex tracks - ratings, reviews and contact details, side by side.',
     'all_banks_link' => 'View all banks',
-    'coming_soon' => 'This section will be available soon.',
-    'soon_badge' => 'Soon',
     'per_month' => 'mo',
 
     'categories' => [

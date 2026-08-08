@@ -10,40 +10,51 @@
         fn ($prefix) => str_starts_with($currentRoute, $prefix)
     );
 
-    // Label/URL/availability for one bank product, read straight from
-    // OfferController::CATEGORIES - the same source /banks renders from, so
-    // adding a category there surfaces it here too. Only the grouping below
-    // is nav-specific. 'soon' drives the same badge the hub page shows, so
-    // the menu doesn't promise a page that's still empty.
+    // Bank products, filtered to what an admin has switched on (Feature
+    // Toggles in the panel -> FeatureToggle). A disabled category is absent
+    // here and 404s its own page, so the menu never links somewhere the
+    // visitor can't go - which is also why there's no "coming soon" state
+    // in the nav any more.
+    $enabledCategories = \App\Http\Controllers\OfferController::enabledCategories();
+
     $product = fn (string $slug) => [
         'label' => __('offers.categories.'.$slug.'.title'),
         'href' => route('banks.show', $slug),
-        'soon' => ! (\App\Http\Controllers\OfferController::CATEGORIES[$slug] ?? false),
     ];
+
+    // Null when every product in the section is switched off, so the
+    // heading doesn't survive its own contents.
+    $section = function (string $headingKey, array $slugs) use ($enabledCategories, $product) {
+        $slugs = array_values(array_intersect($slugs, $enabledCategories));
+
+        return $slugs === [] ? null : ['heading' => __($headingKey), 'items' => array_map($product, $slugs)];
+    };
+
+    $bankingColumns = array_values(array_filter([
+        array_values(array_filter([
+            $section('nav.banking.groups.loans', ['mortgages', 'personal-loans', 'business-loans', 'student-loans']),
+        ])),
+        array_values(array_filter([
+            $section('nav.banking.groups.cards', ['credit-cards']),
+            $section('nav.banking.groups.saving', ['banking', 'investing']),
+        ])),
+    ], fn (array $column) => $column !== []));
 
     // Insurance/Travel/About are plain links (below), not dropdowns - each
     // has exactly one real destination today, and a dropdown with a single
     // item is a click with nothing behind it. Rates, Compare Banks and the
     // bank directory stay reachable by URL, just not from this menu.
     //
-    // One panel, columns of headed sections - not a nested flyout. With
-    // only seven products a hover-to-open submenu is two interactions to
+    // One panel, columns of headed sections - not a nested flyout. With a
+    // handful of products a hover-to-open submenu is two interactions to
     // reach any leaf, and it put a second floating panel at a different
     // height overlapping the first, which just read as broken. Everything
     // is visible in one click here, and there's no alignment to get wrong.
-    $dropdowns = [
+    $dropdowns = $bankingColumns === [] ? [] : [
         'banking' => [
             'label' => __('nav.banking.label'),
             'active' => $isActive(['banks.']),
-            'columns' => [
-                [
-                    ['heading' => __('nav.banking.groups.loans'), 'items' => array_map($product, ['mortgages', 'personal-loans', 'business-loans', 'student-loans'])],
-                ],
-                [
-                    ['heading' => __('nav.banking.groups.cards'), 'items' => array_map($product, ['credit-cards'])],
-                    ['heading' => __('nav.banking.groups.saving'), 'items' => array_map($product, ['banking', 'investing'])],
-                ],
-            ],
+            'columns' => $bankingColumns,
         ],
     ];
 
@@ -98,9 +109,9 @@
                         x-show="open"
                         x-transition
                         x-cloak
-                        class="absolute left-0 top-full z-20 mt-3 w-[34rem] rounded-2xl border border-placeholder bg-white p-5 shadow-lg ring-1 ring-placeholder/60"
+                        class="absolute left-0 top-full z-20 mt-3 rounded-2xl border border-placeholder bg-white p-5 shadow-lg ring-1 ring-placeholder/60 {{ count($dropdown['columns']) > 1 ? 'w-[34rem]' : 'w-64' }}"
                     >
-                        <div class="grid grid-cols-2 gap-x-8">
+                        <div class="grid gap-x-8 {{ count($dropdown['columns']) > 1 ? 'grid-cols-2' : 'grid-cols-1' }}">
                             @foreach ($dropdown['columns'] as $column)
                                 <div class="space-y-5">
                                     @foreach ($column as $section)
@@ -111,9 +122,6 @@
                                             @foreach ($section['items'] as $item)
                                                 <a href="{{ $item['href'] }}" class="flex items-start justify-between gap-3 rounded-lg px-2 py-2 text-sm leading-snug text-body-text transition hover:bg-primary/5 hover:text-primary">
                                                     {{ $item['label'] }}
-                                                    @if (!empty($item['soon']))
-                                                        <x-nav-soon-badge />
-                                                    @endif
                                                 </a>
                                             @endforeach
                                         </div>
@@ -321,9 +329,6 @@
                                     @foreach ($section['items'] as $item)
                                         <a href="{{ $item['href'] }}" class="flex items-start justify-between gap-3 rounded-lg px-3 py-2.5 leading-snug text-body-text hover:bg-primary/5 hover:text-primary">
                                             {{ $item['label'] }}
-                                            @if (!empty($item['soon']))
-                                                <x-nav-soon-badge />
-                                            @endif
                                         </a>
                                     @endforeach
                                 </div>

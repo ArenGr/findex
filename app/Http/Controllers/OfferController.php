@@ -2,35 +2,56 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FeatureToggle;
 use Illuminate\View\View;
 
 class OfferController extends Controller
 {
     /**
-     * Each was previously a tab on one shared /offers page - split into its
-     * own URL so a category is bookmarkable/shareable/deep-linkable, and so
-     * a visitor landing on an empty "coming soon" tab (the old page's
-     * default) isn't the first thing they see. 'available' means a real
-     * view exists in show() below; everything else falls back to the
-     * generic coming-soon page. Public - routes/web/public/pages.php reads
-     * the keys to build the {category} route's whitelist regex, so a
-     * request for an unknown slug (or a literal collision like "all", the
-     * bank directory's own sibling route) never reaches this controller at
-     * all rather than being turned away here.
+     * Every bank product page the app can render, in the order they appear
+     * in the menu and on the hub. Whether any given one is actually visible
+     * is a runtime decision - an admin flips it in Feature Toggles (see
+     * FeatureToggle), and a disabled category is hidden from the nav and
+     * the hub and 404s its own page.
+     *
+     * A slug here without a matching feature_toggles row simply stays off,
+     * so adding one is safe: seed the row when the page is ready to show.
      */
     public const CATEGORIES = [
-        'mortgages' => true,
-        'personal-loans' => true,
-        'banking' => true,
-        'credit-cards' => false,
-        'business-loans' => false,
-        'investing' => false,
-        'student-loans' => false,
+        'mortgages',
+        'personal-loans',
+        'banking',
+        'credit-cards',
+        'business-loans',
+        'investing',
+        'student-loans',
     ];
+
+    /**
+     * Categories with a bespoke page. Everything else renders the shared
+     * sample layout (banks.sample) - a real comparison table filled with
+     * clearly-marked example figures plus the list of fields we need from
+     * the bank, so a page exists to show a partner before any data lands.
+     */
+    private const CUSTOM_VIEWS = [
+        'mortgages' => 'banks.mortgages',
+        'personal-loans' => 'banks.personal-loans',
+        'banking' => 'banks.banking',
+    ];
+
+    /**
+     * Known categories that are currently switched on, in CATEGORIES order.
+     *
+     * @return array<int, string>
+     */
+    public static function enabledCategories(): array
+    {
+        return array_values(array_intersect(self::CATEGORIES, FeatureToggle::enabledKeys()));
+    }
 
     public function index(): View
     {
-        return view('banks.index', ['categories' => self::CATEGORIES]);
+        return view('banks.index', ['categories' => self::enabledCategories()]);
     }
 
     /**
@@ -43,15 +64,11 @@ class OfferController extends Controller
      */
     public function show(string $locale, string $category): View
     {
-        // Backstop only - the route's own regex constraint (see pages.php)
-        // already keeps anything not in CATEGORIES from reaching here.
-        abort_unless(array_key_exists($category, self::CATEGORIES), 404);
+        // The route's regex constraint (see pages.php) already rejects
+        // anything not in CATEGORIES; this is the switched-off case, which
+        // is a runtime value the route can't express.
+        abort_unless(in_array($category, self::enabledCategories(), true), 404);
 
-        return match ($category) {
-            'mortgages' => view('banks.mortgages'),
-            'personal-loans' => view('banks.personal-loans'),
-            'banking' => view('banks.banking'),
-            default => view('banks.coming-soon', ['category' => $category]),
-        };
+        return view(self::CUSTOM_VIEWS[$category] ?? 'banks.sample', ['category' => $category]);
     }
 }
