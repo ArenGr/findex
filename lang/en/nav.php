@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'rates' => 'Exchange Rates',
     'home' => 'Home',
     'about' => 'About Us',
     'get_updates' => 'Get Updates',

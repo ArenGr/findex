@@ -50,19 +50,28 @@
     // reach any leaf, and it put a second floating panel at a different
     // height overlapping the first, which just read as broken. Everything
     // is visible in one click here, and there's no alignment to get wrong.
-    $dropdowns = $bankingColumns === [] ? [] : [
-        'banking' => [
+    // Links and the Banking menu share one ordered list so the sequence is
+    // decided here rather than falling out of which loop runs first - which
+    // is what previously forced every plain link after the dropdown.
+    // array_filter drops the Banking entry when every product is toggled
+    // off, and the rest of the nav closes up around the gap.
+    //
+    // Exchange rates leads: it's the most-used page and isn't behind a
+    // feature toggle, so it stays put even with Banking gone entirely.
+    $navItems = array_values(array_filter([
+        ['label' => __('nav.rates'), 'icon' => 'rates', 'href' => route('rates.index'), 'active' => $isActive(['rates.'])],
+
+        $bankingColumns === [] ? null : [
             'label' => __('nav.banking.label'),
+            'icon' => 'banking',
             'active' => $isActive(['banks.']),
             'columns' => $bankingColumns,
         ],
-    ];
 
-    $navLinks = [
-        ['label' => __('nav.insurance.label'), 'href' => route('insurance.auto.request'), 'active' => $isActive(['insurance.'])],
-        ['label' => __('nav.travel.label'), 'href' => route('tourism.request'), 'active' => $isActive(['tourism.'])],
-        ['label' => __('nav.about'), 'href' => route('about'), 'active' => $currentRoute === 'about'],
-    ];
+        ['label' => __('nav.insurance.label'), 'icon' => 'insurance', 'href' => route('insurance.auto.request'), 'active' => $isActive(['insurance.'])],
+        ['label' => __('nav.travel.label'), 'icon' => 'travel', 'href' => route('tourism.request'), 'active' => $isActive(['tourism.'])],
+        ['label' => __('nav.about'), 'icon' => 'about', 'href' => route('about'), 'active' => $currentRoute === 'about'],
+    ]));
 
     // WhatsApp's real group link isn't set up yet - shown now with a
     // placeholder so the entry is visible, swapped in once WHATSAPP_GROUP_URL
@@ -92,14 +101,22 @@
              there, and every label saved keeps this row from wrapping in
              Armenian/Russian. --}}
         <nav class="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink lg:flex">
-            @foreach ($dropdowns as $key => $dropdown)
+            @foreach ($navItems as $navItem)
+                @if (empty($navItem['columns']))
+                    <a href="{{ $navItem['href'] }}" class="flex items-center gap-1.5 whitespace-nowrap hover:text-primary {{ $navItem['active'] ? 'font-semibold text-primary' : '' }}">
+                        <x-nav-icon :name="$navItem['icon']" />
+                        {{ $navItem['label'] }}
+                    </a>
+                @else
+                @php($dropdown = $navItem)
                 <div x-data="{ open: false }" class="relative" @click.outside="open = false">
                     <button
                         type="button"
                         @click="open = !open"
-                        class="flex items-center gap-1 whitespace-nowrap hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}"
+                        class="flex items-center gap-1.5 whitespace-nowrap hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}"
                         :aria-expanded="open"
                     >
+                        <x-nav-icon :name="$dropdown['icon']" />
                         {{ $dropdown['label'] }}
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
                             <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -131,12 +148,7 @@
                         </div>
                     </div>
                 </div>
-            @endforeach
-
-            @foreach ($navLinks as $link)
-                <a href="{{ $link['href'] }}" class="whitespace-nowrap hover:text-primary {{ $link['active'] ? 'font-semibold text-primary' : '' }}">
-                    {{ $link['label'] }}
-                </a>
+                @endif
             @endforeach
         </nav>
 
@@ -308,10 +320,20 @@
         <nav class="flex flex-col gap-1 text-sm text-ink">
             <a href="{{ route('home') }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary">{{ __('nav.home') }}</a>
 
-            @foreach ($dropdowns as $dropdown)
+            @foreach ($navItems as $navItem)
+                @if (empty($navItem['columns']))
+                    <a href="{{ $navItem['href'] }}" class="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $navItem['active'] ? 'font-semibold text-primary' : '' }}">
+                        <x-nav-icon :name="$navItem['icon']" />
+                        {{ $navItem['label'] }}
+                    </a>
+                @else
+                @php($dropdown = $navItem)
                 <div x-data="{ open: false }">
                     <button type="button" @click="open = !open" class="flex w-full items-center justify-between rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $dropdown['active'] ? 'font-semibold text-primary' : '' }}">
-                        {{ $dropdown['label'] }}
+                        <span class="flex items-center gap-2">
+                            <x-nav-icon :name="$dropdown['icon']" />
+                            {{ $dropdown['label'] }}
+                        </span>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
                             <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -336,12 +358,7 @@
                         @endforeach
                     </div>
                 </div>
-            @endforeach
-
-            @foreach ($navLinks as $link)
-                <a href="{{ $link['href'] }}" class="rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary {{ $link['active'] ? 'font-semibold text-primary' : '' }}">
-                    {{ $link['label'] }}
-                </a>
+                @endif
             @endforeach
 
             @if ($joinLinks->isNotEmpty())
