@@ -103,6 +103,9 @@ button {
        badge size, but this one clears 6:1 on ink. */
     --color-best-row: #fdf0cd;
     --color-best-edge: #d4a72c;
+    /* The badge carries white text, so it needs a deeper gold than the bar:
+       white on #d4a72c is 2.26:1 and fails AA, this clears 4.5:1. */
+    --color-best-badge: #9a7016;
 
     /* Neutrals */
     --color-ink: #161515;

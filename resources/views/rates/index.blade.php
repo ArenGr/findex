@@ -453,7 +453,7 @@
                                     <p class="font-medium break-words text-ink">{{ $rate->organization_name }}</p>
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         @if ($isBest)
-                                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-edge px-2.5 py-1 text-xs font-semibold text-ink">
+                                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-badge px-2.5 py-1 text-xs font-semibold text-white">
                                                 <svg viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3 shrink-0" aria-hidden="true">
                                                     <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
                                                 </svg>
@@ -553,7 +553,7 @@
                                                 <span class="flex items-center gap-2">
                                                     <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
                                                     @if ($isBest)
-                                                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-edge px-2.5 py-1 text-xs font-semibold text-ink">
+                                                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-badge px-2.5 py-1 text-xs font-semibold text-white">
                                                             <svg viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3 shrink-0" aria-hidden="true">
                                                                 <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
                                                             </svg>
