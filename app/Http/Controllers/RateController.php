@@ -12,6 +12,7 @@ use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -44,6 +45,47 @@ class RateController extends Controller
             fn (RateType $type) => $type->value === $request->query('type')
         ) ?? RateType::CASH;
 
+        // Coverage is very uneven per currency - KZT only has cash rates, and
+        // card/cross/transfer come from one or two organizations - so offering
+        // every rate type for every currency guarantees dead ends. Only the
+        // types that actually have rows for this currency are offered, the
+        // same rule the home page widget already applies (see
+        // HomeRatesTableData). Cached as plain strings: rate_type is an enum
+        // cast, and config/cache.php forbids objects in the cache.
+        $availableTypes = collect(Cache::tags([RateCache::TAG])->remember(
+            'rates.types_for_currency.'.($selectedCurrency->id ?? 'none'),
+            now()->addMinutes(self::TTL_MINUTES),
+            fn () => CurrencyRate::query()
+                ->when($selectedCurrency, fn ($query) => $query->where('currency_id', $selectedCurrency->id))
+                ->whereHas('organization', fn ($query) => $query->active())
+                ->distinct()
+                ->pluck('rate_type')
+                ->map(fn ($type) => $type instanceof RateType ? $type->value : (string) $type)
+                ->values()
+                ->all()
+        ));
+
+        // DISTINCT returns them in whatever order the index yields
+        // ("card, cash, central_bank, cross..."). Re-ordered to the enum's own
+        // declaration order, which is already the order that makes sense to a
+        // visitor: the two everyday types first, the central bank reference
+        // rate - which isn't a place you can exchange at - last.
+        $availableTypes = collect(RateType::cases())
+            ->map(fn (RateType $type) => $type->value)
+            ->filter(fn (string $type) => $availableTypes->contains($type))
+            ->values();
+
+        // What the visitor is trying to do, which is what decides the ranking:
+        // buying the currency means the cheapest sell_rate wins, selling it
+        // means the highest buy_rate does. Replaces asking them to reason
+        // about which of two institution-side columns to sort by.
+        $intent = $request->query('intent') === 'sell' ? 'sell' : 'buy';
+
+        // Optional. Blank leaves the page a plain rate table; a value turns
+        // every row into a concrete "you pay / you get" total. Display-layer
+        // only - deliberately not part of any cache key (see fetchCachedRates).
+        $amount = $this->amountFromQuery($request);
+
         // "distance" only means anything once we actually have the
         // visitor's coordinates - falls back to the normal default rather
         // than erroring if the sort param is stale (e.g. a bookmarked link
@@ -52,11 +94,22 @@ class RateController extends Controller
         [$latitude, $longitude] = $this->coordinatesFromQuery($request);
         $hasLocation = $latitude !== null && $longitude !== null;
 
+        // An explicit column click always wins; otherwise the intent (or a
+        // shared location) picks the ranking, so the default order already
+        // answers the question the visitor came with.
         $sortOptions = $hasLocation ? ['buy_rate', 'sell_rate', 'spread', 'distance'] : ['buy_rate', 'sell_rate', 'spread'];
-        $sort = in_array($request->query('sort'), $sortOptions, true)
-            ? $request->query('sort')
-            : ($hasLocation ? 'distance' : 'sell_rate');
-        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+        $explicitSort = in_array($request->query('sort'), $sortOptions, true) ? $request->query('sort') : null;
+
+        if ($explicitSort !== null) {
+            $sort = $explicitSort;
+            $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+        } elseif ($hasLocation) {
+            $sort = 'distance';
+            $direction = 'asc';
+        } else {
+            $sort = $intent === 'sell' ? 'buy_rate' : 'sell_rate';
+            $direction = $intent === 'sell' ? 'desc' : 'asc';
+        }
 
         // Only "bank" and "exchange" organizations ever carry currency rates,
         // but which of the two actually appear depends on real data - built
@@ -125,6 +178,10 @@ class RateController extends Controller
             'selectedCurrency' => $selectedCurrency,
             'rateTypes' => RateType::cases(),
             'selectedType' => $selectedType,
+            'availableTypes' => $availableTypes,
+            // Somewhere to go when the current combination has no rows, so an
+            // empty result is never a dead end.
+            'suggestedType' => $this->suggestedType($selectedType, $availableTypes),
             'orgTypes' => $orgTypes,
             'selectedOrgType' => $selectedOrgType,
             'organizations' => $organizations,
@@ -133,11 +190,98 @@ class RateController extends Controller
             'selectedCity' => $selectedCity,
             'sort' => $sort,
             'direction' => $direction,
+            'intent' => $intent,
+            'amount' => $amount,
             'rates' => $rates,
+            // Banks and exchange offices quote very different levels (~363 vs
+            // ~384 for USD cash), so one interleaved ranking reads as broken
+            // data. Same rows as $rates, split and ranked per market.
+            'groups' => $this->groupRows($rates->items(), $intent, $orgTypes),
             'hasLocation' => $hasLocation,
             'latitude' => $latitude,
             'longitude' => $longitude,
         ]);
+    }
+
+    /**
+     * The rate column the visitor's intent actually ranks on: buying the
+     * currency means they pay the organization's sell rate, selling it means
+     * they receive its buy rate.
+     */
+    public static function rateFieldForIntent(string $intent): string
+    {
+        return $intent === 'sell' ? 'buy_rate' : 'sell_rate';
+    }
+
+    /**
+     * Split the page's rows per organization type and mark the winner in each,
+     * so "All" reads as two ranked markets rather than one list with an
+     * unexplained 20-dram step in the middle.
+     *
+     * Best is computed from the values rather than taken as the first row:
+     * the visitor may have sorted by spread or distance, in which case row one
+     * is not the best rate.
+     *
+     * @param  array<int, object>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function groupRows(array $rows, string $intent, Collection $orgTypes): array
+    {
+        $field = self::rateFieldForIntent($intent);
+        $byType = collect($rows)->groupBy('organization_type');
+
+        // $orgTypes preserves a stable order across requests; anything not in
+        // it (a type that gained rates mid-cache) still gets rendered.
+        $ordered = $orgTypes->filter(fn ($type) => $byType->has($type))
+            ->merge($byType->keys()->diff($orgTypes))
+            ->values();
+
+        return $ordered->map(function ($type) use ($byType, $field, $intent) {
+            $group = $byType->get($type);
+            $values = $group->pluck($field)->map(fn ($value) => (float) $value);
+
+            // Selling: the most AMD back wins. Buying: the least paid wins.
+            $best = $intent === 'sell' ? $values->max() : $values->min();
+            $worst = $intent === 'sell' ? $values->min() : $values->max();
+
+            return [
+                'type' => $type,
+                'rows' => $group->values()->all(),
+                'count' => $group->count(),
+                'best_value' => $best,
+                'worst_value' => $worst,
+                // Only meaningful with more than one quote to compare.
+                'spread_across_market' => $group->count() > 1 ? abs($best - $worst) : null,
+            ];
+        })->all();
+    }
+
+    /**
+     * First type with data that isn't the one already selected - used to offer
+     * a way forward from an empty result rather than a bare "nothing found".
+     */
+    private function suggestedType(RateType $selectedType, Collection $availableTypes): ?string
+    {
+        return $availableTypes->first(fn (string $type) => $type !== $selectedType->value);
+    }
+
+    /**
+     * Silently dropped rather than rejected when malformed or out of range -
+     * the amount only enriches the display, so a bad value degrades to the
+     * plain rate table instead of erroring. Upper bound matches the
+     * exchange-quote form's own cap.
+     */
+    private function amountFromQuery(Request $request): ?float
+    {
+        $amount = $request->query('amount');
+
+        if (! is_numeric($amount)) {
+            return null;
+        }
+
+        $amount = round((float) $amount, 2);
+
+        return $amount > 0 && $amount <= 99999999.99 ? $amount : null;
     }
 
     /**
@@ -187,8 +331,10 @@ class RateController extends Controller
         // and locale (row URLs like organizations.show are locale-prefixed,
         // so a locale-less key would leak one locale's links into another's
         // cached render - see rates-table.blade.php for the same caveat).
+        // 'v2' bumps every key at once: rows gained organization_type, and an
+        // entry written before that would render an ungrouped page.
         $cacheKey = 'rates.listing.'.md5(json_encode([
-            app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
+            'v2', app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
             $selectedOrgType, $selectedCity, $sort, $direction, $page,
         ]));
 
@@ -283,6 +429,7 @@ class RateController extends Controller
             'spread' => $rate->getSpread(),
             'scraped_at' => $rate->scraped_at?->toIso8601String(),
             'organization_id' => $rate->organization_id,
+            'organization_type' => $rate->organization->type,
             'organization_name' => $rate->organization->name,
             'organization_logo' => $rate->organization->logo,
             'organization_url' => route('organizations.show', $rate->organization),
