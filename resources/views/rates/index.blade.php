@@ -90,26 +90,33 @@
             </div>
 
             {{-- The one thing here a competitor cannot offer, so it takes the
-            prime slot beside the heading. Still says who it is for: below the
-            configured minimum an exchange office will not renegotiate. --}}
+            prime slot beside the heading. The "who is this for" detail lives in
+            a popover rather than a paragraph - it only matters to the people
+            who stop to ask. --}}
             @if ($quoteMinimum !== null)
                 @php $qualifies = $amount !== null && $amount >= $quoteMinimum; @endphp
-                <div class="w-full sm:w-auto sm:shrink-0">
+                <div class="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
                     <a
                         href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
-                        class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md sm:inline-flex sm:w-auto"
+                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md sm:inline-flex sm:flex-none"
                     >
-                        <span aria-hidden="true">💱</span>
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0" aria-hidden="true">
+                            <path d="M13.2 2.24a.75.75 0 00.04 1.06l2.1 1.95H6.75a.75.75 0 000 1.5h8.59l-2.1 1.95a.75.75 0 101.02 1.1l3.5-3.25a.75.75 0 000-1.1l-3.5-3.25a.75.75 0 00-1.06.04zm-6.4 8a.75.75 0 00-1.06-.04l-3.5 3.25a.75.75 0 000 1.1l3.5 3.25a.75.75 0 101.02-1.1l-2.1-1.95h8.59a.75.75 0 000-1.5H4.66l2.1-1.95a.75.75 0 00.04-1.06z" />
+                        </svg>
                         <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
-                        <span aria-hidden="true">&rarr;</span>
                     </a>
-                    <p class="mt-2 text-xs break-words text-muted sm:max-w-[19rem]">
-                        @if ($qualifies)
-                            {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
-                        @else
-                            {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
-                        @endif
-                    </p>
+
+                    <x-info-popover :label="__('rates.cta_button')">
+                        <p class="font-semibold text-ink">
+                            @if ($qualifies)
+                                {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                            @else
+                                {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                            @endif
+                        </p>
+                        <p class="mt-2">{{ __('rates.cta_body') }}</p>
+                        <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
+                    </x-info-popover>
                 </div>
             @endif
         </div>
@@ -354,13 +361,31 @@
             </div>
         </div>
 
-        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <p class="text-xs text-muted">
+        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p class="text-sm text-muted">
                 {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
             </p>
             @if ($allStale)
-                <p class="text-xs text-[#B4791F]">{{ __('rates.all_stale_notice') }}</p>
+                <p class="text-sm text-[#B4791F]">{{ __('rates.all_stale_notice') }}</p>
             @endif
+
+            {{-- Sits with the results rather than in the page header: an alert
+            is a follow-up to what you are looking at. --}}
+            <div class="ms-auto flex items-center gap-2">
+                <a
+                    href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-[#D4A72C]">
+                        <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
+                </a>
+
+                <x-info-popover :label="__('rates.alert_cta')">
+                    {{ __('rates.alert_hint') }}
+                </x-info-popover>
+            </div>
         </div>
 
         @php
@@ -595,19 +620,5 @@
             </div>
         @endif
 
-        {{-- Follows the results rather than heading them: setting an alert is
-        what you do when nothing on the page is good enough yet. --}}
-        <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-3">
-            <a
-                href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
-                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-placeholder bg-white px-6 py-3 text-base font-semibold text-ink transition hover:border-primary hover:text-primary sm:inline-flex sm:w-auto"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-[#D4A72C]">
-                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                </svg>
-                <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
-            </a>
-            <p class="max-w-md text-sm break-words text-muted">{{ __('rates.alert_hint') }}</p>
-        </div>
     </section>
 @endsection
