@@ -24,6 +24,12 @@ return [
     'cta_button' => 'Запросить лучший курс',
     'cta_note' => 'Бесплатно, аккаунт не нужен. Ответы обычно приходят в течение нескольких часов.',
 
+    'provider_column' => 'Организация',
+    'save_hint' => 'По сравнению с худшим курсом на этой странице.',
+    'save_column' => 'Вы экономите',
+    'save_vs_worst' => 'экономия :amount :currency',
+    'per_unit' => ':amount :currency / :code',
+    'market_saving_per_unit' => 'До :amount :currency разницы на 1 :code между лучшим и худшим. Укажите сумму, чтобы увидеть итог.',
     'intent_label' => 'Я хочу',
     'intent_buy' => 'Купить :currency',
     'intent_sell' => 'Продать :currency',

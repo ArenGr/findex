@@ -24,6 +24,12 @@ return [
     'cta_button' => 'Հայցել ավելի լավ փոխարժեք',
     'cta_note' => 'Անվճար է, հաշիվ պետք չէ։ Պատասխանները սովորաբար գալիս են մի քանի ժամվա ընթացքում։',
 
+    'provider_column' => 'Կազմակերպություն',
+    'save_hint' => 'Համեմատած այս էջի ամենավատ փոխարժեքի հետ։',
+    'save_column' => 'Դուք խնայում եք',
+    'save_vs_worst' => 'խնայում եք :amount :currency',
+    'per_unit' => ':amount :currency / :code',
+    'market_saving_per_unit' => 'Մինչև :amount :currency տարբերություն 1 :code-ի համար լավագույնի և վատագույնի միջև։ Նշեք գումարը՝ ընդհանուրը տեսնելու համար։',
     'intent_label' => 'Ես ուզում եմ',
     'intent_buy' => 'Գնել :currency',
     'intent_sell' => 'Վաճառել :currency',

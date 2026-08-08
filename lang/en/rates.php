@@ -24,6 +24,12 @@ return [
     'cta_button' => 'Request better rates',
     'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
 
+    'provider_column' => 'Organization',
+    'save_hint' => 'Compared with the worst rate on this page.',
+    'save_column' => 'You save',
+    'save_vs_worst' => 'save :amount :currency',
+    'per_unit' => ':amount :currency / :code',
+    'market_saving_per_unit' => 'Up to :amount :currency per :code between the best and worst here - enter an amount to see your total.',
     'intent_label' => 'I want to',
     'intent_buy' => 'Buy :currency',
     'intent_sell' => 'Sell :currency',

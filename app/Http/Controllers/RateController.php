@@ -213,6 +213,12 @@ class RateController extends Controller
         return $intent === 'sell' ? 'buy_rate' : 'sell_rate';
     }
 
+    /** Stable array-key form of a rate, immune to float-to-int key casting. */
+    private static function rateKey(float $value): string
+    {
+        return number_format($value, 4, '.', '');
+    }
+
     /**
      * Rank every visible row as one list and resolve the winner.
      *
@@ -241,6 +247,30 @@ class RateController extends Controller
         // Selling: the most AMD back wins. Buying: the least paid wins.
         $best = $intent === 'sell' ? $values->max() : $values->min();
         $worst = $intent === 'sell' ? $values->min() : $values->max();
+
+        // Rank by rate, independent of the visitor's chosen sort: they may have
+        // ordered by spread or distance, in which case row one is not rank one.
+        // Equal rates share a rank, so two joint-seconds are followed by a 4th.
+        $ordered = $values->unique()->sort()->values();
+        if ($intent === 'sell') {
+            $ordered = $ordered->reverse()->values();
+        }
+
+        // Keyed by a fixed-precision string, not the float: PHP casts float
+        // array keys to int, which would collapse 365.50 and 365.00 onto one.
+        $rankByValue = [];
+        foreach ($ordered as $index => $value) {
+            $rankByValue[self::rateKey($value)] = $index + 1;
+        }
+
+        $field = self::rateFieldForIntent($intent);
+        foreach ($rows as $row) {
+            $value = (float) $row->{$field};
+            $row->rank = $rankByValue[self::rateKey($value)] ?? null;
+            // What picking this row saves per unit against the worst quote on
+            // the page - the concrete cost of not comparing.
+            $row->saving_per_unit = abs($worst - $value);
+        }
 
         return [
             'rows' => $rows,

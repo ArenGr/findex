@@ -49,6 +49,36 @@
     // - but only when the list actually mixes them.
     $showMarket = collect($ranked['rows'])->pluck('organization_type')->unique()->count() > 1;
 
+    $marketStyle = fn (?string $type) => match ($type) {
+        'bank' => 'border-market-bank-line bg-market-bank-tint text-market-bank-ink',
+        'exchange' => 'border-market-exchange-line bg-market-exchange-tint text-market-exchange-ink',
+        default => 'border-border-muted text-muted',
+    };
+
+    // Podium: brand green, accent yellow, soft blue. Only the top three get
+    // one - beyond that a badge stops meaning "worth your attention".
+    $rankBadge = [1 => 'bg-rank-1 text-white', 2 => 'bg-rank-2 text-ink', 3 => 'bg-rank-3 text-ink'];
+    // Equal rates share a rank, and with this data several banks routinely tie
+    // for second - tinting each of them floods the table, so only the outright
+    // winner gets a row tint. The badge still carries the podium colour.
+    $rankTint = [1 => 'bg-rank-1/8'];
+
+    // With an amount this is real money; without one it is the per-unit gap,
+    // which is still worth showing rather than hiding savings entirely.
+    $savingFor = fn ($row) => $amount !== null
+        ? $amount * $row->saving_per_unit
+        : $row->saving_per_unit;
+    // Inline (mobile) needs the verb; the desktop column header already
+    // supplies it, so that cell carries the figure alone.
+    $savingLabel = fn ($row) => $amount !== null
+        ? __('rates.save_vs_worst', ['amount' => number_format($savingFor($row)), 'currency' => __('exchange_quotes.request.amd')])
+        : __('rates.per_unit', ['amount' => number_format($row->saving_per_unit, 2), 'currency' => __('exchange_quotes.request.amd'), 'code' => $selectedCurrency?->code]);
+    $savingCell = fn ($row) => $amount !== null
+        ? number_format($savingFor($row)).' '.__('exchange_quotes.request.amd')
+        : __('rates.per_unit', ['amount' => number_format($row->saving_per_unit, 2), 'currency' => __('exchange_quotes.request.amd'), 'code' => $selectedCurrency?->code]);
+    // Sub-1 AMD "savings" are noise.
+    $hasSaving = fn ($row) => $savingFor($row) >= ($amount !== null ? 1 : 0.01);
+
     $activeFilterCount = collect([$selectedOrganization, $selectedCity, $hasLocation ?: null])
         ->filter()->count();
 @endphp
@@ -319,10 +349,18 @@
 
             <div class="mt-6">
                 @if ($marketSaving !== null && $marketSaving >= 1)
-                    <p class="text-xs text-muted">
+                    <p class="text-sm font-medium break-words text-ink">
                         {{ __('rates.market_saving', [
                             'amount' => number_format($marketSaving),
                             'currency' => __('exchange_quotes.request.amd'),
+                        ]) }}
+                    </p>
+                @elseif ($ranked['spread'] !== null && $ranked['spread'] >= 0.01)
+                    <p class="text-sm break-words text-muted">
+                        {{ __('rates.market_saving_per_unit', [
+                            'amount' => number_format($ranked['spread'], 2),
+                            'currency' => __('exchange_quotes.request.amd'),
+                            'code' => $selectedCurrency?->code,
                         ]) }}
                     </p>
                 @endif
@@ -331,18 +369,17 @@
                 once both rate columns need space. --}}
                 <div class="mt-3 border border-placeholder sm:hidden">
                     <div class="flex items-center justify-between gap-3 border-b border-placeholder bg-placeholder/20 px-4 py-2 text-xs font-semibold text-subtle uppercase">
-                        <span>{{ __('rates.filter_bank') }}</span>
+                        <span>{{ __('rates.provider_column') }}</span>
                         <span>{{ $isBuying ? __('rates.you_buy_at') : __('rates.you_sell_at') }}</span>
                     </div>
 
                     <div class="divide-y divide-placeholder">
                         @foreach ($ranked['rows'] as $rate)
                             @php
-                                $isBest = ! $bestShown && (float) $rate->{$rateField} === (float) $ranked['best_value'];
-                                $bestShown = $bestShown || $isBest;
+                                $rank = $rate->rank;
                                 $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                             @endphp
-                            <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4 {{ $isBest ? 'bg-primary/5' : '' }}">
+                            <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4 {{ $rankTint[$rank] ?? '' }}">
                                 @if ($rate->organization_logo)
                                     <img src="{{ $rate->organization_logo }}" alt="" class="h-9 w-9 shrink-0 rounded-full object-contain">
                                 @else
@@ -352,16 +389,16 @@
                                 @endif
 
                                 <div class="min-w-0 flex-1">
-                                    <p class="truncate font-medium text-ink">{{ $rate->organization_name }}</p>
+                                    <p class="font-medium break-words text-ink">{{ $rate->organization_name }}</p>
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                        @if ($showMarket)
-                                            <span class="rounded-full border border-border-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
-                                                {{ __('rates.market_badge.' . $rate->organization_type) }}
+                                        @if ($rank <= 3)
+                                            <span class="rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide uppercase {{ $rankBadge[$rank] }}">
+                                                {{ $rank === 1 ? __('rates.best_badge') : '#'.$rank }}
                                             </span>
                                         @endif
-                                        @if ($isBest)
-                                            <span class="rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase">
-                                                {{ __('rates.best_badge') }}
+                                        @if ($showMarket)
+                                            <span class="rounded-full border px-1.5 py-0.5 text-[10px] font-medium {{ $marketStyle($rate->organization_type) }}">
+                                                {{ __('rates.market_badge.' . $rate->organization_type) }}
                                             </span>
                                         @endif
                                         @if ($hasLocation && isset($rate->distance_km))
@@ -385,6 +422,9 @@
                                             ]) }}
                                         </p>
                                     @endif
+                                    @if ($hasSaving($rate))
+                                        <p class="text-xs font-semibold whitespace-nowrap text-primary">{{ $savingLabel($rate) }}</p>
+                                    @endif
                                 </div>
                             </a>
                         @endforeach
@@ -392,12 +432,11 @@
                 </div>
 
                 {{-- Desktop table --}}
-                @php $bestShown = false; @endphp
                 <div class="mt-3 hidden overflow-x-auto border border-placeholder sm:block">
                     <table class="w-full border-collapse text-sm">
                         <thead>
                             <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-subtle uppercase">
-                                <th class="px-6 py-3 text-left">{{ __('rates.filter_bank') }}</th>
+                                <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
                                 <th class="px-4 py-3 text-right">
                                     <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.you_sell_at_hint') }}">
                                         {{ __('rates.you_sell_at') }} {{ $sortArrow('buy_rate') }}
@@ -413,7 +452,8 @@
                                         {{ $isBuying ? __('rates.you_pay_column') : __('rates.you_get_column') }}
                                     </th>
                                 @endif
-                                <th class="hidden px-4 py-3 text-right md:table-cell">
+                                <th class="px-4 py-3 text-right" title="{{ __('rates.save_hint') }}">{{ __('rates.save_column') }}</th>
+                                <th class="hidden px-4 py-3 text-right lg:table-cell">
                                     <a href="{{ $sortLink('spread') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.spread_hint') }}">
                                         {{ __('rates.spread_column') }} {{ $sortArrow('spread') }}
                                     </a>
@@ -431,12 +471,11 @@
                         <tbody>
                             @foreach ($ranked['rows'] as $rate)
                                 @php
-                                    $isBest = ! $bestShown && (float) $rate->{$rateField} === (float) $ranked['best_value'];
-                                    $bestShown = $bestShown || $isBest;
+                                    $rank = $rate->rank;
                                     $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                                     $stale = $isStale($rate->scraped_at);
                                 @endphp
-                                <tr class="border-b border-placeholder last:border-b-0 {{ $isBest ? 'bg-primary/5' : '' }}">
+                                <tr class="border-b border-placeholder last:border-b-0 {{ $rankTint[$rank] ?? '' }}">
                                     <td class="px-6 py-4">
                                         <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
                                             @if ($rate->organization_logo)
@@ -449,13 +488,13 @@
                                             <div class="min-w-0">
                                                 <span class="flex items-center gap-2">
                                                     <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
-                                                    @if ($isBest)
-                                                        <span class="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase">
-                                                            {{ __('rates.best_badge') }}
+                                                    @if ($rank <= 3)
+                                                        <span class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase {{ $rankBadge[$rank] }}">
+                                                            {{ $rank === 1 ? __('rates.best_badge') : '#'.$rank }}
                                                         </span>
                                                     @endif
                                                     @if ($showMarket)
-                                                        <span class="shrink-0 rounded-full border border-border-muted px-2 py-0.5 text-[10px] font-medium text-muted">
+                                                        <span class="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium {{ $marketStyle($rate->organization_type) }}">
                                                             {{ __('rates.market_badge.' . $rate->organization_type) }}
                                                         </span>
                                                     @endif
@@ -481,7 +520,10 @@
                                             <span class="text-xs font-normal text-subtle">{{ __('exchange_quotes.request.amd') }}</span>
                                         </td>
                                     @endif
-                                    <td class="hidden px-4 py-4 text-right text-xs text-subtle md:table-cell">
+                                    <td class="px-4 py-4 text-right text-sm font-semibold whitespace-nowrap {{ $hasSaving($rate) ? 'text-primary' : 'text-subtle' }}">
+                                        {{ $hasSaving($rate) ? $savingCell($rate) : '—' }}
+                                    </td>
+                                    <td class="hidden px-4 py-4 text-right text-xs text-subtle lg:table-cell">
                                         {{ number_format($rate->spread, 2) }}
                                     </td>
                                     <td class="px-4 py-4 text-left text-xs {{ $stale ? 'text-[#B4791F]' : 'text-subtle' }}">

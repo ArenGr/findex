@@ -148,6 +148,81 @@ class RatesPageTest extends TestCase
         $this->assertSame(23.0, round((float) $ranked['spread'], 2));
     }
 
+    public function test_the_three_best_rates_are_ranked_for_the_podium(): void
+    {
+        $this->seedMarket();
+
+        $ranked = $this->get('/en/rates?currency=USD&intent=buy')->viewData('ranked');
+        $byName = collect($ranked['rows'])->keyBy('organization_name');
+
+        // Buying: 365 < 370 < 388.
+        $this->assertSame(1, $byName['Cheap bank']->rank);
+        $this->assertSame(2, $byName['Pricey bank']->rank);
+        $this->assertSame(3, $byName['Corner exchange']->rank);
+    }
+
+    public function test_equal_rates_share_a_rank(): void
+    {
+        $usd = $this->seedMarket();
+        $this->rate($this->organization('tied-bank'), $usd, 360.0, 365.0);
+
+        $byName = collect($this->get('/en/rates?currency=USD&intent=buy')->viewData('ranked')['rows'])
+            ->keyBy('organization_name');
+
+        $this->assertSame(1, $byName['Cheap bank']->rank);
+        $this->assertSame(1, $byName['Tied bank']->rank, 'an identical rate is joint-first');
+        $this->assertSame(2, $byName['Pricey bank']->rank, 'the next distinct rate is second, not third');
+    }
+
+    public function test_rank_follows_the_rate_not_the_visitor_s_chosen_sort(): void
+    {
+        $this->seedMarket();
+
+        // Sorted by spread, the cheapest row is no longer row one - the podium
+        // must still track the rate.
+        $rows = collect($this->get('/en/rates?currency=USD&intent=buy&sort=spread&direction=desc')->viewData('ranked')['rows']);
+
+        $this->assertNotSame('Cheap bank', $rows->first()->organization_name, 'precondition: the sort moved it');
+        $this->assertSame(1, $rows->firstWhere('organization_name', 'Cheap bank')->rank);
+    }
+
+    public function test_rates_a_fraction_apart_do_not_collapse_onto_one_rank(): void
+    {
+        $usd = $this->seedMarket();
+        // Float array keys cast to int in PHP, so 365.50 could silently land on
+        // 365.00's rank.
+        $this->rate($this->organization('halfway-bank'), $usd, 360.0, 365.5);
+
+        $byName = collect($this->get('/en/rates?currency=USD&intent=buy')->viewData('ranked')['rows'])
+            ->keyBy('organization_name');
+
+        $this->assertSame(1, $byName['Cheap bank']->rank);
+        $this->assertSame(2, $byName['Halfway bank']->rank);
+    }
+
+    public function test_each_row_reports_what_it_saves_against_the_worst_rate(): void
+    {
+        $this->seedMarket();
+
+        $byName = collect($this->get('/en/rates?currency=USD&intent=buy')->viewData('ranked')['rows'])
+            ->keyBy('organization_name');
+
+        // Worst sell rate on the page is the exchange office's 388.
+        $this->assertSame(23.0, round($byName['Cheap bank']->saving_per_unit, 2));
+        $this->assertSame(18.0, round($byName['Pricey bank']->saving_per_unit, 2));
+        $this->assertSame(0.0, round($byName['Corner exchange']->saving_per_unit, 2));
+    }
+
+    public function test_an_amount_turns_the_per_unit_saving_into_a_total(): void
+    {
+        $this->seedMarket();
+
+        // 500 x 23.00 = 11,500 AMD saved by using the best rate over the worst.
+        $this->get('/en/rates?currency=USD&intent=buy&amount=500')
+            ->assertOk()
+            ->assertSee('11,500');
+    }
+
     public function test_only_rate_types_that_have_rows_are_offered(): void
     {
         $usd = $this->seedMarket();

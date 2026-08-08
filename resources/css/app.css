@@ -86,6 +86,24 @@ button {
     --color-travel-tint: #eef5ff;
     --color-travel-line: #c9dbf8;
 
+    /* /rates market badges - banks and exchange offices share one table now,
+       so each row says which it is and the two must be tellable apart at a
+       glance. Blue reuses the currency-service tint; purple is its pastel
+       counterpart, both kept soft enough not to compete with the podium. */
+    --color-market-bank-tint: #eaf3ff;
+    --color-market-bank-line: #c7ddf7;
+    --color-market-bank-ink: #00458a;
+    --color-market-exchange-tint: #f7edfb;
+    --color-market-exchange-line: #e3c9ee;
+    --color-market-exchange-ink: #6d3487;
+
+    /* Podium for the three best rates. Brand green leads, then the accent
+       yellow and the carousel's soft blue - all three take ink or white text
+       at a readable contrast. */
+    --color-rank-1: #607e34;
+    --color-rank-2: #f1cb40;
+    --color-rank-3: #87b8f5;
+
     /* Neutrals */
     --color-ink: #161515;
     --color-body-text: #262626;
