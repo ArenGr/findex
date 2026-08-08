@@ -55,13 +55,12 @@
         default => 'border-border-muted text-muted',
     };
 
-    // Podium: gold, silver, bronze. Only the top three get one - beyond that a
-    // badge stops meaning "worth your attention".
-    $rankBadge = [1 => 'bg-rank-1 text-ink', 2 => 'bg-rank-2 text-ink', 3 => 'bg-rank-3 text-ink'];
-    // Equal rates share a rank, and with this data several banks routinely tie
-    // for second - tinting each of them floods the table, so only the outright
-    // winner gets a row tint. The badge still carries the podium colour.
-    $rankTint = [1 => 'bg-rank-1/8'];
+    // One winner, marked hard: a yellow row wash plus a left bar, so it reads
+    // as the answer at a glance rather than as one highlighted line among
+    // several. Ranks 2 and 3 get nothing - with this data several banks tie for
+    // second, and badging them all drained the badge of meaning.
+    $bestRow = 'bg-best-row';
+    $bestBar = fn (bool $isBest) => $isBest ? 'border-l-4 border-best-edge' : 'border-l-4 border-transparent';
 
     // With an amount this is real money; without one it is the per-unit gap,
     // which is still worth showing rather than hiding savings entirely.
@@ -376,10 +375,10 @@
                     <div class="divide-y divide-placeholder">
                         @foreach ($ranked['rows'] as $rate)
                             @php
-                                $rank = $rate->rank;
+                                $isBest = $rate->rank === 1;
                                 $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                             @endphp
-                            <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4 {{ $rankTint[$rank] ?? '' }}">
+                            <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 py-4 pr-4 pl-3 {{ $bestBar($isBest) }} {{ $isBest ? $bestRow : '' }}">
                                 @if ($rate->organization_logo)
                                     <img src="{{ $rate->organization_logo }}" alt="" class="h-9 w-9 shrink-0 rounded-full object-contain">
                                 @else
@@ -391,9 +390,9 @@
                                 <div class="min-w-0 flex-1">
                                     <p class="font-medium break-words text-ink">{{ $rate->organization_name }}</p>
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                        @if ($rank <= 3)
-                                            <span class="rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide uppercase {{ $rankBadge[$rank] }}">
-                                                {{ $rank }}
+                                        @if ($isBest)
+                                            <span class="rounded-full bg-best-edge px-2 py-0.5 text-[9px] font-semibold tracking-wide text-ink uppercase">
+                                                {{ __('rates.best_badge') }}
                                             </span>
                                         @endif
                                         @if ($showMarket)
@@ -471,12 +470,12 @@
                         <tbody>
                             @foreach ($ranked['rows'] as $rate)
                                 @php
-                                    $rank = $rate->rank;
+                                    $isBest = $rate->rank === 1;
                                     $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                                     $stale = $isStale($rate->scraped_at);
                                 @endphp
-                                <tr class="border-b border-placeholder last:border-b-0 {{ $rankTint[$rank] ?? '' }}">
-                                    <td class="px-6 py-4">
+                                <tr class="border-b border-placeholder last:border-b-0 {{ $isBest ? $bestRow : '' }}">
+                                    <td class="py-4 pr-6 pl-5 {{ $bestBar($isBest) }}">
                                         <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
                                             @if ($rate->organization_logo)
                                                 <img src="{{ $rate->organization_logo }}" alt="" class="h-8 w-8 shrink-0 rounded-full object-contain">
@@ -488,9 +487,9 @@
                                             <div class="min-w-0">
                                                 <span class="flex items-center gap-2">
                                                     <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
-                                                    @if ($rank <= 3)
-                                                        <span class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase {{ $rankBadge[$rank] }}">
-                                                            {{ $rank }}
+                                                    @if ($isBest)
+                                                        <span class="shrink-0 rounded-full bg-best-edge px-2 py-0.5 text-[9px] font-semibold tracking-wide text-ink uppercase">
+                                                            {{ __('rates.best_badge') }}
                                                         </span>
                                                     @endif
                                                     @if ($showMarket)

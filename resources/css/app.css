@@ -97,12 +97,12 @@ button {
     --color-market-exchange-line: #e3c9ee;
     --color-market-exchange-ink: #6d3487;
 
-    /* Podium for the three best rates - gold, silver, bronze. All three carry
-       ink text rather than white: bronze against white is only ~3.5:1, which
-       fails at badge size, while ink clears 5:1 on all three. */
-    --color-rank-1: #f1cb40;
-    --color-rank-2: #a7a9ac;
-    --color-rank-3: #cd7f32;
+    /* Best-rate row on /rates. The accent yellow washed right back so body text
+       stays readable across the whole row, with a deeper gold for the edge bar
+       and badge - full-strength #f1cb40 takes neither white nor ink cleanly at
+       badge size, but this one clears 6:1 on ink. */
+    --color-best-row: #fdf0cd;
+    --color-best-edge: #d4a72c;
 
     /* Neutrals */
     --color-ink: #161515;

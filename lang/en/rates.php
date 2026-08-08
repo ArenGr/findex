@@ -24,6 +24,7 @@ return [
     'cta_button' => 'Request better rates',
     'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
 
+    'best_badge' => 'Best rate',
     'buy_column' => 'Buy',
     'sell_column' => 'Sell',
     'buy_hint' => 'The rate the organization buys at - what you receive when selling this currency.',
