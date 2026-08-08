@@ -138,7 +138,8 @@
                         <input
                             type="number" step="0.01" min="0.01" required
                             name="amount" id="amount"
-                            value="{{ old('amount') }}"
+                            {{-- Prefilled when arriving from /rates with an amount already entered. --}}
+                            value="{{ old('amount', request('amount')) }}"
                             class="mt-1.5 block w-full rounded-md border px-3 py-2 text-sm text-ink focus:outline-none {{ $errors->has('amount') ? 'border-red-400 focus:border-red-500' : 'border-border-muted focus:border-primary' }}"
                         >
                         @error('amount')

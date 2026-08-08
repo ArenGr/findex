@@ -38,10 +38,16 @@
     $staleAfterHours = 24;
     $isStale = fn ($scrapedAt) => $scrapedAt && Carbon::parse($scrapedAt)->diffInHours(now()) >= $staleAfterHours;
 
-    $rowCount = collect($groups)->sum('count');
-    $allStale = $rowCount > 0 && collect($groups)
-        ->flatMap(fn (array $group) => $group['rows'])
-        ->every(fn ($row) => $isStale($row->scraped_at));
+    $rowCount = $ranked['count'];
+    $allStale = $rowCount > 0 && collect($ranked['rows'])->every(fn ($row) => $isStale($row->scraped_at));
+
+    // Shown once above the table rather than per market, now that everything
+    // is ranked as one list.
+    $marketSaving = $amount !== null && $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
+
+    // Banks and exchange offices share one table, so each row says which it is
+    // - but only when the list actually mixes them.
+    $showMarket = collect($ranked['rows'])->pluck('organization_type')->unique()->count() > 1;
 
     $activeFilterCount = collect([$selectedOrganization, $selectedCity, $hasLocation ?: null])
         ->filter()->count();
@@ -99,7 +105,13 @@
                     <div class="mt-1.5 inline-flex rounded-full border border-border-muted bg-white p-0.5">
                         @foreach (['buy', 'sell'] as $option)
                             <label class="cursor-pointer">
-                                <input type="radio" name="intent" value="{{ $option }}" class="peer sr-only" @checked($intent === $option)>
+                                {{-- Submits on pick so switching buy/sell is one click; the button
+                                below stays for the amount field and for no-JS. --}}
+                                <input
+                                    type="radio" name="intent" value="{{ $option }}"
+                                    class="peer sr-only" @checked($intent === $option)
+                                    onchange="this.form.submit()"
+                                >
                                 <span class="block rounded-full px-4 py-1.5 text-sm font-medium text-muted transition peer-checked:bg-primary peer-checked:text-white">
                                     {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
                                 </span>
@@ -302,27 +314,12 @@
             $sortArrow = fn (string $column) => $sort === $column ? ($direction === 'asc' ? '▲' : '▼') : '';
         @endphp
 
-        @forelse ($groups as $group)
-            @php
-                $bestShown = false;
-                $marketSaving = $amount !== null && $group['spread_across_market'] !== null
-                    ? $amount * $group['spread_across_market']
-                    : null;
-            @endphp
+        @if ($rowCount > 0)
+            @php $bestShown = false; @endphp
 
-            <div class="mt-8">
-                {{-- Only worth naming the market when both are on screen. --}}
-                @if (count($groups) > 1)
-                    <div class="flex flex-wrap items-baseline gap-x-3">
-                        <h2 class="font-heading text-sm font-semibold tracking-wide text-ink uppercase">
-                            {{ __('rates.markets.' . $group['type']) }}
-                        </h2>
-                        <span class="text-xs text-subtle">{{ $group['count'] }}</span>
-                    </div>
-                @endif
-
+            <div class="mt-6">
                 @if ($marketSaving !== null && $marketSaving >= 1)
-                    <p class="mt-1 text-xs text-muted">
+                    <p class="text-xs text-muted">
                         {{ __('rates.market_saving', [
                             'amount' => number_format($marketSaving),
                             'currency' => __('exchange_quotes.request.amd'),
@@ -339,9 +336,9 @@
                     </div>
 
                     <div class="divide-y divide-placeholder">
-                        @foreach ($group['rows'] as $rate)
+                        @foreach ($ranked['rows'] as $rate)
                             @php
-                                $isBest = ! $bestShown && (float) $rate->{$rateField} === (float) $group['best_value'];
+                                $isBest = ! $bestShown && (float) $rate->{$rateField} === (float) $ranked['best_value'];
                                 $bestShown = $bestShown || $isBest;
                                 $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                             @endphp
@@ -357,6 +354,11 @@
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate font-medium text-ink">{{ $rate->organization_name }}</p>
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                        @if ($showMarket)
+                                            <span class="rounded-full border border-border-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                                                {{ __('rates.market_badge.' . $rate->organization_type) }}
+                                            </span>
+                                        @endif
                                         @if ($isBest)
                                             <span class="rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase">
                                                 {{ __('rates.best_badge') }}
@@ -427,9 +429,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($group['rows'] as $rate)
+                            @foreach ($ranked['rows'] as $rate)
                                 @php
-                                    $isBest = ! $bestShown && (float) $rate->{$rateField} === (float) $group['best_value'];
+                                    $isBest = ! $bestShown && (float) $rate->{$rateField} === (float) $ranked['best_value'];
                                     $bestShown = $bestShown || $isBest;
                                     $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                                     $stale = $isStale($rate->scraped_at);
@@ -450,6 +452,11 @@
                                                     @if ($isBest)
                                                         <span class="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase">
                                                             {{ __('rates.best_badge') }}
+                                                        </span>
+                                                    @endif
+                                                    @if ($showMarket)
+                                                        <span class="shrink-0 rounded-full border border-border-muted px-2 py-0.5 text-[10px] font-medium text-muted">
+                                                            {{ __('rates.market_badge.' . $rate->organization_type) }}
                                                         </span>
                                                     @endif
                                                 </span>
@@ -491,7 +498,7 @@
                     </table>
                 </div>
             </div>
-        @empty
+        @else
             {{-- Never a dead end: offer the nearest combination that has data
             rather than only reporting the absence. --}}
             <div class="mt-8 rounded-2xl border border-dashed border-placeholder px-6 py-16 text-center">
@@ -510,22 +517,32 @@
                     @endif
                 </div>
             </div>
-        @endforelse
+        @endif
 
-        {{-- Large-amount negotiation: most relevant once someone has entered a
-        real amount, so it sits after the results rather than above them. --}}
-        <a
-            href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code])) }}"
-            class="mt-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4 transition hover:border-primary/50"
-        >
-            <span class="flex items-center gap-3">
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl">💱</span>
-                <span>
-                    <span class="block text-sm font-semibold text-ink">{{ __('exchange_quotes.request.badge') }}</span>
-                    <span class="block text-xs text-muted">{{ __('exchange_quotes.request.subheading') }}</span>
-                </span>
-            </span>
-            <span class="shrink-0 text-sm font-medium text-primary">{{ __('exchange_quotes.request.submit') }} &rarr;</span>
-        </a>
+        {{-- Large-amount negotiation. The posted rates above are the whole point
+        of the page, so this sits after them - but it is the one thing here a
+        visitor cannot get from a competitor, and it was being read as a footnote
+        at link size. Given real space and a real button instead. --}}
+        <div class="mt-14 rounded-2xl border border-primary/30 bg-primary/5 px-6 py-10 text-center sm:px-10 lg:py-12">
+            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl">💱</span>
+
+            <h2 class="mt-5 font-heading text-xl font-bold break-words text-ink lg:text-2xl">
+                {{ __('rates.cta_heading') }}
+            </h2>
+
+            <p class="mx-auto mt-3 max-w-2xl text-sm leading-relaxed break-words text-muted">
+                {{ __('rates.cta_body') }}
+            </p>
+
+            <a
+                href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
+                class="mt-7 inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-primary-dark hover:shadow-md"
+            >
+                {{ __('rates.cta_button') }}
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+
+            <p class="mt-4 text-xs break-words text-subtle">{{ __('rates.cta_note') }}</p>
+        </div>
     </section>
 @endsection

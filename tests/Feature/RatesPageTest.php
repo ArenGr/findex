@@ -10,9 +10,9 @@ use Tests\TestCase;
 
 /**
  * Covers the intent-driven rebuild of /rates: buy/sell decides the ranking,
- * an optional amount turns each row into a real total, banks and exchange
- * offices are ranked as separate markets, and no filter combination is a
- * dead end.
+ * an optional amount turns each row into a real total, every market shares one
+ * ranked table (with tabs to narrow it), and no filter combination is a dead
+ * end.
  */
 class RatesPageTest extends TestCase
 {
@@ -55,6 +55,8 @@ class RatesPageTest extends TestCase
         $response->assertOk()
             ->assertViewHas('amount', null)
             ->assertDontSee('pay 182,500');
+
+        $this->assertSame(3, $response->viewData('ranked')['count']);
     }
 
     public function test_an_amount_turns_each_row_into_a_total(): void
@@ -87,9 +89,11 @@ class RatesPageTest extends TestCase
 
         $response->assertOk()->assertViewHas('intent', 'buy');
 
-        $bankGroup = collect($response->viewData('groups'))->firstWhere('type', 'bank');
-        $this->assertSame(365.0, (float) $bankGroup['best_value'], 'buying should rank by the lowest sell rate');
-        $this->assertSame('Cheap bank', $bankGroup['rows'][0]->organization_name);
+        // Cheapest to buy USD across every market: the bank at 365, not the
+        // exchange office at 388.
+        $ranked = $response->viewData('ranked');
+        $this->assertSame(365.0, (float) $ranked['best_value'], 'buying should rank by the lowest sell rate');
+        $this->assertSame('Cheap bank', $ranked['rows'][0]->organization_name);
     }
 
     public function test_sell_intent_flips_the_ranking_to_the_highest_buy_rate(): void
@@ -100,35 +104,48 @@ class RatesPageTest extends TestCase
 
         $response->assertOk()->assertViewHas('intent', 'sell');
 
-        $bankGroup = collect($response->viewData('groups'))->firstWhere('type', 'bank');
-        $this->assertSame(360.0, (float) $bankGroup['best_value'], 'selling should rank by the highest buy rate');
-        $this->assertSame('Cheap bank', $bankGroup['rows'][0]->organization_name);
+        // Selling USD, the exchange office's 384 beats every bank - which only
+        // surfaces because both markets share one ranking.
+        $ranked = $response->viewData('ranked');
+        $this->assertSame(384.0, (float) $ranked['best_value'], 'selling should rank by the highest buy rate');
+        $this->assertSame('Corner exchange', $ranked['rows'][0]->organization_name);
     }
 
-    public function test_banks_and_exchange_offices_are_grouped_and_ranked_independently(): void
+    public function test_banks_and_exchange_offices_share_one_ranked_table(): void
     {
         $this->seedMarket();
 
-        $groups = collect($this->get('/en/rates?currency=USD')->viewData('groups'));
+        $response = $this->get('/en/rates?currency=USD');
+        $ranked = $response->viewData('ranked');
 
-        $this->assertEqualsCanonicalizing(['bank', 'exchange'], $groups->pluck('type')->all());
-        $this->assertSame(2, $groups->firstWhere('type', 'bank')['count']);
-        $this->assertSame(1, $groups->firstWhere('type', 'exchange')['count']);
+        $this->assertSame(3, $ranked['count'], 'every market belongs to the same list');
+        $this->assertEqualsCanonicalizing(
+            ['bank', 'bank', 'exchange'],
+            collect($ranked['rows'])->pluck('organization_type')->all(),
+        );
 
-        // Each market keeps its own best - the exchange office's 388 must not
-        // be measured against the banks'.
-        $this->assertSame(365.0, (float) $groups->firstWhere('type', 'bank')['best_value']);
-        $this->assertSame(388.0, (float) $groups->firstWhere('type', 'exchange')['best_value']);
+        // Mixed markets, so each row must say which it is.
+        $response->assertSee('Exchange office')->assertSee('Bank');
     }
 
-    public function test_each_group_reports_the_spread_between_its_best_and_worst(): void
+    public function test_a_market_tab_narrows_the_table_to_that_market(): void
     {
         $this->seedMarket();
 
-        $bankGroup = collect($this->get('/en/rates?currency=USD')->viewData('groups'))->firstWhere('type', 'bank');
+        $ranked = $this->get('/en/rates?currency=USD&org_type=exchange')->viewData('ranked');
 
-        // 370.00 - 365.00 = 5.00 AMD per unit between the two banks.
-        $this->assertSame(5.0, round((float) $bankGroup['spread_across_market'], 2));
+        $this->assertSame(1, $ranked['count']);
+        $this->assertSame('exchange', $ranked['rows'][0]->organization_type);
+    }
+
+    public function test_the_spread_spans_the_best_and_worst_on_the_page(): void
+    {
+        $this->seedMarket();
+
+        // Buying: cheapest sell rate 365.00, dearest 388.00.
+        $ranked = $this->get('/en/rates?currency=USD')->viewData('ranked');
+
+        $this->assertSame(23.0, round((float) $ranked['spread'], 2));
     }
 
     public function test_only_rate_types_that_have_rows_are_offered(): void

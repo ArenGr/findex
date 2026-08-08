@@ -15,6 +15,15 @@ return [
         'exchange' => 'Exchange offices',
     ],
 
+    'market_badge' => [
+        'bank' => 'Bank',
+        'exchange' => 'Exchange office',
+    ],
+    'cta_heading' => 'Exchanging a large amount?',
+    'cta_body' => 'Posted rates are for everyday amounts. Tell us how much you need once, and we will ask our partner exchange offices whether they will beat their posted rate for you.',
+    'cta_button' => 'Request better rates',
+    'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
+
     'intent_label' => 'I want to',
     'intent_buy' => 'Buy :currency',
     'intent_sell' => 'Sell :currency',

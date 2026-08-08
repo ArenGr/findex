@@ -193,10 +193,10 @@ class RateController extends Controller
             'intent' => $intent,
             'amount' => $amount,
             'rates' => $rates,
-            // Banks and exchange offices quote very different levels (~363 vs
-            // ~384 for USD cash), so one interleaved ranking reads as broken
-            // data. Same rows as $rates, split and ranked per market.
-            'groups' => $this->groupRows($rates->items(), $intent, $orgTypes),
+            // One ranked list covering every market, so the page answers "who
+            // has the best rate" outright. Same rows as $rates, with the winner
+            // and the best-to-worst gap resolved.
+            'ranked' => $this->rankRows($rates->items(), $intent),
             'hasLocation' => $hasLocation,
             'latitude' => $latitude,
             'longitude' => $longitude,
@@ -214,46 +214,42 @@ class RateController extends Controller
     }
 
     /**
-     * Split the page's rows per organization type and mark the winner in each,
-     * so "All" reads as two ranked markets rather than one list with an
-     * unexplained 20-dram step in the middle.
+     * Rank every visible row as one list and resolve the winner.
      *
-     * Best is computed from the values rather than taken as the first row:
-     * the visitor may have sorted by spread or distance, in which case row one
-     * is not the best rate.
+     * Banks and exchange offices sit in the same table on purpose: the visitor
+     * wants the best rate, not a per-market league table. They quote very
+     * different levels (~363 vs ~384 for USD cash), so each row carries its own
+     * market badge and the market tabs still narrow to one or the other.
+     *
+     * Best is computed from the values rather than taken as the first row: the
+     * visitor may have sorted by spread or distance, in which case row one is
+     * not the best rate.
      *
      * @param  array<int, object>  $rows
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      */
-    private function groupRows(array $rows, string $intent, Collection $orgTypes): array
+    private function rankRows(array $rows, string $intent): array
     {
-        $field = self::rateFieldForIntent($intent);
-        $byType = collect($rows)->groupBy('organization_type');
+        $values = collect($rows)
+            ->pluck(self::rateFieldForIntent($intent))
+            ->map(fn ($value) => (float) $value);
 
-        // $orgTypes preserves a stable order across requests; anything not in
-        // it (a type that gained rates mid-cache) still gets rendered.
-        $ordered = $orgTypes->filter(fn ($type) => $byType->has($type))
-            ->merge($byType->keys()->diff($orgTypes))
-            ->values();
+        if ($values->isEmpty()) {
+            return ['rows' => [], 'count' => 0, 'best_value' => null, 'worst_value' => null, 'spread' => null];
+        }
 
-        return $ordered->map(function ($type) use ($byType, $field, $intent) {
-            $group = $byType->get($type);
-            $values = $group->pluck($field)->map(fn ($value) => (float) $value);
+        // Selling: the most AMD back wins. Buying: the least paid wins.
+        $best = $intent === 'sell' ? $values->max() : $values->min();
+        $worst = $intent === 'sell' ? $values->min() : $values->max();
 
-            // Selling: the most AMD back wins. Buying: the least paid wins.
-            $best = $intent === 'sell' ? $values->max() : $values->min();
-            $worst = $intent === 'sell' ? $values->min() : $values->max();
-
-            return [
-                'type' => $type,
-                'rows' => $group->values()->all(),
-                'count' => $group->count(),
-                'best_value' => $best,
-                'worst_value' => $worst,
-                // Only meaningful with more than one quote to compare.
-                'spread_across_market' => $group->count() > 1 ? abs($best - $worst) : null,
-            ];
-        })->all();
+        return [
+            'rows' => $rows,
+            'count' => count($rows),
+            'best_value' => $best,
+            'worst_value' => $worst,
+            // Only meaningful with more than one quote to compare.
+            'spread' => count($rows) > 1 ? abs($best - $worst) : null,
+        ];
     }
 
     /**
