@@ -2,28 +2,28 @@
 
 @php
     /*
-     * Per-icon colours rather than currentColor: these are meant to read as
-     * distinct product areas at a glance, so each keeps its own hue in every
-     * state. The link's text still recolours on hover/active, which is what
-     * carries the interaction feedback.
+     * Colours are referenced as CSS custom properties, not hex, so these
+     * icons track resources/css/app.css's @theme block - retune a brand
+     * colour there and the nav follows. Tailwind v4 emits every @theme
+     * entry on :root, which is what makes var() resolve inside these
+     * presentation attributes.
      *
-     * Hex rather than theme tokens because the existing *-tint/*-line pairs
-     * are pale border/background colours - far too light to stroke a 18px
-     * glyph with. These are the same hues at usable weight, plus the tint
-     * used as a soft fill so the icons read as duotone rather than outline.
+     * One hue per nav item, taken from the documented palette (see
+     * /style-guide): the brand trio plus two of the slide accents, which
+     * together give five distinguishable product areas.
+     *
+     * Each glyph is its own colour at full strength for the stroke and 20%
+     * for the fill, which is what makes them read as duotone without
+     * needing a separate tint token per hue.
      */
-    $ink = [
-        'rates' => '#607e34',      // primary green - money
-        'ratesAlt' => '#005fb9',   // second currency in the exchange arrows
-        'banking' => '#005fb9',    // accent blue - institutions
-        'bankingFill' => '#dbeafe',
-        'insurance' => '#c8971f',  // gold, as used by the rate-alert bell
-        'insuranceFill' => '#fdf3d7',
-        'insuranceMark' => '#607e34',
-        'travel' => '#0e8fa0',     // teal - globe
-        'travelFill' => '#e0f2f4',
-        'about' => '#7161a8',      // muted violet
-        'aboutFill' => '#efeaf7',
+    $hue = [
+        'rates' => 'var(--color-primary)',
+        'ratesAlt' => 'var(--color-accent-blue)',
+        'banking' => 'var(--color-accent-blue)',
+        'insurance' => 'var(--color-accent-yellow)',
+        'insuranceMark' => 'var(--color-primary)',
+        'travel' => 'var(--color-slide-blue)',
+        'about' => 'var(--color-slide-purple)',
     ];
 @endphp
 
@@ -31,7 +31,7 @@
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
-    stroke-width="1.7"
+    stroke-width="1.9"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"
@@ -40,35 +40,35 @@
     @switch($name)
         @case('rates')
             {{-- Two currencies swapping, one arrow per colour --}}
-            <path d="M3.5 8.5h14l-3.2-3.2" stroke="{{ $ink['rates'] }}" />
-            <path d="M20.5 15.5h-14l3.2 3.2" stroke="{{ $ink['ratesAlt'] }}" />
+            <path d="M3.5 8.5h14l-3.2-3.2" stroke="{{ $hue['rates'] }}" />
+            <path d="M20.5 15.5h-14l3.2 3.2" stroke="{{ $hue['ratesAlt'] }}" />
             @break
 
         @case('banking')
             {{-- Bank facade: filled pediment over columns --}}
-            <path d="M3.5 9.8 12 4.5l8.5 5.3z" fill="{{ $ink['bankingFill'] }}" stroke="{{ $ink['banking'] }}" />
-            <path d="M6.2 11v6.5M10.1 11v6.5M13.9 11v6.5M17.8 11v6.5" stroke="{{ $ink['banking'] }}" />
-            <path d="M3.8 19.6h16.4" stroke="{{ $ink['banking'] }}" />
+            <path d="M3.5 9.8 12 4.5l8.5 5.3z" fill="{{ $hue['banking'] }}" fill-opacity="0.35" stroke="{{ $hue['banking'] }}" />
+            <path d="M6.2 11v6.5M10.1 11v6.5M13.9 11v6.5M17.8 11v6.5" stroke="{{ $hue['banking'] }}" />
+            <path d="M3.8 19.6h16.4" stroke="{{ $hue['banking'] }}" />
             @break
 
         @case('insurance')
             {{-- Shield, with the tick in green so "covered" reads instantly --}}
-            <path d="M12 3.4 19 6v5.2c0 4.3-2.9 7.6-7 9.4-4.1-1.8-7-5.1-7-9.4V6z" fill="{{ $ink['insuranceFill'] }}" stroke="{{ $ink['insurance'] }}" />
-            <path d="M9.2 11.9 11.3 14l3.6-3.7" stroke="{{ $ink['insuranceMark'] }}" />
+            <path d="M12 3.4 19 6v5.2c0 4.3-2.9 7.6-7 9.4-4.1-1.8-7-5.1-7-9.4V6z" fill="{{ $hue['insurance'] }}" fill-opacity="0.35" stroke="{{ $hue['insurance'] }}" />
+            <path d="M9.2 11.9 11.3 14l3.6-3.7" stroke="{{ $hue['insuranceMark'] }}" />
             @break
 
         @case('travel')
             {{-- Globe --}}
-            <circle cx="12" cy="12" r="8.4" fill="{{ $ink['travelFill'] }}" stroke="{{ $ink['travel'] }}" />
-            <path d="M3.6 12h16.8" stroke="{{ $ink['travel'] }}" />
-            <path d="M12 3.6c2.4 2.5 2.4 14.3 0 16.8-2.4-2.5-2.4-14.3 0-16.8z" stroke="{{ $ink['travel'] }}" />
+            <circle cx="12" cy="12" r="8.4" fill="{{ $hue['travel'] }}" fill-opacity="0.35" stroke="{{ $hue['travel'] }}" />
+            <path d="M3.6 12h16.8" stroke="{{ $hue['travel'] }}" />
+            <path d="M12 3.6c2.4 2.5 2.4 14.3 0 16.8-2.4-2.5-2.4-14.3 0-16.8z" stroke="{{ $hue['travel'] }}" />
             @break
 
         @case('about')
             {{-- Info --}}
-            <circle cx="12" cy="12" r="8.4" fill="{{ $ink['aboutFill'] }}" stroke="{{ $ink['about'] }}" />
-            <path d="M12 11.3v4.8" stroke="{{ $ink['about'] }}" />
-            <path d="M12 8.1h.01" stroke="{{ $ink['about'] }}" />
+            <circle cx="12" cy="12" r="8.4" fill="{{ $hue['about'] }}" fill-opacity="0.35" stroke="{{ $hue['about'] }}" />
+            <path d="M12 11.3v4.8" stroke="{{ $hue['about'] }}" />
+            <path d="M12 8.1h.01" stroke="{{ $hue['about'] }}" />
             @break
     @endswitch
 </svg>
