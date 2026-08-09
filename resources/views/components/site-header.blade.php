@@ -73,22 +73,22 @@
         ['label' => __('nav.about'), 'icon' => 'about', 'href' => route('about'), 'active' => $currentRoute === 'about'],
     ]));
 
-    // WhatsApp's real group link isn't set up yet - shown now with a
-    // placeholder so the entry is visible, swapped in once WHATSAPP_GROUP_URL
-    // is set. The Telegram entry deliberately points at the bot
-    // (t.me/<bot_username>), not the separate announcements group -
-    // opening it and tapping Start lands in RatesBotHandler's currency
-    // menu (see app/Services/Telegram/RatesBotHandler.php), which the
-    // plain group link can't offer since nothing in a group chat runs
-    // that flow automatically.
-    $joinLinks = collect([
+    // Telegram is the only channel we actually run, and connecting it is an
+    // account action, not a group invite: the link goes to the alert page's
+    // connect flow (auth-gated, so a guest registers first), which binds the
+    // chat to the user via users.telegram_connect_token. The bare t.me link it
+    // replaced started a bot session tied to nothing.
+    //
+    // WhatsApp used to sit beside it rendering href="#" - a dead link in the
+    // header of every page, because WHATSAPP_GROUP_URL has never been set.
+    $connectLinks = collect([
         [
-            'label' => 'Rates Bot',
-            'url' => config('services.telegram.bot_username') ? 'https://t.me/' . config('services.telegram.bot_username') : null,
+            'label' => 'Telegram',
+            'url' => route('alerts.index', ['channel' => 'telegram']),
             'icon' => asset('images/telegram-logo.svg'),
+            'connected' => auth()->check() && auth()->user()->telegram_chat_id,
         ],
-        ['label' => 'WhatsApp', 'url' => config('services.whatsapp.group_url') ?: '#', 'icon' => asset('images/whatsapp-logo.svg')],
-    ])->filter(fn ($link) => $link['url']);
+    ]);
 @endphp
 
 <header x-data="{ mobileOpen: false }" class="border-b border-placeholder">
@@ -153,12 +153,12 @@
         </nav>
 
         <div class="flex items-center gap-5">
-            @if ($joinLinks->isNotEmpty())
+            @if ($connectLinks->isNotEmpty())
                 <div x-data="{ open: false }" class="relative hidden sm:block" @click.outside="open = false">
                     <button
                         type="button"
                         @click="open = !open"
-                        aria-label="{{ __('nav.get_updates') }}"
+                        aria-label="{{ __('nav.connect') }}"
                         class="flex items-center gap-1 whitespace-nowrap rounded-full bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-dark"
                         :aria-expanded="open"
                     >
@@ -169,7 +169,7 @@
                             <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 0 0-5-5.9V4a1 1 0 1 0-2 0v1.1A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M9 17a3 3 0 0 0 6 0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <span class="hidden xl:inline">{{ __('nav.get_updates') }}</span>
+                        <span class="hidden xl:inline">{{ __('nav.connect') }}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
                             <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -181,15 +181,16 @@
                         x-cloak
                         class="absolute right-0 top-full z-20 mt-3 w-48 rounded-md border border-placeholder bg-white py-2 shadow-lg"
                     >
-                        @foreach ($joinLinks as $link)
+                        @foreach ($connectLinks as $link)
                             <a
                                 href="{{ $link['url'] }}"
-                                target="_blank"
-                                rel="noopener"
                                 class="flex items-center gap-2 px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary"
                             >
-                                <img src="{{ $link['icon'] }}" alt="" class="h-4 w-4">
-                                {{ $link['label'] }}
+                                <img src="{{ $link['icon'] }}" alt="" class="h-4 w-4 shrink-0">
+                                <span class="min-w-0 flex-1 break-words">{{ $link['label'] }}</span>
+                                @if ($link['connected'])
+                                    <span class="shrink-0 text-xs font-medium text-primary">{{ __('nav.connected') }}</span>
+                                @endif
                             </a>
                         @endforeach
                     </div>
@@ -361,18 +362,19 @@
                 @endif
             @endforeach
 
-            @if ($joinLinks->isNotEmpty())
+            @if ($connectLinks->isNotEmpty())
                 <div class="mt-1 border-t border-placeholder pt-3">
-                    <p class="px-2 pb-1 text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('nav.get_updates') }}</p>
-                    @foreach ($joinLinks as $link)
+                    <p class="px-2 pb-1 text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('nav.connect') }}</p>
+                    @foreach ($connectLinks as $link)
                         <a
                             href="{{ $link['url'] }}"
-                            target="_blank"
-                            rel="noopener"
                             class="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-primary/5 hover:text-primary"
                         >
-                            <img src="{{ $link['icon'] }}" alt="" class="h-4 w-4">
-                            {{ $link['label'] }}
+                            <img src="{{ $link['icon'] }}" alt="" class="h-4 w-4 shrink-0">
+                            <span class="min-w-0 flex-1 break-words">{{ $link['label'] }}</span>
+                            @if ($link['connected'])
+                                <span class="shrink-0 text-xs font-medium text-primary">{{ __('nav.connected') }}</span>
+                            @endif
                         </a>
                     @endforeach
                 </div>

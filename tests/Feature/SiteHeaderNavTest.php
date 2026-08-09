@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
@@ -60,5 +61,75 @@ class SiteHeaderNavTest extends TestCase
 
         $response->assertOk();
         $response->assertSee(route('tourism.request', ['locale' => 'en']), false);
+    }
+
+    /**
+     * The header's Connect entry is an account action, not a group invite: it
+     * points at the alert page's Telegram connect flow, which is auth-gated,
+     * so notifications end up bound to a registered user rather than to a
+     * bot session tied to nothing.
+     */
+    public function test_the_connect_menu_offers_telegram_through_the_account_flow(): void
+    {
+        $response = $this->get('/en');
+
+        $response->assertOk()
+            ->assertSee('Connect')
+            ->assertSee(route('alerts.index', ['locale' => 'en', 'channel' => 'telegram']), false)
+            ->assertSee('Telegram');
+    }
+
+    /** The bare t.me bot link started a session bound to no account. */
+    public function test_the_header_no_longer_links_straight_to_the_bot(): void
+    {
+        config(['services.telegram.bot_username' => 'findex_rates_bot']);
+
+        $this->get('/en')
+            ->assertOk()
+            ->assertDontSee('t.me/findex_rates_bot');
+    }
+
+    /** It rendered href="#" on every page, because the group URL is never set. */
+    public function test_the_unconfigured_whatsapp_entry_is_gone(): void
+    {
+        $this->get('/en')->assertOk()->assertDontSee('WhatsApp');
+    }
+
+    public function test_a_guest_following_connect_is_sent_to_sign_in_first(): void
+    {
+        $this->get('/en/alerts?channel=telegram')
+            ->assertRedirect(route('login', ['locale' => 'en']));
+    }
+
+    public function test_a_signed_in_visitor_lands_on_the_telegram_connect_button(): void
+    {
+        config(['services.telegram.bot_username' => 'findex_rates_bot']);
+        $user = User::factory()->create(['telegram_chat_id' => null]);
+
+        $response = $this->actingAs($user)->get('/en/alerts?channel=telegram');
+
+        $response->assertOk()
+            // The deep link carries the token that binds the chat to this user.
+            ->assertSee('t.me/findex_rates_bot?start='.$user->fresh()->telegram_connect_token, false);
+    }
+
+    public function test_the_header_reports_an_already_connected_account(): void
+    {
+        $user = User::factory()->create(['telegram_chat_id' => '123456']);
+
+        $this->actingAs($user)->get('/en')->assertOk()->assertSee('Connected');
+    }
+
+    /** Separate test, not a second request: actingAs persists for the whole one. */
+    public function test_an_account_without_telegram_is_not_reported_as_connected(): void
+    {
+        $user = User::factory()->create(['telegram_chat_id' => null]);
+
+        $this->actingAs($user)->get('/en')->assertOk()->assertDontSee('Connected');
+    }
+
+    public function test_a_guest_is_not_reported_as_connected(): void
+    {
+        $this->get('/en')->assertOk()->assertDontSee('Connected');
     }
 }

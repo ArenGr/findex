@@ -4,7 +4,8 @@ return [
     'rates' => 'Exchange Rates',
     'home' => 'Home',
     'about' => 'About Us',
-    'get_updates' => 'Get Updates',
+    'connect' => 'Connect',
+    'connected' => 'Connected',
 
     'banking' => [
         'label' => 'Banking',

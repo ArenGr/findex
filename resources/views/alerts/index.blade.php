@@ -81,7 +81,11 @@
             method="POST"
             action="{{ route('alerts.store') }}"
             class="mt-6 grid grid-cols-1 gap-5 rounded-2xl border border-placeholder bg-white p-6 shadow-sm sm:grid-cols-2 sm:p-8"
-            x-data="{ channel: @js(old('channel', 'email')) }"
+            {{-- The header's Connect entry links here with ?channel=telegram,
+            so the connect button is on screen instead of hidden behind the
+            channel select. --}}
+            @php($requestedChannel = in_array(request('channel'), ['email', 'telegram', 'viber'], true) ? request('channel') : 'email')
+            x-data="{ channel: @js(old('channel', $requestedChannel)) }"
         >
             @csrf
 
