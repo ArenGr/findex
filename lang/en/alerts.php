@@ -23,6 +23,19 @@ return [
     'existing_heading' => 'Your Alerts',
     'create_heading' => 'Create a New Alert',
 
+    'modal' => [
+        'subtitle' => 'Tell us the rate you want and we will notify you as soon as it happens.',
+        'sign_in_required' => 'Rate alerts are tied to your account, so sign in first - we will bring you straight back to these rates.',
+        'sign_in' => 'Sign in',
+        'cancel' => 'Cancel',
+        'direction_below' => 'Falls below',
+        'direction_above' => 'Rises above',
+        'threshold_placeholder' => 'e.g. 360.00',
+        'current_rate' => 'Right now the best is',
+        'manage' => 'Manage your alerts',
+        'channel_question' => 'How should we notify you?',
+        'more_channels' => 'Connect Telegram or Viber to get alerts there',
+    ],
     'form' => [
         'currency' => 'Currency',
         'organization' => 'Bank',

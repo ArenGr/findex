@@ -469,8 +469,31 @@
                 alert is a follow-up to what you are looking at. --}}
                 <div class="flex min-w-0 flex-col items-start gap-1 sm:items-end">
                     <div class="flex items-center gap-2">
+                        {{--
+                            Opens the modal rather than leaving for /alerts. The
+                            page already knows the currency, the transaction type,
+                            the buy/sell direction and the going rate, so the form
+                            arrives answered and the visitor keeps their filters.
+
+                            A real link underneath: with JS off, or before Alpine
+                            boots, this still navigates to the alerts page.
+                        --}}
                         <a
                             href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from([
+                                'form' => [
+                                    'currency_id' => (string) ($selectedCurrency?->id ?? ''),
+                                    'organization_id' => (string) ($selectedOrganization?->id ?? ''),
+                                    'rate_type' => $selectedType->value,
+                                    'rate_field' => $rateField,
+                                    'direction' => $isBuying ? 'below' : 'above',
+                                    'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
+                                ],
+                                'context' => [
+                                    'currency' => __('exchange_quotes.request.amd'),
+                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+                                ],
+                            ]) }} }))"
                             class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-accent-yellow">
@@ -626,6 +649,14 @@
         @endif
 
     </section>
+
+    {{-- Outside the panel: it is morphed on every filter click, and a dialog
+    patched underneath an open form would lose what was typed into it. --}}
+    <x-rate-alert-modal
+        :currencies="$currencies"
+        :organizations="$alertOrganizations"
+        :rate-types="$alertRateTypes"
+    />
     {{--
         Filtering used to reload the whole document - re-parsing every asset,
         losing scroll position and flashing the header on each pill. This swaps

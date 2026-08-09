@@ -135,16 +135,14 @@ class RateController extends Controller
         ));
         $selectedOrgType = $orgTypes->contains($request->query('org_type')) ? $request->query('org_type') : null;
 
-        $organizations = collect(Cache::tags([RateCache::TAG])->remember(
-            'rates.organizations.'.($selectedOrgType ?? 'all'),
-            now()->addMinutes(self::TTL_MINUTES),
-            fn () => Organization::active()
-                ->whereHas('currencyRates')
-                ->when($selectedOrgType, fn ($query) => $query->where('type', $selectedOrgType))
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'type'])
-                ->toArray()
-        ))->map(fn (array $row) => (object) $row);
+        $organizations = $this->organizations($selectedOrgType);
+
+        // The rate-alert modal is not scoped by the page's market filter - an
+        // alert can name any organization. Reuses the same cache entry the
+        // unfiltered page builds, so this costs a query only when a market
+        // filter is active.
+        $alertOrganizations = $selectedOrgType === null ? $organizations : $this->organizations(null);
+
         $selectedOrganization = $request->filled('organization')
             ? $organizations->firstWhere('slug', $request->query('organization'))
             : null;
@@ -199,6 +197,8 @@ class RateController extends Controller
             'orgTypes' => $orgTypes,
             'selectedOrgType' => $selectedOrgType,
             'organizations' => $organizations,
+            'alertOrganizations' => $alertOrganizations,
+            'alertRateTypes' => RateType::cases(),
             'selectedOrganization' => $selectedOrganization,
             'cities' => $cities,
             'selectedCity' => $selectedCity,
@@ -285,6 +285,23 @@ class RateController extends Controller
      * @param  array<int, object>  $rows
      * @return array<string, mixed>
      */
+    /**
+     * @return Collection<int, object>
+     */
+    private function organizations(?string $orgType): Collection
+    {
+        return collect(Cache::tags([RateCache::TAG])->remember(
+            'rates.organizations.'.($orgType ?? 'all'),
+            now()->addMinutes(self::TTL_MINUTES),
+            fn () => Organization::active()
+                ->whereHas('currencyRates')
+                ->when($orgType, fn ($query) => $query->where('type', $orgType))
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'type'])
+                ->toArray()
+        ))->map(fn (array $row) => (object) $row);
+    }
+
     private function rankRows(array $rows, string $intent): array
     {
         $values = collect($rows)

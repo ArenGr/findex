@@ -88,7 +88,25 @@ class RateAlertController extends Controller
 
         $request->user()->rateAlerts()->create($validated);
 
-        return redirect()->route('alerts.index')->with('status', 'alert-created');
+        return $this->afterStore($request)->with('status', 'alert-created');
+    }
+
+    /**
+     * An alert set from the modal on /rates is a side errand - the visitor was
+     * comparing rates and wants to keep doing that, not land on a management
+     * page with their filters gone. The URL is taken from the form rather than
+     * the referer so it survives a validation round-trip, and is honoured only
+     * when it points at this host: an unchecked one is an open redirect.
+     */
+    private function afterStore(Request $request): RedirectResponse
+    {
+        $returnTo = (string) $request->input('return_to');
+
+        if ($returnTo !== '' && parse_url($returnTo, PHP_URL_HOST) === $request->getHost()) {
+            return redirect()->to($returnTo);
+        }
+
+        return redirect()->route('alerts.index');
     }
 
     /**

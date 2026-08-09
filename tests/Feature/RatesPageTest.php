@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\Organization;
+use App\Models\RateAlert;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -408,5 +410,139 @@ class RatesPageTest extends TestCase
             ->assertDontSee('>Central Bank<', false);
 
         $this->assertNotContains('central_bank', $response->viewData('availableTypes')->all());
+    }
+
+    /**
+     * Every alert route is behind auth. A guest who filled in the modal would
+     * be bounced to login and lose it, so they are asked to sign in first.
+     */
+    public function test_the_alert_modal_asks_a_guest_to_sign_in_before_the_form(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('Rate alerts are tied to your account', false)
+            ->assertDontSee('name="threshold"', false);
+    }
+
+    /**
+     * The point of the modal over the redirect: /rates already knows the
+     * currency, the transaction type, the buy/sell direction and the going
+     * rate, so the form arrives answered rather than blank.
+     */
+    public function test_the_alert_modal_is_prefilled_from_what_is_on_screen(): void
+    {
+        $this->seedMarket();
+
+        $html = $this->actingAs(User::factory()->create())
+            ->get('/en/rates?currency=USD&intent=buy&type=cash')
+            ->assertOk()
+            ->assertSee('name="threshold"', false)
+            ->getContent();
+
+        // Buying ranks on sell_rate, and the visitor wants to be told when it
+        // drops - so the alert watches that field, below the current best.
+        $this->assertSame([
+            'currency_id' => (string) Currency::where('code', 'USD')->value('id'),
+            'organization_id' => '',
+            'rate_type' => 'cash',
+            'rate_field' => 'sell_rate',
+            'direction' => 'below',
+            'threshold' => '365.00',
+        ], $this->alertPrefill($html));
+    }
+
+    /** Selling watches the other side of the pair, and waits for a rise. */
+    public function test_selling_flips_the_prefilled_field_and_condition(): void
+    {
+        $this->seedMarket();
+
+        $html = $this->actingAs(User::factory()->create())
+            ->get('/en/rates?currency=USD&intent=sell&type=cash')
+            ->assertOk()
+            ->getContent();
+
+        $prefill = $this->alertPrefill($html);
+
+        $this->assertSame('buy_rate', $prefill['rate_field']);
+        $this->assertSame('above', $prefill['direction']);
+    }
+
+    /**
+     * The trigger hands the modal its prefill as a JSON payload on a CustomEvent.
+     * Decoded rather than string-matched: what matters is the values reaching
+     * the form, not how Blade happened to escape them into the attribute.
+     *
+     * @return array<string, string>
+     */
+    private function alertPrefill(string $html): array
+    {
+        $this->assertMatchesRegularExpression("/rate-alert-open', \{ detail: JSON\.parse\('/", $html);
+
+        preg_match("/rate-alert-open', \{ detail: JSON\.parse\('(.+?)'\)/", $html, $matches);
+
+        return json_decode(json_decode('"'.$matches[1].'"'), true)['form'];
+    }
+
+    /**
+     * An alert set from /rates is a side errand - the visitor was comparing
+     * rates and should land back on the same filtered view, not on the alert
+     * management page with their filters gone.
+     */
+    public function test_creating_an_alert_from_rates_returns_to_the_same_filtered_view(): void
+    {
+        $this->seedMarket();
+        $user = User::factory()->create();
+        $return = url('/en/rates?currency=USD&intent=sell');
+
+        $this->actingAs($user)->post('/en/alerts', [
+            'currency_id' => Currency::where('code', 'USD')->value('id'),
+            'rate_type' => 'cash',
+            'rate_field' => 'buy_rate',
+            'direction' => 'above',
+            'threshold' => 370,
+            'channel' => 'email',
+            'return_to' => $return,
+        ])->assertRedirect($return);
+
+        $this->assertSame(1, RateAlert::where('user_id', $user->id)->count());
+    }
+
+    /** An unvalidated return_to is an open redirect. */
+    public function test_an_offsite_return_to_is_ignored(): void
+    {
+        $this->seedMarket();
+
+        $this->actingAs(User::factory()->create())->post('/en/alerts', [
+            'currency_id' => Currency::where('code', 'USD')->value('id'),
+            'rate_type' => 'cash',
+            'rate_field' => 'buy_rate',
+            'direction' => 'above',
+            'threshold' => 370,
+            'channel' => 'email',
+            'return_to' => 'https://evil.example.com/phish',
+        ])->assertRedirect(route('alerts.index'));
+    }
+
+    /**
+     * store() rejects an unconnected channel server-side, and the modal - unlike
+     * the alerts page - has nowhere to show connection state or a connect
+     * button, so offering one that will bounce is a dead end.
+     */
+    public function test_the_modal_only_offers_channels_the_account_can_receive_on(): void
+    {
+        $this->seedMarket();
+
+        $this->actingAs(User::factory()->create())
+            ->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('value="email"', false)
+            ->assertDontSee('value="telegram"', false);
+
+        $this->actingAs(User::factory()->create(['telegram_chat_id' => '12345']))
+            ->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('value="telegram"', false);
     }
 }
