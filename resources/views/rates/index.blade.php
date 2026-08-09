@@ -143,7 +143,10 @@
             @endforeach
             <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
 
-            <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
+            {{-- Alpine-only, deliberately: with JS off the buy/sell radios do
+            not self-submit, so this button is the only way to apply an intent
+            change and must stay enabled. --}}
+            <div x-data="{ amount: @js($amount) }" class="flex flex-wrap items-end gap-x-4 gap-y-3">
                 <div>
                     <span class="{{ $labelClass }}">{{ __('rates.intent_label') }}</span>
                     <div class="mt-1.5 inline-flex rounded-full border border-border-muted bg-white p-0.5">
@@ -172,6 +175,7 @@
                         <input
                             type="number" inputmode="decimal" step="0.01" min="0"
                             name="amount" id="amount"
+                            x-model="amount"
                             value="{{ $amount }}"
                             placeholder="{{ __('rates.amount_placeholder') }}"
                             class="w-32 rounded-md border border-border-muted bg-white px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
@@ -180,7 +184,13 @@
                     </div>
                 </div>
 
-                <button type="submit" class="rounded-md bg-primary px-5 py-2 text-sm font-medium text-white transition hover:bg-primary-dark">
+                {{-- Number(), not a truthiness check: the string "0" is truthy
+                in JS, and the controller drops a zero amount anyway. --}}
+                <button
+                    type="submit"
+                    :disabled="!(Number(amount) > 0)"
+                    class="rounded-md bg-primary px-5 py-2 text-sm font-medium text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-placeholder disabled:text-muted disabled:hover:bg-placeholder"
+                >
                     {{ __('rates.intent_submit') }}
                 </button>
 

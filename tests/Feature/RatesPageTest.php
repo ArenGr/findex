@@ -315,4 +315,19 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertDontSee('Hidden bank');
     }
+
+    /**
+     * Disabling is Alpine-bound rather than rendered, because with JS off the
+     * buy/sell radios do not self-submit and this button is the only way to
+     * apply an intent change.
+     */
+    public function test_the_submit_button_is_only_disabled_client_side(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee(':disabled="!(Number(amount) > 0)"', false)
+            ->assertDontSee('<button type="submit" disabled', false);
+    }
 }
