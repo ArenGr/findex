@@ -18,6 +18,7 @@
         'lng' => $longitude,
         'intent' => $intent,
         'amount' => $amount,
+        'both' => $showBothRates ? 1 : null,
     ];
 
     $link = fn (array $overrides = []) => route('rates.index', array_filter(
@@ -26,12 +27,19 @@
     ));
 
     $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH
-        || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation || $amount !== null;
+        || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
+        || $amount !== \App\Http\Controllers\RateController::DEFAULT_AMOUNT;
 
     // Which column the visitor's intent ranks on, and therefore which one the
     // "you pay / you get" total is derived from.
     $rateField = \App\Http\Controllers\RateController::rateFieldForIntent($intent);
     $isBuying = $intent === 'buy';
+
+    // The rate the visitor actually transacts at, named from their side. The
+    // institution-side Buy/Sell pair is a toggle rather than the default: a
+    // non-expert buying USD reads the column headed "Buy" and takes the wrong
+    // number, because what they pay is the institution's sell rate.
+    $yourRateLabel = __($isBuying ? 'rates.rate_per_unit_pay' : 'rates.rate_per_unit_get', ['code' => $selectedCurrency?->code]);
 
     // A rate this old is worth flagging - banks republish through the day, so
     // anything past a day is no longer "today's rate".
@@ -43,7 +51,7 @@
 
     // Shown once above the table rather than per market, now that everything
     // is ranked as one list.
-    $marketSaving = $amount !== null && $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
+    $marketSaving = $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
 
     // Banks and exchange offices share one table, so each row says which it is
     // - but only when the list actually mixes them.
@@ -75,10 +83,10 @@
             a popover rather than a paragraph - it only matters to the people
             who stop to ask. --}}
             @if ($quoteMinimum !== null)
-                @php $qualifies = $amount !== null && $amount >= $quoteMinimum; @endphp
+                @php $qualifies = $amount >= $quoteMinimum; @endphp
                 <div class="flex items-center gap-2 sm:shrink-0">
                     <a
-                        href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
+                        href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
                         class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
                     >
                         {{-- A handshake, not exchange arrows: the arrows read as
@@ -194,11 +202,6 @@
                     {{ __('rates.intent_submit') }}
                 </button>
 
-                @if ($amount !== null)
-                    <a href="{{ $link(['amount' => null]) }}" class="pb-2 text-xs text-muted hover:text-ink">
-                        {{ __('rates.amount_clear') }}
-                    </a>
-                @endif
             </div>
         </form>
 
@@ -265,7 +268,7 @@
                     <input type="hidden" name="intent" value="{{ $intent }}">
                     {{-- lat/lng were previously omitted here, so changing bank or
                     city silently dropped an active "find nearby". --}}
-                    @if ($amount !== null)<input type="hidden" name="amount" value="{{ $amount }}">@endif
+                    <input type="hidden" name="amount" value="{{ $amount }}">
                     @if ($hasLocation)
                         <input type="hidden" name="lat" value="{{ $latitude }}">
                         <input type="hidden" name="lng" value="{{ $longitude }}">
@@ -370,6 +373,18 @@
             </div>
         </div>
 
+        @if ($centralBankRate)
+            {{-- Stated once, as a reference. It used to sit in the transaction
+            type row as a peer of Cash and Card, which sent visitors to rows
+            they could not act on. --}}
+            <p class="mt-5 text-sm break-words text-muted">
+                {{ __('rates.central_bank_reference', [
+                    'rate' => number_format((float) $centralBankRate['rate'], 2),
+                    'code' => $selectedCurrency?->code,
+                ]) }}
+            </p>
+        @endif
+
         <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
             <p class="text-sm text-muted">
                 {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
@@ -377,6 +392,13 @@
             @if ($allStale)
                 <p class="text-sm text-[#B4791F]">{{ __('rates.all_stale_notice') }}</p>
             @endif
+
+            {{-- For anyone who does want the institution-side pair. Hidden by
+            default because reading it correctly means knowing that "Buy" is the
+            rate the bank buys at, not the one you buy at. --}}
+            <a href="{{ $link(['both' => $showBothRates ? null : 1]) }}" class="text-sm text-muted underline hover:text-ink">
+                {{ $showBothRates ? __('rates.hide_both_rates') : __('rates.show_both_rates') }}
+            </a>
 
             {{-- Sits with the results rather than in the page header: an alert
             is a follow-up to what you are looking at. --}}
@@ -430,7 +452,7 @@
                 <div class="mt-3 border border-placeholder sm:hidden">
                     <div class="flex items-center justify-between gap-3 border-b border-placeholder bg-placeholder/20 px-4 py-2 text-xs font-semibold text-muted uppercase">
                         <span>{{ __('rates.provider_column') }}</span>
-                        <span>{{ $isBuying ? __('rates.sell_column') : __('rates.buy_column') }}</span>
+                        <span>{{ $yourRateLabel }}</span>
                     </div>
 
                     @php $bestShown = false; @endphp
@@ -443,7 +465,7 @@
                                 // directly beneath and read as equal.
                                 $isBest = $rate->rank === 1 && ! $bestShown;
                                 $bestShown = $bestShown || $isBest;
-                                $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
+                                $total = $amount * (float) $rate->{$rateField};
                             @endphp
                             <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4">
                                 @if ($rate->organization_logo)
@@ -483,14 +505,12 @@
                                     <p class="font-heading font-bold {{ $isBuying ? 'text-[#c25b6e]' : 'text-primary' }}">
                                         {{ number_format($rate->{$rateField}, 2) }}
                                     </p>
-                                    @if ($total !== null)
-                                        <p class="text-xs text-muted">
-                                            {{ __($isBuying ? 'rates.you_pay_total' : 'rates.you_get_total', [
-                                                'amount' => number_format($total),
-                                                'currency' => __('exchange_quotes.request.amd'),
-                                            ]) }}
-                                        </p>
-                                    @endif
+                                    <p class="text-xs text-muted">
+                                        {{ __($isBuying ? 'rates.you_pay_total' : 'rates.you_get_total', [
+                                            'amount' => number_format($total),
+                                            'currency' => __('exchange_quotes.request.amd'),
+                                        ]) }}
+                                    </p>
                                 </div>
                             </a>
                         @endforeach
@@ -505,24 +525,24 @@
                             <tr class="border-b border-placeholder bg-placeholder/20 text-xs font-semibold text-muted uppercase">
                                 <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
                                 <th class="px-4 py-3 text-right">
-                                    <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.buy_hint') }}">
-                                        {{ __('rates.buy_column') }} {{ $sortArrow('buy_rate') }}
+                                    <a href="{{ $sortLink($rateField) }}" class="inline-flex items-center gap-1 hover:text-ink">
+                                        {{ $yourRateLabel }} {{ $sortArrow($rateField) }}
                                     </a>
                                 </th>
-                                <th class="px-4 py-3 text-right">
-                                    <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.sell_hint') }}">
-                                        {{ __('rates.sell_column') }} {{ $sortArrow('sell_rate') }}
-                                    </a>
-                                </th>
-                                @if ($amount !== null)
+                                @if ($showBothRates)
                                     <th class="px-4 py-3 text-right">
-                                        {{ $isBuying ? __('rates.you_pay_column') : __('rates.you_get_column') }}
+                                        <a href="{{ $sortLink('buy_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.buy_hint') }}">
+                                            {{ __('rates.buy_column') }} {{ $sortArrow('buy_rate') }}
+                                        </a>
+                                    </th>
+                                    <th class="px-4 py-3 text-right">
+                                        <a href="{{ $sortLink('sell_rate') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.sell_hint') }}">
+                                            {{ __('rates.sell_column') }} {{ $sortArrow('sell_rate') }}
+                                        </a>
                                     </th>
                                 @endif
-                                <th class="hidden px-4 py-3 text-right lg:table-cell">
-                                    <a href="{{ $sortLink('spread') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.spread_hint') }}">
-                                        {{ __('rates.spread_column') }} {{ $sortArrow('spread') }}
-                                    </a>
+                                <th class="px-4 py-3 text-right">
+                                    {{ $isBuying ? __('rates.you_pay_column') : __('rates.you_get_column') }}
                                 </th>
                                 <th class="px-4 py-3 text-left">{{ __('rates.updated_column') }}</th>
                                 @if ($hasLocation)
@@ -539,7 +559,7 @@
                                 @php
                                     $isBest = $rate->rank === 1 && ! $bestShown;
                                     $bestShown = $bestShown || $isBest;
-                                    $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
+                                    $total = $amount * (float) $rate->{$rateField};
                                     $stale = $isStale($rate->scraped_at);
                                 @endphp
                                 <tr class="border-b border-placeholder last:border-b-0">
@@ -578,20 +598,20 @@
                                             </div>
                                         </a>
                                     </td>
-                                    <td class="px-4 py-4 text-right font-heading font-bold text-primary {{ $isBuying ? 'opacity-60' : 'text-base' }}">
-                                        {{ number_format($rate->buy_rate, 2) }}
+                                    <td class="px-4 py-4 text-right font-heading text-base font-bold {{ $isBuying ? 'text-[#c25b6e]' : 'text-primary' }}">
+                                        {{ number_format($rate->{$rateField}, 2) }}
                                     </td>
-                                    <td class="px-4 py-4 text-right font-heading font-bold text-[#c25b6e] {{ $isBuying ? 'text-base' : 'opacity-60' }}">
-                                        {{ number_format($rate->sell_rate, 2) }}
-                                    </td>
-                                    @if ($total !== null)
-                                        <td class="px-4 py-4 text-right font-heading font-bold whitespace-nowrap text-ink">
-                                            {{ number_format($total) }}
-                                            <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                    @if ($showBothRates)
+                                        <td class="px-4 py-4 text-right font-heading font-bold text-primary opacity-70">
+                                            {{ number_format($rate->buy_rate, 2) }}
+                                        </td>
+                                        <td class="px-4 py-4 text-right font-heading font-bold text-[#c25b6e] opacity-70">
+                                            {{ number_format($rate->sell_rate, 2) }}
                                         </td>
                                     @endif
-                                    <td class="hidden px-4 py-4 text-right text-xs text-muted lg:table-cell">
-                                        {{ number_format($rate->spread, 2) }}
+                                    <td class="px-4 py-4 text-right font-heading font-bold whitespace-nowrap text-ink">
+                                        {{ number_format($total) }}
+                                        <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                     </td>
                                     <td class="px-4 py-4 text-left text-xs {{ $stale ? 'text-[#B4791F]' : 'text-muted' }}">
                                         {{ $rate->scraped_at ? Carbon::parse($rate->scraped_at)->diffForHumans() : '—' }}

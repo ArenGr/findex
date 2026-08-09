@@ -46,15 +46,20 @@ class RatesPageTest extends TestCase
         return $usd;
     }
 
-    public function test_without_an_amount_the_page_shows_rates_but_no_totals(): void
+    /**
+     * The total is the one figure a non-expert reads without decoding a rate,
+     * so it is on screen before anyone types.
+     */
+    public function test_the_amount_defaults_so_totals_show_immediately(): void
     {
         $this->seedMarket();
 
         $response = $this->get('/en/rates?currency=USD');
 
         $response->assertOk()
-            ->assertViewHas('amount', null)
-            ->assertDontSee('pay 182,500');
+            ->assertViewHas('amount', 100.0)
+            // 100 x 365.00, the cheapest sell rate.
+            ->assertSee('36,500');
 
         $this->assertSame(3, $response->viewData('ranked')['count']);
     }
@@ -74,10 +79,10 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        foreach (['abc', '-5', '0', '999999999'] as $bad) {
+        foreach (['abc', '-5', '0', '999999999', ''] as $bad) {
             $this->get('/en/rates?currency=USD&amount='.$bad)
                 ->assertOk()
-                ->assertViewHas('amount', null);
+                ->assertViewHas('amount', 100.0);
         }
     }
 
@@ -180,7 +185,7 @@ class RatesPageTest extends TestCase
 
         // Sorted by spread, the cheapest row is no longer row one - the podium
         // must still track the rate.
-        $rows = collect($this->get('/en/rates?currency=USD&intent=buy&sort=spread&direction=desc')->viewData('ranked')['rows']);
+        $rows = collect($this->get('/en/rates?currency=USD&intent=buy&sort=buy_rate&direction=desc')->viewData('ranked')['rows']);
 
         $this->assertNotSame('Cheap bank', $rows->first()->organization_name, 'precondition: the sort moved it');
         $this->assertSame(1, $rows->firstWhere('organization_name', 'Cheap bank')->rank);
@@ -329,5 +334,62 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertSee(':disabled="!(Number(amount) > 0)"', false)
             ->assertDontSee('<button type="submit" disabled', false);
+    }
+
+    /**
+     * The institution-side pair is the single biggest trap on this page: buying
+     * USD, the number you pay sits under a column headed "Sell". Only the
+     * visitor-side rate is shown unless they ask for both.
+     */
+    public function test_only_the_visitor_side_rate_is_shown_by_default(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&intent=buy')
+            ->assertOk()
+            ->assertSee('You pay per 1 USD')
+            ->assertDontSee('>Buy<', false)
+            ->assertDontSee('>Sell<', false);
+
+        $this->get('/en/rates?currency=USD&intent=sell')
+            ->assertOk()
+            ->assertSee('You get per 1 USD');
+    }
+
+    public function test_both_rates_can_be_revealed_on_request(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&both=1')
+            ->assertOk()
+            ->assertViewHas('showBothRates', true)
+            ->assertSee('Hide buy and sell rates');
+    }
+
+    /** Jargon, and unusable once the savings column it supported was removed. */
+    public function test_the_spread_column_is_gone(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Spread');
+    }
+
+    /**
+     * It is the official reference rate, not a venue - offering it beside Cash
+     * and Card sent visitors to rows they could not act on.
+     */
+    public function test_the_central_bank_rate_is_a_reference_line_not_a_filter(): void
+    {
+        $usd = $this->seedMarket();
+        $cba = $this->organization('central-bank');
+        $this->rate($cba, $usd, 366.17, 366.17, 'central_bank');
+
+        $response = $this->get('/en/rates?currency=USD');
+
+        $response->assertOk()
+            ->assertSee('Central Bank official rate: 366.17')
+            ->assertDontSee('>Central Bank<', false);
+
+        $this->assertNotContains('central_bank', $response->viewData('availableTypes')->all());
     }
 }

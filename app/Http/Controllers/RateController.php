@@ -22,6 +22,12 @@ class RateController extends Controller
     // MortgageOffer/Currency/Organization/Branch booted() hooks) is the
     // real invalidation path; this just bounds the worst case if a write
     // path is ever missed.
+    /**
+     * Seeds the "you pay" column so it is on screen before anyone types. Small
+     * enough to read as an example rather than as a claim about the visitor.
+     */
+    public const DEFAULT_AMOUNT = 100.0;
+
     private const TTL_MINUTES = 360;
 
     public function index(Request $request): View
@@ -70,9 +76,15 @@ class RateController extends Controller
         // declaration order, which is already the order that makes sense to a
         // visitor: the two everyday types first, the central bank reference
         // rate - which isn't a place you can exchange at - last.
+        // central_bank is dropped from the choices entirely: it is the
+        // official reference rate, not somewhere a visitor can exchange money,
+        // so offering it as a peer of Cash and Card sent people to rows they
+        // could not act on. It is surfaced as a single reference line instead
+        // (see $centralBankRate below).
         $availableTypes = collect(RateType::cases())
             ->map(fn (RateType $type) => $type->value)
             ->filter(fn (string $type) => $availableTypes->contains($type))
+            ->reject(fn (string $type) => $type === RateType::CENTRAL_BANK->value)
             ->values();
 
         // What the visitor is trying to do, which is what decides the ranking:
@@ -81,9 +93,11 @@ class RateController extends Controller
         // about which of two institution-side columns to sort by.
         $intent = $request->query('intent') === 'sell' ? 'sell' : 'buy';
 
-        // Optional. Blank leaves the page a plain rate table; a value turns
-        // every row into a concrete "you pay / you get" total. Display-layer
-        // only - deliberately not part of any cache key (see fetchCachedRates).
+        // Always set, defaulting to DEFAULT_AMOUNT: the per-row total is the
+        // one figure a non-expert reads without decoding a rate, and leaving it
+        // behind an optional field meant most visitors never saw it.
+        // Display-layer only - deliberately not part of any cache key
+        // (see fetchCachedRates).
         $amount = $this->amountFromQuery($request);
 
         // "distance" only means anything once we actually have the
@@ -97,7 +111,7 @@ class RateController extends Controller
         // An explicit column click always wins; otherwise the intent (or a
         // shared location) picks the ranking, so the default order already
         // answers the question the visitor came with.
-        $sortOptions = $hasLocation ? ['buy_rate', 'sell_rate', 'spread', 'distance'] : ['buy_rate', 'sell_rate', 'spread'];
+        $sortOptions = $hasLocation ? ['buy_rate', 'sell_rate', 'distance'] : ['buy_rate', 'sell_rate'];
         $explicitSort = in_array($request->query('sort'), $sortOptions, true) ? $request->query('sort') : null;
 
         if ($explicitSort !== null) {
@@ -201,6 +215,8 @@ class RateController extends Controller
             // office to renegotiate, so the CTA states the bar instead of
             // inviting everyone to ask.
             'quoteMinimum' => config('exchange-quotes.minimum_amounts')[$selectedCurrency?->code] ?? null,
+            'centralBankRate' => $this->centralBankRate($selectedCurrency),
+            'showBothRates' => $request->boolean('both'),
             'hasLocation' => $hasLocation,
             'latitude' => $latitude,
             'longitude' => $longitude,
@@ -215,6 +231,37 @@ class RateController extends Controller
     public static function rateFieldForIntent(string $intent): string
     {
         return $intent === 'sell' ? 'buy_rate' : 'sell_rate';
+    }
+
+    /**
+     * The official reference rate for this currency, or null when we have not
+     * scraped one. Several scrapers publish it, so this takes the most recent;
+     * buy and sell are identical on these rows, which is why one figure is
+     * enough.
+     */
+    private function centralBankRate(?object $selectedCurrency): ?array
+    {
+        if (! $selectedCurrency) {
+            return null;
+        }
+
+        return Cache::tags([RateCache::TAG])->remember(
+            'rates.central_bank.'.$selectedCurrency->id,
+            now()->addMinutes(self::TTL_MINUTES),
+            function () use ($selectedCurrency) {
+                $rate = CurrencyRate::query()
+                    ->where('currency_id', $selectedCurrency->id)
+                    ->where('rate_type', RateType::CENTRAL_BANK)
+                    ->whereHas('organization', fn ($query) => $query->active())
+                    ->latest('scraped_at')
+                    ->first();
+
+                return $rate ? [
+                    'rate' => (string) $rate->sell_rate,
+                    'scraped_at' => $rate->scraped_at?->toIso8601String(),
+                ] : null;
+            }
+        );
     }
 
     /** Stable array-key form of a rate, immune to float-to-int key casting. */
@@ -298,17 +345,19 @@ class RateController extends Controller
      * plain rate table instead of erroring. Upper bound matches the
      * exchange-quote form's own cap.
      */
-    private function amountFromQuery(Request $request): ?float
+    private function amountFromQuery(Request $request): float
     {
         $amount = $request->query('amount');
 
         if (! is_numeric($amount)) {
-            return null;
+            return self::DEFAULT_AMOUNT;
         }
 
-        $amount = round((float) $amount, 2);
+        $amount = (float) $amount;
 
-        return $amount > 0 && $amount <= 99999999.99 ? $amount : null;
+        // Silently corrected rather than rejected: a nonsense amount is a typo,
+        // not something worth blocking the whole page over.
+        return $amount > 0 && $amount <= 99999999.99 ? $amount : self::DEFAULT_AMOUNT;
     }
 
     /**
