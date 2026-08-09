@@ -338,8 +338,9 @@ class RatesPageTest extends TestCase
 
     /**
      * The institution-side pair is the single biggest trap on this page: buying
-     * USD, the number you pay sits under a column headed "Sell". Only the
-     * visitor-side rate is shown unless they ask for both.
+     * USD, the number you pay sits under a column headed "Sell". The visible
+     * columns are a neutral rate plus a total that names the direction, and the
+     * pair only appears when asked for.
      */
     public function test_only_the_visitor_side_rate_is_shown_by_default(): void
     {
@@ -347,13 +348,29 @@ class RatesPageTest extends TestCase
 
         $this->get('/en/rates?currency=USD&intent=buy')
             ->assertOk()
-            ->assertSee('You pay per 1 USD')
+            ->assertSee('Rate per 1 USD')
+            ->assertSee('Total you pay')
             ->assertDontSee('>Buy<', false)
             ->assertDontSee('>Sell<', false);
 
         $this->get('/en/rates?currency=USD&intent=sell')
             ->assertOk()
-            ->assertSee('You get per 1 USD');
+            ->assertSee('Total you get');
+    }
+
+    /**
+     * Six banks quoting 368.00 all hold rank 1. Marking one of them looked
+     * arbitrary next to five identical numbers, so the winning figure is stated
+     * once above the table and every row that holds it is marked.
+     */
+    public function test_the_best_rate_is_stated_once_above_the_table(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&intent=buy&amount=100')
+            ->assertOk()
+            ->assertSee('Current best rate')
+            ->assertSee('Total you pay');
     }
 
     public function test_both_rates_can_be_revealed_on_request(): void
