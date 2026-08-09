@@ -96,8 +96,18 @@
                         href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
                         class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
                     >
-                        <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-muted" aria-hidden="true">
-                            <path d="M13.2 2.24a.75.75 0 00.04 1.06l2.1 1.95H6.75a.75.75 0 000 1.5h8.59l-2.1 1.95a.75.75 0 101.02 1.1l3.5-3.25a.75.75 0 000-1.1l-3.5-3.25a.75.75 0 00-1.06.04zm-6.4 8a.75.75 0 00-1.06-.04l-3.5 3.25a.75.75 0 000 1.1l3.5 3.25a.75.75 0 101.02-1.1l-2.1-1.95h8.59a.75.75 0 000-1.5H4.66l2.1-1.95a.75.75 0 00.04-1.06z" />
+                        {{-- A handshake, not exchange arrows: the arrows read as
+                        "swap currency", which is what the whole page already does. --}}
+                        <svg
+                            viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true"
+                        >
+                            <path d="m11 17 2 2a1 1 0 1 0 3-3" />
+                            <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
+                            <path d="m21 3 1 11h-2" />
+                            <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" />
+                            <path d="M3 4h8" />
                         </svg>
                         <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
                     </a>
@@ -380,7 +390,7 @@
                     href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
                     class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-[#D4A72C]">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-accent-yellow">
                         <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
                     </svg>
                     <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
