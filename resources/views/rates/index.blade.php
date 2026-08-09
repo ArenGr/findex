@@ -78,7 +78,7 @@
 @endphp
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 transition-opacity lg:px-10">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="font-heading text-2xl font-bold break-words text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
@@ -91,12 +91,12 @@
             who stop to ask. --}}
             @if ($quoteMinimum !== null)
                 @php $qualifies = $amount !== null && $amount >= $quoteMinimum; @endphp
-                <div class="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+                <div class="flex items-center gap-2 sm:shrink-0">
                     <a
                         href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $amount])) }}"
-                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-muted px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-body-text hover:shadow-md sm:inline-flex sm:flex-none"
+                        class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
                     >
-                        <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0" aria-hidden="true">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-muted" aria-hidden="true">
                             <path d="M13.2 2.24a.75.75 0 00.04 1.06l2.1 1.95H6.75a.75.75 0 000 1.5h8.59l-2.1 1.95a.75.75 0 101.02 1.1l3.5-3.25a.75.75 0 000-1.1l-3.5-3.25a.75.75 0 00-1.06.04zm-6.4 8a.75.75 0 00-1.06-.04l-3.5 3.25a.75.75 0 000 1.1l3.5 3.25a.75.75 0 101.02-1.1l-2.1-1.95h8.59a.75.75 0 000-1.5H4.66l2.1-1.95a.75.75 0 00.04-1.06z" />
                         </svg>
                         <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
@@ -159,7 +159,7 @@
                                 <input
                                     type="radio" name="intent" value="{{ $option }}"
                                     class="peer sr-only" @checked($intent === $option)
-                                    onchange="this.form.submit()"
+                                    onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
                                 >
                                 <span class="block rounded-full px-4 py-1.5 text-sm font-medium text-muted transition peer-checked:bg-muted peer-checked:text-white">
                                     {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
@@ -239,7 +239,7 @@
 
         {{-- Secondary filters, collapsed behind a toggle on mobile so they
         don't push the results themselves below the fold. --}}
-        <div x-data="{ open: false }" class="mt-5">
+        <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-5">
             <button
                 type="button"
                 @click="open = !open"
@@ -277,7 +277,7 @@
                             <select
                                 name="organization"
                                 id="filter-organization"
-                                onchange="this.form.submit()"
+                                onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
                                 class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
                             >
                                 <option value="">{{ __('rates.filter_org_all.'.$selectedOrgType) }}</option>
@@ -296,7 +296,7 @@
                             <select
                                 name="city"
                                 id="filter-city"
-                                onchange="this.form.submit()"
+                                onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
                                 title="{{ __('rates.filter_city_hint') }}"
                                 class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
                             >
@@ -327,7 +327,7 @@
                                 url.searchParams.set('lng', position.coords.longitude);
                                 url.searchParams.set('sort', 'distance');
                                 url.searchParams.set('direction', 'asc');
-                                window.location.href = url.toString();
+                                window.dispatchEvent(new CustomEvent('rates:navigate', { detail: url.toString() }));
                             },
                             () => { this.state = 'error'; },
                         );
@@ -625,4 +625,114 @@
         @endif
 
     </section>
+    {{--
+        Filtering used to reload the whole document - re-parsing every asset,
+        losing scroll position and flashing the header on each pill. This swaps
+        only #rates-panel from the same URL the link already points at, so the
+        page stays put and the address bar still holds shareable state.
+
+        Progressive enhancement on purpose: every control here is a real link or
+        a GET form, so with JS off, or if any fetch fails, the browser just
+        navigates as before. Nothing depends on this script to work.
+    --}}
+    <script>
+        (() => {
+            const panel = document.getElementById('rates-panel');
+            if (!panel || !window.fetch || !window.history.pushState || !window.DOMParser) {
+                return;
+            }
+
+            let inFlight = null;
+
+            const swap = async (url, push) => {
+                inFlight?.abort();
+                const request = new AbortController();
+                inFlight = request;
+
+                panel.setAttribute('aria-busy', 'true');
+                panel.classList.add('opacity-60');
+
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'X-Requested-With': 'fetch' },
+                        signal: request.signal,
+                    });
+                    if (!response.ok) {
+                        throw new Error(response.status);
+                    }
+
+                    const next = new DOMParser()
+                        .parseFromString(await response.text(), 'text/html')
+                        .getElementById('rates-panel');
+                    if (!next) {
+                        throw new Error('no panel in response');
+                    }
+
+                    // Alpine picks up the new x-data subtrees itself via its
+                    // MutationObserver, so the popovers and the filter toggle
+                    // rebind without any manual init.
+                    panel.innerHTML = next.innerHTML;
+
+                    if (push) {
+                        window.history.pushState({ ratesUrl: url }, '', url);
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        return;
+                    }
+                    window.location.assign(url);
+                    return;
+                } finally {
+                    if (inFlight === request) {
+                        inFlight = null;
+                        panel.removeAttribute('aria-busy');
+                        panel.classList.remove('opacity-60');
+                    }
+                }
+            };
+
+            // Only links that stay on this page. Organization rows, the alert
+            // and the negotiate CTA all point elsewhere and navigate normally.
+            panel.addEventListener('click', (event) => {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+                const link = event.target.closest('a[href]');
+                if (!link || link.target) {
+                    return;
+                }
+                const target = new URL(link.href, window.location.href);
+                if (target.origin !== window.location.origin || target.pathname !== window.location.pathname) {
+                    return;
+                }
+                event.preventDefault();
+                swap(target.href, true);
+            });
+
+            panel.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'get') {
+                    return;
+                }
+                const target = new URL(form.action, window.location.href);
+                if (target.pathname !== window.location.pathname) {
+                    return;
+                }
+                event.preventDefault();
+
+                // Empty selects would otherwise litter the URL with bare keys.
+                const params = new URLSearchParams();
+                for (const [key, value] of new FormData(form)) {
+                    if (value !== '') {
+                        params.append(key, value);
+                    }
+                }
+                target.search = params.toString();
+                swap(target.href, true);
+            });
+
+            window.addEventListener('rates:navigate', (event) => swap(event.detail, true));
+            window.addEventListener('popstate', () => swap(window.location.href, false));
+        })();
+    </script>
 @endsection
