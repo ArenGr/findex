@@ -125,7 +125,7 @@
                 @foreach ($currencies as $currency)
                     <a
                         href="{{ $link(['currency' => $currency->code]) }}"
-                        class="flex shrink-0 items-center gap-1.5 px-4 py-3 text-sm font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-muted text-white' : 'text-muted hover:text-ink' }}"
+                        class="flex shrink-0 items-center gap-1.5 px-4 py-3 text-sm font-semibold tracking-wide whitespace-nowrap uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'bg-border-muted text-ink' : 'text-muted hover:text-ink' }}"
                     >
                         <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
                         {{ $currency->code }}
@@ -161,7 +161,7 @@
                                     class="peer sr-only" @checked($intent === $option)
                                     onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
                                 >
-                                <span class="block rounded-full px-4 py-1.5 text-sm font-medium text-muted transition peer-checked:bg-muted peer-checked:text-white">
+                                <span class="block rounded-full px-4 py-1.5 text-sm font-medium text-muted transition peer-checked:bg-border-muted peer-checked:text-ink">
                                     {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
                                 </span>
                             </label>
@@ -205,14 +205,14 @@
                 <div class="mt-2 flex flex-wrap gap-2">
                 <a
                     href="{{ $link(['org_type' => null, 'organization' => null]) }}"
-                    class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'bg-muted text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                    class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'bg-border-muted text-ink' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
                 >
                     {{ __('rates.market_all') }}
                 </a>
                 @foreach ($orgTypes as $orgType)
                     <a
                         href="{{ $link(['org_type' => $orgType, 'organization' => null]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'bg-muted text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'bg-border-muted text-ink' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
                     >
                         {{ __('rates.markets.' . $orgType) }}
                         </a>
@@ -229,7 +229,7 @@
                 @foreach ($availableTypes as $typeValue)
                     <a
                         href="{{ $link(['type' => $typeValue]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'bg-muted text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'bg-border-muted text-ink' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
                     >
                         {{ __('organizations.rate_types.' . $typeValue) }}
                     </a>
