@@ -78,7 +78,7 @@
 @endphp
 
 @section('content')
-    <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 transition-opacity lg:px-10">
+    <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="font-heading text-2xl font-bold break-words text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
@@ -650,7 +650,11 @@
                 inFlight = request;
 
                 panel.setAttribute('aria-busy', 'true');
-                panel.classList.add('opacity-60');
+
+                // Morph can land the patched control on a fresh node, which
+                // drops focus to <body> - so a keyboard user who picks a city
+                // loses their place. Remembered by id and restored after.
+                const focusedId = document.activeElement?.id || null;
 
                 try {
                     const response = await fetch(url, {
@@ -668,10 +672,16 @@
                         throw new Error('no panel in response');
                     }
 
-                    // Alpine picks up the new x-data subtrees itself via its
-                    // MutationObserver, so the popovers and the filter toggle
-                    // rebind without any manual init.
-                    panel.innerHTML = next.innerHTML;
+                    // Morph, not innerHTML: patching only the nodes that
+                    // actually differ means the untouched parts of the page
+                    // never repaint, so there is no flash and no scroll jump.
+                    // Replacing the subtree also tore down every Alpine
+                    // component inside it on each click.
+                    window.Alpine.morph(panel, next.outerHTML);
+
+                    if (focusedId) {
+                        document.getElementById(focusedId)?.focus({ preventScroll: true });
+                    }
 
                     if (push) {
                         window.history.pushState({ ratesUrl: url }, '', url);
@@ -686,7 +696,6 @@
                     if (inFlight === request) {
                         inFlight = null;
                         panel.removeAttribute('aria-busy');
-                        panel.classList.remove('opacity-60');
                     }
                 }
             };

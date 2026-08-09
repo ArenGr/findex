@@ -1,6 +1,12 @@
 import Alpine from 'alpinejs';
+import morph from '@alpinejs/morph';
 
 window.Alpine = Alpine;
+
+// Used by /rates to patch the filtered results in place. Morphing rather than
+// replacing innerHTML keeps the existing nodes, so nothing unchanged repaints
+// and focus, scroll and open popovers survive a filter change.
+Alpine.plugin(morph);
 
 // Bank/organization comparison shortlist. Stored in localStorage (not a
 // server session) so it works for guests and survives normal full-page
