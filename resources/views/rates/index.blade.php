@@ -55,21 +55,6 @@
         default => 'border-border-muted text-muted',
     };
 
-    // With an amount this is real money; without one it is the per-unit gap,
-    // which is still worth showing rather than hiding savings entirely.
-    $savingFor = fn ($row) => $amount !== null
-        ? $amount * $row->saving_per_unit
-        : $row->saving_per_unit;
-    // Inline (mobile) needs the verb; the desktop column header already
-    // supplies it, so that cell carries the figure alone.
-    $savingLabel = fn ($row) => $amount !== null
-        ? __('rates.save_vs_worst', ['amount' => number_format($savingFor($row)), 'currency' => __('exchange_quotes.request.amd')])
-        : __('rates.per_unit', ['amount' => number_format($row->saving_per_unit, 2), 'currency' => __('exchange_quotes.request.amd'), 'code' => $selectedCurrency?->code]);
-    $savingCell = fn ($row) => $amount !== null
-        ? number_format($savingFor($row)).' '.__('exchange_quotes.request.amd')
-        : __('rates.per_unit', ['amount' => number_format($row->saving_per_unit, 2), 'currency' => __('exchange_quotes.request.amd'), 'code' => $selectedCurrency?->code]);
-    // Sub-1 AMD "savings" are noise.
-    $hasSaving = fn ($row) => $savingFor($row) >= ($amount !== null ? 1 : 0.01);
 
     $labelClass = 'block text-xs font-semibold tracking-wider text-muted uppercase';
 
@@ -99,7 +84,7 @@
                         {{-- A handshake, not exchange arrows: the arrows read as
                         "swap currency", which is what the whole page already does. --}}
                         <svg
-                            viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
                             stroke-linecap="round" stroke-linejoin="round"
                             class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true"
                         >
@@ -412,8 +397,6 @@
         @endphp
 
         @if ($rowCount > 0)
-            @php $bestShown = false; @endphp
-
             <div class="mt-6">
                 @if ($marketSaving !== null && $marketSaving >= 1)
                     <p class="text-sm font-medium break-words text-ink">
@@ -440,10 +423,16 @@
                         <span>{{ $isBuying ? __('rates.sell_column') : __('rates.buy_column') }}</span>
                     </div>
 
+                    @php $bestShown = false; @endphp
                     <div class="divide-y divide-placeholder">
                         @foreach ($ranked['rows'] as $rate)
                             @php
-                                $isBest = $rate->rank === 1;
+                                // Ties are common - three banks quoting 368.00 all hold
+                                // rank 1, and badging every one of them makes "Best" mean
+                                // nothing. Only the first gets it; the equal rates sit
+                                // directly beneath and read as equal.
+                                $isBest = $rate->rank === 1 && ! $bestShown;
+                                $bestShown = $bestShown || $isBest;
                                 $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                             @endphp
                             <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 px-4 py-4">
@@ -459,7 +448,7 @@
                                     <p class="font-medium break-words text-ink">{{ $rate->organization_name }}</p>
                                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         @if ($isBest)
-                                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-badge px-2.5 py-1 text-xs font-semibold text-white">
+                                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-yellow px-2.5 py-1 text-xs font-semibold text-ink">
                                                 <svg viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3 shrink-0" aria-hidden="true">
                                                     <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
                                                 </svg>
@@ -492,9 +481,6 @@
                                             ]) }}
                                         </p>
                                     @endif
-                                    @if ($hasSaving($rate))
-                                        <p class="text-xs font-semibold whitespace-nowrap text-primary">{{ $savingLabel($rate) }}</p>
-                                    @endif
                                 </div>
                             </a>
                         @endforeach
@@ -502,6 +488,7 @@
                 </div>
 
                 {{-- Desktop table --}}
+                @php $bestShown = false; @endphp
                 <div class="mt-3 hidden overflow-x-auto border border-placeholder sm:block">
                     <table class="w-full border-collapse text-sm">
                         <thead>
@@ -522,7 +509,6 @@
                                         {{ $isBuying ? __('rates.you_pay_column') : __('rates.you_get_column') }}
                                     </th>
                                 @endif
-                                <th class="px-4 py-3 text-right" title="{{ __('rates.save_hint') }}">{{ __('rates.save_column') }}</th>
                                 <th class="hidden px-4 py-3 text-right lg:table-cell">
                                     <a href="{{ $sortLink('spread') }}" class="inline-flex items-center gap-1 hover:text-ink" title="{{ __('rates.spread_hint') }}">
                                         {{ __('rates.spread_column') }} {{ $sortArrow('spread') }}
@@ -541,7 +527,8 @@
                         <tbody>
                             @foreach ($ranked['rows'] as $rate)
                                 @php
-                                    $isBest = $rate->rank === 1;
+                                    $isBest = $rate->rank === 1 && ! $bestShown;
+                                    $bestShown = $bestShown || $isBest;
                                     $total = $amount !== null ? $amount * (float) $rate->{$rateField} : null;
                                     $stale = $isStale($rate->scraped_at);
                                 @endphp
@@ -559,7 +546,7 @@
                                                 <span class="flex items-center gap-2">
                                                     <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
                                                     @if ($isBest)
-                                                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-best-badge px-2.5 py-1 text-xs font-semibold text-white">
+                                                        <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-yellow px-2.5 py-1 text-xs font-semibold text-ink">
                                                             <svg viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3 shrink-0" aria-hidden="true">
                                                                 <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
                                                             </svg>
@@ -593,9 +580,6 @@
                                             <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                         </td>
                                     @endif
-                                    <td class="px-4 py-4 text-right text-sm font-semibold whitespace-nowrap {{ $hasSaving($rate) ? 'text-primary' : 'text-muted' }}">
-                                        {{ $hasSaving($rate) ? $savingCell($rate) : '—' }}
-                                    </td>
                                     <td class="hidden px-4 py-4 text-right text-xs text-muted lg:table-cell">
                                         {{ number_format($rate->spread, 2) }}
                                     </td>

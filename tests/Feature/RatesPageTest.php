@@ -200,29 +200,6 @@ class RatesPageTest extends TestCase
         $this->assertSame(2, $byName['Halfway bank']->rank);
     }
 
-    public function test_each_row_reports_what_it_saves_against_the_worst_rate(): void
-    {
-        $this->seedMarket();
-
-        $byName = collect($this->get('/en/rates?currency=USD&intent=buy')->viewData('ranked')['rows'])
-            ->keyBy('organization_name');
-
-        // Worst sell rate on the page is the exchange office's 388.
-        $this->assertSame(23.0, round($byName['Cheap bank']->saving_per_unit, 2));
-        $this->assertSame(18.0, round($byName['Pricey bank']->saving_per_unit, 2));
-        $this->assertSame(0.0, round($byName['Corner exchange']->saving_per_unit, 2));
-    }
-
-    public function test_an_amount_turns_the_per_unit_saving_into_a_total(): void
-    {
-        $this->seedMarket();
-
-        // 500 x 23.00 = 11,500 AMD saved by using the best rate over the worst.
-        $this->get('/en/rates?currency=USD&intent=buy&amount=500')
-            ->assertOk()
-            ->assertSee('11,500');
-    }
-
     public function test_only_rate_types_that_have_rows_are_offered(): void
     {
         $usd = $this->seedMarket();

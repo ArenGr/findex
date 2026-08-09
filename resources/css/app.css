@@ -98,11 +98,6 @@ button {
     --color-market-exchange-line: #e3c9ee;
     --color-market-exchange-ink: #6d3487;
 
-    /* Best-rate badge on /rates. Deep enough that its white star and label
-       clear 4.5:1 - the accent yellow itself only reaches 2.26:1 against white
-       and fails AA at badge size. */
-    --color-best-badge: #9a7016;
-
     /* Neutrals */
     --color-ink: #161515;
     --color-body-text: #262626;

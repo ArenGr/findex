@@ -271,9 +271,6 @@ class RateController extends Controller
         foreach ($rows as $row) {
             $value = (float) $row->{$field};
             $row->rank = $rankByValue[self::rateKey($value)] ?? null;
-            // What picking this row saves per unit against the worst quote on
-            // the page - the concrete cost of not comparing.
-            $row->saving_per_unit = abs($worst - $value);
         }
 
         return [
