@@ -89,4 +89,31 @@ class GoogleAuthTest extends TestCase
         $this->assertNotNull($user->email_verified_at);
         $this->assertAuthenticatedAs($user);
     }
+
+    /**
+     * The callback is registered with Google at a fixed URL, so it sits outside
+     * the {locale} prefix and has no locale segment to read. An already-signed-
+     * in visitor landing back on it - Google's silent prompt=none re-auth, a
+     * refresh, a stale tab - trips the guest middleware, and building the
+     * redirect used to throw UrlGenerationException for a missing parameter
+     * rather than sending them home.
+     */
+    public function test_an_authenticated_visitor_hitting_the_callback_is_sent_home_not_a_500(): void
+    {
+        $user = User::factory()->create(['locale' => 'ru']);
+
+        $this->actingAs($user)
+            ->get('/auth/google/callback')
+            ->assertRedirect(route('home', ['locale' => 'ru']));
+    }
+
+    /** No stored preference either, so fall back to what the browser asks for. */
+    public function test_the_redirect_falls_back_to_the_browser_language(): void
+    {
+        $user = User::factory()->create(['locale' => null]);
+
+        $this->actingAs($user)
+            ->get('/auth/google/callback', ['Accept-Language' => 'en-US,en;q=0.9'])
+            ->assertRedirect(route('home', ['locale' => 'en']));
+    }
 }

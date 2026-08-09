@@ -28,4 +28,36 @@ class SetLocale
 
         return $next($request);
     }
+
+    /**
+     * The locale to build a redirect URL with, for code that runs before (or
+     * outside) this middleware and so cannot rely on URL::defaults().
+     *
+     * Most routes carry the locale as a segment, but the ones registered with
+     * external providers at fixed URLs - OAuth callbacks, webhooks - do not.
+     * Reading the segment alone yields null there, and route() throws on a
+     * missing required parameter rather than omitting it, so a redirect off
+     * one of those routes used to 500 instead of going anywhere.
+     */
+    public static function resolveFor(Request $request): string
+    {
+        $available = config('localization.available');
+
+        $fromRoute = $request->route('locale');
+
+        if (is_string($fromRoute) && array_key_exists($fromRoute, $available)) {
+            return $fromRoute;
+        }
+
+        // Set the last time they browsed a locale-prefixed page, so it is a
+        // real preference rather than a guess. Null for a guest, by definition.
+        $fromUser = $request->user()?->locale;
+
+        if (is_string($fromUser) && array_key_exists($fromUser, $available)) {
+            return $fromUser;
+        }
+
+        return $request->getPreferredLanguage(array_keys($available))
+            ?? config('localization.default');
+    }
 }

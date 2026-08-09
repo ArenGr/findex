@@ -40,7 +40,7 @@ class EnsureUserIsNotBanned
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route($loginRoute, ['locale' => $request->route('locale')])
+            return redirect()->route($loginRoute, ['locale' => SetLocale::resolveFor($request)])
                 ->withErrors(['email' => __('auth.failed')]);
         }
 

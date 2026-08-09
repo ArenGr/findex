@@ -109,19 +109,22 @@ return Application::configure(basePath: dirname(__DIR__))
         // Laravel's middleware priority sorting can run Authenticate (which
         // triggers this closure) before the 'setlocale' middleware has had a
         // chance to call URL::defaults(['locale' => ...]), so route() can't
-        // rely on that default here - the {locale} route parameter is read
-        // directly off the request instead, which is available regardless of
-        // middleware order since it's bound during route matching.
+        // rely on that default here - SetLocale::resolveFor() reads the
+        // {locale} route parameter directly off the request instead, which is
+        // available regardless of middleware order since it's bound during
+        // route matching. It also covers the routes that have no such
+        // parameter to read: OAuth callbacks and webhooks are registered with
+        // external providers at fixed, non-prefixed URLs.
         $middleware->redirectGuestsTo(fn (Request $request) => match (true) {
-            $request->routeIs('org.dashboard.*') => route('org.login', ['locale' => $request->route('locale')]),
-            $request->routeIs('writer.dashboard.*') => route('writer.login', ['locale' => $request->route('locale')]),
-            default => route('login', ['locale' => $request->route('locale')]),
+            $request->routeIs('org.dashboard.*') => route('org.login', ['locale' => SetLocale::resolveFor($request)]),
+            $request->routeIs('writer.dashboard.*') => route('writer.login', ['locale' => SetLocale::resolveFor($request)]),
+            default => route('login', ['locale' => SetLocale::resolveFor($request)]),
         });
 
         $middleware->redirectUsersTo(fn (Request $request) => match (true) {
-            $request->routeIs('org.*') => route('org.dashboard.index', ['locale' => $request->route('locale')]),
-            $request->routeIs('writer.*') => route('writer.dashboard.index', ['locale' => $request->route('locale')]),
-            default => route('home', ['locale' => $request->route('locale')]),
+            $request->routeIs('org.*') => route('org.dashboard.index', ['locale' => SetLocale::resolveFor($request)]),
+            $request->routeIs('writer.*') => route('writer.dashboard.index', ['locale' => SetLocale::resolveFor($request)]),
+            default => route('home', ['locale' => SetLocale::resolveFor($request)]),
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
