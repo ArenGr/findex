@@ -28,17 +28,19 @@
 
     $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH
         || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
-        || $amount !== \App\Http\Controllers\RateController::DEFAULT_AMOUNT;
+        || $amount !== null;
+
+    // Two views of the same rows. Without an amount the page answers "what are
+    // today's rates" with the Buy/Sell table everyone in this market already
+    // reads. Type an amount and it answers "what do I get", which needs a
+    // direction, a single rate column and a total - a different table, not a
+    // decoration on this one.
+    $calculating = $amount !== null;
 
     // Which column the visitor's intent ranks on, and therefore which one the
     // "you pay / you get" total is derived from.
     $rateField = \App\Http\Controllers\RateController::rateFieldForIntent($intent);
     $isBuying = $intent === 'buy';
-
-    // The institution-side Buy/Sell pair is a toggle rather than the default:
-    // a non-expert buying USD reads the column headed "Buy" and takes the wrong
-    // number, because what they pay is the institution's sell rate. The visible
-    // columns are a neutral rate plus a total that names the direction.
 
     // A rate this old is worth flagging - banks republish through the day, so
     // anything past a day is no longer "today's rate".
@@ -50,7 +52,7 @@
 
     // Shown once above the table rather than per market, now that everything
     // is ranked as one list.
-    $marketSaving = $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
+    $marketSaving = $calculating && $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
 
     // Banks and exchange offices share one table, so each row says which it is
     // - but only when the list actually mixes them.
@@ -82,18 +84,19 @@
                         href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
                         class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
                     >
-                        {{-- A handshake, not exchange arrows: the arrows read as
-                        "swap currency", which is what the whole page already does. --}}
+                        {{-- Two speech bubbles. Not exchange arrows, which read
+                        as "swap currency" - what the whole page already does -
+                        and not a handshake, whose five overlapping strokes
+                        collapse into a blob at this size. Not a percent badge
+                        either: that promises a discount, and all we can promise
+                        is that the question gets asked. --}}
                         <svg
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
                             stroke-linecap="round" stroke-linejoin="round"
                             class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true"
                         >
-                            <path d="m11 17 2 2a1 1 0 1 0 3-3" />
-                            <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
-                            <path d="m21 3 1 11h-2" />
-                            <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" />
-                            <path d="M3 4h8" />
+                            <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+                            <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
                         </svg>
                         <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
                     </a>
@@ -146,58 +149,77 @@
                 @endforeach
             </div>
 
-            {{-- Alpine-only, deliberately: with JS off the buy/sell radios do
-            not self-submit, so the button is the only way to apply an intent
-            change and must stay enabled. --}}
-            <div x-data="{ amount: @js($amount) }">
-                <div class="mt-4 flex flex-wrap items-end gap-x-8 gap-y-4 rounded-xl bg-placeholder/25 px-4 py-4">
-                    <div>
-                        <span class="{{ $labelClass }}">{{ __('rates.intent_label') }}</span>
-                        <div class="mt-2 inline-flex rounded-lg bg-white p-1">
-                            @foreach (['buy', 'sell'] as $option)
-                                <label class="cursor-pointer">
-                                    {{-- Submits on pick so switching buy/sell is one click; the
-                                    button below stays for the amount field and for no-JS. --}}
-                                    <input
-                                        type="radio" name="intent" value="{{ $option }}"
-                                        class="peer sr-only" @checked($intent === $option)
-                                        onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
-                                    >
-                                    <span class="block rounded-md px-6 py-2.5 text-sm font-semibold text-muted transition peer-checked:bg-primary peer-checked:text-white">
-                                        {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
+            {{--
+                The calculator, which is a second question rather than the
+                point of the page - so it sits in its own panel, on one line,
+                and produces a different table when answered.
+
+                Alpine-only, deliberately: with JS off the buy/sell radios do
+                not self-submit, so the button is the only way to apply an
+                intent change and must stay enabled.
+            --}}
+            <div x-data="{ amount: @js($amount ?? '') }" class="mt-4 rounded-xl bg-placeholder/25 px-4 py-4">
+                <span class="{{ $labelClass }}">{{ __('rates.calculator_label') }}</span>
+
+                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-3">
+                    {{-- Full width below sm, halves that share it: "Վաճառել
+                    USD" is wider than a 320px screen leaves for a content-sized
+                    pill, and shrink-0 turned that into page overflow rather than
+                    a wrap. --}}
+                    <div class="flex w-full rounded-lg bg-white p-1 sm:w-auto sm:shrink-0">
+                        @foreach (['buy', 'sell'] as $option)
+                            <label class="min-w-0 flex-1 cursor-pointer sm:flex-none">
+                                {{-- Submits on pick, but only once there is an
+                                amount to recalculate: switching direction on the
+                                plain rate table changes nothing a visitor can
+                                see, and reloading under them looks like a fault. --}}
+                                <input
+                                    type="radio" name="intent" value="{{ $option }}"
+                                    class="peer sr-only" @checked($intent === $option)
+                                    onchange="if (Number(this.form.amount.value) > 0) { this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit(); }"
+                                >
+                                <span class="block rounded-md px-3 py-2.5 text-center text-sm leading-tight font-semibold break-words text-muted transition peer-checked:bg-primary peer-checked:text-white sm:px-5">
+                                    {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
+                                </span>
+                            </label>
+                        @endforeach
                     </div>
 
-                    <div class="min-w-0 flex-1">
-                        <label for="amount" class="{{ $labelClass }}">{{ __('rates.amount_label') }}</label>
-                        <div class="mt-2 flex items-center gap-2">
-                            <input
-                                type="number" inputmode="decimal" step="0.01" min="0"
-                                name="amount" id="amount"
-                                x-model="amount"
-                                value="{{ $amount }}"
-                                placeholder="{{ __('rates.amount_placeholder') }}"
-                                class="w-full min-w-0 rounded-lg border border-border-muted bg-white px-4 py-2.5 text-base text-ink focus:border-primary focus:outline-none"
-                            >
-                            <span class="shrink-0 text-sm font-semibold text-ink">{{ $selectedCurrency?->code }}</span>
-                        </div>
+                    <div class="flex min-w-0 flex-1 items-center gap-2">
+                        <label for="amount" class="sr-only">{{ __('rates.amount_label') }}</label>
+                        <input
+                            type="number" inputmode="decimal" step="0.01" min="0"
+                            name="amount" id="amount"
+                            x-model="amount"
+                            value="{{ $amount }}"
+                            placeholder="{{ __('rates.amount_placeholder') }}"
+                            class="w-full min-w-0 rounded-lg border border-border-muted bg-white px-4 py-2.5 text-base text-ink focus:border-primary focus:outline-none"
+                        >
+                        <span class="shrink-0 text-sm font-semibold text-ink">{{ $selectedCurrency?->code }}</span>
                     </div>
-                </div>
 
-                {{-- Number(), not a truthiness check: the string "0" is truthy
-                in JS, and the controller drops a zero amount anyway. --}}
-                <div class="mt-4 flex justify-end">
+                    {{-- Number(), not a truthiness check: the string "0" is
+                    truthy in JS, and the controller drops a zero amount
+                    anyway. --}}
                     <button
                         type="submit"
                         :disabled="!(Number(amount) > 0)"
-                        class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-placeholder disabled:text-muted disabled:hover:bg-placeholder"
+                        {{-- Its own line on a phone: sharing one with the
+                        amount field left the field about 90px wide, which
+                        truncates a four-figure number as you type it. --}}
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-placeholder disabled:text-muted disabled:hover:bg-placeholder sm:w-auto sm:shrink-0"
                     >
-                        {{ __('rates.intent_submit') }}
+                        {{ __('rates.calculate_submit') }}
                         <span aria-hidden="true">&rarr;</span>
                     </button>
+
+                    @if ($calculating)
+                        {{-- Not shrink-0: the Armenian string is wider than a
+                        320px screen and would push the page sideways. --}}
+                        <a href="{{ $link(['amount' => null]) }}" class="min-w-0 text-sm break-words text-muted underline hover:text-ink">
+                            {{ __('rates.calculator_clear') }}
+                        </a>
+                    @endif
                 </div>
             </div>
         </form>
@@ -395,6 +417,14 @@
             $bestRows = collect($ranked['rows'])->where('rank', 1);
             $best = $bestRows->first();
 
+            // Without an amount there is no single winner - buy and sell rank
+            // in opposite directions - so each column names its own. The
+            // organization buys low and sells high, which for the visitor is
+            // the highest buy and the lowest sell.
+            $bestBuy = collect($ranked['rows'])->max(fn ($row) => (float) $row->buy_rate);
+            $bestSell = collect($ranked['rows'])->min(fn ($row) => (float) $row->sell_rate);
+            $isBestRate = fn (float $value, ?float $target) => $target !== null && abs($value - $target) < 0.00005;
+
             $rateColumn = __('rates.rate_column', ['code' => $selectedCurrency?->code]);
             $totalColumn = __($isBuying ? 'rates.total_pay_column' : 'rates.total_get_column');
 
@@ -407,22 +437,25 @@
 
         @if ($rowCount > 0)
             {{--
-                The answer, before the table. Six banks can quote the same
-                figure and a badge buried in row four does not tell you that -
-                this states the winning total once, says who holds it, and says
-                how many others match it.
+                The answer, before the table, and filled rather than tinted -
+                a pale strip the width of the page reads as a caption on the
+                table instead of the thing the visitor came for.
+
+                Only while calculating: with no amount there is no single
+                winner to state, because buy and sell rank in opposite
+                directions.
             --}}
-            @if ($best)
-                <div class="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-2xl border border-primary/30 border-s-4 border-s-primary bg-primary/8 px-5 py-4">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white">
-                            <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-ink" aria-hidden="true">
+            @if ($calculating && $best)
+                <div class="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-2xl bg-primary px-4 py-5 sm:px-6">
+                    <div class="flex min-w-0 items-center gap-4">
+                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
+                            <svg viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 text-primary" aria-hidden="true">
                                 <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <p class="font-heading font-bold break-words text-ink">{{ __('rates.best_heading') }}</p>
-                            <p class="text-sm break-words text-muted">
+                            <p class="font-heading text-lg font-bold break-words text-white">{{ __('rates.best_heading') }}</p>
+                            <p class="text-sm break-words text-white/80">
                                 @if ($bestRows->count() > 1)
                                     {{ trans_choice('rates.best_shared', $bestRows->count() - 1, [
                                         'name' => $best->organization_name,
@@ -439,10 +472,14 @@
                     </div>
 
                     <div class="text-end">
-                        <p class="{{ $labelClass }}">{{ $totalColumn }}</p>
-                        <p class="font-heading text-2xl font-bold whitespace-nowrap text-ink">
+                        <p class="block text-xs font-semibold tracking-wider text-white/80 uppercase">{{ $totalColumn }}</p>
+                        {{-- Scaled down on the narrowest screens: at 30px a
+                        six-figure total plus "драм" is wider than 320px, and it
+                        is set nowrap so it would push the page rather than
+                        break. --}}
+                        <p class="font-heading text-2xl font-bold whitespace-nowrap text-white sm:text-3xl">
                             {{ number_format($amount * (float) $best->{$rateField}) }}
-                            <span class="text-base font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                            <span class="text-base font-normal text-white/80 sm:text-lg">{{ __('exchange_quotes.request.amd') }}</span>
                         </p>
                     </div>
                 </div>
@@ -507,13 +544,15 @@
                         </x-info-popover>
                     </div>
 
-                    {{-- For anyone who does want the institution-side pair.
-                    Hidden by default because reading it correctly means knowing
-                    that "Buy" is the rate the bank buys at, not the one you buy
-                    at. --}}
-                    <a href="{{ $link(['both' => $showBothRates ? null : 1]) }}" class="text-sm break-words text-muted underline hover:text-ink">
-                        {{ $showBothRates ? __('rates.hide_both_rates') : __('rates.show_both_rates') }}
-                    </a>
+                    {{-- Only offered while calculating: that table shows one
+                    rate named from the visitor's side, because reading the pair
+                    correctly means knowing that "Buy" is the rate the bank buys
+                    at, not the one you buy at. The plain table is the pair. --}}
+                    @if ($calculating)
+                        <a href="{{ $link(['both' => $showBothRates ? null : 1]) }}" class="text-sm break-words text-muted underline hover:text-ink">
+                            {{ $showBothRates ? __('rates.hide_both_rates') : __('rates.show_both_rates') }}
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -521,14 +560,14 @@
             once the rate and the total both need space. --}}
             <div class="mt-4 overflow-hidden rounded-xl border border-placeholder sm:hidden">
                 @foreach ($ranked['rows'] as $rate)
-                    @php $total = $amount * (float) $rate->{$rateField}; @endphp
+                    @php $total = $calculating ? $amount * (float) $rate->{$rateField} : null; @endphp
                     <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 border-b border-placeholder px-4 py-4 last:border-b-0">
                         <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
 
                         <div class="min-w-0 flex-1">
                             <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <span class="font-medium break-words text-ink">{{ $rate->organization_name }}</span>
-                                @if ($rate->rank === 1)
+                                @if ($calculating && $rate->rank === 1)
                                     <x-rates.best-chip />
                                 @endif
                             </span>
@@ -547,11 +586,16 @@
                         </div>
 
                         <div class="shrink-0 text-end">
-                            <p class="font-heading font-bold whitespace-nowrap text-ink">
-                                {{ number_format($total) }}
-                                <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
-                            </p>
-                            <p class="text-xs whitespace-nowrap text-muted">{{ number_format($rate->{$rateField}, 2) }}</p>
+                            @if ($calculating)
+                                <p class="font-heading font-bold whitespace-nowrap text-ink">
+                                    {{ number_format($total) }}
+                                    <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                </p>
+                                <p class="text-xs whitespace-nowrap text-muted">{{ number_format($rate->{$rateField}, 2) }}</p>
+                            @else
+                                <p class="font-heading font-bold whitespace-nowrap text-ink">{{ number_format($rate->buy_rate, 2) }}</p>
+                                <p class="font-heading font-bold whitespace-nowrap text-ink">{{ number_format($rate->sell_rate, 2) }}</p>
+                            @endif
                         </div>
                     </a>
                 @endforeach
@@ -566,25 +610,35 @@
                     <thead>
                         <tr class="border-b border-placeholder text-xs font-semibold tracking-wider text-muted uppercase">
                             <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
-                            <th class="px-4 py-3 text-right">
-                                <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $rateColumn }}{{ $sortArrow($rateField) }}</a>
-                            </th>
-                            @if ($showBothRates)
+                            @if ($calculating)
                                 <th class="px-4 py-3 text-right">
+                                    <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $rateColumn }}{{ $sortArrow($rateField) }}</a>
+                                </th>
+                                @if ($showBothRates)
+                                    <th class="px-4 py-3 text-right">
+                                        <a href="{{ $sortLink('buy_rate') }}" class="hover:text-ink" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}{{ $sortArrow('buy_rate') }}</a>
+                                    </th>
+                                    <th class="px-4 py-3 text-right">
+                                        <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
+                                    </th>
+                                @endif
+                                {{-- Tinted, because this is the number the
+                                calculation exists to produce and it sits
+                                furthest from the name. --}}
+                                <th class="bg-placeholder/25 px-6 py-3 text-right">{{ $totalColumn }}</th>
+                            @else
+                                <th class="px-6 py-3 text-right">
                                     <a href="{{ $sortLink('buy_rate') }}" class="hover:text-ink" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}{{ $sortArrow('buy_rate') }}</a>
                                 </th>
-                                <th class="px-4 py-3 text-right">
+                                <th class="px-6 py-3 text-right">
                                     <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
                                 </th>
                             @endif
-                            {{-- Tinted, because this is the number the page exists
-                            to produce and it sits furthest from the name. --}}
-                            <th class="bg-placeholder/25 px-6 py-3 text-right">{{ $totalColumn }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($ranked['rows'] as $rate)
-                            @php $total = $amount * (float) $rate->{$rateField}; @endphp
+                            @php $total = $calculating ? $amount * (float) $rate->{$rateField} : null; @endphp
                             <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
                                 <td class="px-6 py-4">
                                     <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
@@ -592,7 +646,7 @@
                                         <div class="min-w-0">
                                             <span class="flex items-center gap-2">
                                                 <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
-                                                @if ($rate->rank === 1)
+                                                @if ($calculating && $rate->rank === 1)
                                                     <x-rates.best-chip />
                                                 @endif
                                             </span>
@@ -611,17 +665,36 @@
                                         </div>
                                     </a>
                                 </td>
-                                <td class="px-4 py-4 text-right font-heading text-base text-ink">
-                                    {{ number_format($rate->{$rateField}, 2) }}
-                                </td>
-                                @if ($showBothRates)
-                                    <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->buy_rate, 2) }}</td>
-                                    <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->sell_rate, 2) }}</td>
+                                @if ($calculating)
+                                    <td class="px-4 py-4 text-right font-heading text-base text-ink">
+                                        {{ number_format($rate->{$rateField}, 2) }}
+                                    </td>
+                                    @if ($showBothRates)
+                                        <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->buy_rate, 2) }}</td>
+                                        <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->sell_rate, 2) }}</td>
+                                    @endif
+                                    <td class="bg-placeholder/25 px-6 py-4 text-right font-heading text-base font-bold whitespace-nowrap text-ink">
+                                        {{ number_format($total) }}
+                                        <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                    </td>
+                                @else
+                                    <td class="px-6 py-4 text-right font-heading text-base text-ink">
+                                        <span class="inline-flex items-center justify-end gap-2">
+                                            @if ($isBestRate((float) $rate->buy_rate, $bestBuy))
+                                                <x-rates.best-chip />
+                                            @endif
+                                            {{ number_format($rate->buy_rate, 2) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-heading text-base text-ink">
+                                        <span class="inline-flex items-center justify-end gap-2">
+                                            @if ($isBestRate((float) $rate->sell_rate, $bestSell))
+                                                <x-rates.best-chip />
+                                            @endif
+                                            {{ number_format($rate->sell_rate, 2) }}
+                                        </span>
+                                    </td>
                                 @endif
-                                <td class="bg-placeholder/25 px-6 py-4 text-right font-heading text-base font-bold whitespace-nowrap text-ink">
-                                    {{ number_format($total) }}
-                                    <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
-                                </td>
                             </tr>
                         @endforeach
                     </tbody>

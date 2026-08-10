@@ -49,21 +49,36 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * The total is the one figure a non-expert reads without decoding a rate,
-     * so it is on screen before anyone types.
+     * Most people arrive to read today's rates, and the Buy/Sell table everyone
+     * in this market already knows is the honest answer to that. Totals are a
+     * second question, asked by typing an amount.
      */
-    public function test_the_amount_defaults_so_totals_show_immediately(): void
+    public function test_without_an_amount_the_page_is_a_plain_buy_and_sell_table(): void
     {
         $this->seedMarket();
 
         $response = $this->get('/en/rates?currency=USD');
 
         $response->assertOk()
-            ->assertViewHas('amount', 100.0)
-            // 100 x 365.00, the cheapest sell rate.
-            ->assertSee('36,500');
+            ->assertViewHas('amount', null)
+            ->assertSee('>Buy', false)
+            ->assertSee('>Sell', false)
+            ->assertDontSee('Total you pay')
+            ->assertDontSee('Current best rate');
 
         $this->assertSame(3, $response->viewData('ranked')['count']);
+    }
+
+    /** An amount swaps in the other table: one rate column and a total. */
+    public function test_an_amount_switches_to_the_calculated_table(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&amount=500&intent=buy')
+            ->assertOk()
+            ->assertSee('Total you pay')
+            ->assertSee('Current best rate')
+            ->assertSee('Rate per 1 USD');
     }
 
     public function test_an_amount_turns_each_row_into_a_total(): void
@@ -84,7 +99,7 @@ class RatesPageTest extends TestCase
         foreach (['abc', '-5', '0', '999999999', ''] as $bad) {
             $this->get('/en/rates?currency=USD&amount='.$bad)
                 ->assertOk()
-                ->assertViewHas('amount', 100.0);
+                ->assertViewHas('amount', null);
         }
     }
 
@@ -348,14 +363,14 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD&intent=buy')
+        $this->get('/en/rates?currency=USD&intent=buy&amount=100')
             ->assertOk()
             ->assertSee('Rate per 1 USD')
             ->assertSee('Total you pay')
             ->assertDontSee('>Buy<', false)
             ->assertDontSee('>Sell<', false);
 
-        $this->get('/en/rates?currency=USD&intent=sell')
+        $this->get('/en/rates?currency=USD&intent=sell&amount=100')
             ->assertOk()
             ->assertSee('Total you get');
     }
@@ -379,7 +394,7 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD&both=1')
+        $this->get('/en/rates?currency=USD&both=1&amount=100')
             ->assertOk()
             ->assertViewHas('showBothRates', true)
             ->assertSee('Hide buy and sell rates');

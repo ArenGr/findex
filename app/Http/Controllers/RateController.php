@@ -26,8 +26,6 @@ class RateController extends Controller
      * Seeds the "you pay" column so it is on screen before anyone types. Small
      * enough to read as an example rather than as a claim about the visitor.
      */
-    public const DEFAULT_AMOUNT = 100.0;
-
     private const TTL_MINUTES = 360;
 
     public function index(Request $request): View
@@ -93,9 +91,9 @@ class RateController extends Controller
         // about which of two institution-side columns to sort by.
         $intent = $request->query('intent') === 'sell' ? 'sell' : 'buy';
 
-        // Always set, defaulting to DEFAULT_AMOUNT: the per-row total is the
-        // one figure a non-expert reads without decoding a rate, and leaving it
-        // behind an optional field meant most visitors never saw it.
+        // Null unless the visitor asked for a calculation. Most people arrive
+        // to read today's rates, and a rate table is the honest answer to that;
+        // totals are a second question, asked by typing an amount.
         // Display-layer only - deliberately not part of any cache key
         // (see fetchCachedRates).
         $amount = $this->amountFromQuery($request);
@@ -358,23 +356,21 @@ class RateController extends Controller
 
     /**
      * Silently dropped rather than rejected when malformed or out of range -
-     * the amount only enriches the display, so a bad value degrades to the
-     * plain rate table instead of erroring. Upper bound matches the
-     * exchange-quote form's own cap.
+     * the amount only switches on a second view of the same data, so a bad
+     * value degrades to the plain rate table instead of erroring. Upper bound
+     * matches the exchange-quote form's own cap.
      */
-    private function amountFromQuery(Request $request): float
+    private function amountFromQuery(Request $request): ?float
     {
         $amount = $request->query('amount');
 
         if (! is_numeric($amount)) {
-            return self::DEFAULT_AMOUNT;
+            return null;
         }
 
         $amount = (float) $amount;
 
-        // Silently corrected rather than rejected: a nonsense amount is a typo,
-        // not something worth blocking the whole page over.
-        return $amount > 0 && $amount <= 99999999.99 ? $amount : self::DEFAULT_AMOUNT;
+        return $amount > 0 && $amount <= 99999999.99 ? $amount : null;
     }
 
     /**
