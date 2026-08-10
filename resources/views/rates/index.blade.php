@@ -218,7 +218,6 @@
                         class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-placeholder disabled:text-muted disabled:hover:bg-placeholder sm:w-auto sm:shrink-0"
                     >
                         {{ __('rates.calculate_submit') }}
-                        <span aria-hidden="true">&rarr;</span>
                     </button>
 
                     @if ($calculating)
@@ -397,13 +396,6 @@
                     @endif
                 </div>
 
-                @if ($hasNonDefaultFilter)
-                    {{-- Bottom-aligned with the pills, so the padding optically
-                    centres this bare text against them. --}}
-                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="pb-2 text-sm break-words text-muted hover:text-ink">
-                        {{ __('rates.reset_filters') }}
-                    </a>
-                @endif
             </div>
         </div>
 
@@ -465,9 +457,9 @@
             @if ($calculating && $best)
                 <div class="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-2xl bg-primary px-4 py-5 sm:px-6">
                     <div class="flex min-w-0 items-center gap-4">
-                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
-                            <svg viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 text-primary" aria-hidden="true">
-                                <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
+                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-6 w-6 fill-accent-yellow" aria-hidden="true">
+                                <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
                             </svg>
                         </span>
                         <div class="min-w-0">
@@ -507,6 +499,13 @@
                     <h2 class="font-heading text-lg font-bold break-words text-ink">{{ $sectionHeading }}</h2>
                     <p class="mt-1 text-sm break-words text-muted">
                         {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
+                        {{-- Here rather than in the filter row above: appearing
+                        there pushed that row onto a second line, so the layout
+                        jumped at the moment a filter was applied. It also reads
+                        better against a count it is about to change. --}}
+                        @if ($hasNonDefaultFilter)
+                            &middot; <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
+                        @endif
                         {{-- 0.01, not 1: the floor was written for dram totals
                         in the thousands, and silently swallowed the whole line
                         for a small amount of a low-value currency. --}}
