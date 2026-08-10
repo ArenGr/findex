@@ -30,6 +30,14 @@
         || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
         || $amount !== null;
 
+    // Whole dram above 1,000, where a rounded half-unit is noise. Below it the
+    // decimals are the number: 1 KZT at 4.60 rendered as "5", and the office
+    // beside it quoting 4.75 rendered as "5" too, so the table stopped telling
+    // two rows apart at exactly the amounts where the gap is easiest to see.
+    $amd = fn (float $value) => $value < 1000
+        ? number_format($value, 2)
+        : number_format($value);
+
     // Two views of the same rows. Without an amount the page answers "what are
     // today's rates" with the Buy/Sell table everyone in this market already
     // reads. Type an amount and it answers "what do I get", which needs a
@@ -478,7 +486,7 @@
                         is set nowrap so it would push the page rather than
                         break. --}}
                         <p class="font-heading text-2xl font-bold whitespace-nowrap text-white sm:text-3xl">
-                            {{ number_format($amount * (float) $best->{$rateField}) }}
+                            {{ $amd($amount * (float) $best->{$rateField}) }}
                             <span class="text-base font-normal text-white/80 sm:text-lg">{{ __('exchange_quotes.request.amd') }}</span>
                         </p>
                     </div>
@@ -490,9 +498,12 @@
                     <h2 class="font-heading text-lg font-bold break-words text-ink">{{ $sectionHeading }}</h2>
                     <p class="mt-1 text-sm break-words text-muted">
                         {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
-                        @if ($marketSaving !== null && $marketSaving >= 1)
+                        {{-- 0.01, not 1: the floor was written for dram totals
+                        in the thousands, and silently swallowed the whole line
+                        for a small amount of a low-value currency. --}}
+                        @if ($marketSaving !== null && $marketSaving >= 0.01)
                             &middot; {{ __('rates.market_saving', [
-                                'amount' => number_format($marketSaving),
+                                'amount' => $amd($marketSaving),
                                 'currency' => __('exchange_quotes.request.amd'),
                             ]) }}
                         @endif
@@ -588,7 +599,7 @@
                         <div class="shrink-0 text-end">
                             @if ($calculating)
                                 <p class="font-heading font-bold whitespace-nowrap text-ink">
-                                    {{ number_format($total) }}
+                                    {{ $amd($total) }}
                                     <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                 </p>
                                 <p class="text-xs whitespace-nowrap text-muted">{{ number_format($rate->{$rateField}, 2) }}</p>
@@ -674,7 +685,7 @@
                                         <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->sell_rate, 2) }}</td>
                                     @endif
                                     <td class="bg-placeholder/25 px-6 py-4 text-right font-heading text-base font-bold whitespace-nowrap text-ink">
-                                        {{ number_format($total) }}
+                                        {{ $amd($total) }}
                                         <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                     </td>
                                 @else

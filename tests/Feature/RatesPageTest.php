@@ -560,4 +560,38 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertSee('value="telegram"', false);
     }
+
+    /**
+     * Totals were formatted to whole dram, which is right at 368,000 and wrong
+     * at 4.60: it rendered as "5", and so did the office next to it quoting
+     * 4.75 - so the table stopped telling two rows apart at exactly the amounts
+     * where the difference is easiest to read.
+     */
+    public function test_a_small_total_keeps_the_decimals_that_distinguish_it(): void
+    {
+        $kzt = Currency::create(['code' => 'KZT', 'name' => 'Tenge', 'symbol' => '\u{20b8}', 'sort_order' => 2, 'is_active' => true]);
+
+        $this->rate($this->organization('low-office', 'exchange'), $kzt, 0.76, 0.80);
+        $this->rate($this->organization('high-office', 'exchange'), $kzt, 0.77, 0.81);
+
+        $this->get('/en/rates?currency=KZT&amount=1&intent=sell')
+            ->assertOk()
+            ->assertSee('0.77')
+            ->assertSee('0.76')
+            ->assertDontSee('>1 AMD<', false)
+            // The saving line has its own floor, which was written for dram
+            // totals in the thousands and swallowed this whole.
+            ->assertSee('Up to 0.01 AMD difference');
+    }
+
+    /** Above a thousand a rounded half-dram is noise, so it still rounds. */
+    public function test_a_large_total_is_still_shown_as_whole_dram(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&amount=500&intent=buy')
+            ->assertOk()
+            ->assertSee('182,500')
+            ->assertDontSee('182,500.00');
+    }
 }
