@@ -232,22 +232,29 @@
             </div>
         </form>
 
+        {{--
+            The three narrowing filters read as one row of questions - where,
+            what kind, which city - rather than three stacked blocks each
+            claiming its own band of the page. They wrap in order on a phone.
+        --}}
+        <div class="mt-6 flex flex-wrap items-start gap-x-10 gap-y-5">
+
         {{-- Market tabs. Banks and exchange offices quote very different
         levels, so they are separated rather than interleaved. --}}
         @if ($orgTypes->count() > 1)
-            <div class="mt-6">
+            <div>
                 <span class="{{ $labelClass }}">{{ __('rates.market_label') }}</span>
                 <div class="mt-2 flex flex-wrap gap-2">
                 <a
                     href="{{ $link(['org_type' => null, 'organization' => null]) }}"
-                    class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'bg-border-muted text-ink' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                    class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                 >
                     {{ __('rates.market_all') }}
                 </a>
                 @foreach ($orgTypes as $orgType)
                     <a
                         href="{{ $link(['org_type' => $orgType, 'organization' => null]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'bg-border-muted text-ink' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         {{ __('rates.markets.' . $orgType) }}
                         </a>
@@ -258,13 +265,13 @@
 
         {{-- Transaction type: only the ones this currency actually has, so a
         pill never leads to an empty table. --}}
-        <div class="mt-5">
+        <div>
             <span class="{{ $labelClass }}">{{ __('rates.type_label') }}</span>
             <div class="mt-2 flex flex-wrap gap-2">
                 @foreach ($availableTypes as $typeValue)
                     <a
                         href="{{ $link(['type' => $typeValue]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'bg-border-muted text-ink' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         {{ __('organizations.rate_types.' . $typeValue) }}
                     </a>
@@ -274,7 +281,7 @@
 
         {{-- Secondary filters, collapsed behind a toggle on mobile so they
         don't push the results themselves below the fold. --}}
-        <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-5">
+        <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open">
             <button
                 type="button"
                 @click="open = !open"
@@ -393,11 +400,13 @@
                 @if ($hasNonDefaultFilter)
                     {{-- Bottom-aligned with the pills, so the padding optically
                     centres this bare text against them. --}}
-                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="pb-2 text-sm text-muted hover:text-ink">
+                    <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="pb-2 text-sm break-words text-muted hover:text-ink">
                         {{ __('rates.reset_filters') }}
                     </a>
                 @endif
             </div>
+        </div>
+
         </div>
 
         @if ($centralBankRate)
