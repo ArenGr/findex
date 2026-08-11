@@ -42,7 +42,7 @@ return [
     'best_badge' => 'Best',
     'show_both_rates' => 'Show buy and sell rates',
     'hide_both_rates' => 'Hide buy and sell rates',
-    'central_bank_reference' => 'Central Bank official rate: :rate AMD per 1 :code. A reference only - you cannot exchange at this rate.',
+    'central_bank_reference' => 'Central Bank official rate: :rate AMD per 1 :code.',
     'buy_column' => 'Buy',
     'sell_column' => 'Sell',
     'buy_hint' => 'The rate the organization buys at - what you receive when selling this currency.',

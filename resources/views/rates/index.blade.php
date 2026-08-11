@@ -156,7 +156,7 @@
                 @foreach ($currencies as $currency)
                     <a
                         href="{{ $link(['currency' => $currency->code]) }}"
-                        class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                        class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
                         {{ $currency->code }}
@@ -287,7 +287,7 @@
                         link is also shareable and works with JS off. --}}
                         <a
                             href="{{ $link(['amount' => $quick]) }}"
-                            class="rounded-full border px-3 py-1 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                            class="rounded-full border px-3 py-1 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                         >
                             {{ number_format($quick) }}
                         </a>
@@ -323,7 +323,7 @@
                     type="button"
                     @click="open = !open"
                     :aria-expanded="open"
-                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                 >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
                         <path d="M3 6h18M7 12h10M11 18h2" />
@@ -376,14 +376,14 @@
                 <div class="mt-2 flex flex-wrap gap-2">
                 <a
                     href="{{ $link(['org_type' => null, 'organization' => null]) }}"
-                    class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                    class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                 >
                     {{ __('rates.market_all') }}
                 </a>
                 @foreach ($orgTypes as $orgType)
                     <a
                         href="{{ $link(['org_type' => $orgType, 'organization' => null]) }}"
-                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         {{ __('rates.markets.' . $orgType) }}
                         </a>
@@ -400,7 +400,7 @@
                 @foreach ($availableTypes as $typeValue)
                     <a
                         href="{{ $link(['type' => $typeValue]) }}"
-                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         {{ __('organizations.rate_types.' . $typeValue) }}
                     </a>
