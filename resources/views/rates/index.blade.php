@@ -84,14 +84,6 @@
         $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null,
     ])->filter()->count();
 
-    // Hiding the controls is only safe if the state stays readable, so what
-    // they are set to is written out in words beside the button.
-    $filterSummary = collect([
-        __('rates.summary_type', ['type' => __('organizations.rate_types.' . $selectedType->value)]),
-        $selectedOrganization?->name
-            ?? ($selectedOrgType ? __('rates.markets.' . $selectedOrgType) : __('rates.summary_all_orgs')),
-        $hasLocation ? __('rates.summary_near_you') : ($selectedCity ?: __('rates.summary_all_cities')),
-    ])->implode(' · ');
 @endphp
 
 @section('content')
@@ -327,21 +319,19 @@
         --}}
         <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-6">
             <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                <p class="min-w-0 text-sm break-words text-muted">{{ $filterSummary }}</p>
+                <button
+                    type="button"
+                    @click="open = !open"
+                    :aria-expanded="open"
+                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                        <path d="M3 6h18M7 12h10M11 18h2" />
+                    </svg>
+                    {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
+                </button>
 
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <button
-                        type="button"
-                        @click="open = !open"
-                        :aria-expanded="open"
-                        class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                    >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                            <path d="M3 6h18M7 12h10M11 18h2" />
-                        </svg>
-                        {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
-                    </button>
-
                     {{-- An alert is a follow-up to what you are looking at, so
                     it sits with the controls that define it. --}}
                     <div class="flex items-center gap-2">

@@ -748,24 +748,22 @@ class RatesPageTest extends TestCase
     /**
      * A page called "All Exchange Rates" that shows no rates until you scroll
      * is answering the wrong question first. Currency is the only control with
-     * no sensible default, so it is the only one on sight; the rest state
-     * themselves in words and keep their controls behind a button.
+     * no sensible default, so it is the only one on sight; the rest sit behind
+     * a button that counts what has moved off its default, which is the only
+     * sign on the page that the table has been narrowed.
      */
-    public function test_the_filters_state_is_readable_without_opening_them(): void
+    public function test_the_filter_button_counts_what_is_narrowing_the_table(): void
     {
         $this->seedMarket();
 
         $this->get('/en/rates?currency=USD')
             ->assertOk()
-            ->assertSee('Cash rates · all organizations · all cities', false)
+            ->assertSee('Filters')
             // No count when nothing has moved off its default.
             ->assertDontSee('Filters (');
 
-        // A named organization replaces the market in the sentence: it is the
-        // narrower of the two and repeating both says nothing extra.
         $this->get('/en/rates?currency=USD&org_type=exchange&organization=corner-exchange')
             ->assertOk()
-            ->assertSee('Cash rates · Corner exchange · all cities', false)
             ->assertSee('Filters (2)');
     }
 
