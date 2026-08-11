@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\Organization;
@@ -659,5 +660,88 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertSee('amount=500', false)
             ->assertSee('amount=5000', false);
+    }
+
+    private function branch(Organization $org, string $name, float $lat, float $lng, ?string $city = 'Yerevan'): Branch
+    {
+        return Branch::create([
+            'organization_id' => $org->id, 'name' => $name, 'city' => $city,
+            'latitude' => $lat, 'longitude' => $lng, 'is_active' => true,
+        ]);
+    }
+
+    /**
+     * A rate belongs to an organization, but you walk to a branch - and most
+     * organizations here have more than one. Guessing sends people across town,
+     * so with nothing to disambiguate on, only a single-branch organization
+     * gets a link.
+     */
+    public function test_directions_appear_only_when_one_branch_is_identifiable(): void
+    {
+        $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
+
+        $single = $this->organization('one-branch-bank');
+        $this->branch($single, 'Only', 40.1811, 44.5136);
+        $this->rate($single, $usd, 360.0, 365.0);
+
+        $many = $this->organization('two-branch-bank');
+        $this->branch($many, 'Kentron', 40.1770, 44.5100);
+        $this->branch($many, 'Far away', 40.1611, 44.2916, 'Vagharshapat');
+        $this->rate($many, $usd, 359.0, 366.0);
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('destination=40.1811,44.5136', false)
+            // The two-branch organization is on the page, but with nothing to
+            // choose between Kentron and Vagharshapat it gets no link.
+            ->assertSee('Two branch bank')
+            ->assertDontSee('destination=40.177', false);
+    }
+
+    /** A city filter disambiguates just as well as location does. */
+    public function test_a_city_filter_identifies_the_branch_to_walk_to(): void
+    {
+        $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
+
+        $org = $this->organization('two-branch-bank');
+        $this->branch($org, 'Kentron', 40.1770, 44.5100);
+        $this->branch($org, 'Far away', 40.1611, 44.2916, 'Vagharshapat');
+        $this->rate($org, $usd, 359.0, 366.0);
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertDontSee('maps/dir', false);
+
+        $this->get('/en/rates?currency=USD&city=Vagharshapat')
+            ->assertOk()
+            ->assertSee('destination=40.1611,44.2916', false);
+    }
+
+    /**
+     * Once location is shared the branch is known, so every row with one gets a
+     * link - and it points at the nearest, not the first the database returns.
+     */
+    public function test_with_location_directions_point_at_the_nearest_branch(): void
+    {
+        $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
+
+        $org = $this->organization('two-branch-bank');
+        // Deliberately created far-first: taking the first row would pick this.
+        $this->branch($org, 'Far away', 40.1611, 44.2916, 'Vagharshapat');
+        $this->branch($org, 'Kentron', 40.1770, 44.5100);
+        $this->rate($org, $usd, 359.0, 366.0);
+
+        $this->get('/en/rates?currency=USD&lat=40.1792&lng=44.4991&sort=distance&direction=asc')
+            ->assertOk()
+            ->assertSee('destination=40.177,44.51', false)
+            ->assertDontSee('destination=40.1611,44.2916', false);
+    }
+
+    /** An organization with no branches on file simply has nowhere to send you. */
+    public function test_an_organization_without_branches_has_no_directions_link(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('maps/dir', false);
     }
 }

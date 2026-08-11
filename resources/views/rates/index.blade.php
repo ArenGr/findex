@@ -618,12 +618,18 @@
             <div class="mt-4 overflow-hidden rounded-xl border border-placeholder sm:hidden">
                 @foreach ($ranked['rows'] as $rate)
                     @php $total = $calculating ? $amount * (float) $rate->{$rateField} : null; @endphp
-                    <a href="{{ $rate->organization_url }}" class="flex items-center gap-3 border-b border-placeholder px-4 py-4 last:border-b-0">
-                        <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
+                    {{-- The name is the link, not the whole card: the meta line
+                    under it now carries a Directions link of its own, and an
+                    anchor inside an anchor is invalid - browsers close the outer
+                    one early and the row falls apart. --}}
+                    <div class="flex items-center gap-3 border-b border-placeholder px-4 py-4 last:border-b-0">
+                        <a href="{{ $rate->organization_url }}" class="shrink-0">
+                            <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
+                        </a>
 
                         <div class="min-w-0 flex-1">
                             <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span class="font-medium break-words text-ink">{{ $rate->organization_name }}</span>
+                                <a href="{{ $rate->organization_url }}" class="font-medium break-words text-ink hover:text-primary">{{ $rate->organization_name }}</a>
                                 @if ($calculating && $rate->rank === 1)
                                     <x-rates.best-chip />
                                 @endif
@@ -633,6 +639,7 @@
                                 :scraped-at="$rate->scraped_at"
                                 :stale="$isStale($rate->scraped_at)"
                                 :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
+                                :directions="$rate->branch ?? null"
                             />
                             @if ($rate->organization_reviews_count > 0)
                                 <span class="mt-1 flex items-center gap-1">
@@ -654,7 +661,7 @@
                                 <p class="font-heading font-bold whitespace-nowrap text-ink">{{ number_format($rate->sell_rate, 2) }}</p>
                             @endif
                         </div>
-                    </a>
+                    </div>
                 @endforeach
             </div>
 
@@ -706,11 +713,15 @@
                             @php $total = $calculating ? $amount * (float) $rate->{$rateField} : null; @endphp
                             <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
                                 <td class="px-6 py-4">
-                                    <a href="{{ $rate->organization_url }}" class="flex items-center gap-3">
-                                        <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
+                                    {{-- See the mobile card: the meta line holds
+                                    a link now, so the cell cannot be one. --}}
+                                    <div class="flex items-center gap-3">
+                                        <a href="{{ $rate->organization_url }}" class="shrink-0">
+                                            <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
+                                        </a>
                                         <div class="min-w-0">
                                             <span class="flex items-center gap-2">
-                                                <span class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</span>
+                                                <a href="{{ $rate->organization_url }}" class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</a>
                                                 @if ($calculating && $rate->rank === 1)
                                                     <x-rates.best-chip />
                                                 @endif
@@ -720,6 +731,7 @@
                                                 :scraped-at="$rate->scraped_at"
                                                 :stale="$isStale($rate->scraped_at)"
                                                 :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
+                                                :directions="$rate->branch ?? null"
                                             />
                                             @if ($rate->organization_reviews_count > 0)
                                                 <span class="mt-1 flex items-center gap-1">
@@ -728,7 +740,7 @@
                                                 </span>
                                             @endif
                                         </div>
-                                    </a>
+                                    </div>
                                 </td>
                                 @if ($calculating)
                                     <td class="px-4 py-4 text-right font-heading text-base text-ink">

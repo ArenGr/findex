@@ -87,6 +87,7 @@ return [
     'locating' => 'Locating…',
     'location_error' => 'Could not get your location. Check your browser permissions and try again.',
     'distance_column' => 'Distance',
+    'directions' => 'Directions',
     'distance_km' => ':km km',
     'spread_column' => 'Spread',
     'spread_hint' => 'The gap between buy and sell - a tighter spread means a better deal.',

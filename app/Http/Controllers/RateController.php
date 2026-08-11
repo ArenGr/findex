@@ -441,7 +441,9 @@ class RateController extends Controller
 
                 return [
                     'total' => $paginator->total(),
-                    'items' => $paginator->getCollection()->map(fn (CurrencyRate $rate) => $this->rateRow($rate))->all(),
+                    'items' => $paginator->getCollection()
+                        ->map(fn (CurrencyRate $rate) => $this->rateRow($rate, $this->directionsBranch($rate, $selectedCity)))
+                        ->all(),
                 ];
             }
         );
@@ -467,16 +469,21 @@ class RateController extends Controller
             'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page] = $filters;
 
         $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity)
-            ->with('organization.branches')
             ->get()
-            ->map(function (CurrencyRate $rate) use ($latitude, $longitude) {
-                $distanceKm = $rate->organization->branches
+            ->map(function (CurrencyRate $rate) use ($latitude, $longitude, $selectedCity) {
+                // sortBy, not min(): the branch that won is the one to send
+                // people to, and the distance alone does not say which it was.
+                $nearest = $rate->organization->branches
                     ->filter(fn (Branch $branch) => $branch->is_active)
-                    ->map(fn (Branch $branch) => $branch->distanceInKmFrom($latitude, $longitude))
-                    ->filter(fn (?float $km) => $km !== null)
-                    ->min();
+                    ->map(fn (Branch $branch) => [$branch, $branch->distanceInKmFrom($latitude, $longitude)])
+                    ->reject(fn (array $pair) => $pair[1] === null)
+                    ->sortBy(fn (array $pair) => $pair[1])
+                    ->first();
 
-                return [...$this->rateRow($rate), 'distance_km' => $distanceKm];
+                return [
+                    ...$this->rateRow($rate, $this->directionsBranch($rate, $selectedCity, $nearest[0] ?? null)),
+                    'distance_km' => $nearest[1] ?? null,
+                ];
             });
 
         $sorted = $sort === 'distance'
@@ -494,7 +501,11 @@ class RateController extends Controller
     private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity): Builder
     {
         return CurrencyRate::query()
-            ->with(['organization' => fn ($query) => $query->withRatingStats(), 'currency'])
+            // Branches live inside this closure rather than as a separate
+            // ->with('organization.branches'): declared afterwards, the nested
+            // form replaces the constraint on 'organization' and silently drops
+            // withRatingStats(), so every row's review count comes back null.
+            ->with(['organization' => fn ($query) => $query->withRatingStats()->with('branches'), 'currency'])
             ->whereHas('organization', fn ($query) => $query->active())
             ->when($selectedCurrency, fn ($query) => $query->where('currency_id', $selectedCurrency->id))
             ->where('rate_type', $selectedType)
@@ -509,10 +520,43 @@ class RateController extends Controller
             ));
     }
 
-    private function rateRow(CurrencyRate $rate): array
+    /**
+     * A rate belongs to an organization, but you walk to a branch - and nine
+     * of fifteen organizations here have more than one. Directions are offered
+     * only when a single branch is identifiable: the nearest one once location
+     * is shared, the only one, or the only one in the selected city. Guessing
+     * otherwise sends someone across town.
+     */
+    private function directionsBranch(CurrencyRate $rate, ?string $city, ?Branch $nearest = null): ?array
+    {
+        $branch = $nearest;
+
+        if ($branch === null) {
+            $candidates = $rate->organization->branches
+                ->filter(fn (Branch $b) => $b->is_active && $b->latitude !== null && $b->longitude !== null)
+                ->when($city !== null, fn ($rows) => $rows->where('city', $city));
+
+            $branch = $candidates->count() === 1 ? $candidates->first() : null;
+        }
+
+        if ($branch === null || $branch->latitude === null || $branch->longitude === null) {
+            return null;
+        }
+
+        return [
+            'name' => $branch->name,
+            'address' => $branch->address,
+            // Universal cross-platform link: iOS, Android and desktop all
+            // resolve this to their own maps app rather than a web page.
+            'url' => 'https://www.google.com/maps/dir/?api=1&destination='.$branch->latitude.','.$branch->longitude,
+        ];
+    }
+
+    private function rateRow(CurrencyRate $rate, ?array $branch = null): array
     {
         return [
             'id' => $rate->id,
+            'branch' => $branch,
             'buy_rate' => (string) $rate->buy_rate,
             'sell_rate' => (string) $rate->sell_rate,
             'spread' => $rate->getSpread(),
