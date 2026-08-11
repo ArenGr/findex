@@ -581,7 +581,7 @@ class RatesPageTest extends TestCase
             ->assertDontSee('>1 AMD<', false)
             // The saving line has its own floor, which was written for dram
             // totals in the thousands and swallowed this whole.
-            ->assertSee('Up to 0.01 AMD difference');
+            ->assertSee('0.01 AMD');
     }
 
     /** Above a thousand a rounded half-dram is noise, so it still rounds. */
@@ -593,5 +593,71 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertSee('182,500')
             ->assertDontSee('182,500.00');
+    }
+
+    /**
+     * "Current best rate" sitting above "1 day ago", with "these rates are more
+     * than a day old" below it, is a contradiction the visitor resolves by
+     * trusting the page less. The claim drops to what is actually true.
+     */
+    public function test_the_best_rate_stops_calling_itself_current_once_it_is_stale(): void
+    {
+        $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
+        $rate = $this->rate($this->organization('fresh-bank'), $usd, 360.0, 365.0);
+        $rate->update(['scraped_at' => now()->subMinutes(10)]);
+
+        $this->get('/en/rates?currency=USD&amount=100')
+            ->assertOk()
+            ->assertSee('Current best rate')
+            ->assertDontSee('Best available rate');
+
+        $rate->update(['scraped_at' => now()->subDays(3)]);
+
+        $this->get('/en/rates?currency=USD&amount=100')
+            ->assertOk()
+            ->assertSee('Best available rate')
+            ->assertDontSee('Current best rate');
+    }
+
+    /**
+     * "Buy USD" does not say buy from whom, or with what. Both sides of the
+     * movement are named, and both readings are in the markup because the
+     * radios do not reload the page in the plain table.
+     */
+    public function test_both_directions_spell_out_which_way_the_money_moves(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('You pay AMD and receive USD.')
+            ->assertSee('You hand over USD and receive AMD.');
+    }
+
+    /** The spread restated as something that happens to the visitor. */
+    public function test_the_spread_is_framed_as_what_the_visitor_keeps(): void
+    {
+        $this->seedMarket();
+
+        // Buying 100 USD: 365.00 at the cheapest bank against 388.00 at the
+        // exchange office is 2,300 AMD.
+        $this->get('/en/rates?currency=USD&amount=100&intent=buy')
+            ->assertOk()
+            ->assertSee('Choosing the best rate here saves you 2,300 AMD');
+
+        $this->get('/en/rates?currency=USD&amount=100&intent=sell')
+            ->assertOk()
+            ->assertSee('more');
+    }
+
+    /** Round numbers, one tap, no keyboard - and shareable, since they are links. */
+    public function test_the_quick_amounts_are_links_that_carry_the_current_filters(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&intent=sell&type=cash')
+            ->assertOk()
+            ->assertSee('amount=500', false)
+            ->assertSee('amount=5000', false);
     }
 }

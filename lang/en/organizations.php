@@ -86,7 +86,7 @@ return [
         'non_cash' => 'Non-cash',
         'card' => 'Card',
         'transfer' => 'Transfer',
-        'cross' => 'Cross',
+        'cross' => 'Cross-currency',
         'central_bank' => 'Central Bank',
     ],
 ];

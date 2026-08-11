@@ -166,7 +166,7 @@
                 not self-submit, so the button is the only way to apply an
                 intent change and must stay enabled.
             --}}
-            <div x-data="{ amount: @js($amount ?? '') }" class="mt-4 rounded-xl bg-placeholder/25 px-4 py-4">
+            <div x-data="{ amount: @js($amount ?? ''), intent: @js($intent) }" class="mt-4 rounded-xl bg-placeholder/25 px-4 py-4">
                 <span class="{{ $labelClass }}">{{ __('rates.calculator_label') }}</span>
 
                 <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -183,6 +183,7 @@
                                 see, and reloading under them looks like a fault. --}}
                                 <input
                                     type="radio" name="intent" value="{{ $option }}"
+                                    x-model="intent"
                                     class="peer sr-only" @checked($intent === $option)
                                     onchange="if (Number(this.form.amount.value) > 0) { this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit(); }"
                                 >
@@ -228,6 +229,35 @@
                         </a>
                     @endif
                 </div>
+
+                {{-- Most people are exchanging a round number. Offering
+                the four they actually type saves the keyboard entirely on a
+                phone, and submits in the same tap. --}}
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-muted">{{ __('rates.quick_amounts') }}</span>
+                    @foreach ([100, 500, 1000, 5000] as $quick)
+                        {{-- Links, not submit buttons: a submit button named
+                        "amount" would serialize alongside the field of the same
+                        name and leave which one wins to browser ordering. A
+                        link is also shareable and works with JS off. --}}
+                        <a
+                            href="{{ $link(['amount' => $quick]) }}"
+                            class="rounded-full border px-3 py-1 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                        >
+                            {{ number_format($quick) }}
+                        </a>
+                    @endforeach
+                </div>
+
+                {{-- "Buy USD" answers nothing on its own - buy from whom, with
+                what? Spelling out which way each side of the money moves costs
+                one line and removes the only genuinely ambiguous control here.
+                Alpine-driven because in the plain table the radios do not
+                submit, so the page never reloads to update it. --}}
+                <p class="mt-3 text-sm break-words text-muted">
+                    <span x-show="intent === 'buy'">{{ __('rates.direction_buy', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
+                    <span x-show="intent === 'sell'" x-cloak>{{ __('rates.direction_sell', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
+                </p>
             </div>
         </form>
 
@@ -463,7 +493,12 @@
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <p class="font-heading text-lg font-bold break-words text-white">{{ __('rates.best_heading') }}</p>
+                            {{-- "Current" next to "1 day ago" is a contradiction
+                            the visitor has to resolve, and they resolve it by
+                            trusting the page less. Claim only what is true. --}}
+                            <p class="font-heading text-lg font-bold break-words text-white">
+                                {{ $isStale($best->scraped_at) ? __('rates.best_heading_stale') : __('rates.best_heading') }}
+                            </p>
                             <p class="text-sm break-words text-white/80">
                                 @if ($bestRows->count() > 1)
                                     {{ trans_choice('rates.best_shared', $bestRows->count() - 1, [
@@ -510,7 +545,10 @@
                         in the thousands, and silently swallowed the whole line
                         for a small amount of a low-value currency. --}}
                         @if ($marketSaving !== null && $marketSaving >= 0.01)
-                            &middot; {{ __('rates.market_saving', [
+                            {{-- "difference between best and worst" is a fact
+                            about the table; "you keep X by picking the best" is
+                            a fact about the visitor. Same number. --}}
+                            &middot; {{ __($isBuying ? 'rates.market_saving_buy' : 'rates.market_saving_sell', [
                                 'amount' => $amd($marketSaving),
                                 'currency' => __('exchange_quotes.request.amd'),
                             ]) }}
@@ -631,7 +669,15 @@
                             <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
                             @if ($calculating)
                                 <th class="px-4 py-3 text-right">
-                                    <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $rateColumn }}{{ $sortArrow($rateField) }}</a>
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $rateColumn }}{{ $sortArrow($rateField) }}</a>
+                                        {{-- Which side of the pair this is, and
+                                        which way is better, without putting
+                                        "Sell" in a heading a buyer reads. --}}
+                                        <x-info-popover :label="$rateColumn">
+                                            {{ __($isBuying ? 'rates.rate_column_hint_buy' : 'rates.rate_column_hint_sell', ['code' => $selectedCurrency?->code]) }}
+                                        </x-info-popover>
+                                    </span>
                                 </th>
                                 @if ($showBothRates)
                                     <th class="px-4 py-3 text-right">
