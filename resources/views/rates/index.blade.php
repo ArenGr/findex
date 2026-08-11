@@ -62,6 +62,13 @@
     // is ranked as one list.
     $marketSaving = $calculating && $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
 
+    // Rank is computed independently of the chosen sort, so the winner is the
+    // same row whichever column the visitor ordered by. Resolved up here rather
+    // than beside the table, because the alert trigger above it prefills a
+    // threshold from the going rate.
+    $bestRows = collect($ranked['rows'])->where('rank', 1);
+    $best = $bestRows->first();
+
     // Banks and exchange offices share one table, so each row says which it is
     // - but only when the list actually mixes them.
     $showMarket = collect($ranked['rows'])->pluck('organization_type')->unique()->count() > 1;
@@ -69,8 +76,22 @@
 
     $labelClass = 'block text-xs font-semibold tracking-wider text-muted uppercase';
 
-    $activeFilterCount = collect([$selectedOrganization, $selectedCity, $hasLocation ?: null])
-        ->filter()->count();
+    // Everything that has moved off its default, so the button can say how
+    // much is hidden behind it. The transaction type counts too - "Card" is a
+    // narrower view than "Cash" and the visitor should be told they set it.
+    $activeFilterCount = collect([
+        $selectedType !== \App\Enums\RateType::CASH ? $selectedType : null,
+        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null,
+    ])->filter()->count();
+
+    // Hiding the controls is only safe if the state stays readable, so what
+    // they are set to is written out in words beside the button.
+    $filterSummary = collect([
+        __('rates.summary_type', ['type' => __('organizations.rate_types.' . $selectedType->value)]),
+        $selectedOrganization?->name
+            ?? ($selectedOrgType ? __('rates.markets.' . $selectedOrgType) : __('rates.summary_all_orgs')),
+        $hasLocation ? __('rates.summary_near_you') : ($selectedCity ?: __('rates.summary_all_cities')),
+    ])->implode(' · ');
 @endphp
 
 @section('content')
@@ -125,26 +146,20 @@
         </div>
 
         {{--
-            Currency, direction and amount are the three decisions that define a
-            result, so they sit together in one card and are answered top to
-            bottom. Everything below the card only narrows what the card already
-            asked for.
+            Currency is the only question here with no sensible default, so it
+            is the only one asked on sight. Everything else - market, kind of
+            transaction, city, and the calculator - has an answer already and
+            waits behind a control, because a page called "All Exchange Rates"
+            that shows no rates until you scroll is answering the wrong
+            question first.
 
-            Currency is a set of links inside the form rather than a field:
-            picking one navigates, carrying the current amount and intent.
+            Currency is a set of links rather than a field: picking one
+            navigates, carrying the current amount and intent.
         --}}
-        <form method="GET" action="{{ route('rates.index') }}" class="mt-8 rounded-2xl border border-placeholder bg-white p-5">
-            @foreach (['type', 'org_type', 'organization', 'city', 'lat', 'lng'] as $carried)
-                @if (!empty($baseParams[$carried]))
-                    <input type="hidden" name="{{ $carried }}" value="{{ $baseParams[$carried] }}">
-                @endif
-            @endforeach
-            <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
-
+        <div class="mt-8">
             <span class="{{ $labelClass }}">{{ __('rates.currency_label') }}</span>
-            {{-- Eleven currencies wrap to six rows on a phone and push the
-            amount field off screen, so on small viewports they scroll sideways
-            instead. --}}
+            {{-- Eleven currencies wrap to six rows on a phone, so on small
+            viewports they scroll sideways instead. --}}
             <div class="mt-2 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
                 @foreach ($currencies as $currency)
                     <a
@@ -156,6 +171,44 @@
                     </a>
                 @endforeach
             </div>
+
+        </div>
+
+        {{--
+            Collapsed by default, and open whenever an amount is already in the
+            URL. Most people arrive to read rates; the ones who came to work out
+            a transaction take one click to say so, and get the whole panel.
+        --}}
+        <div x-data="{ open: @js($calculating) }" class="mt-4">
+            <button
+                type="button"
+                x-show="!open"
+                @click="open = true"
+                class="flex w-full items-center justify-between gap-3 rounded-xl border border-placeholder bg-white px-5 py-4 text-start transition hover:border-border-muted"
+            >
+                <span class="flex min-w-0 items-center gap-3">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
+                        <rect width="16" height="20" x="4" y="2" rx="2" />
+                        <line x1="8" x2="16" y1="6" y2="6" />
+                        <line x1="8" x2="8" y1="14" y2="14" />
+                        <line x1="12" x2="12" y1="14" y2="14" />
+                        <line x1="16" x2="16" y1="14" y2="14" />
+                        <line x1="8" x2="8" y1="18" y2="18" />
+                        <line x1="12" x2="12" y1="18" y2="18" />
+                        <line x1="16" x2="16" y1="18" y2="18" />
+                    </svg>
+                    <span class="min-w-0 text-sm font-medium break-words text-ink">{{ __('rates.calculator_prompt') }}</span>
+                </span>
+                <span aria-hidden="true" class="shrink-0 text-muted">&rsaquo;</span>
+            </button>
+
+        <form method="GET" action="{{ route('rates.index') }}" x-show="open" x-cloak class="rounded-2xl border border-placeholder bg-white p-5">
+            @foreach (['type', 'org_type', 'organization', 'city', 'lat', 'lng'] as $carried)
+                @if (!empty($baseParams[$carried]))
+                    <input type="hidden" name="{{ $carried }}" value="{{ $baseParams[$carried] }}">
+                @endif
+            @endforeach
+            <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
 
             {{--
                 The calculator, which is a second question rather than the
@@ -260,13 +313,70 @@
                 </p>
             </div>
         </form>
+        </div>
 
         {{--
-            The three narrowing filters read as one row of questions - where,
-            what kind, which city - rather than three stacked blocks each
-            claiming its own band of the page. They wrap in order on a phone.
+            The state in words, the controls behind a button. Hiding filters
+            usually breaks because a narrowed table then looks like the full
+            one; saying "Cash rates · banks · Gyumri" out loud fixes that
+            without keeping thirteen pills on screen.
+
+            Alpine only decides whether the panel is open. Every control inside
+            is still a link or a GET form, so with JS off the panel renders
+            open and the page works exactly as before.
         --}}
-        <div class="mt-6 flex flex-wrap items-start gap-x-10 gap-y-5">
+        <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-6">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                <p class="min-w-0 text-sm break-words text-muted">{{ $filterSummary }}</p>
+
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-border-muted bg-placeholder/40 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                            <path d="M3 6h18M7 12h10M11 18h2" />
+                        </svg>
+                        {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
+                    </button>
+
+                    {{-- An alert is a follow-up to what you are looking at, so
+                    it sits with the controls that define it. --}}
+                    <div class="flex items-center gap-2">
+                        <a
+                            href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from([
+                                'form' => [
+                                    'currency_id' => (string) ($selectedCurrency?->id ?? ''),
+                                    'organization_id' => (string) ($selectedOrganization?->id ?? ''),
+                                    'rate_type' => $selectedType->value,
+                                    'rate_field' => $rateField,
+                                    'direction' => $isBuying ? 'below' : 'above',
+                                    'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
+                                ],
+                                'context' => [
+                                    'currency' => __('exchange_quotes.request.amd'),
+                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+                                ],
+                            ]) }} }))"
+                            class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-accent-yellow">
+                                <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
+                        </a>
+
+                        <x-info-popover :label="__('rates.alert_cta')">
+                            {{ __('rates.alert_hint') }}
+                        </x-info-popover>
+                    </div>
+                </div>
+            </div>
+
+        <div x-show="open" x-cloak class="mt-5 flex flex-wrap items-start gap-x-10 gap-y-5 rounded-xl border border-placeholder bg-white px-5 py-5">
 
         {{-- Market tabs. Banks and exchange offices quote very different
         levels, so they are separated rather than interleaved. --}}
@@ -308,22 +418,10 @@
             </div>
         </div>
 
-        {{-- Secondary filters, collapsed behind a toggle on mobile so they
-        don't push the results themselves below the fold. --}}
-        <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open">
-            <button
-                type="button"
-                @click="open = !open"
-                class="flex items-center gap-2 text-xs font-semibold tracking-wider text-muted uppercase sm:hidden"
-                :aria-expanded="open"
-            >
-                {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }}) @endif
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
-                    <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </button>
-
-            <div x-show="open" x-cloak class="mt-3 flex flex-wrap items-end gap-x-3 gap-y-3 sm:!flex sm:mt-0">
+        {{-- The organization and city selects. Their own mobile-only collapse
+        is gone: the whole panel is behind one button now, at every width. --}}
+        <div>
+            <div class="flex flex-wrap items-end gap-x-3 gap-y-3">
                 <form method="GET" action="{{ route('rates.index') }}" class="contents">
                     <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
                     <input type="hidden" name="type" value="{{ $selectedType->value }}">
@@ -430,6 +528,7 @@
         </div>
 
         </div>
+        </div>
 
         @if ($centralBankRate)
             {{-- Stated once, as a reference. It used to sit in the transaction
@@ -451,11 +550,6 @@
             ]);
             $sortArrow = fn (string $column) => $sort === $column ? ($direction === 'asc' ? ' ▲' : ' ▼') : '';
 
-            // Rank is computed independently of the chosen sort, so the winner
-            // is the same row whichever column the visitor ordered by.
-            $bestRows = collect($ranked['rows'])->where('rank', 1);
-            $best = $bestRows->first();
-
             // Without an amount there is no single winner - buy and sell rank
             // in opposite directions - so each column names its own. The
             // organization buys low and sells high, which for the visitor is
@@ -467,11 +561,6 @@
             $rateColumn = __('rates.rate_column', ['code' => $selectedCurrency?->code]);
             $totalColumn = __($isBuying ? 'rates.total_pay_column' : 'rates.total_get_column');
 
-            $sectionHeading = match ($selectedOrgType) {
-                'bank' => __('rates.section_bank'),
-                'exchange' => __('rates.section_exchange'),
-                default => __('rates.section_all'),
-            };
         @endphp
 
         @if ($rowCount > 0)
@@ -529,88 +618,45 @@
                 </div>
             @endif
 
-            <div class="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-                <div class="min-w-0">
-                    <h2 class="font-heading text-lg font-bold break-words text-ink">{{ $sectionHeading }}</h2>
-                    <p class="mt-1 text-sm break-words text-muted">
-                        {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
-                        {{-- Here rather than in the filter row above: appearing
-                        there pushed that row onto a second line, so the layout
-                        jumped at the moment a filter was applied. It also reads
-                        better against a count it is about to change. --}}
-                        @if ($hasNonDefaultFilter)
-                            &middot; <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
-                        @endif
-                        {{-- 0.01, not 1: the floor was written for dram totals
-                        in the thousands, and silently swallowed the whole line
-                        for a small amount of a low-value currency. --}}
-                        @if ($marketSaving !== null && $marketSaving >= 0.01)
-                            {{-- "difference between best and worst" is a fact
-                            about the table; "you keep X by picking the best" is
-                            a fact about the visitor. Same number. --}}
-                            &middot; {{ __($isBuying ? 'rates.market_saving_buy' : 'rates.market_saving_sell', [
-                                'amount' => $amd($marketSaving),
-                                'currency' => __('exchange_quotes.request.amd'),
-                            ]) }}
-                        @endif
-                    </p>
+            {{--
+                One thin line, not a heading block. The page title already says
+                what this is and the summary above says how it is narrowed, so a
+                second "All rates" heading was restating both.
+            --}}
+            <div class="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                <p class="min-w-0 text-sm break-words text-muted">
+                    {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
+                    @if ($hasNonDefaultFilter)
+                        &middot; <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
+                    @endif
+                    {{-- 0.01, not 1: the floor was written for dram totals in
+                    the thousands, and silently swallowed the whole line for a
+                    small amount of a low-value currency. --}}
+                    @if ($marketSaving !== null && $marketSaving >= 0.01)
+                        {{-- "difference between best and worst" is a fact about
+                        the table; "you keep X by picking the best" is a fact
+                        about the visitor. Same number. --}}
+                        &middot; {{ __($isBuying ? 'rates.market_saving_buy' : 'rates.market_saving_sell', [
+                            'amount' => $amd($marketSaving),
+                            'currency' => __('exchange_quotes.request.amd'),
+                        ]) }}
+                    @endif
                     @if ($allStale)
-                        <p class="mt-1 text-sm break-words text-[#B4791F]">{{ __('rates.all_stale_notice') }}</p>
+                        &middot; <span class="text-[#B4791F]">{{ __('rates.all_stale_notice') }}</span>
                     @endif
-                </div>
+                </p>
 
-                {{-- Sits with the results rather than in the page header: an
-                alert is a follow-up to what you are looking at. --}}
-                <div class="flex min-w-0 flex-col items-start gap-1 sm:items-end">
-                    <div class="flex items-center gap-2">
-                        {{--
-                            Opens the modal rather than leaving for /alerts. The
-                            page already knows the currency, the transaction type,
-                            the buy/sell direction and the going rate, so the form
-                            arrives answered and the visitor keeps their filters.
-
-                            A real link underneath: with JS off, or before Alpine
-                            boots, this still navigates to the alerts page.
-                        --}}
-                        <a
-                            href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
-                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from([
-                                'form' => [
-                                    'currency_id' => (string) ($selectedCurrency?->id ?? ''),
-                                    'organization_id' => (string) ($selectedOrganization?->id ?? ''),
-                                    'rate_type' => $selectedType->value,
-                                    'rate_field' => $rateField,
-                                    'direction' => $isBuying ? 'below' : 'above',
-                                    'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
-                                ],
-                                'context' => [
-                                    'currency' => __('exchange_quotes.request.amd'),
-                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
-                                ],
-                            ]) }} }))"
-                            class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-accent-yellow">
-                                <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
-                        </a>
-
-                        <x-info-popover :label="__('rates.alert_cta')">
-                            {{ __('rates.alert_hint') }}
-                        </x-info-popover>
-                    </div>
-
-                    {{-- Only offered while calculating: that table shows one
-                    rate named from the visitor's side, because reading the pair
-                    correctly means knowing that "Buy" is the rate the bank buys
-                    at, not the one you buy at. The plain table is the pair. --}}
-                    @if ($calculating)
-                        <a href="{{ $link(['both' => $showBothRates ? null : 1]) }}" class="text-sm break-words text-muted underline hover:text-ink">
-                            {{ $showBothRates ? __('rates.hide_both_rates') : __('rates.show_both_rates') }}
-                        </a>
-                    @endif
-                </div>
+                {{-- Only offered while calculating: that table shows one rate
+                named from the visitor's side, because reading the pair
+                correctly means knowing that "Buy" is the rate the bank buys at,
+                not the one you buy at. The plain table is the pair. --}}
+                @if ($calculating)
+                    {{-- Not shrink-0: "Ցույց տալ առքի և վաճառքի փոխարժեքները"
+                    is wider than a 320px screen. --}}
+                    <a href="{{ $link(['both' => $showBothRates ? null : 1]) }}" class="min-w-0 text-sm break-words text-muted underline hover:text-ink">
+                        {{ $showBothRates ? __('rates.hide_both_rates') : __('rates.show_both_rates') }}
+                    </a>
+                @endif
             </div>
 
             {{-- Mobile: a row list. A table has no room for a readable name

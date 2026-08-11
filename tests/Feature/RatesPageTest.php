@@ -744,4 +744,43 @@ class RatesPageTest extends TestCase
 
         $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('maps/dir', false);
     }
+
+    /**
+     * A page called "All Exchange Rates" that shows no rates until you scroll
+     * is answering the wrong question first. Currency is the only control with
+     * no sensible default, so it is the only one on sight; the rest state
+     * themselves in words and keep their controls behind a button.
+     */
+    public function test_the_filters_state_is_readable_without_opening_them(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('Cash rates · all organizations · all cities', false)
+            // No count when nothing has moved off its default.
+            ->assertDontSee('Filters (');
+
+        // A named organization replaces the market in the sentence: it is the
+        // narrower of the two and repeating both says nothing extra.
+        $this->get('/en/rates?currency=USD&org_type=exchange&organization=corner-exchange')
+            ->assertOk()
+            ->assertSee('Cash rates · Corner exchange · all cities', false)
+            ->assertSee('Filters (2)');
+    }
+
+    /** Open only when there is already an amount to show a result for. */
+    public function test_the_calculator_starts_collapsed_and_opens_with_an_amount(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('How much are you exchanging?')
+            ->assertSee('x-data="{ open: false }"', false);
+
+        $this->get('/en/rates?currency=USD&amount=500')
+            ->assertOk()
+            ->assertSee('x-data="{ open: true }"', false);
+    }
 }
