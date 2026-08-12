@@ -3,11 +3,10 @@
 @section('title', __('exchange_quotes.request.heading') . ' — Findex')
 
 @php
-    $steps = [
-        ['title' => __('exchange_quotes.request.step_1_title'), 'body' => __('exchange_quotes.request.step_1_body'), 'color' => 'slide-green'],
-        ['title' => __('exchange_quotes.request.step_2_title'), 'body' => __('exchange_quotes.request.step_2_body'), 'color' => 'slide-blue'],
-        ['title' => __('exchange_quotes.request.step_3_title'), 'body' => __('exchange_quotes.request.step_3_body'), 'color' => 'accent-yellow'],
-    ];
+    $steps = collect([1, 2, 3])->map(fn (int $n) => [
+        'title' => __("exchange_quotes.request.step_{$n}_title"),
+        'body' => __("exchange_quotes.request.step_{$n}_body"),
+    ]);
 
     // Both direction labels, pre-translated per currency, so switching the
     // currency select client-side can relabel the direction options without
@@ -22,27 +21,33 @@
 @endphp
 
 @section('content')
-    {{-- Hero --}}
+    {{--
+        Heading beside the steps rather than above them: what this is and how
+        it works are one thought, and stacking them centred pushed the form -
+        the thing the page exists for - a full screen down.
+
+        The steps lose their cards. Three boxes on a tinted band read as three
+        offers to choose between; these are one sequence, and a number, a title
+        and a line of text say that without any chrome.
+    --}}
     <section class="border-b border-placeholder bg-primary/5">
-        <div class="mx-auto max-w-3xl px-6 py-16 text-center lg:px-10">
-            <span class="inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
-                {{ __('exchange_quotes.request.badge') }}
-            </span>
+        <div class="mx-auto grid max-w-6xl gap-x-12 gap-y-10 px-6 py-14 lg:grid-cols-[minmax(0,20rem)_1fr] lg:px-10">
+            <div class="min-w-0">
+                <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('exchange_quotes.request.heading') }}</h1>
+                <p class="mt-4 text-base leading-relaxed break-words text-muted">{{ __('exchange_quotes.request.subheading') }}</p>
+            </div>
 
-            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('exchange_quotes.request.heading') }}</h1>
-            <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted">{{ __('exchange_quotes.request.subheading') }}</p>
-
-            <div class="mx-auto mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
+            <ol class="grid min-w-0 grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-3">
                 @foreach ($steps as $i => $step)
-                    <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-placeholder/20 font-heading text-xs font-bold" style="color: var(--color-{{ $step['color'] }})">
+                    <li class="min-w-0">
+                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-placeholder/40 font-heading text-xs font-bold text-muted">
                             {{ $i + 1 }}
                         </span>
-                        <p class="mt-3 text-sm font-semibold text-ink">{{ $step['title'] }}</p>
-                        <p class="mt-1 text-xs leading-relaxed text-muted">{{ $step['body'] }}</p>
-                    </div>
+                        <p class="mt-3 font-heading font-bold break-words text-ink">{{ $step['title'] }}</p>
+                        <p class="mt-2 text-sm leading-relaxed break-words text-muted">{{ $step['body'] }}</p>
+                    </li>
                 @endforeach
-            </div>
+            </ol>
         </div>
     </section>
 
