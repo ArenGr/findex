@@ -3,14 +3,9 @@
 @section('title', __('exchange_quotes.request.heading') . ' — Findex')
 
 @php
-    // Same three accents, in the same order, as the auto-insurance request
-    // page. Both pages are "tell us once, we ask around" forms, so the step
-    // strip is the one thing a visitor may see twice - it should look like
-    // the same strip rather than a second, unrelated one.
-    $steps = collect(['slide-green', 'slide-blue', 'accent-yellow'])->map(fn (string $color, int $i) => [
-        'title' => __('exchange_quotes.request.step_'.($i + 1).'_title'),
-        'body' => __('exchange_quotes.request.step_'.($i + 1).'_body'),
-        'color' => $color,
+    $steps = collect([1, 2, 3])->map(fn (int $n) => [
+        'title' => __("exchange_quotes.request.step_{$n}_title"),
+        'body' => __("exchange_quotes.request.step_{$n}_body"),
     ]);
 
     // Both direction labels, pre-translated per currency, so switching the
@@ -26,36 +21,11 @@
 @endphp
 
 @section('content')
-    {{--
-        Heading beside the steps rather than above them: what this is and how
-        it works are one thought, and stacking them centred pushed the form -
-        the thing the page exists for - a full screen down.
-
-        The steps are the same white cards the auto-insurance request page
-        uses, down to the accent on each number - both pages are the same
-        "tell us once, we ask around" offer, and a visitor who meets both
-        should recognise the second from the first.
-    --}}
-    <section class="border-b border-placeholder bg-primary/5">
-        <div class="mx-auto grid max-w-6xl gap-x-12 gap-y-10 px-6 py-14 lg:grid-cols-[minmax(0,20rem)_1fr] lg:px-10">
-            <div class="min-w-0">
-                <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('exchange_quotes.request.heading') }}</h1>
-                <p class="mt-4 text-base leading-relaxed break-words text-muted">{{ __('exchange_quotes.request.subheading') }}</p>
-            </div>
-
-            <ol class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-3">
-                @foreach ($steps as $i => $step)
-                    <li class="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-placeholder/20 font-heading text-xs font-bold" style="color: var(--color-{{ $step['color'] }})">
-                            {{ $i + 1 }}
-                        </span>
-                        <p class="mt-3 text-sm font-semibold break-words text-ink">{{ $step['title'] }}</p>
-                        <p class="mt-1 text-xs leading-relaxed break-words text-muted">{{ $step['body'] }}</p>
-                    </li>
-                @endforeach
-            </ol>
-        </div>
-    </section>
+    <x-request-hero
+        :heading="__('exchange_quotes.request.heading')"
+        :subheading="__('exchange_quotes.request.subheading')"
+        :steps="$steps"
+    />
 
     <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
         @if (session('status') === 'email-verification-required')

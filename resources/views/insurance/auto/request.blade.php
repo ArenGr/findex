@@ -3,37 +3,19 @@
 @section('title', __('auto_insurance.request.heading') . ' — Findex')
 
 @php
-    $steps = [
-        ['title' => __('auto_insurance.request.step_1_title'), 'body' => __('auto_insurance.request.step_1_body'), 'color' => 'slide-green'],
-        ['title' => __('auto_insurance.request.step_2_title'), 'body' => __('auto_insurance.request.step_2_body'), 'color' => 'slide-blue'],
-        ['title' => __('auto_insurance.request.step_3_title'), 'body' => __('auto_insurance.request.step_3_body'), 'color' => 'accent-yellow'],
-    ];
+    $steps = collect([1, 2, 3])->map(fn (int $n) => [
+        'title' => __("auto_insurance.request.step_{$n}_title"),
+        'body' => __("auto_insurance.request.step_{$n}_body"),
+    ]);
 @endphp
 
 @section('content')
-    {{-- Hero --}}
-    <section class="border-b border-placeholder bg-primary/5">
-        <div class="mx-auto max-w-3xl px-6 py-16 text-center lg:px-10">
-            <span class="inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
-                {{ __('auto_insurance.request.badge') }}
-            </span>
-
-            <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('auto_insurance.request.heading') }}</h1>
-            <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted">{{ __('auto_insurance.request.subheading') }}</p>
-
-            <div class="mx-auto mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
-                @foreach ($steps as $i => $step)
-                    <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-placeholder/20 font-heading text-xs font-bold" style="color: var(--color-{{ $step['color'] }})">
-                            {{ $i + 1 }}
-                        </span>
-                        <p class="mt-3 text-sm font-semibold text-ink">{{ $step['title'] }}</p>
-                        <p class="mt-1 text-xs leading-relaxed text-muted">{{ $step['body'] }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
+    <x-request-hero
+        :badge="__('auto_insurance.request.badge')"
+        :heading="__('auto_insurance.request.heading')"
+        :subheading="__('auto_insurance.request.subheading')"
+        :steps="$steps"
+    />
 
     <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
         <form
