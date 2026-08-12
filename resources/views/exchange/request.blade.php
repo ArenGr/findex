@@ -3,9 +3,14 @@
 @section('title', __('exchange_quotes.request.heading') . ' — Findex')
 
 @php
-    $steps = collect([1, 2, 3])->map(fn (int $n) => [
-        'title' => __("exchange_quotes.request.step_{$n}_title"),
-        'body' => __("exchange_quotes.request.step_{$n}_body"),
+    // Same three accents, in the same order, as the auto-insurance request
+    // page. Both pages are "tell us once, we ask around" forms, so the step
+    // strip is the one thing a visitor may see twice - it should look like
+    // the same strip rather than a second, unrelated one.
+    $steps = collect(['slide-green', 'slide-blue', 'accent-yellow'])->map(fn (string $color, int $i) => [
+        'title' => __('exchange_quotes.request.step_'.($i + 1).'_title'),
+        'body' => __('exchange_quotes.request.step_'.($i + 1).'_body'),
+        'color' => $color,
     ]);
 
     // Both direction labels, pre-translated per currency, so switching the
@@ -40,7 +45,7 @@
             <ol class="grid min-w-0 grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-3">
                 @foreach ($steps as $i => $step)
                     <li class="min-w-0">
-                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-placeholder/40 font-heading text-xs font-bold text-muted">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-placeholder/20 font-heading text-xs font-bold" style="color: var(--color-{{ $step['color'] }})">
                             {{ $i + 1 }}
                         </span>
                         <p class="mt-3 font-heading font-bold break-words text-ink">{{ $step['title'] }}</p>
