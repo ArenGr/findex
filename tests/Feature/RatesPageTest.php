@@ -391,14 +391,25 @@ class RatesPageTest extends TestCase
             ->assertSee('Total you pay');
     }
 
+    /**
+     * The Simple/Detailed toggle. Asserted on the Buy column rather than the
+     * toggle's own label because the label only says which view you could
+     * switch to - the column is what the switch is for.
+     */
     public function test_both_rates_can_be_revealed_on_request(): void
     {
         $this->seedMarket();
 
+        $this->get('/en/rates?currency=USD&amount=100')
+            ->assertOk()
+            ->assertViewHas('showBothRates', false)
+            ->assertSee('Detailed')
+            ->assertDontSee('>Buy</a>', false);
+
         $this->get('/en/rates?currency=USD&both=1&amount=100')
             ->assertOk()
             ->assertViewHas('showBothRates', true)
-            ->assertSee('Hide buy and sell rates');
+            ->assertSee('>Buy</a>', false);
     }
 
     /** Jargon, and unusable once the savings column it supported was removed. */

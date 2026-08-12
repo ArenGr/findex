@@ -90,7 +90,7 @@
     <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h1 class="font-heading text-2xl font-bold break-words text-ink lg:text-3xl">{{ __('rates.all_heading') }}</h1>
+                <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('rates.all_heading') }}</h1>
                 <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
             </div>
 
@@ -103,7 +103,7 @@
                 <div class="flex items-center gap-2 sm:shrink-0">
                     <a
                         href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
-                        class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-ink transition hover:border-placeholder hover:bg-placeholder/20 hover:text-primary"
                     >
                         {{-- Two speech bubbles. Not exchange arrows, which read
                         as "swap currency" - what the whole page already does -
@@ -194,7 +194,21 @@
                 <span aria-hidden="true" class="shrink-0 text-muted">&rsaquo;</span>
             </button>
 
-        <form method="GET" action="{{ route('rates.index') }}" x-show="open" x-cloak class="rounded-2xl border border-placeholder bg-white p-5">
+        {{--
+            The calculator, which is a second question rather than the point of
+            the page - so it sits in its own panel and produces a different
+            table when answered.
+
+            Alpine-only, deliberately: with JS off the buy/sell radios do not
+            self-submit, so the button is the only way to apply an intent change
+            and must stay enabled.
+        --}}
+        <form
+            method="GET" action="{{ route('rates.index') }}"
+            x-show="open" x-cloak
+            x-data="{ amount: @js($amount ?? ''), intent: @js($intent) }"
+            class="rounded-2xl border border-placeholder bg-white p-6 sm:p-8"
+        >
             @foreach (['type', 'org_type', 'organization', 'city', 'lat', 'lng'] as $carried)
                 @if (!empty($baseParams[$carried]))
                     <input type="hidden" name="{{ $carried }}" value="{{ $baseParams[$carried] }}">
@@ -202,26 +216,18 @@
             @endforeach
             <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
 
-            {{--
-                The calculator, which is a second question rather than the
-                point of the page - so it sits in its own panel, on one line,
-                and produces a different table when answered.
-
-                Alpine-only, deliberately: with JS off the buy/sell radios do
-                not self-submit, so the button is the only way to apply an
-                intent change and must stay enabled.
-            --}}
-            <div x-data="{ amount: @js($amount ?? ''), intent: @js($intent) }" class="mt-4 rounded-xl bg-placeholder/25 px-4 py-4">
-                <span class="{{ $labelClass }}">{{ __('rates.calculator_label') }}</span>
-
-                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-3">
-                    {{-- Full width below sm, halves that share it: "Վաճառել
-                    USD" is wider than a 320px screen leaves for a content-sized
-                    pill, and shrink-0 turned that into page overflow rather than
-                    a wrap. --}}
-                    <div class="flex w-full rounded-lg bg-white p-1 sm:w-auto sm:shrink-0">
+            {{-- One row of three labelled controls on a desktop, stacked on a
+            phone. items-end so the button's baseline lines up with the fields
+            beside it, whose captions make them taller. --}}
+            <div class="grid grid-cols-1 items-end gap-x-6 gap-y-5 md:grid-cols-12">
+                <div class="min-w-0 md:col-span-4">
+                    <span class="{{ $labelClass }}">{{ __('rates.intent_label') }}</span>
+                    {{-- Full width below md: "Վաճառել USD" is wider than a
+                    320px screen leaves for a content-sized pill, and shrink-0
+                    turned that into page overflow rather than a wrap. --}}
+                    <div class="mt-2 flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
                         @foreach (['buy', 'sell'] as $option)
-                            <label class="min-w-0 flex-1 cursor-pointer sm:flex-none">
+                            <label class="min-w-0 flex-1 cursor-pointer">
                                 {{-- Submits on pick, but only once there is an
                                 amount to recalculate: switching direction on the
                                 plain rate table changes nothing a visitor can
@@ -232,78 +238,78 @@
                                     class="peer sr-only" @checked($intent === $option)
                                     onchange="if (Number(this.form.amount.value) > 0) { this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit(); }"
                                 >
-                                <span class="block rounded-md px-3 py-2.5 text-center text-sm leading-tight font-semibold break-words text-muted transition peer-checked:bg-primary peer-checked:text-white sm:px-5">
+                                <span class="block rounded-md px-3 py-2 text-center text-sm leading-tight font-semibold break-words text-muted transition peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm">
                                     {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
                                 </span>
                             </label>
                         @endforeach
                     </div>
+                </div>
 
-                    <div class="flex min-w-0 flex-1 items-center gap-2">
-                        <label for="amount" class="sr-only">{{ __('rates.amount_label') }}</label>
+                <div class="min-w-0 md:col-span-5">
+                    <label for="amount" class="{{ $labelClass }}">{{ __('rates.amount_label') }}</label>
+                    {{-- The code sits inside the field rather than beside it,
+                    so the field itself says what unit is being typed into it. --}}
+                    <div class="relative mt-2 flex items-center">
                         <input
                             type="number" inputmode="decimal" step="0.01" min="0"
                             name="amount" id="amount"
                             x-model="amount"
                             value="{{ $amount }}"
                             placeholder="{{ __('rates.amount_placeholder') }}"
-                            class="w-full min-w-0 rounded-lg border border-border-muted bg-white px-4 py-2.5 text-base text-ink focus:border-primary focus:outline-none"
+                            class="w-full min-w-0 rounded-lg border border-border-muted bg-white py-2.5 pr-16 pl-4 text-base text-ink focus:border-primary focus:outline-none"
                         >
-                        <span class="shrink-0 text-sm font-semibold text-ink">{{ $selectedCurrency?->code }}</span>
+                        <span class="pointer-events-none absolute right-4 text-sm font-semibold text-muted">{{ $selectedCurrency?->code }}</span>
                     </div>
-
-                    {{-- Number(), not a truthiness check: the string "0" is
-                    truthy in JS, and the controller drops a zero amount
-                    anyway. --}}
-                    <button
-                        type="submit"
-                        :disabled="!(Number(amount) > 0)"
-                        {{-- Its own line on a phone: sharing one with the
-                        amount field left the field about 90px wide, which
-                        truncates a four-figure number as you type it. --}}
-                        class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-placeholder disabled:text-muted disabled:hover:bg-placeholder sm:w-auto sm:shrink-0"
-                    >
-                        {{ __('rates.calculate_submit') }}
-                    </button>
-
-                    @if ($calculating)
-                        {{-- Not shrink-0: the Armenian string is wider than a
-                        320px screen and would push the page sideways. --}}
-                        <a href="{{ $link(['amount' => null]) }}" class="min-w-0 text-sm break-words text-muted underline hover:text-ink">
-                            {{ __('rates.calculator_clear') }}
-                        </a>
-                    @endif
                 </div>
 
-                {{-- Most people are exchanging a round number. Offering
-                the four they actually type saves the keyboard entirely on a
-                phone, and submits in the same tap. --}}
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                    <span class="text-xs text-muted">{{ __('rates.quick_amounts') }}</span>
-                    @foreach ([100, 500, 1000, 5000] as $quick)
-                        {{-- Links, not submit buttons: a submit button named
-                        "amount" would serialize alongside the field of the same
-                        name and leave which one wins to browser ordering. A
-                        link is also shareable and works with JS off. --}}
-                        <a
-                            href="{{ $link(['amount' => $quick]) }}"
-                            class="rounded-full border px-3 py-1 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                        >
-                            {{ number_format($quick) }}
-                        </a>
-                    @endforeach
-                </div>
-
-                {{-- "Buy USD" answers nothing on its own - buy from whom, with
-                what? Spelling out which way each side of the money moves costs
-                one line and removes the only genuinely ambiguous control here.
-                Alpine-driven because in the plain table the radios do not
-                submit, so the page never reloads to update it. --}}
-                <p class="mt-3 text-sm break-words text-muted">
-                    <span x-show="intent === 'buy'">{{ __('rates.direction_buy', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
-                    <span x-show="intent === 'sell'" x-cloak>{{ __('rates.direction_sell', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
-                </p>
+                {{-- Number(), not a truthiness check: the string "0" is truthy
+                in JS, and the controller drops a zero amount anyway. --}}
+                <button
+                    type="submit"
+                    :disabled="!(Number(amount) > 0)"
+                    class="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold break-words text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-placeholder disabled:text-muted disabled:hover:bg-placeholder md:col-span-3"
+                >
+                    {{ __('rates.calculate_submit') }}
+                </button>
             </div>
+
+            {{-- Most people are exchanging a round number. Offering the four
+            they actually type saves the keyboard entirely on a phone, and
+            submits in the same tap. --}}
+            <div class="mt-5 flex flex-wrap items-center gap-2">
+                <span class="text-xs text-muted">{{ __('rates.quick_amounts') }}</span>
+                @foreach ([100, 500, 1000, 5000] as $quick)
+                    {{-- Links, not submit buttons: a submit button named
+                    "amount" would serialize alongside the field of the same
+                    name and leave which one wins to browser ordering. A link is
+                    also shareable and works with JS off. --}}
+                    <a
+                        href="{{ $link(['amount' => $quick]) }}"
+                        class="rounded-full border px-3 py-1 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                    >
+                        {{ number_format($quick) }}
+                    </a>
+                @endforeach
+
+                @if ($calculating)
+                    {{-- Not shrink-0: the Armenian string is wider than a 320px
+                    screen and would push the page sideways. --}}
+                    <a href="{{ $link(['amount' => null]) }}" class="min-w-0 text-xs break-words text-muted underline hover:text-ink">
+                        {{ __('rates.calculator_clear') }}
+                    </a>
+                @endif
+            </div>
+
+            {{-- "Buy USD" answers nothing on its own - buy from whom, with
+            what? Spelling out which way each side of the money moves costs one
+            line and removes the only genuinely ambiguous control here.
+            Alpine-driven because in the plain table the radios do not submit,
+            so the page never reloads to update it. --}}
+            <p class="mt-4 text-sm break-words text-muted">
+                <span x-show="intent === 'buy'">{{ __('rates.direction_buy', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
+                <span x-show="intent === 'sell'" x-cloak>{{ __('rates.direction_sell', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
+            </p>
         </form>
         </div>
 
@@ -564,9 +570,15 @@
                 directions.
             --}}
             @if ($calculating && $best)
-                <div class="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-2xl bg-primary px-4 py-5 sm:px-6">
+                {{-- A pale card with one saturated edge, rather than a block of
+                solid green: filled, it was the loudest thing on a page whose
+                point is the table under it, and it left the total set in white
+                on green where every other number here is ink on white. --}}
+                <div class="relative mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 overflow-hidden rounded-2xl border-2 border-primary/40 bg-primary/5 py-5 pr-4 pl-6 sm:pr-6 sm:pl-8">
+                    <span class="absolute inset-y-0 left-0 w-2 bg-primary" aria-hidden="true"></span>
+
                     <div class="flex min-w-0 items-center gap-4">
-                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white">
+                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-placeholder bg-white shadow-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-6 w-6 fill-accent-yellow" aria-hidden="true">
                                 <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
                             </svg>
@@ -575,10 +587,10 @@
                             {{-- "Current" next to "1 day ago" is a contradiction
                             the visitor has to resolve, and they resolve it by
                             trusting the page less. Claim only what is true. --}}
-                            <p class="font-heading text-lg font-bold break-words text-white">
+                            <p class="font-heading text-lg font-bold break-words text-ink">
                                 {{ $isStale($best->scraped_at) ? __('rates.best_heading_stale') : __('rates.best_heading') }}
                             </p>
-                            <p class="text-sm break-words text-white/80">
+                            <p class="text-sm break-words text-muted">
                                 @if ($bestRows->count() > 1)
                                     {{ trans_choice('rates.best_shared', $bestRows->count() - 1, [
                                         'name' => $best->organization_name,
@@ -595,14 +607,14 @@
                     </div>
 
                     <div class="text-end">
-                        <p class="block text-xs font-semibold tracking-wider text-white/80 uppercase">{{ $totalColumn }}</p>
-                        {{-- Scaled down on the narrowest screens: at 30px a
+                        <p class="{{ $labelClass }}">{{ $totalColumn }}</p>
+                        {{-- Scaled down on the narrowest screens: at 36px a
                         six-figure total plus "драм" is wider than 320px, and it
                         is set nowrap so it would push the page rather than
                         break. --}}
-                        <p class="font-heading text-2xl font-bold whitespace-nowrap text-white sm:text-3xl">
+                        <p class="mt-1 font-heading text-2xl font-bold tracking-tight whitespace-nowrap text-ink sm:text-4xl">
                             {{ $amd($amount * (float) $best->{$rateField}) }}
-                            <span class="text-base font-normal text-white/80 sm:text-lg">{{ __('exchange_quotes.request.amd') }}</span>
+                            <span class="text-base font-normal text-muted sm:text-xl">{{ __('exchange_quotes.request.amd') }}</span>
                         </p>
                     </div>
                 </div>
@@ -639,13 +651,28 @@
                 {{-- Only offered while calculating: that table shows one rate
                 named from the visitor's side, because reading the pair
                 correctly means knowing that "Buy" is the rate the bank buys at,
-                not the one you buy at. The plain table is the pair. --}}
+                not the one you buy at. The plain table is the pair.
+
+                A two-state control rather than the sentence that used to sit
+                here: it says which of the two views you are in, which one link
+                naming only the other view never did. Still two links, so it
+                works with JS off and stays shareable. --}}
                 @if ($calculating)
-                    {{-- Not shrink-0: "Ցույց տալ առքի և վաճառքի փոխարժեքները"
-                    is wider than a 320px screen. --}}
-                    <a href="{{ $link(['both' => $showBothRates ? null : 1]) }}" class="min-w-0 text-sm break-words text-muted underline hover:text-ink">
-                        {{ $showBothRates ? __('rates.hide_both_rates') : __('rates.show_both_rates') }}
-                    </a>
+                    <div class="flex min-w-0 flex-wrap items-center gap-2">
+                        <span class="{{ $labelClass }}">{{ __('rates.view_label') }}</span>
+                        <div class="flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
+                            @foreach (['view_simple' => false, 'view_detailed' => true] as $key => $both)
+                                @php $isCurrent = $showBothRates === $both; @endphp
+                                <a
+                                    href="{{ $link(['both' => $both ? 1 : null]) }}"
+                                    aria-current="{{ $isCurrent ? 'true' : 'false' }}"
+                                    class="min-w-0 rounded-md px-3 py-1 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
+                                >
+                                    {{ __('rates.'.$key) }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 @endif
             </div>
 
