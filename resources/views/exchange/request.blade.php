@@ -31,9 +31,10 @@
         it works are one thought, and stacking them centred pushed the form -
         the thing the page exists for - a full screen down.
 
-        The steps lose their cards. Three boxes on a tinted band read as three
-        offers to choose between; these are one sequence, and a number, a title
-        and a line of text say that without any chrome.
+        The steps are the same white cards the auto-insurance request page
+        uses, down to the accent on each number - both pages are the same
+        "tell us once, we ask around" offer, and a visitor who meets both
+        should recognise the second from the first.
     --}}
     <section class="border-b border-placeholder bg-primary/5">
         <div class="mx-auto grid max-w-6xl gap-x-12 gap-y-10 px-6 py-14 lg:grid-cols-[minmax(0,20rem)_1fr] lg:px-10">
@@ -42,14 +43,14 @@
                 <p class="mt-4 text-base leading-relaxed break-words text-muted">{{ __('exchange_quotes.request.subheading') }}</p>
             </div>
 
-            <ol class="grid min-w-0 grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-3">
+            <ol class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-3">
                 @foreach ($steps as $i => $step)
-                    <li class="min-w-0">
+                    <li class="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60">
                         <span class="flex h-8 w-8 items-center justify-center rounded-full bg-placeholder/20 font-heading text-xs font-bold" style="color: var(--color-{{ $step['color'] }})">
                             {{ $i + 1 }}
                         </span>
-                        <p class="mt-3 font-heading font-bold break-words text-ink">{{ $step['title'] }}</p>
-                        <p class="mt-2 text-sm leading-relaxed break-words text-muted">{{ $step['body'] }}</p>
+                        <p class="mt-3 text-sm font-semibold break-words text-ink">{{ $step['title'] }}</p>
+                        <p class="mt-1 text-xs leading-relaxed break-words text-muted">{{ $step['body'] }}</p>
                     </li>
                 @endforeach
             </ol>
