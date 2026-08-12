@@ -612,7 +612,7 @@
                         six-figure total plus "драм" is wider than 320px, and it
                         is set nowrap so it would push the page rather than
                         break. --}}
-                        <p class="mt-1 font-heading text-2xl font-bold tracking-tight whitespace-nowrap text-ink sm:text-4xl">
+                        <p class="mt-1 text-2xl font-bold tracking-tight whitespace-nowrap text-ink tabular-nums sm:text-4xl">
                             {{ $amd($amount * (float) $best->{$rateField}) }}
                             <span class="text-base font-normal text-muted sm:text-xl">{{ __('exchange_quotes.request.amd') }}</span>
                         </p>
@@ -714,14 +714,14 @@
 
                         <div class="shrink-0 text-end">
                             @if ($calculating)
-                                <p class="font-heading font-bold whitespace-nowrap text-ink">
+                                <p class="font-bold whitespace-nowrap text-ink tabular-nums">
                                     {{ $amd($total) }}
                                     <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                 </p>
                                 <p class="text-xs whitespace-nowrap text-muted">{{ number_format($rate->{$rateField}, 2) }}</p>
                             @else
-                                <p class="font-heading font-bold whitespace-nowrap text-ink">{{ number_format($rate->buy_rate, 2) }}</p>
-                                <p class="font-heading font-bold whitespace-nowrap text-ink">{{ number_format($rate->sell_rate, 2) }}</p>
+                                <p class="font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->buy_rate, 2) }}</p>
+                                <p class="font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->sell_rate, 2) }}</p>
                             @endif
                         </div>
                     </div>
@@ -806,19 +806,19 @@
                                     </div>
                                 </td>
                                 @if ($calculating)
-                                    <td class="px-4 py-4 text-right font-heading text-base text-ink">
+                                    <td class="px-4 py-4 text-right text-base font-medium text-ink tabular-nums">
                                         {{ number_format($rate->{$rateField}, 2) }}
                                     </td>
                                     @if ($showBothRates)
-                                        <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->buy_rate, 2) }}</td>
-                                        <td class="px-4 py-4 text-right font-heading text-muted">{{ number_format($rate->sell_rate, 2) }}</td>
+                                        <td class="px-4 py-4 text-right text-muted tabular-nums">{{ number_format($rate->buy_rate, 2) }}</td>
+                                        <td class="px-4 py-4 text-right text-muted tabular-nums">{{ number_format($rate->sell_rate, 2) }}</td>
                                     @endif
-                                    <td class="bg-placeholder/25 px-6 py-4 text-right font-heading text-base font-bold whitespace-nowrap text-ink">
+                                    <td class="bg-placeholder/25 px-6 py-4 text-right text-base font-bold whitespace-nowrap text-ink tabular-nums">
                                         {{ $amd($total) }}
                                         <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                     </td>
                                 @else
-                                    <td class="px-6 py-4 text-right font-heading text-base text-ink">
+                                    <td class="px-6 py-4 text-right text-base font-medium text-ink tabular-nums">
                                         <span class="inline-flex items-center justify-end gap-2">
                                             @if ($isBestRate((float) $rate->buy_rate, $bestBuy))
                                                 <x-rates.best-chip />
@@ -826,7 +826,7 @@
                                             {{ number_format($rate->buy_rate, 2) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right font-heading text-base text-ink">
+                                    <td class="px-6 py-4 text-right text-base font-medium text-ink tabular-nums">
                                         <span class="inline-flex items-center justify-end gap-2">
                                             @if ($isBestRate((float) $rate->sell_rate, $bestSell))
                                                 <x-rates.best-chip />

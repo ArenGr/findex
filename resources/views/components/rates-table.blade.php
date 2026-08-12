@@ -160,12 +160,18 @@
                                         </div>
                                     </div>
 
+                                    {{-- Both figures in ink on the body face,
+                                    matching /rates: green-against-red read as a
+                                    verdict on each number rather than a label
+                                    for the column, and Montserrat is the
+                                    style guide's decorative heading face, not a
+                                    face for data. --}}
                                     <div class="w-20 text-right">
-                                        <p class="font-heading text-lg font-bold text-primary" x-text="row.buy_rate.toFixed(2)"></p>
+                                        <p class="text-lg font-bold text-ink tabular-nums" x-text="row.buy_rate.toFixed(2)"></p>
                                     </div>
 
                                     <div class="w-20 text-right">
-                                        <p class="font-heading text-lg font-bold text-[#c25b6e]" x-text="row.sell_rate.toFixed(2)"></p>
+                                        <p class="text-lg font-bold text-ink tabular-nums" x-text="row.sell_rate.toFixed(2)"></p>
                                     </div>
 
                                     <div class="hidden w-24 shrink-0 text-right sm:block">
