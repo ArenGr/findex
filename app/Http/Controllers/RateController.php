@@ -110,22 +110,38 @@ class RateController extends Controller
         [$latitude, $longitude] = $this->coordinatesFromQuery($request);
         $hasLocation = $latitude !== null && $longitude !== null;
 
-        // An explicit column click always wins; otherwise the intent (or a
-        // shared location) picks the ranking, so the default order already
-        // answers the question the visitor came with.
-        $sortOptions = $hasLocation ? ['buy_rate', 'sell_rate', 'distance'] : ['buy_rate', 'sell_rate'];
-        $explicitSort = in_array($request->query('sort'), $sortOptions, true) ? $request->query('sort') : null;
+        // Sorts are named after what the visitor wants, not after the column
+        // they happen to run on. "Best rate" already knows which of the two
+        // rate columns that is and which way it runs - which was exactly the
+        // question the clickable column headers used to ask them to answer.
+        //
+        // Deliberately not offering "most you receive" as a separate option:
+        // the total is amount x buy_rate or amount / sell_rate, both monotonic
+        // in the rate, so it produces the identical ordering to "best rate".
+        // Two labels for one sort is the sort of thing this page has too much
+        // of already.
+        $sortOptions = ['best', 'updated', 'spread'];
 
-        if ($explicitSort !== null) {
-            $sort = $explicitSort;
-            $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
-        } elseif ($hasLocation) {
-            $sort = 'distance';
-            $direction = 'asc';
-        } else {
-            $sort = $intent === 'sell' ? 'buy_rate' : 'sell_rate';
-            $direction = $intent === 'sell' ? 'desc' : 'asc';
+        if ($hasLocation) {
+            $sortOptions[] = 'distance';
         }
+
+        $sortKey = in_array($request->query('sort'), $sortOptions, true)
+            ? $request->query('sort')
+            // Sharing a location is itself a statement of intent, so it picks
+            // the sort; otherwise the direction does.
+            : ($hasLocation ? 'distance' : 'best');
+
+        // Resolved to a column and a direction for the query layer, which is
+        // unchanged and still speaks in columns.
+        [$sort, $direction] = match ($sortKey) {
+            'updated' => ['scraped_at', 'desc'],
+            'spread' => ['spread', 'asc'],
+            'distance' => ['distance', 'asc'],
+            // Selling the currency, the highest buy rate wins; buying it, the
+            // lowest sell rate does.
+            default => $intent === 'sell' ? ['buy_rate', 'desc'] : ['sell_rate', 'asc'],
+        };
 
         // Only "bank" and "exchange" organizations ever carry currency rates,
         // but which of the two actually appear depends on real data - built
@@ -204,7 +220,8 @@ class RateController extends Controller
             'selectedOrganization' => $selectedOrganization,
             'cities' => $cities,
             'selectedCity' => $selectedCity,
-            'sort' => $sort,
+            'sort' => $sortKey,
+            'sortOptions' => $sortOptions,
             'direction' => $direction,
             'intent' => $intent,
             'amount' => $amount,

@@ -599,13 +599,6 @@
         @endif
 
         @php
-            // Ascending first, flipping on a repeat click of the same column.
-            $sortLink = fn (string $column) => $link([
-                'sort' => $column,
-                'direction' => $sort === $column && $direction === 'asc' ? 'desc' : 'asc',
-            ]);
-            $sortArrow = fn (string $column) => $sort === $column ? ($direction === 'asc' ? ' ▲' : ' ▼') : '';
-
             // Without an amount there is no single winner - buy and sell rank
             // in opposite directions - so each column names its own. The
             // organization buys low and sells high, which for the visitor is
@@ -810,9 +803,35 @@
                 here: it says which of the two views you are in, which one link
                 naming only the other view never did. Still two links, so it
                 works with JS off and stays shareable. --}}
-                {{-- Always offered, and it changes exactly one thing: whether
-                the table carries the spread column. It used to appear only while
-                calculating, and to swap the whole rate pair in and out. --}}
+                {{--
+                    Named sorts rather than clickable column headings. A heading
+                    that sorts asks the visitor to work out which column answers
+                    their question and which way it runs; "Best rate" and
+                    "Closest" just answer it. The headings lose their arrows with
+                    it, which is one less thing moving around in the table.
+                --}}
+                <form method="GET" action="{{ route('rates.index') }}" class="flex min-w-0 flex-wrap items-center gap-2">
+                    @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'both'] as $carried)
+                        @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
+                        @if (! empty($value))
+                            <input type="hidden" name="{{ $carried }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+
+                    <label for="sort" class="{{ $labelClass }}">{{ __('rates.sort_label') }}</label>
+                    <select
+                        name="sort" id="sort"
+                        onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
+                        class="min-w-0 rounded-lg border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
+                    >
+                        @foreach ($sortOptions as $option)
+                            <option value="{{ $option }}" @selected($sort === $option)>{{ __('rates.sort_'.$option) }}</option>
+                        @endforeach
+                    </select>
+                </form>
+
+                {{-- Changes exactly one thing: whether the table carries the
+                spread column. --}}
                 <div class="flex min-w-0 flex-wrap items-center gap-2">
                     <span class="{{ $labelClass }}">{{ __('rates.view_label') }}</span>
                         <div class="flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
@@ -906,12 +925,8 @@
                             rate pair is always here, always in the same two
                             places; an amount adds a column, it does not swap the
                             table for a different one. --}}
-                            <th class="px-6 py-3 text-right">
-                                <a href="{{ $sortLink('buy_rate') }}" class="hover:text-ink" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}{{ $sortArrow('buy_rate') }}</a>
-                            </th>
-                            <th class="px-6 py-3 text-right">
-                                <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
-                            </th>
+                            <th class="px-6 py-3 text-right" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}</th>
+                            <th class="px-6 py-3 text-right" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}</th>
 
                             {{-- Detailed only: the gap between the two columns
                             printed either side of it. --}}
@@ -927,7 +942,7 @@
                                 furthest from the name. --}}
                                 <th class="bg-placeholder/25 px-6 py-3 text-right">
                                     <span class="inline-flex items-center gap-1.5">
-                                        <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $totalColumn }}{{ $sortArrow($rateField) }}</a>
+                                        {{ $totalColumn }}
                                         <x-info-popover :label="$totalColumn">
                                             {{ __($isBuying ? 'rates.rate_column_hint_buy' : 'rates.rate_column_hint_sell', ['code' => $selectedCurrency?->code]) }}
                                         </x-info-popover>

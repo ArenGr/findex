@@ -232,11 +232,54 @@ class RatesPageTest extends TestCase
         $this->seedMarket();
 
         // Sorted by spread, the cheapest row is no longer row one - the podium
-        // must still track the rate.
-        $rows = collect($this->get('/en/rates?currency=USD&intent=buy&sort=buy_rate&direction=desc')->viewData('ranked')['rows']);
+        // must still track the rate. Corner exchange has the tightest spread
+        // at 4.00, against Cheap bank's 5.00.
+        $rows = collect($this->get('/en/rates?currency=USD&intent=buy&sort=spread')->viewData('ranked')['rows']);
 
         $this->assertNotSame('Cheap bank', $rows->first()->organization_name, 'precondition: the sort moved it');
         $this->assertSame(1, $rows->firstWhere('organization_name', 'Cheap bank')->rank);
+    }
+
+    /**
+     * Sorts are named after what the visitor wants rather than after a column,
+     * so an unknown or stale one falls back to the default instead of erroring
+     * or quietly ordering by nothing.
+     */
+    public function test_the_named_sorts_are_offered_and_an_unknown_one_falls_back(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertViewHas('sort', 'best')
+            ->assertViewHas('sortOptions', ['best', 'updated', 'spread'])
+            ->assertSee('Lowest spread')
+            ->assertSee('Recently updated');
+
+        // "Closest" is only meaningful once we have somewhere to measure from.
+        $this->get('/en/rates?currency=USD&lat=40.1792&lng=44.4991')
+            ->assertOk()
+            ->assertViewHas('sort', 'distance')
+            ->assertViewHas('sortOptions', ['best', 'updated', 'spread', 'distance']);
+
+        // A bookmarked link from when location sharing was on.
+        $this->get('/en/rates?currency=USD&sort=distance')->assertOk()->assertViewHas('sort', 'best');
+        $this->get('/en/rates?currency=USD&sort=buy_rate')->assertOk()->assertViewHas('sort', 'best');
+    }
+
+    /** Lowest spread first, which is what the option says. */
+    public function test_sorting_by_spread_orders_by_the_tightest_gap(): void
+    {
+        $this->seedMarket();
+
+        $rows = collect($this->get('/en/rates?currency=USD&sort=spread')->viewData('ranked')['rows']);
+
+        // Corner exchange 388-384 = 4.00, Cheap bank 365-360 = 5.00,
+        // Pricey bank 370-358 = 12.00.
+        $this->assertSame(
+            ['Corner exchange', 'Cheap bank', 'Pricey bank'],
+            $rows->pluck('organization_name')->all(),
+        );
     }
 
     public function test_rates_a_fraction_apart_do_not_collapse_onto_one_rank(): void
@@ -285,9 +328,15 @@ class RatesPageTest extends TestCase
         // must carry lat/lng, or submitting either one silently drops an active
         // "find nearby". Asserting presence alone is not enough: the intent bar
         // would satisfy it on its own.
+        // Derived rather than hard-coded: the count is "every GET form on the
+        // page", so adding another one cannot quietly satisfy this by leaving
+        // the new form out.
         $html = $response->getContent();
-        $this->assertSame(2, substr_count($html, 'name="lat" value="40.1792"'), 'every GET form must carry lat');
-        $this->assertSame(2, substr_count($html, 'name="lng" value="44.4991"'), 'every GET form must carry lng');
+        $forms = substr_count($html, 'method="GET"');
+
+        $this->assertGreaterThanOrEqual(3, $forms, 'precondition: the page has several GET forms');
+        $this->assertSame($forms, substr_count($html, 'name="lat" value="40.1792"'), 'every GET form must carry lat');
+        $this->assertSame($forms, substr_count($html, 'name="lng" value="44.4991"'), 'every GET form must carry lng');
     }
 
     public function test_the_quote_cta_states_the_amount_that_qualifies(): void
