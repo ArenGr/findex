@@ -566,9 +566,86 @@
             $rateColumn = __('rates.rate_column', ['code' => $selectedCurrency?->code]);
             $totalColumn = __($isBuying ? 'rates.total_pay_column' : 'rates.total_get_column');
 
+            // Who is quoting each winning figure. Ties are the norm - six banks
+            // at 367.00 - so the card names the first and counts the rest,
+            // exactly as the best-rate band does.
+            $holderOf = function (callable $wins) use ($ranked) {
+                $rows = collect($ranked['rows'])->filter($wins);
+
+                if ($rows->count() > 1) {
+                    return trans_choice('rates.best_shared', $rows->count() - 1, [
+                        'name' => $rows->first()->organization_name,
+                        'count' => $rows->count() - 1,
+                    ]);
+                }
+
+                return $rows->first()?->organization_name;
+            };
+
+            // The midpoint of each row averaged across the list. Stated as a
+            // reference, not a rate: with banks near 365 and exchange offices
+            // near 385 the mean sits in a gap nobody quotes.
+            $marketAverage = collect($ranked['rows'])
+                ->avg(fn ($row) => ((float) $row->buy_rate + (float) $row->sell_rate) / 2);
+
+            $organizationCount = collect($ranked['rows'])->pluck('organization_id')->unique()->count();
+
+            $summaryCards = [
+                [
+                    'label' => __('rates.summary_best_buy'),
+                    'value' => $bestBuy,
+                    'note' => $holderOf(fn ($row) => $isBestRate((float) $row->buy_rate, $bestBuy)),
+                    'hint' => __('rates.buy_hint'),
+                ],
+                [
+                    'label' => __('rates.summary_best_sell'),
+                    'value' => $bestSell,
+                    'note' => $holderOf(fn ($row) => $isBestRate((float) $row->sell_rate, $bestSell)),
+                    'hint' => __('rates.sell_hint'),
+                ],
+                [
+                    'label' => __('rates.summary_average'),
+                    'value' => $marketAverage,
+                    'note' => trans_choice('rates.summary_across', $organizationCount, ['count' => $organizationCount]),
+                    'hint' => __('rates.summary_average_hint'),
+                ],
+            ];
         @endphp
 
         @if ($rowCount > 0)
+            {{--
+                Three figures a visitor would otherwise get by reading fourteen
+                rows twice. They take the slot the best-rate band takes while
+                calculating, and only that slot: with an amount on screen the
+                page has a single answer to give, and "best buy 384.50" beside
+                "you pay 36,700" is two summaries of different questions.
+            --}}
+            @if (! $calculating)
+                <div class="mt-8 grid gap-4 md:grid-cols-3">
+                    @foreach ($summaryCards as $card)
+                        <div class="min-w-0 rounded-xl border border-placeholder bg-white p-4">
+                            <span class="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
+                                <span class="min-w-0 break-words">{{ $card['label'] }}</span>
+                                <x-info-popover :label="$card['label']">{{ $card['hint'] }}</x-info-popover>
+                            </span>
+
+                            {{-- Scaled down below sm: at 36px a five-figure
+                            rate plus its unit is wider than a 320px screen, and
+                            it is set nowrap so it would push the page rather
+                            than break. --}}
+                            <p class="mt-1 flex items-end gap-2 whitespace-nowrap">
+                                <span class="text-3xl font-semibold tracking-tight text-ink tabular-nums sm:text-4xl">
+                                    {{ number_format((float) $card['value'], 2) }}
+                                </span>
+                                <span class="pb-1.5 text-sm text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                            </p>
+
+                            <p class="mt-1 truncate text-sm text-muted" title="{{ $card['note'] }}">{{ $card['note'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             {{--
                 The answer, before the table, and filled rather than tinted -
                 a pale strip the width of the page reads as a caption on the

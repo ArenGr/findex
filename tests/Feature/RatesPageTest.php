@@ -438,6 +438,43 @@ class RatesPageTest extends TestCase
     }
 
     /**
+     * Three figures above the table, so the answer to "what is the best rate
+     * here" does not require reading fourteen rows twice. The seeded market
+     * quotes 360/365, 358/370 and 384/388, so the visitor's best buy is the
+     * highest buy and their best sell is the lowest sell, and the average is
+     * the mean of the three midpoints: (362.5 + 364 + 386) / 3.
+     */
+    public function test_the_summary_cards_state_the_best_of_each_side(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('Best buy rate')
+            ->assertSee('384.00')
+            ->assertSee('Best sell rate')
+            ->assertSee('365.00')
+            ->assertSee('Market average')
+            ->assertSee('370.83')
+            ->assertSee('Across 3 organizations');
+    }
+
+    /**
+     * With an amount on screen the page has one answer to give. "Best buy
+     * 384.00" beside "you pay 36,700" is two summaries of different questions,
+     * so the cards give their slot to the best-rate band.
+     */
+    public function test_the_summary_cards_stand_down_while_calculating(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&amount=100')
+            ->assertOk()
+            ->assertDontSee('Market average')
+            ->assertSee('Current best rate');
+    }
+
+    /**
      * It is the official reference rate, not a venue - offering it beside Cash
      * and Card sent visitors to rows they could not act on.
      */
