@@ -25,9 +25,6 @@ return [
     'cta_heading_qualified' => 'You are exchanging :amount :code - you can ask for a better rate',
     'cta_button' => 'Negotiate your rate',
     'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
-    'cta_action' => 'Ask for a quote',
-    'better_rate_heading' => 'Not the rate you wanted?',
-    'alert_band_title' => 'Watch this rate',
 
     'rate_column' => 'Rate per 1 :code',
     'total_pay_column' => 'Total you pay',
