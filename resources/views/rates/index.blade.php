@@ -76,6 +76,26 @@
 
     $labelClass = 'block text-xs font-semibold tracking-wider text-muted uppercase';
 
+    // What the modal opens with. Hoisted because two things trigger it - the
+    // chip above the table and the card below it - and a visitor who used one
+    // and then the other should not get a different form.
+    $alertPrefill = [
+        'form' => [
+            'currency_id' => (string) ($selectedCurrency?->id ?? ''),
+            'organization_id' => (string) ($selectedOrganization?->id ?? ''),
+            'rate_type' => $selectedType->value,
+            'rate_field' => $rateField,
+            'direction' => $isBuying ? 'below' : 'above',
+            'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
+        ],
+        'context' => [
+            'currency' => __('exchange_quotes.request.amd'),
+            'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+        ],
+    ];
+
+    $alertHref = route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])).'#create-alert';
+
     // Everything that has moved off its default, so the button can say how
     // much is hidden behind it. The transaction type counts too - "Card" is a
     // narrower view than "Cash" and the visitor should be told they set it.
@@ -284,17 +304,34 @@
             open and the page works exactly as before.
         --}}
         <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-6">
-            <button
-                type="button"
-                @click="open = !open"
-                :aria-expanded="open"
-                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-            >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                    <path d="M3 6h18M7 12h10M11 18h2" />
-                </svg>
-                {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
-            </button>
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                <button
+                    type="button"
+                    @click="open = !open"
+                    :aria-expanded="open"
+                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                        <path d="M3 6h18M7 12h10M11 18h2" />
+                    </svg>
+                    {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
+                </button>
+
+                {{-- The same offer as the card below the table, reachable
+                without scrolling it. A chip rather than the text link this used
+                to be: at the same size, weight and ink as the paragraph beside
+                it, nobody read it as something you could press. --}}
+                <a
+                    href="{{ $alertHref }}"
+                    onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
+                    class="inline-flex min-w-0 items-center gap-2 rounded-full border border-accent-yellow/50 bg-accent-yellow/10 px-4 py-2 text-sm font-medium text-ink transition hover:border-accent-yellow hover:bg-accent-yellow/20"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 text-accent-yellow" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
+                </a>
+            </div>
 
         <div x-show="open" x-cloak class="mt-5 flex flex-wrap items-start gap-x-10 gap-y-5 rounded-xl border border-placeholder bg-white px-5 py-5">
 
@@ -870,21 +907,8 @@
                         opened in a new tab; the click is intercepted to open the
                         modal with this page's state prefilled. --}}
                         <a
-                            href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
-                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from([
-                                'form' => [
-                                    'currency_id' => (string) ($selectedCurrency?->id ?? ''),
-                                    'organization_id' => (string) ($selectedOrganization?->id ?? ''),
-                                    'rate_type' => $selectedType->value,
-                                    'rate_field' => $rateField,
-                                    'direction' => $isBuying ? 'below' : 'above',
-                                    'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
-                                ],
-                                'context' => [
-                                    'currency' => __('exchange_quotes.request.amd'),
-                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
-                                ],
-                            ]) }} }))"
+                            href="{{ $alertHref }}"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
                             class="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
                         >
                             {{ __('rates.alert_cta') }}
