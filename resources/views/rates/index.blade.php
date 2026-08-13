@@ -813,7 +813,7 @@
                                 <p class="text-xs whitespace-nowrap text-muted">{{ number_format($rate->{$rateField}, 2) }}</p>
                             @else
                                 <p class="font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->buy_rate, 2) }}</p>
-                                <p class="font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->sell_rate, 2) }}</p>
+                                <p class="font-bold whitespace-nowrap tabular-nums text-accent-red">{{ number_format($rate->sell_rate, 2) }}</p>
                             @endif
                         </div>
                     </div>
@@ -931,7 +931,7 @@
                                     </td>
                                     @if ($showBothRates)
                                         <td class="px-4 py-4 text-right text-muted tabular-nums">{{ number_format($rate->buy_rate, 2) }}</td>
-                                        <td class="px-4 py-4 text-right text-muted tabular-nums">{{ number_format($rate->sell_rate, 2) }}</td>
+                                        <td class="px-4 py-4 text-right tabular-nums text-accent-red/80">{{ number_format($rate->sell_rate, 2) }}</td>
                                     @endif
                                     <td class="bg-placeholder/25 px-6 py-4 text-right text-base font-bold whitespace-nowrap text-ink tabular-nums">
                                         {{ $amd($total) }}
@@ -954,7 +954,9 @@
                                             {{ number_format($rate->buy_rate, 2) }}
                                         </span>
                                     </td>
-                                    <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
+                                    {{-- The same red as the sell-side summary card, so buy and
+                                    sell read the same way in both places. --}}
+                                    <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
                                         <span class="inline-flex items-center justify-end gap-2">
                                             @if ($winsSell)
                                                 <x-rates.best-chip />
