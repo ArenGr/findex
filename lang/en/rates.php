@@ -35,6 +35,9 @@ return [
     'best_heading' => 'Current best rate',
     'best_shared' => '{1} :name and 1 more at this rate|[2,*] :name and :count more at this rate',
     'best_badge' => 'Best',
+    'best_badge_shared' => 'Best rate — available at :count organizations',
+    'stale_label' => 'Rates older than a day',
+    'checked_at' => 'Checked :time',
     'show_both_rates' => 'Show buy and sell rates',
     'hide_both_rates' => 'Hide buy and sell rates',
     'view_label' => 'View',
@@ -97,4 +100,5 @@ return [
     'no_rates_match' => 'No rates match these filters. Try a different currency, type, or bank.',
     'reset_filters' => 'Reset filters',
     'results_count' => '{0} No rates|{1} 1 rate|[2,*] :count rates',
+    'apply_filters' => '{0} No rates|{1} Show 1 rate|[2,*] Show :count rates',
 ];

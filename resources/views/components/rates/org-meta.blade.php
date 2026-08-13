@@ -25,9 +25,7 @@ the whole line would read as a verdict on the organization. --}}
             @if ($market)
                 <span aria-hidden="true">&middot;</span>
             @endif
-            <span @class(['text-[#B4791F]' => $stale])>
-                {{ \Illuminate\Support\Carbon::parse($scrapedAt)->diffForHumans() }}
-            </span>
+            <x-rates.freshness :scraped-at="$scrapedAt" :stale="$stale" />
         </span>
     @endif
 

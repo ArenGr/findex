@@ -401,7 +401,30 @@
                 {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
             </button>
 
-        <div x-show="open" x-cloak class="mt-5 flex flex-wrap items-start gap-x-10 gap-y-5 rounded-xl border border-placeholder bg-white px-5 py-5">
+        {{-- Mobile only. A panel that pushes the table off screen is worse than
+        no panel: you cannot see what your choices did. --}}
+        <div x-show="open" x-cloak x-transition.opacity @click="open = false" class="fixed inset-0 z-40 bg-ink/40 sm:hidden"></div>
+
+        {{--
+            A bottom sheet below sm, the same inline panel from sm up. The
+            controls inside are identical either way - only the box they sit in
+            changes, so there is one panel to maintain rather than two.
+        --}}
+        <div
+            x-show="open" x-cloak
+            role="group" aria-label="{{ __('rates.more_filters') }}"
+            class="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col items-start gap-y-5 overflow-y-auto rounded-t-2xl border-t border-placeholder bg-white px-5 pt-5 pb-5 sm:static sm:z-auto sm:mt-5 sm:max-h-none sm:flex-row sm:flex-wrap sm:gap-x-10 sm:overflow-visible sm:rounded-xl sm:border"
+        >
+            {{-- The sheet needs a title and a way out; the inline panel has the
+            button it opened from sitting right above it. --}}
+            <div class="flex w-full items-center justify-between sm:hidden">
+                <span class="font-heading text-base font-bold text-ink">{{ __('rates.more_filters') }}</span>
+                <button type="button" @click="open = false" class="-mr-1 rounded-full p-2 text-muted hover:bg-placeholder/30 hover:text-ink" aria-label="{{ __('alerts.modal.cancel') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-5 w-5" aria-hidden="true">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
 
         {{-- Market tabs. Banks and exchange offices quote very different
         levels, so they are separated rather than interleaved. --}}
@@ -552,6 +575,14 @@
             </div>
         </div>
 
+            {{-- Every control in here applies on click, so this confirms
+            rather than submits - it says what the choices left you with and
+            gets the sheet out of the way. Sticky, because the panel scrolls. --}}
+            <div class="sticky bottom-0 -mx-5 mt-1 w-[calc(100%+2.5rem)] border-t border-placeholder bg-white px-5 pt-4 sm:hidden">
+                <button type="button" @click="open = false" class="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold break-words text-white transition hover:bg-primary-dark">
+                    {{ trans_choice('rates.apply_filters', $rowCount, ['count' => $rowCount]) }}
+                </button>
+            </div>
         </div>
         </div>
 
@@ -582,6 +613,13 @@
             $bestBuy = collect($ranked['rows'])->max(fn ($row) => (float) $row->buy_rate);
             $bestSell = collect($ranked['rows'])->min(fn ($row) => (float) $row->sell_rate);
             $isBestRate = fn (float $value, ?float $target) => $target !== null && abs($value - $target) < 0.00005;
+
+            // How many organizations hold each winning figure. Six identical
+            // stars with nothing explaining them read as a fault; the chip says
+            // "available at 6 organizations" instead.
+            $bestBuyCount = collect($ranked['rows'])->filter(fn ($row) => $isBestRate((float) $row->buy_rate, $bestBuy))->count();
+            $bestSellCount = collect($ranked['rows'])->filter(fn ($row) => $isBestRate((float) $row->sell_rate, $bestSell))->count();
+            $bestTotalCount = $bestRows->count();
 
             $totalColumn = __('rates.you_receive_column');
 
@@ -753,7 +791,13 @@
                         ]) }}
                     @endif
                     @if ($allStale)
-                        &middot; <span class="text-[#B4791F]">{{ __('rates.all_stale_notice') }}</span>
+                        &middot; <span class="inline-flex items-center gap-1 text-[#B4791F]">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0" />
+                                <path d="M12 9v4" /><path d="M12 17h.01" />
+                            </svg>
+                            {{ __('rates.all_stale_notice') }}
+                        </span>
                     @endif
                 </p>
 
@@ -832,7 +876,7 @@
                             @if ($calculating)
                                 <p class="mt-0.5 flex items-center justify-end gap-1.5 whitespace-nowrap tabular-nums">
                                     @if ($rate->rank === 1)
-                                        <x-rates.best-chip />
+                                        <x-rates.best-chip :count="$bestTotalCount" />
                                     @endif
                                     <span class="font-bold text-ink">{{ $amd($total) }}</span>
                                     <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
@@ -955,7 +999,7 @@
                                 <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
                                     <span class="inline-flex items-center justify-end gap-2">
                                         @if ($winsBuy)
-                                            <x-rates.best-chip />
+                                            <x-rates.best-chip :count="$bestBuyCount" />
                                         @endif
                                         {{ number_format($rate->buy_rate, 2) }}
                                     </span>
@@ -965,7 +1009,7 @@
                                 <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
                                     <span class="inline-flex items-center justify-end gap-2">
                                         @if ($winsSell)
-                                            <x-rates.best-chip />
+                                            <x-rates.best-chip :count="$bestSellCount" />
                                         @endif
                                         {{ number_format($rate->sell_rate, 2) }}
                                     </span>
@@ -981,7 +1025,7 @@
                                     <td @class(['bg-placeholder/25 px-6 py-4 text-right text-base whitespace-nowrap text-ink tabular-nums', 'font-bold' => $winsTotal, 'font-medium' => ! $winsTotal])>
                                         <span class="inline-flex items-center justify-end gap-2">
                                             @if ($winsTotal)
-                                                <x-rates.best-chip />
+                                                <x-rates.best-chip :count="$bestTotalCount" />
                                             @endif
                                             <span>
                                                 {{ $amd($total) }}
@@ -993,9 +1037,7 @@
 
                                 <td class="hidden px-4 py-4 text-right text-xs whitespace-nowrap md:table-cell">
                                     @if ($rate->scraped_at)
-                                        <span @class(['text-[#B4791F]' => $isStale($rate->scraped_at), 'text-muted' => ! $isStale($rate->scraped_at)])>
-                                            {{ Carbon::parse($rate->scraped_at)->diffForHumans() }}
-                                        </span>
+                                        <x-rates.freshness :scraped-at="$rate->scraped_at" :stale="$isStale($rate->scraped_at)" />
                                     @else
                                         <span class="text-muted" aria-hidden="true">&mdash;</span>
                                     @endif

@@ -35,6 +35,9 @@ return [
     'best_heading' => 'Текущий лучший курс',
     'best_shared' => '{1} :name и ещё 1 по этому курсу|[2,*] :name и ещё :count по этому курсу',
     'best_badge' => 'Лучший',
+    'best_badge_shared' => 'Лучший курс — доступен в :count организациях',
+    'stale_label' => 'Курсы старше суток',
+    'checked_at' => 'Проверено :time',
     'show_both_rates' => 'Показать курсы покупки и продажи',
     'hide_both_rates' => 'Скрыть курсы покупки и продажи',
     'view_label' => 'Вид',
@@ -97,4 +100,9 @@ return [
     'no_rates_match' => 'По этим фильтрам курсы не найдены. Попробуйте другую валюту, тип или банк.',
     'reset_filters' => 'Сбросить фильтры',
     'results_count' => '{0} Нет курсов|{1} :count курс|[2,4] :count курса|[5,*] :count курсов',
+    // Correct for every count this page can produce - a currency and rate
+    // type never yields more than ~14 rows. Russian's rule is modulo-based
+    // (21 takes the singular, 11 does not), which trans_choice ranges
+    // cannot express, so covering 0-20 honestly beats faking the rest.
+    'apply_filters' => '{0} Нет курсов|{1} Показать 1 курс|[2,4] Показать :count курса|[5,*] Показать :count курсов',
 ];

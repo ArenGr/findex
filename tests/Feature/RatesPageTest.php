@@ -461,6 +461,71 @@ class RatesPageTest extends TestCase
     }
 
     /**
+     * Three banks quoting the same winning rate all get a star, and three
+     * identical stars with nothing explaining them read as a fault. The label
+     * accounts for the repetition wherever the star is read from - tooltip,
+     * hover, or screen reader.
+     */
+    public function test_a_shared_best_rate_says_how_many_organizations_hold_it(): void
+    {
+        $usd = $this->seedMarket();
+        $this->rate($this->organization('tied-bank'), $usd, 384.0, 391.0);
+
+        // Two organizations now share the top buy rate of 384.00.
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('Best rate — available at 2 organizations');
+    }
+
+    /** A single winner is just "Best" - there is nothing to account for. */
+    public function test_an_outright_best_rate_is_not_described_as_shared(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertDontSee('available at');
+    }
+
+    /**
+     * Staleness used to be amber text and nothing else, which reaches neither a
+     * screen reader nor anyone who cannot separate the amber from the grey. The
+     * warning carries the same meaning in words.
+     */
+    public function test_stale_rates_are_flagged_in_words_not_only_in_colour(): void
+    {
+        $usd = $this->seedMarket();
+        CurrencyRate::query()->update(['scraped_at' => now()->subDays(3)]);
+
+        $this->get('/en/rates?currency='.$usd->code)
+            ->assertOk()
+            ->assertSee('Rates older than a day');
+    }
+
+    /** A fresh table says nothing about staleness at all. */
+    public function test_fresh_rates_carry_no_warning(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertDontSee('Rates older than a day');
+    }
+
+    /**
+     * On a phone the filter panel is a bottom sheet, and it confirms with the
+     * result rather than a bare "Done" - the table is behind the sheet, so the
+     * count is the only way to see what the choices did before closing it.
+     */
+    public function test_the_filter_sheet_confirms_with_the_number_of_results(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Show 3 rates');
+        $this->get('/en/rates?currency=USD&org_type=exchange')->assertOk()->assertSee('Show 1 rate');
+    }
+
+    /**
      * Freshness moves out of the line under the name and into a column of its
      * own, so it can be read down the list rather than row by row.
      */
