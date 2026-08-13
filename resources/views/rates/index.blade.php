@@ -590,12 +590,9 @@
 
             $organizationCount = collect($ranked['rows'])->pluck('organization_id')->unique()->count();
 
-            // Buy and sell are colour-coded, as they are on every currency board
-            // in the country - but blue rather than the red those boards use.
-            // Red is the colour this app spends on errors, and "best sell rate"
-            // is the good number; green against blue also survives red-green
-            // colour blindness, which the classic pairing does not. The average
-            // stays ink: it is a reference, not an offer.
+            // Green buy, red sell - the pairing every currency board in the
+            // country uses, so it is the one visitors arrive already able to
+            // read. The average stays ink: it is a reference, not an offer.
             $summaryCards = [
                 [
                     'label' => __('rates.summary_best_buy'),
@@ -609,7 +606,7 @@
                     'value' => $bestSell,
                     'note' => $holderOf(fn ($row) => $isBestRate((float) $row->sell_rate, $bestSell)),
                     'hint' => __('rates.sell_hint'),
-                    'tone' => 'text-accent-blue',
+                    'tone' => 'text-accent-red',
                 ],
                 [
                     'label' => __('rates.summary_average'),

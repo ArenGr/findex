@@ -57,6 +57,11 @@ button {
     --color-accent-blue: #005fb9;
     --color-accent-blue-dark: #004a91;
 
+    /* Sell-side rates, paired with primary green on the buy side - the
+       convention every currency board in the country uses. Named rather than
+       inlined so the two sides stay in step wherever they are shown. */
+    --color-accent-red: #ba1a1a;
+
     /* Hero carousel per-slide accents */
     --color-slide-green: #607e34;
     --color-slide-blue: #87b8f5;
