@@ -590,24 +590,33 @@
 
             $organizationCount = collect($ranked['rows'])->pluck('organization_id')->unique()->count();
 
+            // Buy and sell are colour-coded, as they are on every currency board
+            // in the country - but blue rather than the red those boards use.
+            // Red is the colour this app spends on errors, and "best sell rate"
+            // is the good number; green against blue also survives red-green
+            // colour blindness, which the classic pairing does not. The average
+            // stays ink: it is a reference, not an offer.
             $summaryCards = [
                 [
                     'label' => __('rates.summary_best_buy'),
                     'value' => $bestBuy,
                     'note' => $holderOf(fn ($row) => $isBestRate((float) $row->buy_rate, $bestBuy)),
                     'hint' => __('rates.buy_hint'),
+                    'tone' => 'text-primary',
                 ],
                 [
                     'label' => __('rates.summary_best_sell'),
                     'value' => $bestSell,
                     'note' => $holderOf(fn ($row) => $isBestRate((float) $row->sell_rate, $bestSell)),
                     'hint' => __('rates.sell_hint'),
+                    'tone' => 'text-accent-blue',
                 ],
                 [
                     'label' => __('rates.summary_average'),
                     'value' => $marketAverage,
                     'note' => trans_choice('rates.summary_across', $organizationCount, ['count' => $organizationCount]),
                     'hint' => __('rates.summary_average_hint'),
+                    'tone' => 'text-ink',
                 ],
             ];
         @endphp
@@ -634,7 +643,7 @@
                             it is set nowrap so it would push the page rather
                             than break. --}}
                             <p class="mt-1 flex items-end gap-2 whitespace-nowrap">
-                                <span class="text-3xl font-semibold tracking-tight text-ink tabular-nums sm:text-4xl">
+                                <span class="text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl {{ $card['tone'] }}">
                                     {{ number_format((float) $card['value'], 2) }}
                                 </span>
                                 <span class="pb-1.5 text-sm text-muted">{{ __('exchange_quotes.request.amd') }}</span>
