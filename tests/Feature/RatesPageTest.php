@@ -82,7 +82,7 @@ class RatesPageTest extends TestCase
 
         $this->get('/en/rates?currency=USD&amount=500&intent=buy')
             ->assertOk()
-            ->assertSee('Total you pay')
+            ->assertSee('You receive')
             ->assertSee('Current best rate')
             // The pair survives the calculation.
             ->assertSee('>Buy', false)
@@ -93,11 +93,34 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Buying 500 USD from the cheapest bank costs 500 x 365.00 AMD.
+        // Handing over 500 USD, the exchange office's 384.00 buy rate returns
+        // 192,000 AMD and the cheapest bank's 360.00 returns 180,000.
         $this->get('/en/rates?currency=USD&amount=500')
             ->assertOk()
             ->assertViewHas('amount', 500.0)
-            ->assertSee('182,500');
+            ->assertViewHas('intent', 'sell')
+            ->assertSee('192,000')
+            ->assertSee('180,000');
+    }
+
+    /**
+     * The other direction is a division, not a multiplication: the amount is
+     * denominated in whatever the visitor HAS, so handing over dram asks how
+     * much foreign currency it buys. Getting this wrong would multiply two
+     * dram figures together and report a number in the millions.
+     */
+    public function test_handing_over_dram_divides_rather_than_multiplies(): void
+    {
+        $this->seedMarket();
+
+        // 100,000 AMD at the cheapest sell rate of 365.00 buys 273.97 USD;
+        // at the dearest, 388.00, only 257.73.
+        $this->get('/en/rates?currency=USD&amount=100000&intent=buy')
+            ->assertOk()
+            ->assertSee('273.97')
+            ->assertSee('257.73')
+            // The result is in the currency they wanted, not in dram.
+            ->assertSee('You have 100,000 AMD and want USD.');
     }
 
     public function test_a_non_numeric_amount_is_ignored_rather_than_erroring(): void
@@ -172,10 +195,10 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Buying: cheapest sell rate 365.00, dearest 388.00.
+        // Handing over USD: best buy rate 384.00, worst 358.00.
         $ranked = $this->get('/en/rates?currency=USD')->viewData('ranked');
 
-        $this->assertSame(23.0, round((float) $ranked['spread'], 2));
+        $this->assertSame(26.0, round((float) $ranked['spread'], 2));
     }
 
     public function test_the_three_best_rates_are_ranked_for_the_podium(): void
@@ -362,24 +385,26 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * The institution-side pair is the biggest trap on this page: buying USD,
-     * the number you pay sits under a column headed "Sell". The pair stays
-     * visible - it is what this market publishes - but the total column names
-     * the direction from the visitor's side, so nobody has to decode it.
+     * Buy and sell are written from the institution's side - the column headed
+     * "Sell" is the one a buyer pays - so the calculator asks what the visitor
+     * has and what they want instead. Buy/sell survives on the wire and in the
+     * table headings, which is what this market publishes.
      */
-    public function test_the_total_column_names_the_direction_from_the_visitor_s_side(): void
+    public function test_the_calculator_asks_what_you_have_rather_than_buy_or_sell(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD&intent=buy&amount=100')
+        $this->get('/en/rates?currency=USD&amount=5000')
             ->assertOk()
-            ->assertSee('Total you pay')
-            ->assertDontSee('Total you get');
+            ->assertSee('I have')
+            ->assertSee('I want')
+            ->assertSee('You have 5,000 USD and want AMD.')
+            ->assertDontSee('Buy USD')
+            ->assertDontSee('Sell USD');
 
-        $this->get('/en/rates?currency=USD&intent=sell&amount=100')
+        $this->get('/en/rates?currency=USD&amount=5000&intent=buy')
             ->assertOk()
-            ->assertSee('Total you get')
-            ->assertDontSee('Total you pay');
+            ->assertSee('You have 5,000 AMD and want USD.');
     }
 
     /**
@@ -394,7 +419,7 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&intent=buy&amount=100')
             ->assertOk()
             ->assertSee('Current best rate')
-            ->assertSee('Total you pay');
+            ->assertSee('You receive');
     }
 
     /**
@@ -665,10 +690,10 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD&amount=500&intent=buy')
+        $this->get('/en/rates?currency=USD&amount=500&intent=sell')
             ->assertOk()
-            ->assertSee('182,500')
-            ->assertDontSee('182,500.00');
+            ->assertSee('192,000')
+            ->assertDontSee('192,000.00');
     }
 
     /**
@@ -700,14 +725,19 @@ class RatesPageTest extends TestCase
      * movement are named, and both readings are in the markup because the
      * radios do not reload the page in the plain table.
      */
-    public function test_both_directions_spell_out_which_way_the_money_moves(): void
+    public function test_the_direction_is_spelled_out_as_a_sentence(): void
     {
         $this->seedMarket();
 
+        // Before anything is typed the sentence still names the pair, with the
+        // field's own placeholder standing in for the amount.
         $this->get('/en/rates?currency=USD')
             ->assertOk()
-            ->assertSee('You pay AMD and receive USD.')
-            ->assertSee('You hand over USD and receive AMD.');
+            ->assertSee('and want AMD.');
+
+        $this->get('/en/rates?currency=USD&intent=buy')
+            ->assertOk()
+            ->assertSee('and want USD.');
     }
 
     /** The spread restated as something that happens to the visitor. */
@@ -715,15 +745,17 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Buying 100 USD: 365.00 at the cheapest bank against 388.00 at the
-        // exchange office is 2,300 AMD.
-        $this->get('/en/rates?currency=USD&amount=100&intent=buy')
-            ->assertOk()
-            ->assertSee('Choosing the best rate here saves you 2,300 AMD');
-
+        // Handing over 100 USD: 384.00 at the exchange office against 358.00
+        // at the worst bank is 2,600 AMD.
         $this->get('/en/rates?currency=USD&amount=100&intent=sell')
             ->assertOk()
-            ->assertSee('more');
+            ->assertSee('Choosing the best rate here earns you 2,600 AMD more.');
+
+        // Handing over 100,000 AMD: 100000/365 - 100000/388 = 16.24 USD. The
+        // saving follows the units of what you receive, so it is quoted in USD.
+        $this->get('/en/rates?currency=USD&amount=100000&intent=buy')
+            ->assertOk()
+            ->assertSee('earns you 16.24 USD more.');
     }
 
     /** Round numbers, one tap, no keyboard - and shareable, since they are links. */

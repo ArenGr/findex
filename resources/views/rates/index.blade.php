@@ -38,17 +38,31 @@
         ? number_format($value, 2)
         : number_format($value);
 
-    // Two views of the same rows. Without an amount the page answers "what are
-    // today's rates" with the Buy/Sell table everyone in this market already
-    // reads. Type an amount and it answers "what do I get", which needs a
-    // direction, a single rate column and a total - a different table, not a
-    // decoration on this one.
+    // One table either way. Without an amount it answers "what are today's
+    // rates"; with one it answers "what do I get", by gaining a column rather
+    // than by becoming a different table.
     $calculating = $amount !== null;
 
     // Which column the visitor's intent ranks on, and therefore which one the
-    // "you pay / you get" total is derived from.
+    // total is derived from.
     $rateField = \App\Http\Controllers\RateController::rateFieldForIntent($intent);
     $isBuying = $intent === 'buy';
+
+    // "I have X, I want Y" instead of Buy/Sell. Buy and sell are written from
+    // the institution's side - the column headed "Sell" is the one a buyer pays
+    // - and asking a visitor to decode that is the oldest trap on this page.
+    // The backend still speaks buy/sell; only the wording here changed.
+    //
+    // The amount is denominated in whatever the visitor HAS, which means the
+    // arithmetic differs by direction rather than only the column it reads:
+    // handing over foreign currency multiplies by the organization's buy rate,
+    // and handing over dram divides by its sell rate.
+    $amdCode = __('exchange_quotes.request.amd');
+    $currencyCode = $selectedCurrency?->code;
+    $sourceCode = $isBuying ? $amdCode : $currencyCode;
+    $targetCode = $isBuying ? $currencyCode : $amdCode;
+
+    $convert = fn (float $rate) => $isBuying ? $amount / $rate : $amount * $rate;
 
     // A rate this old is worth flagging - banks republish through the day, so
     // anything past a day is no longer "today's rate".
@@ -58,9 +72,13 @@
     $rowCount = $ranked['count'];
     $allStale = $rowCount > 0 && collect($ranked['rows'])->every(fn ($row) => $isStale($row->scraped_at));
 
-    // Shown once above the table rather than per market, now that everything
-    // is ranked as one list.
-    $marketSaving = $calculating && $ranked['spread'] !== null ? $amount * $ranked['spread'] : null;
+    // Shown once above the table rather than per market, now that everything is
+    // ranked as one list. Computed from the two converted totals rather than
+    // from the rate spread: when the visitor is handing over dram the total is a
+    // division, so amount x spread would be the wrong number entirely.
+    $marketSaving = $calculating && $ranked['best_value'] !== null && $ranked['worst_value'] !== null
+        ? abs($convert((float) $ranked['best_value']) - $convert((float) $ranked['worst_value']))
+        : null;
 
     // Rank is computed independently of the chosen sort, so the winner is the
     // same row whichever column the visitor ordered by. Resolved up here rather
@@ -261,51 +279,52 @@
             @endforeach
             <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
 
-            {{-- One row of three labelled controls on a desktop, stacked on a
-            phone. items-end so the button's baseline lines up with the fields
-            beside it, whose captions make them taller. --}}
-            <div class="grid grid-cols-1 items-end gap-x-6 gap-y-5 md:grid-cols-12">
-                <div class="min-w-0 md:col-span-4">
-                    <span class="{{ $labelClass }}">{{ __('rates.intent_label') }}</span>
-                    {{-- Full width below md: "Վաճառել USD" is wider than a
-                    320px screen leaves for a content-sized pill, and shrink-0
-                    turned that into page overflow rather than a wrap. --}}
-                    <div class="mt-2 flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
-                        @foreach (['buy', 'sell'] as $option)
-                            <label class="min-w-0 flex-1 cursor-pointer">
-                                {{-- Submits on pick, but only once there is an
-                                amount to recalculate: switching direction on the
-                                plain rate table changes nothing a visitor can
-                                see, and reloading under them looks like a fault. --}}
-                                <input
-                                    type="radio" name="intent" value="{{ $option }}"
-                                    x-model="intent"
-                                    class="peer sr-only" @checked($intent === $option)
-                                    onchange="if (Number(this.form.amount.value) > 0) { this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit(); }"
-                                >
-                                <span class="block rounded-md px-3 py-2 text-center text-sm leading-tight font-semibold break-words text-muted transition peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-sm">
-                                    {{ __('rates.intent_'.$option, ['currency' => $selectedCurrency?->code]) }}
-                                </span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
+            {{--
+                "I have 5,000 USD, I want AMD" rather than "Buy USD / Sell USD".
+                Buy and sell are written from the institution's side - the column
+                headed Sell is the one a buyer pays - and every visitor had to
+                decode that before the calculator meant anything.
 
-                <div class="min-w-0 md:col-span-5">
-                    <label for="amount" class="{{ $labelClass }}">{{ __('rates.amount_label') }}</label>
-                    {{-- The code sits inside the field rather than beside it,
-                    so the field itself says what unit is being typed into it. --}}
-                    <div class="relative mt-2 flex items-center">
+                The pair is fully determined: there are only two currencies in
+                play, so choosing what you have decides what you want. "I want"
+                is therefore stated, not asked.
+            --}}
+            <div class="grid grid-cols-1 items-end gap-x-6 gap-y-5 md:grid-cols-12">
+                <div class="min-w-0 md:col-span-6">
+                    <label for="amount" class="{{ $labelClass }}">{{ __('rates.i_have') }}</label>
+                    <div class="mt-2 flex min-w-0 gap-2">
                         <input
                             type="number" inputmode="decimal" step="0.01" min="0"
                             name="amount" id="amount"
                             x-model="amount"
                             value="{{ $amount }}"
                             placeholder="{{ __('rates.amount_placeholder') }}"
-                            class="w-full min-w-0 rounded-lg border border-border-muted bg-white py-2.5 pr-16 pl-4 text-base text-ink focus:border-primary focus:outline-none"
+                            class="w-full min-w-0 rounded-lg border border-border-muted bg-white px-4 py-2.5 text-base text-ink focus:border-primary focus:outline-none"
                         >
-                        <span class="pointer-events-none absolute right-4 text-sm font-semibold text-muted">{{ $selectedCurrency?->code }}</span>
+                        {{-- Still named "intent", still buy/sell on the wire.
+                        Only the label changed: the value is now the currency the
+                        visitor is handing over. --}}
+                        <label for="intent" class="sr-only">{{ __('rates.i_have') }}</label>
+                        <select
+                            name="intent" id="intent"
+                            x-model="intent"
+                            onchange="if (Number(this.form.amount.value) > 0) { this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit(); }"
+                            class="shrink-0 rounded-lg border border-border-muted bg-white px-3 py-2.5 text-base font-semibold text-ink focus:border-primary focus:outline-none"
+                        >
+                            <option value="sell" @selected(! $isBuying)>{{ $currencyCode }}</option>
+                            <option value="buy" @selected($isBuying)>{{ $amdCode }}</option>
+                        </select>
                     </div>
+                </div>
+
+                <div class="min-w-0 md:col-span-3">
+                    <span class="{{ $labelClass }}">{{ __('rates.i_want') }}</span>
+                    {{-- A field-shaped statement, not a control: with two
+                    currencies there is nothing here to choose. --}}
+                    <p
+                        class="mt-2 rounded-lg border border-placeholder bg-placeholder/25 px-4 py-2.5 text-base font-semibold break-words text-ink"
+                        x-text="intent === 'buy' ? @js($currencyCode) : @js($amdCode)"
+                    >{{ $targetCode }}</p>
                 </div>
 
                 {{-- Number(), not a truthiness check: the string "0" is truthy
@@ -319,12 +338,13 @@
                 </button>
             </div>
 
-            {{-- Most people are exchanging a round number. Offering the four
-            they actually type saves the keyboard entirely on a phone, and
+            {{-- Round numbers people actually type, scaled to whatever they are
+            handing over: 100 dram is not a transaction, and 500,000 US dollars
+            is not one either. Saves the keyboard entirely on a phone and
             submits in the same tap. --}}
             <div class="mt-5 flex flex-wrap items-center gap-2">
                 <span class="text-xs text-muted">{{ __('rates.quick_amounts') }}</span>
-                @foreach ([100, 500, 1000, 5000] as $quick)
+                @foreach (($isBuying ? [50000, 100000, 500000, 1000000] : [100, 500, 1000, 5000]) as $quick)
                     {{-- Links, not submit buttons: a submit button named
                     "amount" would serialize alongside the field of the same
                     name and leave which one wins to browser ordering. A link is
@@ -346,14 +366,14 @@
                 @endif
             </div>
 
-            {{-- "Buy USD" answers nothing on its own - buy from whom, with
-            what? Spelling out which way each side of the money moves costs one
-            line and removes the only genuinely ambiguous control here.
-            Alpine-driven because in the plain table the radios do not submit,
-            so the page never reloads to update it. --}}
+            {{-- The sentence version of the two fields above, so what was
+            selected is legible without reading a form back. --}}
             <p class="mt-4 text-sm break-words text-muted">
-                <span x-show="intent === 'buy'">{{ __('rates.direction_buy', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
-                <span x-show="intent === 'sell'" x-cloak>{{ __('rates.direction_sell', ['code' => $selectedCurrency?->code, 'amd' => __('exchange_quotes.request.amd')]) }}</span>
+                {{ __('rates.direction_summary', [
+                    'amount' => $calculating ? number_format($amount, $amount < 1000 ? 2 : 0) : __('rates.amount_placeholder'),
+                    'from' => $sourceCode,
+                    'to' => $targetCode,
+                ]) }}
             </p>
         </form>
         </div>
@@ -563,8 +583,7 @@
             $bestSell = collect($ranked['rows'])->min(fn ($row) => (float) $row->sell_rate);
             $isBestRate = fn (float $value, ?float $target) => $target !== null && abs($value - $target) < 0.00005;
 
-            $rateColumn = __('rates.rate_column', ['code' => $selectedCurrency?->code]);
-            $totalColumn = __($isBuying ? 'rates.total_pay_column' : 'rates.total_get_column');
+            $totalColumn = __('rates.you_receive_column');
 
             // Who is quoting each winning figure. Ties are the norm - six banks
             // at 367.00 - so the card names the first and counts the rest,
@@ -703,8 +722,8 @@
                         is set nowrap so it would push the page rather than
                         break. --}}
                         <p class="mt-1 text-2xl font-bold tracking-tight whitespace-nowrap text-ink tabular-nums sm:text-4xl">
-                            {{ $amd($amount * (float) $best->{$rateField}) }}
-                            <span class="text-base font-normal text-muted sm:text-xl">{{ __('exchange_quotes.request.amd') }}</span>
+                            {{ $amd($convert((float) $best->{$rateField})) }}
+                            <span class="text-base font-normal text-muted sm:text-xl">{{ $targetCode }}</span>
                         </p>
                     </div>
                 </div>
@@ -728,9 +747,9 @@
                         {{-- "difference between best and worst" is a fact about
                         the table; "you keep X by picking the best" is a fact
                         about the visitor. Same number. --}}
-                        &middot; {{ __($isBuying ? 'rates.market_saving_buy' : 'rates.market_saving_sell', [
+                        &middot; {{ __('rates.market_saving_sell', [
                             'amount' => $amd($marketSaving),
-                            'currency' => __('exchange_quotes.request.amd'),
+                            'currency' => $targetCode,
                         ]) }}
                     @endif
                     @if ($allStale)
@@ -771,7 +790,7 @@
             once the rate and the total both need space. --}}
             <div class="mt-4 overflow-hidden rounded-xl border border-placeholder sm:hidden">
                 @foreach ($ranked['rows'] as $rate)
-                    @php $total = $calculating ? $amount * (float) $rate->{$rateField} : null; @endphp
+                    @php $total = $calculating ? $convert((float) $rate->{$rateField}) : null; @endphp
                     {{-- The name is the link, not the whole card: the meta line
                     under it now carries a Directions link of its own, and an
                     anchor inside an anchor is invalid - browsers close the outer
@@ -816,7 +835,7 @@
                                         <x-rates.best-chip />
                                     @endif
                                     <span class="font-bold text-ink">{{ $amd($total) }}</span>
-                                    <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                    <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
                                 </p>
                             @endif
                         </div>
@@ -885,7 +904,7 @@
                     </thead>
                     <tbody>
                         @foreach ($ranked['rows'] as $rate)
-                            @php $total = $calculating ? $amount * (float) $rate->{$rateField} : null; @endphp
+                            @php $total = $calculating ? $convert((float) $rate->{$rateField}) : null; @endphp
                             <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
                                 <td class="px-6 py-4">
                                     {{-- See the mobile card: the meta line holds
@@ -966,7 +985,7 @@
                                             @endif
                                             <span>
                                                 {{ $amd($total) }}
-                                                <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                                <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
                                             </span>
                                         </span>
                                     </td>

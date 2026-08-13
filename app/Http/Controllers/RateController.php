@@ -89,7 +89,11 @@ class RateController extends Controller
         // buying the currency means the cheapest sell_rate wins, selling it
         // means the highest buy_rate does. Replaces asking them to reason
         // about which of two institution-side columns to sort by.
-        $intent = $request->query('intent') === 'sell' ? 'sell' : 'buy';
+        //
+        // Defaults to 'sell', which the page states as "I have USD, I want
+        // AMD": the currency picked in the strip above is the one the visitor
+        // has, so the two controls agree rather than contradicting each other.
+        $intent = $request->query('intent') === 'buy' ? 'buy' : 'sell';
 
         // Null unless the visitor asked for a calculation. Most people arrive
         // to read today's rates, and a rate table is the honest answer to that;
