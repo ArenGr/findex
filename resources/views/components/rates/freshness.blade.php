@@ -1,7 +1,19 @@
-@props(['scrapedAt', 'stale' => false])
+@props(['scrapedAt', 'stale' => false, 'changedAt' => null])
 
 @php
     $moment = \Illuminate\Support\Carbon::parse($scrapedAt);
+
+    // Two different facts, and the second is the more useful one: "checked 22
+    // hours ago" is true of every bank at once, while "unchanged for a week"
+    // tells them apart. It rides in the title rather than on the row - one more
+    // line per row is the last thing this table needs.
+    $title = __('rates.checked_at', ['time' => $moment->diffForHumans()]);
+
+    if ($changedAt) {
+        $title .= ' · '.__('rates.unchanged_since', [
+            'time' => \Illuminate\Support\Carbon::parse($changedAt)->diffForHumans(),
+        ]);
+    }
 @endphp
 
 {{--
@@ -12,7 +24,7 @@
 --}}
 <span
     @class(['inline-flex items-center gap-1', 'text-[#B4791F]' => $stale, 'text-muted' => ! $stale])
-    title="{{ __('rates.checked_at', ['time' => $moment->diffForHumans()]) }}"
+    title="{{ $title }}"
 >
     @if ($stale)
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" role="img" aria-label="{{ __('rates.stale_label') }}">

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
+use App\Models\CurrencyRateHistory;
 use App\Models\Organization;
 use App\Models\RateAlert;
 use App\Models\User;
@@ -559,6 +560,82 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertDontSee('Rates older than a day');
+    }
+
+    /**
+     * "Only rates worth trusting". Day and week rather than the minutes the
+     * brief suggests: the scrapers run daily, so a minutes option would always
+     * empty the table and read as a fault rather than as a filter.
+     */
+    public function test_the_freshness_filter_drops_rates_older_than_the_window(): void
+    {
+        $usd = $this->seedMarket();
+        CurrencyRate::query()
+            ->whereHas('organization', fn ($query) => $query->where('type', 'exchange'))
+            ->update(['scraped_at' => now()->subWeeks(2)]);
+
+        $this->assertSame(3, $this->get('/en/rates?currency=USD')->viewData('ranked')['count']);
+        $this->assertSame(2, $this->get('/en/rates?currency=USD&fresh=day')->viewData('ranked')['count']);
+        $this->assertSame(2, $this->get('/en/rates?currency=USD&fresh=week')->viewData('ranked')['count']);
+
+        // An unknown window is ignored rather than emptying the table.
+        $this->assertSame(3, $this->get('/en/rates?currency=USD&fresh=decade')->viewData('ranked')['count']);
+    }
+
+    /** It counts towards the badge, or a narrowed table looks like a full one. */
+    public function test_the_freshness_filter_counts_as_an_active_filter(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Filters (');
+        $this->get('/en/rates?currency=USD&fresh=day')->assertOk()->assertSee('Filters (1)');
+    }
+
+    /**
+     * A freshness-filtered page and an unfiltered one must not share a cache
+     * entry - they are different result sets under the same currency and type.
+     */
+    public function test_the_freshness_filter_is_part_of_the_cache_key(): void
+    {
+        $this->seedMarket();
+        CurrencyRate::query()
+            ->whereHas('organization', fn ($query) => $query->where('type', 'exchange'))
+            ->update(['scraped_at' => now()->subWeeks(2)]);
+
+        // Warm the unfiltered entry first, so a shared key would serve three.
+        $this->get('/en/rates?currency=USD')->assertOk();
+
+        $this->assertSame(2, $this->get('/en/rates?currency=USD&fresh=day')->viewData('ranked')['count']);
+    }
+
+    /**
+     * When a rate last moved, as opposed to when it was last looked at.
+     * "Checked 22 hours ago" is true of every bank at once; "unchanged for a
+     * week" is what tells them apart.
+     */
+    public function test_a_row_says_when_its_rate_last_changed(): void
+    {
+        $usd = $this->seedMarket();
+        $rate = CurrencyRate::query()->firstOrFail();
+
+        CurrencyRateHistory::create([
+            'currency_rate_id' => $rate->id,
+            'buy_rate' => 350.0,
+            'sell_rate' => 355.0,
+            'scraped_at' => now()->subWeek(),
+        ]);
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('Rate unchanged since 1 week ago');
+    }
+
+    /** No history means we have never seen it move, which is not a claim. */
+    public function test_a_rate_with_no_history_makes_no_claim_about_changing(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Rate unchanged since');
     }
 
     /**

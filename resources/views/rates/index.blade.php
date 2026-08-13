@@ -18,6 +18,7 @@
         'lng' => $longitude,
         'intent' => $intent,
         'amount' => $amount,
+        'fresh' => $freshness,
         'both' => $detailed ? 1 : null,
     ];
 
@@ -28,7 +29,7 @@
 
     $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH
         || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
-        || $amount !== null;
+        || $amount !== null || $freshness;
 
     // Whole dram above 1,000, where a rounded half-unit is noise. Below it the
     // decimals are the number: 1 KZT at 4.60 rendered as "5", and the office
@@ -119,7 +120,7 @@
     // narrower view than "Cash" and the visitor should be told they set it.
     $activeFilterCount = collect([
         $selectedType !== \App\Enums\RateType::CASH ? $selectedType : null,
-        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null,
+        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null, $freshness,
     ])->filter()->count();
 
 @endphp
@@ -461,6 +462,24 @@
                         class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         {{ __('organizations.rate_types.' . $typeValue) }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- "Only rates worth trusting". Day and week rather than minutes: the
+        scrapers run daily, so a minutes option would always empty the table and
+        read as a fault rather than as a filter. --}}
+        <div>
+            <span class="{{ $labelClass }}">{{ __('rates.freshness_label') }}</span>
+            <div class="mt-2 flex flex-wrap gap-2">
+                @foreach ([null => 'freshness_any', 'day' => 'freshness_day', 'week' => 'freshness_week'] as $value => $key)
+                    @php $value = $value ?: null; @endphp
+                    <a
+                        href="{{ $link(['fresh' => $value]) }}"
+                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $freshness === $value ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                    >
+                        {{ __('rates.'.$key) }}
                     </a>
                 @endforeach
             </div>
@@ -872,6 +891,7 @@
                                 :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
                                 :scraped-at="$rate->scraped_at"
                                 :stale="$isStale($rate->scraped_at)"
+                                :changed-at="$rate->changed_at ?? null"
                                 :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
                                 :directions="$rate->branch ?? null"
                             />
@@ -987,6 +1007,7 @@
                                                 :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
                                                 :scraped-at="$rate->scraped_at"
                                                 :stale="$isStale($rate->scraped_at)"
+                                                :changed-at="$rate->changed_at ?? null"
                                                 :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
                                                 timestamp-class="md:hidden"
                                             />
@@ -1052,7 +1073,7 @@
 
                                 <td class="hidden px-4 py-4 text-right text-xs whitespace-nowrap md:table-cell">
                                     @if ($rate->scraped_at)
-                                        <x-rates.freshness :scraped-at="$rate->scraped_at" :stale="$isStale($rate->scraped_at)" />
+                                        <x-rates.freshness :scraped-at="$rate->scraped_at" :stale="$isStale($rate->scraped_at)" :changed-at="$rate->changed_at ?? null" />
                                     @else
                                         <span class="text-muted" aria-hidden="true">&mdash;</span>
                                     @endif

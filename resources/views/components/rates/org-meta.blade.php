@@ -4,6 +4,7 @@
     'stale' => false,
     'distance' => null,
     'directions' => null,
+    'changedAt' => null,
     // The desktop table gives the timestamp a column of its own once there is
     // room for one, so it passes 'md:hidden' here rather than printing it
     // twice. Which width that happens at is a CSS question, so it is answered
@@ -25,7 +26,7 @@ the whole line would read as a verdict on the organization. --}}
             @if ($market)
                 <span aria-hidden="true">&middot;</span>
             @endif
-            <x-rates.freshness :scraped-at="$scrapedAt" :stale="$stale" />
+            <x-rates.freshness :scraped-at="$scrapedAt" :stale="$stale" :changed-at="$changedAt" />
         </span>
     @endif
 

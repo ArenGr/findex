@@ -6,6 +6,7 @@ use App\Enums\RateType;
 use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
+use App\Models\CurrencyRateHistory;
 use App\Models\Organization;
 use App\Services\Cache\OrgRatingsCache;
 use App\Services\Cache\RateCache;
@@ -178,9 +179,26 @@ class RateController extends Controller
             ? $request->query('city')
             : null;
 
+        // "Only rates worth trusting". Deliberately a day/week choice rather
+        // than the minutes the brief suggests: the scrapers run on a daily
+        // cadence, so "updated in the last 5 minutes" would always return an
+        // empty table and read as a broken filter.
+        $freshness = in_array($request->query('fresh'), ['day', 'week'], true)
+            ? $request->query('fresh')
+            : null;
+
+        // Rounded down to the hour so the cache key is stable for an hour at a
+        // time. Without that, every request would compute a slightly different
+        // cut-off, produce a different key, and never hit the cache.
+        $freshBefore = match ($freshness) {
+            'day' => now()->subDay()->startOfHour()->toDateTimeString(),
+            'week' => now()->subWeek()->startOfHour()->toDateTimeString(),
+            default => null,
+        };
+
         $page = (int) $request->query('page', 1);
 
-        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page');
+        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page', 'freshBefore');
 
         // Distance-sorted results are specific to wherever this one visitor
         // happens to be standing - sharing them under the filter-only cache
@@ -190,6 +208,17 @@ class RateController extends Controller
         $cached = $hasLocation
             ? $this->fetchNearbyRates($filters, $latitude, $longitude)
             : $this->fetchCachedRates($filters);
+
+        // When each rate last actually moved, as opposed to when it was last
+        // looked at. RateScraper only appends history when buy or sell changed,
+        // so the newest snapshot is the last change - which is the more useful
+        // of the two facts: "checked 22 hours ago" is true of every bank at
+        // once, while "unchanged for a week" separates them.
+        //
+        // One grouped query over the rows already on the page, merged in after
+        // the cache rather than inside it: the listing is cached for 30 minutes
+        // and this is the part that must not go stale with it.
+        $cached['items'] = $this->withLastChanged($cached['items']);
 
         // Rebuilt fresh every request (cheap - it's just wrapping the small
         // cached array), not itself cached: LengthAwarePaginator is an
@@ -220,6 +249,7 @@ class RateController extends Controller
             'selectedOrganization' => $selectedOrganization,
             'cities' => $cities,
             'selectedCity' => $selectedCity,
+            'freshness' => $freshness,
             'sort' => $sortKey,
             'sortOptions' => $sortOptions,
             'direction' => $direction,
@@ -432,7 +462,8 @@ class RateController extends Controller
     private function fetchCachedRates(array $filters): array
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
-            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page] = $filters;
+            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
+            'freshBefore' => $freshBefore] = $filters;
 
         // Depends on both rate data and Organization::withRatingStats()
         // (review counts/averages), so it needs both tags - a review write
@@ -445,14 +476,14 @@ class RateController extends Controller
         // entry written before that would render an ungrouped page.
         $cacheKey = 'rates.listing.'.md5(json_encode([
             'v2', app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
-            $selectedOrgType, $selectedCity, $sort, $direction, $page,
+            $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore,
         ]));
 
         return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
             $cacheKey,
             now()->addMinutes(30),
-            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page) {
-                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity)
+            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore) {
+                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore)
                     ->when(
                         $sort === 'spread',
                         fn ($query) => $query->orderByRaw("(sell_rate - buy_rate) {$direction}"),
@@ -487,9 +518,10 @@ class RateController extends Controller
     private function fetchNearbyRates(array $filters, float $latitude, float $longitude): array
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
-            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page] = $filters;
+            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
+            'freshBefore' => $freshBefore] = $filters;
 
-        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity)
+        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore)
             ->get()
             ->map(function (CurrencyRate $rate) use ($latitude, $longitude, $selectedCity) {
                 // sortBy, not min(): the branch that won is the one to send
@@ -519,9 +551,13 @@ class RateController extends Controller
         ];
     }
 
-    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity): Builder
+    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity, ?string $freshBefore = null): Builder
     {
         return CurrencyRate::query()
+            // Passed as a resolved timestamp rather than a period, so the
+            // cache key and the query cannot disagree about where "today"
+            // ends.
+            ->when($freshBefore, fn ($query) => $query->where('scraped_at', '>=', $freshBefore))
             // Branches live inside this closure rather than as a separate
             // ->with('organization.branches'): declared afterwards, the nested
             // form replaces the constraint on 'organization' and silently drops
@@ -571,6 +607,34 @@ class RateController extends Controller
             // resolve this to their own maps app rather than a web page.
             'url' => 'https://www.google.com/maps/dir/?api=1&destination='.$branch->latitude.','.$branch->longitude,
         ];
+    }
+
+    /**
+     * Stamps each row with when its rate last changed, in one query for the
+     * whole page. A rate with no history has never been seen to move since we
+     * started recording, which is not the same as "never changed" - so it stays
+     * null and the view simply says nothing rather than claiming otherwise.
+     *
+     * @param  array<int, array>  $items
+     * @return array<int, array>
+     */
+    private function withLastChanged(array $items): array
+    {
+        $ids = collect($items)->pluck('id')->filter()->all();
+
+        if ($ids === []) {
+            return $items;
+        }
+
+        $changed = CurrencyRateHistory::query()
+            ->whereIn('currency_rate_id', $ids)
+            ->groupBy('currency_rate_id')
+            ->selectRaw('currency_rate_id, MAX(scraped_at) as last_changed')
+            ->pluck('last_changed', 'currency_rate_id');
+
+        return collect($items)
+            ->map(fn (array $row) => [...$row, 'changed_at' => $changed[$row['id']] ?? null])
+            ->all();
     }
 
     private function rateRow(CurrencyRate $rate, ?array $branch = null): array
