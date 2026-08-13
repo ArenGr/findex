@@ -70,8 +70,13 @@ class RatesPageTest extends TestCase
         $this->assertSame(3, $response->viewData('ranked')['count']);
     }
 
-    /** An amount swaps in the other table: one rate column and a total. */
-    public function test_an_amount_switches_to_the_calculated_table(): void
+    /**
+     * An amount adds a column; it does not swap the table for a different one.
+     * The rate pair a visitor was already reading stays exactly where it was,
+     * which is the whole point - the page used to reshape itself the moment a
+     * number was typed, and it was no longer obvious it was the same table.
+     */
+    public function test_an_amount_adds_a_total_column_to_the_same_table(): void
     {
         $this->seedMarket();
 
@@ -79,7 +84,9 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertSee('Total you pay')
             ->assertSee('Current best rate')
-            ->assertSee('Rate per 1 USD');
+            // The pair survives the calculation.
+            ->assertSee('>Buy', false)
+            ->assertSee('>Sell', false);
     }
 
     public function test_an_amount_turns_each_row_into_a_total(): void
@@ -355,25 +362,24 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * The institution-side pair is the single biggest trap on this page: buying
-     * USD, the number you pay sits under a column headed "Sell". The visible
-     * columns are a neutral rate plus a total that names the direction, and the
-     * pair only appears when asked for.
+     * The institution-side pair is the biggest trap on this page: buying USD,
+     * the number you pay sits under a column headed "Sell". The pair stays
+     * visible - it is what this market publishes - but the total column names
+     * the direction from the visitor's side, so nobody has to decode it.
      */
-    public function test_only_the_visitor_side_rate_is_shown_by_default(): void
+    public function test_the_total_column_names_the_direction_from_the_visitor_s_side(): void
     {
         $this->seedMarket();
 
         $this->get('/en/rates?currency=USD&intent=buy&amount=100')
             ->assertOk()
-            ->assertSee('Rate per 1 USD')
             ->assertSee('Total you pay')
-            ->assertDontSee('>Buy<', false)
-            ->assertDontSee('>Sell<', false);
+            ->assertDontSee('Total you get');
 
         $this->get('/en/rates?currency=USD&intent=sell&amount=100')
             ->assertOk()
-            ->assertSee('Total you get');
+            ->assertSee('Total you get')
+            ->assertDontSee('Total you pay');
     }
 
     /**
@@ -392,38 +398,41 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * The Simple/Detailed toggle. Asserted on the Buy column rather than the
-     * toggle's own label because the label only says which view you could
-     * switch to - the column is what the switch is for.
+     * The Simple/Detailed toggle changes exactly one thing - whether the table
+     * carries the spread column - and it is offered whether or not an amount
+     * has been entered. It used to appear only while calculating, and to swap
+     * the whole rate pair in and out, which made it read as a page-level mode
+     * rather than a table option.
      */
-    public function test_both_rates_can_be_revealed_on_request(): void
+    public function test_detailed_view_adds_the_spread_column_and_nothing_else(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD&amount=100')
-            ->assertOk()
-            ->assertViewHas('showBothRates', false)
-            ->assertSee('Detailed')
-            ->assertDontSee('>Buy</a>', false);
+        foreach (['', '&amount=100'] as $amount) {
+            $this->get('/en/rates?currency=USD'.$amount)
+                ->assertOk()
+                ->assertViewHas('detailed', false)
+                ->assertSee('Detailed')
+                ->assertDontSee('Spread');
 
-        $this->get('/en/rates?currency=USD&both=1&amount=100')
-            ->assertOk()
-            ->assertViewHas('showBothRates', true)
-            ->assertSee('>Buy</a>', false);
+            $this->get('/en/rates?currency=USD&both=1'.$amount)
+                ->assertOk()
+                ->assertViewHas('detailed', true)
+                ->assertSee('Spread');
+        }
     }
 
-    /**
-     * Spread is the gap between the buy and sell columns, so it only means
-     * anything while both are on screen. With an amount typed in, the table
-     * shows one rate and a total instead, and the column would be describing
-     * two numbers the visitor cannot see.
-     */
-    public function test_the_spread_column_appears_only_beside_the_rate_pair(): void
+    /** The pair is on screen in every one of those four states. */
+    public function test_the_rate_pair_is_always_on_screen(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Spread');
-        $this->get('/en/rates?currency=USD&amount=100')->assertOk()->assertDontSee('Spread');
+        foreach (['', '&amount=100', '&both=1', '&both=1&amount=100'] as $extra) {
+            $this->get('/en/rates?currency=USD'.$extra)
+                ->assertOk()
+                ->assertSee('>Buy', false)
+                ->assertSee('>Sell', false);
+        }
     }
 
     /**
@@ -460,17 +469,18 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * With an amount on screen the page has one answer to give. "Best buy
-     * 384.00" beside "you pay 36,700" is two summaries of different questions,
-     * so the cards give their slot to the best-rate band.
+     * The cards stay put when an amount is entered, and the best-rate band
+     * joins them. Swapping one for the other was the single biggest reason
+     * typing a number felt like landing on a different page.
      */
-    public function test_the_summary_cards_stand_down_while_calculating(): void
+    public function test_the_summary_cards_survive_a_calculation(): void
     {
         $this->seedMarket();
 
         $this->get('/en/rates?currency=USD&amount=100')
             ->assertOk()
-            ->assertDontSee('Market average')
+            ->assertSee('Market average')
+            ->assertSee('Best buy rate')
             ->assertSee('Current best rate');
     }
 

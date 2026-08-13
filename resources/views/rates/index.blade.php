@@ -18,7 +18,7 @@
         'lng' => $longitude,
         'intent' => $intent,
         'amount' => $amount,
-        'both' => $showBothRates ? 1 : null,
+        'both' => $detailed ? 1 : null,
     ];
 
     $link = fn (array $overrides = []) => route('rates.index', array_filter(
@@ -621,12 +621,11 @@
         @if ($rowCount > 0)
             {{--
                 Three figures a visitor would otherwise get by reading fourteen
-                rows twice. They take the slot the best-rate band takes while
-                calculating, and only that slot: with an amount on screen the
-                page has a single answer to give, and "best buy 384.50" beside
-                "you pay 36,700" is two summaries of different questions.
+                rows twice - and they stay put whether or not an amount has been
+                entered. Swapping them out for the best-rate band the moment a
+                number was typed was the single biggest reason this page felt
+                like it had jumped to a different screen.
             --}}
-            @if (! $calculating)
                 <div class="mt-8 grid gap-4 md:grid-cols-3">
                     @foreach ($summaryCards as $card)
                         <div class="min-w-0 rounded-xl border border-placeholder bg-white p-4">
@@ -650,7 +649,6 @@
                         </div>
                     @endforeach
                 </div>
-            @endif
 
             {{--
                 The answer, before the table, and filled rather than tinted -
@@ -749,12 +747,14 @@
                 here: it says which of the two views you are in, which one link
                 naming only the other view never did. Still two links, so it
                 works with JS off and stays shareable. --}}
-                @if ($calculating)
-                    <div class="flex min-w-0 flex-wrap items-center gap-2">
-                        <span class="{{ $labelClass }}">{{ __('rates.view_label') }}</span>
+                {{-- Always offered, and it changes exactly one thing: whether
+                the table carries the spread column. It used to appear only while
+                calculating, and to swap the whole rate pair in and out. --}}
+                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    <span class="{{ $labelClass }}">{{ __('rates.view_label') }}</span>
                         <div class="flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
                             @foreach (['view_simple' => false, 'view_detailed' => true] as $key => $both)
-                                @php $isCurrent = $showBothRates === $both; @endphp
+                                @php $isCurrent = $detailed === $both; @endphp
                                 <a
                                     href="{{ $link(['both' => $both ? 1 : null]) }}"
                                     aria-current="{{ $isCurrent ? 'true' : 'false' }}"
@@ -764,8 +764,7 @@
                                 </a>
                             @endforeach
                         </div>
-                    </div>
-                @endif
+                </div>
             </div>
 
             {{-- Mobile: a row list. A table has no room for a readable name
@@ -783,12 +782,10 @@
                         </a>
 
                         <div class="min-w-0 flex-1">
-                            <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <a href="{{ $rate->organization_url }}" class="font-medium break-words text-ink hover:text-primary">{{ $rate->organization_name }}</a>
-                                @if ($calculating && $rate->rank === 1)
-                                    <x-rates.best-chip />
-                                @endif
-                            </span>
+                            {{-- No star beside the name: the total carries it,
+                            so each row is marked once, on the number it is
+                            about. --}}
+                            <a href="{{ $rate->organization_url }}" class="block font-medium break-words text-ink hover:text-primary">{{ $rate->organization_name }}</a>
                             <x-rates.org-meta
                                 :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
                                 :scraped-at="$rate->scraped_at"
@@ -804,16 +801,23 @@
                             @endif
                         </div>
 
+                        {{-- The same three figures the table carries, stacked:
+                        the pair stays put and the total joins it, so a phone
+                        sees the same change a desktop does. --}}
                         <div class="shrink-0 text-end">
+                            <p class="whitespace-nowrap tabular-nums">
+                                <span class="font-bold text-ink">{{ number_format($rate->buy_rate, 2) }}</span>
+                                <span class="text-muted" aria-hidden="true"> / </span>
+                                <span class="font-bold text-accent-red">{{ number_format($rate->sell_rate, 2) }}</span>
+                            </p>
                             @if ($calculating)
-                                <p class="font-bold whitespace-nowrap text-ink tabular-nums">
-                                    {{ $amd($total) }}
+                                <p class="mt-0.5 flex items-center justify-end gap-1.5 whitespace-nowrap tabular-nums">
+                                    @if ($rate->rank === 1)
+                                        <x-rates.best-chip />
+                                    @endif
+                                    <span class="font-bold text-ink">{{ $amd($total) }}</span>
                                     <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                 </p>
-                                <p class="text-xs whitespace-nowrap text-muted">{{ number_format($rate->{$rateField}, 2) }}</p>
-                            @else
-                                <p class="font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->buy_rate, 2) }}</p>
-                                <p class="font-bold whitespace-nowrap tabular-nums text-accent-red">{{ number_format($rate->sell_rate, 2) }}</p>
                             @endif
                         </div>
                     </div>
@@ -835,44 +839,36 @@
                         the numbers rather than as a first row of them. --}}
                         <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
                             <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
-                            @if ($calculating)
-                                <th class="px-4 py-3 text-right">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $rateColumn }}{{ $sortArrow($rateField) }}</a>
-                                        {{-- Which side of the pair this is, and
-                                        which way is better, without putting
-                                        "Sell" in a heading a buyer reads. --}}
-                                        <x-info-popover :label="$rateColumn">
-                                            {{ __($isBuying ? 'rates.rate_column_hint_buy' : 'rates.rate_column_hint_sell', ['code' => $selectedCurrency?->code]) }}
-                                        </x-info-popover>
-                                    </span>
+                            {{-- One table, whatever the visitor has typed. The
+                            rate pair is always here, always in the same two
+                            places; an amount adds a column, it does not swap the
+                            table for a different one. --}}
+                            <th class="px-6 py-3 text-right">
+                                <a href="{{ $sortLink('buy_rate') }}" class="hover:text-ink" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}{{ $sortArrow('buy_rate') }}</a>
+                            </th>
+                            <th class="px-6 py-3 text-right">
+                                <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
+                            </th>
+
+                            {{-- Detailed only: the gap between the two columns
+                            printed either side of it. --}}
+                            @if ($detailed)
+                                <th class="hidden px-4 py-3 text-right lg:table-cell" title="{{ __('rates.spread_hint') }}">
+                                    {{ __('rates.spread_column') }}
                                 </th>
-                                @if ($showBothRates)
-                                    <th class="px-4 py-3 text-right">
-                                        <a href="{{ $sortLink('buy_rate') }}" class="hover:text-ink" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}{{ $sortArrow('buy_rate') }}</a>
-                                    </th>
-                                    <th class="px-4 py-3 text-right">
-                                        <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
-                                    </th>
-                                @endif
+                            @endif
+
+                            @if ($calculating)
                                 {{-- Tinted, because this is the number the
                                 calculation exists to produce and it sits
                                 furthest from the name. --}}
-                                <th class="bg-placeholder/25 px-6 py-3 text-right">{{ $totalColumn }}</th>
-                            @else
-                                <th class="px-6 py-3 text-right">
-                                    <a href="{{ $sortLink('buy_rate') }}" class="hover:text-ink" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}{{ $sortArrow('buy_rate') }}</a>
-                                </th>
-                                <th class="px-6 py-3 text-right">
-                                    <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
-                                </th>
-                                {{-- Spread only belongs beside the pair it is
-                                the gap between; with an amount on screen the
-                                table shows one rate and a total instead. Last
-                                to appear, because it is the least-asked
-                                question of the three. --}}
-                                <th class="hidden px-4 py-3 text-right lg:table-cell" title="{{ __('rates.spread_hint') }}">
-                                    {{ __('rates.spread_column') }}
+                                <th class="bg-placeholder/25 px-6 py-3 text-right">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <a href="{{ $sortLink($rateField) }}" class="hover:text-ink">{{ $totalColumn }}{{ $sortArrow($rateField) }}</a>
+                                        <x-info-popover :label="$totalColumn">
+                                            {{ __($isBuying ? 'rates.rate_column_hint_buy' : 'rates.rate_column_hint_sell', ['code' => $selectedCurrency?->code]) }}
+                                        </x-info-popover>
+                                    </span>
                                 </th>
                             @endif
 
@@ -899,12 +895,12 @@
                                             <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
                                         </a>
                                         <div class="min-w-0">
-                                            <span class="flex items-center gap-2">
-                                                <a href="{{ $rate->organization_url }}" class="truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</a>
-                                                @if ($calculating && $rate->rank === 1)
-                                                    <x-rates.best-chip />
-                                                @endif
-                                            </span>
+                                            {{-- No star here: with an amount the
+                                            total column marks the winner, and
+                                            without one each rate column marks
+                                            its own. One star per row, always on
+                                            the number it is about. --}}
+                                            <a href="{{ $rate->organization_url }}" class="block truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</a>
                                             {{-- No directions here: the row
                                             ends with a button for that. The
                                             timestamp hides itself once its own
@@ -925,47 +921,54 @@
                                         </div>
                                     </div>
                                 </td>
-                                @if ($calculating)
-                                    <td class="px-4 py-4 text-right text-base font-medium text-ink tabular-nums">
-                                        {{ number_format($rate->{$rateField}, 2) }}
-                                    </td>
-                                    @if ($showBothRates)
-                                        <td class="px-4 py-4 text-right text-muted tabular-nums">{{ number_format($rate->buy_rate, 2) }}</td>
-                                        <td class="px-4 py-4 text-right tabular-nums text-accent-red/80">{{ number_format($rate->sell_rate, 2) }}</td>
-                                    @endif
-                                    <td class="bg-placeholder/25 px-6 py-4 text-right text-base font-bold whitespace-nowrap text-ink tabular-nums">
-                                        {{ $amd($total) }}
-                                        <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
-                                    </td>
-                                @else
-                                    @php
-                                        $winsBuy = $isBestRate((float) $rate->buy_rate, $bestBuy);
-                                        $winsSell = $isBestRate((float) $rate->sell_rate, $bestSell);
-                                    @endphp
-                                    {{-- The winning figure is bolder as well as
-                                    starred. Not coloured: a green number beside
-                                    thirteen black ones reads as a verdict, and
-                                    the star already says which one won. --}}
-                                    <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
-                                        <span class="inline-flex items-center justify-end gap-2">
-                                            @if ($winsBuy)
-                                                <x-rates.best-chip />
-                                            @endif
-                                            {{ number_format($rate->buy_rate, 2) }}
-                                        </span>
-                                    </td>
-                                    {{-- The same red as the sell-side summary card, so buy and
-                                    sell read the same way in both places. --}}
-                                    <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
-                                        <span class="inline-flex items-center justify-end gap-2">
-                                            @if ($winsSell)
-                                                <x-rates.best-chip />
-                                            @endif
-                                            {{ number_format($rate->sell_rate, 2) }}
-                                        </span>
-                                    </td>
+                                @php
+                                    // With an amount on screen the answer is the
+                                    // total, so that is the column that carries
+                                    // the star. Without one there is no single
+                                    // winner - buy and sell rank in opposite
+                                    // directions - so each column marks its own.
+                                    $winsBuy = ! $calculating && $isBestRate((float) $rate->buy_rate, $bestBuy);
+                                    $winsSell = ! $calculating && $isBestRate((float) $rate->sell_rate, $bestSell);
+                                    $winsTotal = $calculating && $rate->rank === 1;
+                                @endphp
+
+                                {{-- The winning figure is bolder as well as starred. --}}
+                                <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
+                                    <span class="inline-flex items-center justify-end gap-2">
+                                        @if ($winsBuy)
+                                            <x-rates.best-chip />
+                                        @endif
+                                        {{ number_format($rate->buy_rate, 2) }}
+                                    </span>
+                                </td>
+                                {{-- The same red as the sell-side summary card, so buy and
+                                sell read the same way in both places. --}}
+                                <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
+                                    <span class="inline-flex items-center justify-end gap-2">
+                                        @if ($winsSell)
+                                            <x-rates.best-chip />
+                                        @endif
+                                        {{ number_format($rate->sell_rate, 2) }}
+                                    </span>
+                                </td>
+
+                                @if ($detailed)
                                     <td class="hidden px-4 py-4 text-right text-muted tabular-nums lg:table-cell">
                                         {{ number_format((float) $rate->sell_rate - (float) $rate->buy_rate, 2) }}
+                                    </td>
+                                @endif
+
+                                @if ($calculating)
+                                    <td @class(['bg-placeholder/25 px-6 py-4 text-right text-base whitespace-nowrap text-ink tabular-nums', 'font-bold' => $winsTotal, 'font-medium' => ! $winsTotal])>
+                                        <span class="inline-flex items-center justify-end gap-2">
+                                            @if ($winsTotal)
+                                                <x-rates.best-chip />
+                                            @endif
+                                            <span>
+                                                {{ $amd($total) }}
+                                                <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                            </span>
+                                        </span>
                                     </td>
                                 @endif
 

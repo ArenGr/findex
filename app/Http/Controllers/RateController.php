@@ -214,7 +214,7 @@ class RateController extends Controller
             // inviting everyone to ask.
             'quoteMinimum' => config('exchange-quotes.minimum_amounts')[$selectedCurrency?->code] ?? null,
             'centralBankRate' => $this->centralBankRate($selectedCurrency),
-            'showBothRates' => $request->boolean('both'),
+            'detailed' => $request->boolean('both'),
             'hasLocation' => $hasLocation,
             'latitude' => $latitude,
             'longitude' => $longitude,
