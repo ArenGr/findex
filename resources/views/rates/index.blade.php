@@ -88,53 +88,13 @@
 
 @section('content')
     <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('rates.all_heading') }}</h1>
-                <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
-            </div>
-
-            {{-- The one thing here a competitor cannot offer, so it takes the
-            prime slot beside the heading. The "who is this for" detail lives in
-            a popover rather than a paragraph - it only matters to the people
-            who stop to ask. --}}
-            @if ($quoteMinimum !== null)
-                @php $qualifies = $amount >= $quoteMinimum; @endphp
-                <div class="flex items-center gap-2 sm:shrink-0">
-                    <a
-                        href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-ink transition hover:border-placeholder hover:bg-placeholder/20 hover:text-primary"
-                    >
-                        {{-- Two speech bubbles. Not exchange arrows, which read
-                        as "swap currency" - what the whole page already does -
-                        and not a handshake, whose five overlapping strokes
-                        collapse into a blob at this size. Not a percent badge
-                        either: that promises a discount, and all we can promise
-                        is that the question gets asked. --}}
-                        <svg
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true"
-                        >
-                            <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
-                            <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
-                        </svg>
-                        <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
-                    </a>
-
-                    <x-info-popover :label="__('rates.cta_button')">
-                        <p class="font-semibold text-ink">
-                            @if ($qualifies)
-                                {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
-                            @else
-                                {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
-                            @endif
-                        </p>
-                        <p class="mt-2">{{ __('rates.cta_body') }}</p>
-                        <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
-                    </x-info-popover>
-                </div>
-            @endif
+        {{-- Negotiating a rate and watching one both mean "none of these are
+        good enough for me" - a thought that only forms after reading the table,
+        so both offers live in a band under it rather than in the corner above
+        it, where they were the same ink, size and weight as the body copy. --}}
+        <div>
+            <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('rates.all_heading') }}</h1>
+            <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
         </div>
 
         {{--
@@ -324,53 +284,17 @@
             open and the page works exactly as before.
         --}}
         <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-6">
-            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                <button
-                    type="button"
-                    @click="open = !open"
-                    :aria-expanded="open"
-                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                        <path d="M3 6h18M7 12h10M11 18h2" />
-                    </svg>
-                    {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
-                </button>
-
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    {{-- An alert is a follow-up to what you are looking at, so
-                    it sits with the controls that define it. --}}
-                    <div class="flex items-center gap-2">
-                        <a
-                            href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
-                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from([
-                                'form' => [
-                                    'currency_id' => (string) ($selectedCurrency?->id ?? ''),
-                                    'organization_id' => (string) ($selectedOrganization?->id ?? ''),
-                                    'rate_type' => $selectedType->value,
-                                    'rate_field' => $rateField,
-                                    'direction' => $isBuying ? 'below' : 'above',
-                                    'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
-                                ],
-                                'context' => [
-                                    'currency' => __('exchange_quotes.request.amd'),
-                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
-                                ],
-                            ]) }} }))"
-                            class="inline-flex items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 shrink-0 text-accent-yellow">
-                                <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
-                        </a>
-
-                        <x-info-popover :label="__('rates.alert_cta')">
-                            {{ __('rates.alert_hint') }}
-                        </x-info-popover>
-                    </div>
-                </div>
-            </div>
+            <button
+                type="button"
+                @click="open = !open"
+                :aria-expanded="open"
+                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                    <path d="M3 6h18M7 12h10M11 18h2" />
+                </svg>
+                {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
+            </button>
 
         <div x-show="open" x-cloak class="mt-5 flex flex-wrap items-start gap-x-10 gap-y-5 rounded-xl border border-placeholder bg-white px-5 py-5">
 
@@ -860,6 +784,115 @@
                 </div>
             </div>
         @endif
+
+        {{--
+            Both cards answer the same question - "none of these are good enough
+            for me" - which is why they sit together, and why they sit here: the
+            visitor has now read the rates and knows whether they have it.
+
+            Neither is a text link any more. Both were 16px ink at weight 500,
+            indistinguishable from the paragraph beside them, pinned to the
+            top-right corner where nobody looks.
+        --}}
+        <div class="mt-10 border-t border-placeholder pt-8">
+            <h2 class="font-heading text-lg font-bold break-words text-ink">{{ __('rates.better_rate_heading') }}</h2>
+
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                @if ($quoteMinimum !== null)
+                    @php $qualifies = $amount >= $quoteMinimum; @endphp
+                    <div class="flex min-w-0 flex-col rounded-2xl border border-placeholder bg-white p-6">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-yellow/15">
+                                {{-- Two speech bubbles. Not exchange arrows,
+                                which read as "swap currency" - what the whole
+                                page already does - and not a handshake, whose
+                                five overlapping strokes collapse into a blob at
+                                this size. Not a percent badge either: that
+                                promises a discount, and all we can promise is
+                                that the question gets asked. --}}
+                                <svg
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="h-5 w-5 text-accent-yellow" aria-hidden="true"
+                                >
+                                    <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+                                    <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                                </svg>
+                            </span>
+                            <p class="min-w-0 font-semibold break-words text-ink">{{ __('rates.cta_button') }}</p>
+                        </div>
+
+                        {{-- Says who this is for before it asks for a click:
+                        below the minimum it states the threshold, above it says
+                        the visitor already qualifies. --}}
+                        <p class="mt-3 text-sm leading-relaxed break-words text-muted">
+                            @if ($qualifies)
+                                {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                            @else
+                                {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                            @endif
+                            {{ __('rates.cta_body') }}
+                        </p>
+
+                        {{-- mt-auto so both buttons sit on the same line however long the copy above them runs - the Armenian and Russian strings wrap to different heights. --}}
+                        <div class="mt-auto flex flex-wrap items-center gap-3 pt-5">
+                            <a
+                                href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
+                                class="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
+                            >
+                                {{ __('rates.cta_action') }}
+                            </a>
+                            <x-info-popover :label="__('rates.cta_button')">
+                                {{ __('rates.cta_note') }}
+                            </x-info-popover>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Spans the row when there is no negotiate card beside it -
+                every configured currency has a minimum, so this only happens
+                for one we do not broker quotes for. --}}
+                <div @class(['flex min-w-0 flex-col rounded-2xl border border-placeholder bg-white p-6', 'sm:col-span-2' => $quoteMinimum === null])>
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-yellow/15">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-accent-yellow" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <p class="min-w-0 font-semibold break-words text-ink">{{ __('rates.alert_band_title') }}</p>
+                    </div>
+
+                    <p class="mt-3 text-sm leading-relaxed break-words text-muted">{{ __('rates.alert_hint') }}</p>
+
+                    {{-- mt-auto so both buttons sit on the same line however long the copy above them runs - the Armenian and Russian strings wrap to different heights. --}}
+                        <div class="mt-auto flex flex-wrap items-center gap-3 pt-5">
+                        {{-- A real href so it still works with JS off and can be
+                        opened in a new tab; the click is intercepted to open the
+                        modal with this page's state prefilled. --}}
+                        <a
+                            href="{{ route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])) }}#create-alert"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from([
+                                'form' => [
+                                    'currency_id' => (string) ($selectedCurrency?->id ?? ''),
+                                    'organization_id' => (string) ($selectedOrganization?->id ?? ''),
+                                    'rate_type' => $selectedType->value,
+                                    'rate_field' => $rateField,
+                                    'direction' => $isBuying ? 'below' : 'above',
+                                    'threshold' => $best ? number_format((float) $best->{$rateField}, 2, '.', '') : '',
+                                ],
+                                'context' => [
+                                    'currency' => __('exchange_quotes.request.amd'),
+                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+                                ],
+                            ]) }} }))"
+                            class="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
+                        >
+                            {{ __('rates.alert_cta') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </section>
 
