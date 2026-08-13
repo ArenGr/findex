@@ -108,76 +108,78 @@
 
 @section('content')
     <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <div>
-            <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('rates.all_heading') }}</h1>
-            <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
-        </div>
-
         {{--
-            The two things this page offers beyond a list of numbers. Under the
-            table they were only found by people who read to the end of it; in
-            the corner beside the heading they were plain text at the same ink,
-            size and weight as the paragraph next to them, which nobody read as
-            something you could press.
+            Heading on the left, the page's two offers on the right, baselines
+            aligned. They sat here before as plain text at the same ink, size and
+            weight as the paragraph beside them, which nobody read as something
+            you could press - so they are buttons now, one filled and one
+            outlined. Two solid greens side by side would make the visitor choose
+            between them, when negotiating is the offer no competitor can match
+            and watching a rate is the fallback for everyone else.
 
-            So: on one line, high on the page, as actual buttons - and only one
-            of them filled. Two solid greens side by side would make the visitor
-            choose between them, when negotiating is the offer no competitor can
-            match and watching a rate is the fallback for everyone else.
+            Stacked below md: at 390px the heading and two buttons cannot share
+            a row without the buttons shrinking below their own labels.
         --}}
-        <div class="mt-6 flex flex-wrap items-center gap-3">
-            @if ($quoteMinimum !== null)
-                @php $qualifies = $amount >= $quoteMinimum; @endphp
-                <a
-                    href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
-                    class="inline-flex min-w-0 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
-                >
-                    {{-- Two speech bubbles. Not exchange arrows, which read as
-                    "swap currency" - what the whole page already does - and not
-                    a handshake, whose five overlapping strokes collapse into a
-                    blob at this size. Not a percent badge either: that promises
-                    a discount, and all we can promise is that the question gets
-                    asked. --}}
-                    <svg
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
-                        stroke-linecap="round" stroke-linejoin="round"
-                        class="h-4 w-4 shrink-0" aria-hidden="true"
+        <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div class="min-w-0">
+                <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('rates.all_heading') }}</h1>
+                <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 md:shrink-0">
+                @if ($quoteMinimum !== null)
+                    @php $qualifies = $amount >= $quoteMinimum; @endphp
+                    <a
+                        href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
+                        class="inline-flex min-w-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark"
                     >
-                        <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
-                        <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                        {{-- Two speech bubbles. Not exchange arrows, which read
+                        as "swap currency" - what the whole page already does -
+                        and not a handshake, whose five overlapping strokes
+                        collapse into a blob at this size. Not a percent badge
+                        either: that promises a discount, and all we can promise
+                        is that the question gets asked. --}}
+                        <svg
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            class="h-5 w-5 shrink-0" aria-hidden="true"
+                        >
+                            <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+                            <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                        </svg>
+                        <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
+                    </a>
+
+                    {{-- Who this is for, kept out of the button: it only matters
+                    to the people who stop to ask. --}}
+                    <x-info-popover :label="__('rates.cta_button')">
+                        <p class="font-semibold text-ink">
+                            @if ($qualifies)
+                                {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                            @else
+                                {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                            @endif
+                        </p>
+                        <p class="mt-2">{{ __('rates.cta_body') }}</p>
+                        <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
+                    </x-info-popover>
+                @endif
+
+                <a
+                    href="{{ $alertHref }}"
+                    onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
+                    class="inline-flex min-w-0 items-center gap-2 rounded-lg border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink transition hover:bg-placeholder/25"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
                     </svg>
-                    <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
+                    <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
                 </a>
 
-                {{-- Who this is for, kept out of the button: it only matters to
-                the people who stop to ask. --}}
-                <x-info-popover :label="__('rates.cta_button')">
-                    <p class="font-semibold text-ink">
-                        @if ($qualifies)
-                            {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
-                        @else
-                            {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
-                        @endif
-                    </p>
-                    <p class="mt-2">{{ __('rates.cta_body') }}</p>
-                    <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
+                <x-info-popover :label="__('rates.alert_cta')">
+                    {{ __('rates.alert_hint') }}
                 </x-info-popover>
-            @endif
-
-            <a
-                href="{{ $alertHref }}"
-                onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
-                class="inline-flex min-w-0 items-center gap-2 rounded-full border border-accent-yellow/50 bg-accent-yellow/10 px-5 py-2.5 text-sm font-semibold text-ink transition hover:border-accent-yellow hover:bg-accent-yellow/20"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 text-accent-yellow" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                </svg>
-                <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
-            </a>
-
-            <x-info-popover :label="__('rates.alert_cta')">
-                {{ __('rates.alert_hint') }}
-            </x-info-popover>
+            </div>
         </div>
 
         {{--
