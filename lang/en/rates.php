@@ -91,6 +91,7 @@ return [
     'directions' => 'Directions',
     'distance_km' => ':km km',
     'spread_column' => 'Spread',
+    'updated_column' => 'Updated',
     'spread_hint' => 'The gap between buy and sell - a tighter spread means a better deal.',
     'updated_relative' => 'Updated :time',
     'no_rates_match' => 'No rates match these filters. Try a different currency, type, or bank.',

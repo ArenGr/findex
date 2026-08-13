@@ -412,12 +412,29 @@ class RatesPageTest extends TestCase
             ->assertSee('>Buy</a>', false);
     }
 
-    /** Jargon, and unusable once the savings column it supported was removed. */
-    public function test_the_spread_column_is_gone(): void
+    /**
+     * Spread is the gap between the buy and sell columns, so it only means
+     * anything while both are on screen. With an amount typed in, the table
+     * shows one rate and a total instead, and the column would be describing
+     * two numbers the visitor cannot see.
+     */
+    public function test_the_spread_column_appears_only_beside_the_rate_pair(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Spread');
+        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Spread');
+        $this->get('/en/rates?currency=USD&amount=100')->assertOk()->assertDontSee('Spread');
+    }
+
+    /**
+     * Freshness moves out of the line under the name and into a column of its
+     * own, so it can be read down the list rather than row by row.
+     */
+    public function test_the_table_carries_an_updated_column(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Updated');
     }
 
     /**

@@ -1,4 +1,15 @@
-@props(['market' => null, 'scrapedAt' => null, 'stale' => false, 'distance' => null, 'directions' => null])
+@props([
+    'market' => null,
+    'scrapedAt' => null,
+    'stale' => false,
+    'distance' => null,
+    'directions' => null,
+    // The desktop table gives the timestamp a column of its own once there is
+    // room for one, so it passes 'md:hidden' here rather than printing it
+    // twice. Which width that happens at is a CSS question, so it is answered
+    // with a class instead of a second render path.
+    'timestampClass' => '',
+])
 
 {{-- Market, freshness and distance qualify a single row rather than being
 things you compare across rows, so they ride under the name instead of taking
@@ -10,11 +21,13 @@ the whole line would read as a verdict on the organization. --}}
     @endif
 
     @if ($scrapedAt)
-        @if ($market)
-            <span aria-hidden="true">&middot;</span>
-        @endif
-        <span @class(['text-[#B4791F]' => $stale])>
-            {{ \Illuminate\Support\Carbon::parse($scrapedAt)->diffForHumans() }}
+        <span @class(['flex items-center gap-1.5', $timestampClass])>
+            @if ($market)
+                <span aria-hidden="true">&middot;</span>
+            @endif
+            <span @class(['text-[#B4791F]' => $stale])>
+                {{ \Illuminate\Support\Carbon::parse($scrapedAt)->diffForHumans() }}
+            </span>
         </span>
     @endif
 

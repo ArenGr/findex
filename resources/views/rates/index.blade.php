@@ -741,10 +741,16 @@
             market and the timestamp ride under the name rather than claiming
             columns of their own - they qualify the row, they are not something
             you compare across rows. --}}
-            <div class="mt-4 hidden overflow-x-auto rounded-xl border border-placeholder sm:block">
+            {{-- relative, so the sr-only labels inside resolve against this box: with
+            no positioned ancestor they fall back to the page, and an absolutely
+            positioned span sitting at x=892 in a scrolled-out column drags the
+            whole document sideways. --}}
+            <div class="relative mt-4 hidden overflow-x-auto rounded-xl border border-placeholder sm:block">
                 <table class="w-full border-collapse text-sm">
                     <thead>
-                        <tr class="border-b border-placeholder text-xs font-semibold tracking-wider text-muted uppercase">
+                        {{-- Tinted, so the column names read as the frame around
+                        the numbers rather than as a first row of them. --}}
+                        <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
                             <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
                             @if ($calculating)
                                 <th class="px-4 py-3 text-right">
@@ -777,7 +783,25 @@
                                 <th class="px-6 py-3 text-right">
                                     <a href="{{ $sortLink('sell_rate') }}" class="hover:text-ink" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}{{ $sortArrow('sell_rate') }}</a>
                                 </th>
+                                {{-- Spread only belongs beside the pair it is
+                                the gap between; with an amount on screen the
+                                table shows one rate and a total instead. Last
+                                to appear, because it is the least-asked
+                                question of the three. --}}
+                                <th class="hidden px-4 py-3 text-right lg:table-cell" title="{{ __('rates.spread_hint') }}">
+                                    {{ __('rates.spread_column') }}
+                                </th>
                             @endif
+
+                            {{-- Out of the line under the name and into a column
+                            of its own once the width allows one, so freshness
+                            can be compared down the list rather than read row by
+                            row. --}}
+                            <th class="hidden px-4 py-3 text-right md:table-cell">{{ __('rates.updated_column') }}</th>
+
+                            {{-- Unlabelled: the pin says it, and a heading over
+                            a 40px button would be wider than the column. --}}
+                            <th class="px-4 py-3"><span class="sr-only">{{ __('rates.directions') }}</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -798,12 +822,16 @@
                                                     <x-rates.best-chip />
                                                 @endif
                                             </span>
+                                            {{-- No directions here: the row
+                                            ends with a button for that. The
+                                            timestamp hides itself once its own
+                                            column appears. --}}
                                             <x-rates.org-meta
                                                 :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
                                                 :scraped-at="$rate->scraped_at"
                                                 :stale="$isStale($rate->scraped_at)"
                                                 :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
-                                                :directions="$rate->branch ?? null"
+                                                timestamp-class="md:hidden"
                                             />
                                             @if ($rate->organization_reviews_count > 0)
                                                 <span class="mt-1 flex items-center gap-1">
@@ -827,23 +855,65 @@
                                         <span class="text-xs font-normal text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                                     </td>
                                 @else
-                                    <td class="px-6 py-4 text-right text-base font-medium text-ink tabular-nums">
+                                    @php
+                                        $winsBuy = $isBestRate((float) $rate->buy_rate, $bestBuy);
+                                        $winsSell = $isBestRate((float) $rate->sell_rate, $bestSell);
+                                    @endphp
+                                    {{-- The winning figure is bolder as well as
+                                    starred. Not coloured: a green number beside
+                                    thirteen black ones reads as a verdict, and
+                                    the star already says which one won. --}}
+                                    <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
                                         <span class="inline-flex items-center justify-end gap-2">
-                                            @if ($isBestRate((float) $rate->buy_rate, $bestBuy))
+                                            @if ($winsBuy)
                                                 <x-rates.best-chip />
                                             @endif
                                             {{ number_format($rate->buy_rate, 2) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right text-base font-medium text-ink tabular-nums">
+                                    <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
                                         <span class="inline-flex items-center justify-end gap-2">
-                                            @if ($isBestRate((float) $rate->sell_rate, $bestSell))
+                                            @if ($winsSell)
                                                 <x-rates.best-chip />
                                             @endif
                                             {{ number_format($rate->sell_rate, 2) }}
                                         </span>
                                     </td>
+                                    <td class="hidden px-4 py-4 text-right text-muted tabular-nums lg:table-cell">
+                                        {{ number_format((float) $rate->sell_rate - (float) $rate->buy_rate, 2) }}
+                                    </td>
                                 @endif
+
+                                <td class="hidden px-4 py-4 text-right text-xs whitespace-nowrap md:table-cell">
+                                    @if ($rate->scraped_at)
+                                        <span @class(['text-[#B4791F]' => $isStale($rate->scraped_at), 'text-muted' => ! $isStale($rate->scraped_at)])>
+                                            {{ Carbon::parse($rate->scraped_at)->diffForHumans() }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted" aria-hidden="true">&mdash;</span>
+                                    @endif
+                                </td>
+
+                                {{-- Nobody comes here to read a rate; they come
+                                to go and exchange money. This is the last step
+                                of that, so it is a real link out to whatever maps
+                                app the device has, not another page of ours. --}}
+                                <td class="px-4 py-4">
+                                    @if ($rate->branch ?? null)
+                                        <a
+                                            href="{{ $rate->branch['url'] }}"
+                                            target="_blank" rel="noopener noreferrer"
+                                            title="{{ $rate->branch['address'] ?: $rate->branch['name'] }}"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition hover:bg-primary hover:text-white"
+                                        >
+                                            <span class="sr-only">{{ __('rates.directions') }}</span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+                                                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                                                <circle cx="12" cy="10" r="3" />
+                                            </svg>
+                                        </a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
