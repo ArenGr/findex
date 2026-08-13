@@ -149,7 +149,19 @@
                 @if ($quoteMinimum !== null)
                     @php $qualifies = $amount >= $quoteMinimum; @endphp
                     <a
-                        href="{{ route('exchange.request', array_filter(['currency' => $selectedCurrency?->code, 'amount' => $qualifies ? $amount : null])) }}"
+                        {{-- Everything this page already knows goes with them:
+                        asking for the currency, the amount, the city and the
+                        direction a second time is the surest way to lose
+                        someone between the two pages. The amount travels even
+                        when it is below the minimum - the form states its own
+                        minimum, and blanking the number they typed teaches them
+                        nothing. --}}
+                        href="{{ route('exchange.request', array_filter([
+                            'currency' => $selectedCurrency?->code,
+                            'amount' => $amount,
+                            'city' => $selectedCity,
+                            'rate_field' => $rateField,
+                        ])) }}"
                         class="inline-flex min-w-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark"
                     >
                         {{-- Two speech bubbles. Not exchange arrows, which read
@@ -651,11 +663,25 @@
                 return $rows->first()?->organization_name;
             };
 
-            // The midpoint of each row averaged across the list. Stated as a
-            // reference, not a rate: with banks near 365 and exchange offices
-            // near 385 the mean sits in a gap nobody quotes.
-            $marketAverage = collect($ranked['rows'])
-                ->avg(fn ($row) => ((float) $row->buy_rate + (float) $row->sell_rate) / 2);
+            // Averaged over the column the visitor is actually transacting on,
+            // not over the midpoint between buy and sell. The midpoint is a
+            // number nobody quotes, and worse, comparing a real total against
+            // it produced a saving figure that did not reconcile with the card
+            // printed 200px above it - on a page about money, arithmetic that
+            // does not add up is a trust problem, not a rounding one.
+            // Rounded to the precision it is printed at, so the gain below
+            // reconciles exactly with the card: a reader who multiplies the
+            // displayed average themselves must arrive at our number, not one
+            // 21 dram away from it.
+            $marketAverage = round(collect($ranked['rows'])->avg(fn ($row) => (float) $row->{$rateField}), 2);
+
+            // What the winner is worth against that average. The saving beside
+            // the results count measures against the WORST rate on the page,
+            // which flatters us - nobody would have picked it. This is the
+            // honest version of the same claim.
+            $averageGain = $calculating && $marketAverage
+                ? $convert((float) $ranked['best_value']) - $convert((float) $marketAverage)
+                : null;
 
             $organizationCount = collect($ranked['rows'])->pluck('organization_id')->unique()->count();
 
@@ -775,6 +801,15 @@
                             {{ $amd($convert((float) $best->{$rateField})) }}
                             <span class="text-base font-normal text-muted sm:text-xl">{{ $targetCode }}</span>
                         </p>
+
+                        {{-- Only when there is a gap to report: with a single
+                        organization on the page the average IS the best rate,
+                        and "you get 0 more than average" is noise. --}}
+                        @if ($averageGain !== null && $averageGain >= 0.01)
+                            <p class="mt-1 text-sm break-words text-muted">
+                                {{ __('rates.above_average', ['amount' => $amd($averageGain), 'currency' => $targetCode]) }}
+                            </p>
+                        @endif
                     </div>
                 </div>
             @endif

@@ -639,6 +639,70 @@ class RatesPageTest extends TestCase
     }
 
     /**
+     * The saving beside the results count measures against the WORST rate on
+     * the page, which flatters us - nobody would have picked it. This is the
+     * honest version, and it must reconcile with the average card printed
+     * above it or the page is doing arithmetic the reader cannot check.
+     */
+    public function test_the_best_result_is_compared_against_the_market_average(): void
+    {
+        $this->seedMarket();
+
+        // Handing over 100 USD. Buy rates 360, 358 and 384 average 367.33, and
+        // the best is 384.00, so the winner is worth 100 x 16.67 = 1,667 AMD
+        // more than average.
+        $this->get('/en/rates?currency=USD&amount=100')
+            ->assertOk()
+            ->assertSee('367.33')
+            ->assertSee('You get 1,667 AMD more than the market average.');
+    }
+
+    /** One organization means the average IS the best rate; the claim is noise. */
+    public function test_no_average_comparison_when_there_is_nothing_to_compare(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&org_type=exchange&amount=100')
+            ->assertOk()
+            ->assertDontSee('more than the market average');
+    }
+
+    /**
+     * Everything /rates already knows travels to the negotiation form. Asking
+     * for the currency, amount, city and direction a second time is the surest
+     * way to lose someone between two pages.
+     */
+    public function test_the_negotiation_link_carries_the_whole_exchange_context(): void
+    {
+        $this->seedMarket();
+        Branch::create(['organization_id' => Organization::firstOrFail()->id, 'name' => 'B', 'city' => 'Yerevan', 'is_active' => true]);
+
+        $html = $this->get('/en/rates?currency=USD&amount=5000&city=Yerevan&intent=buy')
+            ->assertOk()
+            ->getContent();
+
+        // intent=buy means they hold dram and want the currency, which is the
+        // organization's sell side.
+        $this->assertStringContainsString('currency=USD', $html);
+        $this->assertMatchesRegularExpression('/exchange\?[^"]*amount=5000/', $html);
+        $this->assertMatchesRegularExpression('/exchange\?[^"]*city=Yerevan/', $html);
+        $this->assertMatchesRegularExpression('/exchange\?[^"]*rate_field=sell_rate/', $html);
+    }
+
+    /**
+     * Below the minimum the amount still travels. The form states its own
+     * minimum; blanking the number they typed teaches them nothing.
+     */
+    public function test_an_amount_below_the_quote_minimum_still_travels(): void
+    {
+        $this->seedMarket();
+
+        $html = $this->get('/en/rates?currency=USD&amount=50')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/exchange\?[^"]*amount=50/', $html);
+    }
+
+    /**
      * On a phone the filter panel is a bottom sheet, and it confirms with the
      * result rather than a bare "Done" - the table is behind the sheet, so the
      * count is the only way to see what the choices did before closing it.
@@ -666,8 +730,13 @@ class RatesPageTest extends TestCase
      * Three figures above the table, so the answer to "what is the best rate
      * here" does not require reading fourteen rows twice. The seeded market
      * quotes 360/365, 358/370 and 384/388, so the visitor's best buy is the
-     * highest buy and their best sell is the lowest sell, and the average is
-     * the mean of the three midpoints: (362.5 + 364 + 386) / 3.
+     * highest buy and their best sell is the lowest sell.
+     *
+     * The average is taken over the column the visitor is transacting on -
+     * by default the buy side, (360 + 358 + 384) / 3 - rather than over the
+     * midpoint between buy and sell. A midpoint average is a number nobody
+     * quotes, and comparing a real total against it produced a saving that did
+     * not reconcile with the card printed above it.
      */
     public function test_the_summary_cards_state_the_best_of_each_side(): void
     {
@@ -680,8 +749,20 @@ class RatesPageTest extends TestCase
             ->assertSee('Best sell rate')
             ->assertSee('365.00')
             ->assertSee('Market average')
-            ->assertSee('370.83')
+            ->assertSee('367.33')
             ->assertSee('Across 3 organizations');
+    }
+
+    /** Flipping the direction moves the average to the other column. */
+    public function test_the_average_follows_the_side_being_exchanged(): void
+    {
+        $this->seedMarket();
+
+        // Buy side: (360 + 358 + 384) / 3 = 367.33.
+        $this->get('/en/rates?currency=USD&intent=sell')->assertOk()->assertSee('367.33');
+
+        // Sell side: (365 + 370 + 388) / 3 = 374.33.
+        $this->get('/en/rates?currency=USD&intent=buy')->assertOk()->assertSee('374.33');
     }
 
     /**

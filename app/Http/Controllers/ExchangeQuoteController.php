@@ -39,7 +39,16 @@ class ExchangeQuoteController extends Controller
         // absent or not actually offered.
         $selectedCurrency = $currencies->firstWhere('code', $request->query('currency')) ?? $currencies->first();
 
+        // Which way round the exchange goes, handed over by /rates so the
+        // visitor is not asked a question they have already answered. Validated
+        // rather than trusted: it lands straight in a form field, and only
+        // these two values mean anything to store().
+        $prefilledDirection = in_array($request->query('rate_field'), ['buy_rate', 'sell_rate'], true)
+            ? $request->query('rate_field')
+            : 'buy_rate';
+
         return view('exchange.request', [
+            'prefilledDirection' => $prefilledDirection,
             'currencies' => $currencies,
             'minimums' => $minimums,
             'selectedCurrency' => $selectedCurrency,

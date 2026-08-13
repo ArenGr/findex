@@ -76,6 +76,37 @@ class ExchangeQuoteSubmissionTest extends TestCase
         ], $overrides);
     }
 
+    /**
+     * The other half of the handoff: what /rates sends, this form must read.
+     * A prefill that silently ignores half the query string is worse than no
+     * prefill, because the visitor cannot tell which fields carried over.
+     */
+    public function test_the_form_prefills_from_the_rates_page_context(): void
+    {
+        $this->exchangePartner([], 'Yerevan');
+
+        $html = $this->get('/en/exchange?currency=USD&amount=5000&city=Yerevan&rate_field=sell_rate')
+            ->assertOk()
+            ->assertViewHas('prefilledDirection', 'sell_rate')
+            ->getContent();
+
+        $this->assertStringContainsString('value="5000"', $html);
+        $this->assertStringContainsString('value="Yerevan" selected', $html);
+        // Checked server-side as well as by Alpine, so the prefill survives
+        // with JavaScript off.
+        $this->assertMatchesRegularExpression('/value="sell_rate"[^>]*checked/', $html);
+    }
+
+    /** An unknown direction is ignored rather than landing in the form. */
+    public function test_an_unknown_direction_falls_back_instead_of_being_trusted(): void
+    {
+        $this->exchangePartner();
+
+        $this->get('/en/exchange?currency=USD&rate_field=javascript:alert(1)')
+            ->assertOk()
+            ->assertViewHas('prefilledDirection', 'buy_rate');
+    }
+
     public function test_guest_can_submit_and_is_emailed_a_signed_results_link(): void
     {
         Mail::fake();

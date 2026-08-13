@@ -46,7 +46,7 @@
                 novalidate
                 x-data="{
                     currency: '{{ old('currency_code', $selectedCurrency->code) }}',
-                    direction: '{{ old('rate_field', 'buy_rate') }}',
+                    direction: '{{ old('rate_field', $prefilledDirection) }}',
                     minimums: @js($minimums),
                     directionLabels: @js($directionLabels),
                     flags: @js($currencyFlags),
@@ -139,11 +139,11 @@
                         <label class="block text-sm font-medium text-ink">{{ __('exchange_quotes.request.direction') }}</label>
                         <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                             <label class="group cursor-pointer">
-                                <input type="radio" name="rate_field" value="buy_rate" x-model="direction" class="peer sr-only" required>
+                                <input type="radio" name="rate_field" value="buy_rate" x-model="direction" class="peer sr-only" required @checked(old('rate_field', $prefilledDirection) === 'buy_rate')>
                                 <span class="flex items-center justify-center rounded-xl border border-border-muted px-3 py-3 text-center text-sm font-medium text-ink transition peer-checked:border-primary peer-checked:bg-primary/5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 group-hover:border-primary/60" x-text="directionLabels[currency]?.buy_rate ?? ''"></span>
                             </label>
                             <label class="group cursor-pointer">
-                                <input type="radio" name="rate_field" value="sell_rate" x-model="direction" class="peer sr-only">
+                                <input type="radio" name="rate_field" value="sell_rate" x-model="direction" class="peer sr-only" @checked(old('rate_field', $prefilledDirection) === 'sell_rate')>
                                 <span class="flex items-center justify-center rounded-xl border border-border-muted px-3 py-3 text-center text-sm font-medium text-ink transition peer-checked:border-primary peer-checked:bg-primary/5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 group-hover:border-primary/60" x-text="directionLabels[currency]?.sell_rate ?? ''"></span>
                             </label>
                         </div>
@@ -162,7 +162,7 @@
                             >
                                 <option value="">{{ __('exchange_quotes.request.preferred_city_all') }}</option>
                                 @foreach ($cities as $city)
-                                    <option value="{{ $city }}" @selected(old('preferred_city') === $city)>{{ $city }}</option>
+                                    <option value="{{ $city }}" @selected(old('preferred_city', request('city')) === $city)>{{ $city }}</option>
                                 @endforeach
                             </select>
                             @error('preferred_city')
