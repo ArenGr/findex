@@ -659,17 +659,23 @@
             the visitor to know already: an official rate printed beside a table
             of worse ones invites "why is nobody giving me 365?", and the answer
             is that nobody ever could. --}}
-            <p class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm break-words text-muted">
-                <span class="min-w-0">
-                    {{ __('rates.central_bank_reference', [
-                        'rate' => number_format((float) $centralBankRate['rate'], 2),
-                        'code' => $selectedCurrency?->code,
-                    ]) }}
+            {{--
+                A div, not a p: x-info-popover's root is a div, and a div inside
+                a p makes the parser close the paragraph early and hoist the
+                popover out of it - which is why the "?" kept landing on a line
+                of its own no matter how it was styled. The markup looked right
+                in the response and wrong in the DOM.
+            --}}
+            <div class="mt-5 text-sm break-words text-muted">
+                {{ __('rates.central_bank_reference', [
+                    'rate' => number_format((float) $centralBankRate['rate'], 2),
+                    'code' => $selectedCurrency?->code,
+                ]) }}<span class="ml-1.5 inline-flex translate-y-1.5 align-middle">
+                    <x-info-popover :label="__('rates.central_bank_label')" align="left">
+                        {{ __('rates.central_bank_hint') }}
+                    </x-info-popover>
                 </span>
-                <x-info-popover :label="__('rates.central_bank_label')" align="left">
-                    {{ __('rates.central_bank_hint') }}
-                </x-info-popover>
-            </p>
+            </div>
         @endif
 
         @php
@@ -807,26 +813,33 @@
                 number was typed was the single biggest reason this page felt
                 like it had jumped to a different screen.
             --}}
-                <div class="mt-8 grid gap-4 md:grid-cols-3">
+                {{-- Three across on a phone too, not stacked: at full height
+                these three filled the screen before a single rate appeared, and
+                they are a glance rather than a read. The label and the holder
+                stand down below sm - the figure is the point, and the popover
+                still explains it. --}}
+                <div class="mt-8 grid grid-cols-3 gap-2 sm:gap-4 md:grid-cols-3">
                     @foreach ($summaryCards as $card)
-                        <div class="min-w-0 rounded-xl border border-placeholder bg-white p-4">
-                            <span class="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
-                                <span class="min-w-0 break-words">{{ $card['label'] }}</span>
-                                <x-info-popover :label="$card['label']">{{ $card['hint'] }}</x-info-popover>
+                        <div class="flex min-w-0 flex-col rounded-xl border border-placeholder bg-white p-3 text-center sm:p-4 sm:text-start">
+                            <span class="flex items-center justify-center gap-1.5 sm:justify-start">
+                                <span class="min-w-0 text-[10px] font-semibold tracking-wider break-words text-muted uppercase sm:text-xs">{{ $card['label'] }}</span>
+                                <span class="hidden sm:inline-flex">
+                                    <x-info-popover :label="$card['label']">{{ $card['hint'] }}</x-info-popover>
+                                </span>
                             </span>
 
-                            {{-- Scaled down below sm: at 36px a five-figure
+                            {{-- Scaled with the viewport: at 36px a five-figure
                             rate plus its unit is wider than a 320px screen, and
                             it is set nowrap so it would push the page rather
                             than break. --}}
-                            <p class="mt-1 flex items-end gap-2 whitespace-nowrap">
-                                <span class="text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl {{ $card['tone'] }}">
+                            <p class="mt-1 flex items-end justify-center gap-1 whitespace-nowrap sm:justify-start sm:gap-2">
+                                <span class="text-lg font-semibold tracking-tight tabular-nums sm:text-3xl lg:text-4xl {{ $card['tone'] }}">
                                     {{ number_format((float) $card['value'], 2) }}
                                 </span>
-                                <span class="pb-1.5 text-sm text-muted">{{ __('exchange_quotes.request.amd') }}</span>
+                                <span class="hidden pb-1.5 text-sm text-muted sm:inline">{{ __('exchange_quotes.request.amd') }}</span>
                             </p>
 
-                            <p class="mt-1 truncate text-sm text-muted" title="{{ $card['note'] }}">{{ $card['note'] }}</p>
+                            <p class="mt-1 hidden truncate text-sm text-muted sm:block" title="{{ $card['note'] }}">{{ $card['note'] }}</p>
                         </div>
                     @endforeach
                 </div>
@@ -1064,66 +1077,108 @@
                     </div>
                 @endif
             @else
-            {{-- Mobile: a row list. A table has no room for a readable name
-            once the rate and the total both need space. --}}
-            <div class="mt-4 overflow-hidden rounded-xl border border-placeholder sm:hidden">
+            {{--
+                Mobile: a card per organization rather than a squeezed row.
+
+                A phone has no width to spare sideways but plenty of room
+                downwards, so the two rates get a column each at full size
+                instead of being crushed into the right-hand edge - and the
+                things that were fighting for that edge (freshness, directions)
+                get a footer of their own.
+            --}}
+            <div class="mt-4 space-y-3 sm:hidden">
                 @foreach ($ranked['rows'] as $rate)
-                    @php $total = $calculating ? $convert((float) $rate->{$rateField}) : null; @endphp
-                    {{-- The name is the link, not the whole card: the meta line
-                    under it now carries a Directions link of its own, and an
-                    anchor inside an anchor is invalid - browsers close the outer
-                    one early and the row falls apart. --}}
-                    <div class="flex items-center gap-3 border-b border-placeholder px-4 py-4 last:border-b-0">
-                        <a href="{{ $rate->organization_url }}" class="shrink-0">
-                            <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
-                        </a>
+                    @php
+                        $total = $calculating ? $convert((float) $rate->{$rateField}) : null;
+                        $winsMobile = $calculating ? $rate->rank === 1 : $isBestRate((float) $rate->buy_rate, $bestBuy);
+                    @endphp
 
-                        <div class="min-w-0 flex-1">
-                            {{-- No star beside the name: the total carries it,
-                            so each row is marked once, on the number it is
-                            about. --}}
-                            {{-- Padded and pulled back out again: the row keeps
-                            its height while the name presents a 44px target.
-                            The card itself cannot be the link - the meta line
-                            below holds one, and an anchor inside an anchor is
-                            invalid. --}}
-                            <a href="{{ $rate->organization_url }}" class="-my-2.5 block py-2.5 font-medium break-words text-ink hover:text-primary">{{ $rate->organization_name }}</a>
-                            <x-rates.org-meta
-                                :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
-                                :scraped-at="$rate->scraped_at"
-                                :stale="$isStale($rate->scraped_at)"
-                                :changed-at="$rate->changed_at ?? null"
-                                :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
-                                :directions="$rate->branch ?? null"
-                            />
-                            @if ($rate->organization_reviews_count > 0)
-                                <span class="mt-1 flex items-center gap-1">
-                                    <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
-                                    <span class="text-xs text-muted">({{ $rate->organization_reviews_count }})</span>
-                                </span>
-                            @endif
-                        </div>
+                    <article @class([
+                        'relative overflow-hidden rounded-xl p-4',
+                        'border-2 border-primary/40 bg-accent-yellow/10' => $winsMobile,
+                        'border border-placeholder bg-white' => ! $winsMobile,
+                    ])>
+                        @if ($winsMobile)
+                            <span class="absolute top-0 right-0 rounded-bl-lg bg-primary px-2 py-1 text-[10px] font-bold tracking-wider text-white uppercase">
+                                {{ __('rates.best_badge') }}
+                            </span>
+                        @endif
 
-                        {{-- The same three figures the table carries, stacked:
-                        the pair stays put and the total joins it, so a phone
-                        sees the same change a desktop does. --}}
-                        <div class="shrink-0 text-end">
-                            <p class="whitespace-nowrap tabular-nums">
-                                <span class="font-bold text-ink">{{ number_format($rate->buy_rate, 2) }}</span>
-                                <span class="text-muted" aria-hidden="true"> / </span>
-                                <span class="font-bold text-accent-red">{{ number_format($rate->sell_rate, 2) }}</span>
-                            </p>
-                            @if ($calculating)
-                                <p class="mt-0.5 flex items-center justify-end gap-1.5 whitespace-nowrap tabular-nums">
-                                    @if ($rate->rank === 1)
-                                        <x-rates.best-chip :count="$bestTotalCount" />
+                        <div class="flex items-center gap-3">
+                            <a href="{{ $rate->organization_url }}" class="shrink-0">
+                                <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
+                            </a>
+
+                            <div class="min-w-0 flex-1">
+                                <a href="{{ $rate->organization_url }}" class="-my-2 block py-2 pr-16 font-semibold break-words text-ink hover:text-primary">
+                                    {{ $rate->organization_name }}
+                                </a>
+                                <span class="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
+                                    @if ($showMarket)
+                                        <span class="break-words">{{ __('rates.market_badge.' . $rate->organization_type) }}</span>
                                     @endif
-                                    <span class="font-bold text-ink">{{ $amd($total) }}</span>
-                                    <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
-                                </p>
+                                    @if ($hasLocation && isset($rate->distance_km))
+                                        @if ($showMarket)<span aria-hidden="true">&middot;</span>@endif
+                                        <span>{{ __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) }}</span>
+                                    @endif
+                                </span>
+                                @if ($rate->organization_reviews_count > 0)
+                                    <span class="mt-1 flex items-center gap-1">
+                                        <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
+                                        <span class="text-xs text-muted">({{ $rate->organization_reviews_count }})</span>
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- The pair at full size, a column each. This is the
+                        room a phone actually has. --}}
+                        <div class="my-3 grid grid-cols-2 gap-4 border-y border-placeholder py-3">
+                            <div class="min-w-0">
+                                <span class="block text-xs font-semibold tracking-wider text-muted uppercase">{{ __('rates.buy_column') }}</span>
+                                <span class="mt-0.5 block text-xl font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->buy_rate, 2) }}</span>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-semibold tracking-wider text-muted uppercase">{{ __('rates.sell_column') }}</span>
+                                <span class="mt-0.5 block text-xl font-bold whitespace-nowrap tabular-nums text-accent-red">{{ number_format($rate->sell_rate, 2) }}</span>
+                            </div>
+                        </div>
+
+                        @if ($calculating)
+                            <p class="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-placeholder/25 px-3 py-2">
+                                <span class="text-xs font-semibold tracking-wider text-muted uppercase">{{ $totalColumn }}</span>
+                                <span class="font-bold whitespace-nowrap text-ink tabular-nums">
+                                    {{ $amd($total) }} <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
+                                </span>
+                            </p>
+                        @endif
+
+                        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                            @if ($rate->scraped_at)
+                                <x-rates.freshness
+                                    :scraped-at="$rate->scraped_at"
+                                    :stale="$isStale($rate->scraped_at)"
+                                    :changed-at="$rate->changed_at ?? null"
+                                />
+                            @else
+                                <span></span>
+                            @endif
+
+                            @if ($rate->branch ?? null)
+                                <a
+                                    href="{{ $rate->branch['url'] }}"
+                                    target="_blank" rel="noopener noreferrer"
+                                    class="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-placeholder px-4 text-xs font-medium break-words text-ink transition hover:border-primary hover:text-primary"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                                        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                                        <circle cx="12" cy="10" r="3" />
+                                    </svg>
+                                    {{ __('rates.directions') }}
+                                </a>
                             @endif
                         </div>
-                    </div>
+                    </article>
                 @endforeach
             </div>
 
