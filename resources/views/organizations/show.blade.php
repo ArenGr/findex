@@ -207,6 +207,32 @@
             @endforelse
         @endif
 
+        {{-- One currency's trend, not eleven: enough to see whether this
+        organization moves its rates or sits still, with the full picture a
+        click away. --}}
+        @if ($historySeries !== [])
+            <div class="mt-10 rounded-2xl border border-placeholder bg-white p-5 sm:p-6">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                    <h2 class="font-heading text-lg font-semibold break-words text-ink">
+                        {{ __('rates.history.title', ['code' => $historyCurrency->code]) }}
+                    </h2>
+                    <a href="{{ route('rates.history', ['currency' => $historyCurrency->code]) }}" class="text-sm font-medium break-words text-primary hover:underline">
+                        {{ __('rates.history.link') }} &rarr;
+                    </a>
+                </div>
+
+                <x-rates.history-chart
+                    class="mt-4"
+                    :series="$historySeries"
+                    :lines="[
+                        'buy_rate' => ['label' => __('rates.buy_column'), 'color' => 'var(--color-primary)'],
+                        'sell_rate' => ['label' => __('rates.sell_column'), 'color' => 'var(--color-accent-red)'],
+                    ]"
+                    aria-label="{{ __('rates.history.title', ['code' => $historyCurrency->code]) }}"
+                />
+            </div>
+        @endif
+
         {{-- Where you can actually walk in, and whether it is worth walking
         in right now. The page had the branches all along - only the review
         form used them, as a dropdown. --}}

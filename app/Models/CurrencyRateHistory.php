@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Cache\RateCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -11,6 +12,20 @@ class CurrencyRateHistory extends Model
     use Prunable;
 
     protected $table = 'currency_rate_history';
+
+    /**
+     * The history charts are cached, so a new snapshot has to flush them.
+     *
+     * In practice a row only ever lands here because RateScraper saw a rate
+     * change, and saving that rate invalidates the cache anyway - but the two
+     * writes are independent, and a chart that silently ignores the data it was
+     * built from is a bad thing to leave load-bearing on that coincidence.
+     */
+    protected static function booted(): void
+    {
+        static::saved(fn () => RateCache::invalidate());
+        static::deleted(fn () => RateCache::invalidate());
+    }
 
     protected $fillable = [
         'currency_rate_id',

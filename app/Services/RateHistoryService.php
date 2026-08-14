@@ -139,6 +139,64 @@ class RateHistoryService
     }
 
     /**
+     * One organization's own rate over time, for a single currency.
+     *
+     * Same carry-forward rule as the market series: the days between two moves
+     * are days the rate held, not days it was missing.
+     *
+     * @return array<int, array{date: string, buy_rate: float, sell_rate: float}>
+     */
+    public function organizationSeries(int $organizationId, int $currencyId, RateType $type, int $days): array
+    {
+        return Cache::tags([RateCache::TAG])->remember(
+            "rates.history.org.{$organizationId}.{$currencyId}.{$type->value}.{$days}",
+            now()->addHour(),
+            function () use ($organizationId, $currencyId, $type, $days) {
+                $snapshots = CurrencyRateHistory::query()
+                    ->join('currency_rates', 'currency_rates.id', '=', 'currency_rate_history.currency_rate_id')
+                    ->where('currency_rates.organization_id', $organizationId)
+                    ->where('currency_rates.currency_id', $currencyId)
+                    ->where('currency_rates.rate_type', $type->value)
+                    ->orderBy('currency_rate_history.scraped_at')
+                    ->get([
+                        'currency_rate_history.buy_rate',
+                        'currency_rate_history.sell_rate',
+                        'currency_rate_history.scraped_at',
+                    ]);
+
+                if ($snapshots->isEmpty()) {
+                    return [];
+                }
+
+                $series = [];
+                $current = null;
+                $cursor = 0;
+
+                for ($day = now()->startOfDay()->subDays($days - 1); $day <= now()->startOfDay(); $day->addDay()) {
+                    $endOfDay = $day->copy()->endOfDay();
+
+                    while ($cursor < $snapshots->count() && Carbon::parse($snapshots[$cursor]->scraped_at) <= $endOfDay) {
+                        $current = $snapshots[$cursor];
+                        $cursor++;
+                    }
+
+                    if ($current === null) {
+                        continue;
+                    }
+
+                    $series[] = [
+                        'date' => $day->toDateString(),
+                        'buy_rate' => (float) $current->buy_rate,
+                        'sell_rate' => (float) $current->sell_rate,
+                    ];
+                }
+
+                return $series;
+            },
+        );
+    }
+
+    /**
      * Where today's figure sits against the period it closes. Null when there
      * is nothing to compare against, rather than 0% - "unchanged" and "we have
      * one data point" are different statements.

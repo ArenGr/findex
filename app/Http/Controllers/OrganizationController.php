@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RateType;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Services\OrganizationRatesData;
+use App\Services\RateHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -141,7 +144,7 @@ class OrganizationController extends Controller
      * implicit binding does not resolve correctly for a route parameter
      * that comes after a dynamic {locale} prefix segment.
      */
-    public function show(string $locale, string $organization, OrganizationRatesData $ratesData): View
+    public function show(string $locale, string $organization, OrganizationRatesData $ratesData, RateHistoryService $history): View
     {
         $organization = Organization::active()->where('slug', $organization)->firstOrFail();
 
@@ -158,6 +161,30 @@ class OrganizationController extends Controller
             ? $ratesData->build($organization)
             : ['groups' => [], 'updated_at' => null, 'currency_count' => 0];
 
+        // A trend for the organization's headline currency. Cash only, and only
+        // when there is more than a single point - a chart of one day is a dot.
+        $historyCurrency = null;
+        $historySeries = [];
+        $historyDays = $history->offerableRanges()[0];
+
+        if ($organization->hasRatesPage() && $rates['groups'] !== []) {
+            $first = collect($rates['groups'])->first()[0] ?? null;
+            $historyCurrency = $first === null ? null : Currency::where('code', $first['code'])->first();
+
+            if ($historyCurrency !== null) {
+                $historySeries = $history->organizationSeries(
+                    $organization->id,
+                    $historyCurrency->id,
+                    RateType::CASH,
+                    $historyDays,
+                );
+            }
+
+            if (count($historySeries) < 2) {
+                $historySeries = [];
+            }
+        }
+
         return view('organizations.show', [
             'organization' => $organization,
             'averageRating' => $organization->reviews->avg('rating'),
@@ -167,6 +194,12 @@ class OrganizationController extends Controller
             // Only exchange offices negotiate walk-in cash, and only once they
             // are reachable on Telegram - the same rule the fan-out job uses,
             // so the page cannot offer something the job would drop.
+            // This organization's own rate over time, for whichever currency
+            // it quotes first - one chart, not eleven. The full picture lives
+            // on the history page.
+            'historyCurrency' => $historyCurrency ?? null,
+            'historySeries' => $historySeries ?? [],
+            'historyDays' => $historyDays ?? 0,
             'canNegotiate' => $organization->type === 'exchange'
                 && $organization->telegram_chat_id !== null
                 && $rates['groups'] !== [],

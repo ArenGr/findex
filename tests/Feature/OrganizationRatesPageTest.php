@@ -183,6 +183,41 @@ class OrganizationRatesPageTest extends TestCase
         $this->get('/en/organizations/acba')->assertOk()->assertSee('Closed');
     }
 
+    /**
+     * A trend for this organization's headline currency - enough to see whether
+     * it moves its rates or sits still.
+     *
+     * The guard is on the number of DAYS drawn, not the number of snapshots: a
+     * rate recorded once three days ago carries forward and gives four days of
+     * flat line, which is a true and useful chart. What is not a chart is a
+     * single day, which is a dot.
+     */
+    public function test_a_rate_trend_appears_once_there_is_more_than_one_day_to_draw(): void
+    {
+        $usd = $this->currency();
+        $bank = $this->organization('acba');
+        $rate = $this->rate($bank, $usd, 363.0, 367.0);
+
+        // Recorded today and only today: one day, nothing to draw a line along.
+        CurrencyRateHistory::create([
+            'currency_rate_id' => $rate->id, 'buy_rate' => 363.0, 'sell_rate' => 367.0,
+            'scraped_at' => now(),
+        ]);
+
+        $this->get('/en/organizations/acba')->assertOk()->assertDontSee('History for USD');
+
+        // An older snapshot carries forward and the days in between fill in.
+        CurrencyRateHistory::create([
+            'currency_rate_id' => $rate->id, 'buy_rate' => 360.0, 'sell_rate' => 364.0,
+            'scraped_at' => now()->subDays(3),
+        ]);
+
+        $this->get('/en/organizations/acba')
+            ->assertOk()
+            ->assertSee('History for USD')
+            ->assertSee('See rate history');
+    }
+
     /** Checked and changed are different facts, and the second is the useful one. */
     public function test_a_row_says_when_its_rate_last_moved(): void
     {
