@@ -27,7 +27,14 @@ class AddSecurityHeaders
         $response = $next($request);
 
         // Clickjacking: the org/admin dashboards must not be framable.
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        //
+        // The embeddable widgets are the one deliberate exception - being
+        // framed by someone else is their entire purpose. They are safe to
+        // frame because they carry nothing to hijack: no session, no form, no
+        // action, just numbers and a link home.
+        if (! $request->routeIs('widgets.*')) {
+            $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        }
 
         // Stops the browser MIME-sniffing a response into something
         // executable (e.g. a stored upload served as text/plain).

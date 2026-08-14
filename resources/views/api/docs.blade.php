@@ -69,6 +69,35 @@
             @endforeach
         </div>
 
+        <h2 class="mt-12 font-heading text-xl font-semibold break-words text-ink">{{ __('api.widgets') }}</h2>
+        <p class="mt-2 max-w-2xl text-sm leading-relaxed break-words text-muted">{{ __('api.widgets_tagline') }}</p>
+
+        {{-- Live, not screenshots: the embed on this page is the same URL the
+        copy-paste below produces, so what a customer sees is what they get. --}}
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            @foreach ([
+                'rate' => __('api.widget_rate'),
+                'best' => __('api.widget_best'),
+                'converter' => __('api.widget_converter'),
+                'chart' => __('api.widget_chart'),
+            ] as $widget => $label)
+                <div class="min-w-0 rounded-xl border border-placeholder bg-white p-4">
+                    <p class="text-xs font-semibold tracking-wider text-muted uppercase">{{ $label }}</p>
+
+                    <iframe
+                        src="{{ route('widgets.show', ['type' => $widget, 'currency' => 'USD']) }}"
+                        title="{{ $label }}"
+                        loading="lazy"
+                        class="mt-3 h-44 w-full rounded-lg border border-placeholder"
+                    ></iframe>
+
+                    <p class="mt-3 text-xs font-semibold tracking-wider text-muted uppercase">{{ __('api.embed_code') }}</p>
+                    <pre class="mt-1 overflow-x-auto rounded-lg bg-placeholder/25 px-3 py-2 text-[11px] text-ink"><code>&lt;iframe src="{{ route('widgets.show', ['type' => $widget, 'currency' => 'USD']) }}"
+  width="320" height="170" frameborder="0"&gt;&lt;/iframe&gt;</code></pre>
+                </div>
+            @endforeach
+        </div>
+
         <p class="mt-4 text-sm break-words text-muted">
             {{ __('api.without_key') }}:
             {{ number_format($anonymous['requests_per_day']) }} {{ __('api.per_day') }}.

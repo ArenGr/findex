@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\CurrencyRate;
+use App\Services\MarketRateService;
 use App\Services\RateHistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,20 +18,14 @@ class MarketController extends ApiController
      * at, the lowest anyone sells at. Named so in the payload, because "best"
      * on its own is the ambiguity this whole product exists to remove.
      */
-    public function best(Request $request): JsonResponse
+    public function best(Request $request, MarketRateService $market): JsonResponse
     {
         $currency = $this->currencyFromRequest($request);
         $type = $this->rateTypeFromRequest($request);
 
-        $rates = CurrencyRate::query()
-            ->with('organization')
-            ->where('currency_id', $currency->id)
-            ->where('rate_type', $type)
-            ->whereHas('organization', fn ($query) => $query->active())
-            ->get();
-
-        $bestBuy = $rates->sortByDesc(fn (CurrencyRate $rate) => (float) $rate->buy_rate)->first();
-        $bestSell = $rates->sortBy(fn (CurrencyRate $rate) => (float) $rate->sell_rate)->first();
+        // Shared with the widgets - see MarketRateService for why the two
+        // must not compute this separately.
+        ['highest_buy' => $bestBuy, 'lowest_sell' => $bestSell] = $market->best($currency, $type);
 
         $side = fn (?CurrencyRate $rate, string $field) => $rate === null ? null : [
             'rate' => (string) $rate->{$field},
@@ -49,24 +44,20 @@ class MarketController extends ApiController
     }
 
     /** The mean across everyone currently quoting. */
-    public function average(Request $request): JsonResponse
+    public function average(Request $request, MarketRateService $market): JsonResponse
     {
         $currency = $this->currencyFromRequest($request);
         $type = $this->rateTypeFromRequest($request);
 
-        $rates = CurrencyRate::query()
-            ->where('currency_id', $currency->id)
-            ->where('rate_type', $type)
-            ->whereHas('organization', fn ($query) => $query->active())
-            ->get();
+        $average = $market->average($currency, $type);
 
         return response()->json([
             'data' => [
                 'currency' => $currency->code,
                 'rate_type' => $type->value,
-                'organizations' => $rates->count(),
-                'average_buy' => $rates->isEmpty() ? null : (string) round($rates->avg(fn ($rate) => (float) $rate->buy_rate), 4),
-                'average_sell' => $rates->isEmpty() ? null : (string) round($rates->avg(fn ($rate) => (float) $rate->sell_rate), 4),
+                'organizations' => $average['organizations'],
+                'average_buy' => $average['average_buy'] === null ? null : (string) $average['average_buy'],
+                'average_sell' => $average['average_sell'] === null ? null : (string) $average['average_sell'],
             ],
         ]);
     }

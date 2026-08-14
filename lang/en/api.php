@@ -23,4 +23,11 @@ return [
     'auth_body' => 'Send your key as a bearer token. Calls without one still work, on a smaller allowance.',
     'shown_once' => 'API keys are shown once',
     'revoked' => 'Key revoked.',
+    'widgets' => 'Widgets',
+    'widgets_tagline' => 'Drop live Armenian rates onto your own site. No key needed, and they read the same numbers as the API.',
+    'widget_rate' => 'Current rate',
+    'widget_best' => 'Best rate and who offers it',
+    'widget_converter' => 'Converter',
+    'widget_chart' => '7-day trend',
+    'embed_code' => 'Embed code',
 ];

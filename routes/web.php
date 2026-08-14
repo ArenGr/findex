@@ -35,6 +35,10 @@ Route::prefix('{locale}')
         require __DIR__.'/web/writers/dashboard.php';
     });
 
+// Pasted into other people's HTML, so the URL must never move - no locale
+// segment for the same reason the OAuth callbacks below have none.
+require __DIR__.'/web/public/widgets.php';
+
 // Fixed, non-locale-prefixed URLs registered with external providers
 // (OAuth callbacks, webhooks) - see social.php and telegram.php for why.
 require __DIR__.'/web/auth/social.php';
