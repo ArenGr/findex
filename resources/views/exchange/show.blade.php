@@ -3,6 +3,13 @@
 @section('title', __('exchange_quotes.results.heading') . ' — Findex')
 
 @php
+    // Money formatting shared by the whole page, defined here rather than
+    // beside its first use: this view has several top-level branches and the
+    // helpers are needed in more than one of them.
+    $amd = __('exchange_quotes.request.amd');
+    $money = fn (float $value) => $value < 1000 ? number_format($value, 2) : number_format($value);
+    $totalLabel = __($wantsHigh ? 'exchange_quotes.value.you_receive' : 'exchange_quotes.value.you_pay');
+
     // Answered offices first (most recent reply first), declined ones last -
     // same reasoning as tourism/show.blade.php.
     $statusRank = fn ($response) => match (true) {
@@ -122,7 +129,38 @@
             </div>
         @endif
 
-        <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('exchange_quotes.results.heading') }}</h1>
+        <div class="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+            <div class="min-w-0">
+                <h1 class="font-heading text-2xl font-bold break-words text-ink lg:text-3xl">{{ __('exchange_quotes.results.heading') }}</h1>
+
+                {{-- The number this whole feature exists to produce. Only shown
+                when somebody actually beat the open market: "Findex got you 0
+                more" is not a claim worth making. --}}
+                @if ($bestExtra !== null && $bestExtra >= 1)
+                    <p class="mt-3 inline-flex items-center gap-2 rounded-lg border border-accent-yellow/50 bg-accent-yellow/15 px-4 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-4 w-4 shrink-0 fill-accent-yellow" aria-hidden="true">
+                            <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
+                        </svg>
+                        <span class="min-w-0 text-sm break-words text-ink">
+                            {!! __('exchange_quotes.value.headline', [
+                                'amount' => '<strong class="font-semibold text-primary">'.e($money($bestExtra)).'</strong>',
+                                'currency' => e($amd),
+                            ]) !!}
+                        </span>
+                    </p>
+                @endif
+            </div>
+
+            {{-- True of this system as built: SendExchangeQuoteToPartnersJob
+            sends the amount, the direction and the city, and respond.blade.php
+            shows the office nothing else. --}}
+            <p class="flex min-w-0 items-start gap-2 rounded-lg border border-placeholder bg-placeholder/20 px-4 py-3 text-sm break-words text-muted md:max-w-xs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true">
+                    <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                {{ __('exchange_quotes.value.anonymous_note') }}
+            </p>
+        </div>
 
         {{-- Request summary "ticket" --}}
         <div class="mt-6 rounded-2xl border border-placeholder p-5 shadow-sm">
@@ -139,6 +177,18 @@
                     @endif
                 </div>
             </div>
+
+            {{-- What they would get without asking anyone, so every offer below
+            has something to be measured against. --}}
+            @if ($publicBest !== null)
+                <dl class="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-placeholder pt-3 text-sm">
+                    <dt class="min-w-0 break-words text-muted">{{ __('exchange_quotes.value.public_best') }}</dt>
+                    <dd class="tabular-nums text-ink">
+                        {{ number_format($publicBest, 2) }} {{ $amd }}
+                        <span class="text-muted">&middot; {{ $money($publicBestTotal) }} {{ $amd }} {{ mb_strtolower($totalLabel) }}</span>
+                    </dd>
+                </dl>
+            @endif
 
             <p class="mt-3 border-t border-placeholder pt-3 text-xs {{ $exchangeQuoteRequest->is_open ? 'text-primary' : 'text-subtle' }}">
                 @if ($exchangeQuoteRequest->is_open)
@@ -235,9 +285,38 @@
                                             </span>
                                         @endif
                                     </div>
+
+                                    @if (isset($offerValues[$response->id]))
+                                        {{-- Below sm the header row has no room
+                                        for a second column, so the total sits
+                                        under the rate instead of vanishing. --}}
+                                        <span class="mt-1 block text-sm whitespace-nowrap text-ink tabular-nums sm:hidden">
+                                            {{ $money($offerValues[$response->id]['total']) }} <span class="text-xs text-muted">{{ $amd }}</span>
+                                            @if ($offerValues[$response->id]['extra'] !== null && $offerValues[$response->id]['extra'] >= 1)
+                                                <span class="font-semibold text-primary">{{ __('exchange_quotes.value.extra', ['amount' => $money($offerValues[$response->id]['extra']), 'currency' => $amd]) }}</span>
+                                            @endif
+                                        </span>
+                                    @endif
                                 @endif
                             </div>
                         </div>
+
+                        {{-- The money in the collapsed row, not only once the
+                        card is opened: comparing three offers is the point, and
+                        it should not take three clicks. --}}
+                        @if ($response->has_replied && isset($offerValues[$response->id]))
+                            @php($headline = $offerValues[$response->id])
+                            <div class="ml-auto hidden shrink-0 text-right sm:block">
+                                <span class="block font-heading text-base font-bold whitespace-nowrap text-ink tabular-nums">
+                                    {{ $money($headline['total']) }} <span class="text-xs font-normal text-muted">{{ $amd }}</span>
+                                </span>
+                                @if ($headline['extra'] !== null && $headline['extra'] >= 1)
+                                    <span class="block text-xs font-semibold whitespace-nowrap text-primary tabular-nums">
+                                        {{ __('exchange_quotes.value.extra', ['amount' => $money($headline['extra']), 'currency' => $amd]) }}
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
 
                         <div class="flex shrink-0 items-center gap-3">
                             @if ($response->has_replied)
@@ -275,9 +354,31 @@
                         </p>
 
                         <dl class="mt-3 space-y-1 text-sm text-ink">
-                            <div><dt class="inline text-subtle">{{ __('exchange_quotes.results.posted_rate_label') }}:</dt> <dd class="inline">{{ number_format((float) $response->posted_rate, 2) }} {{ __('exchange_quotes.request.amd') }}</dd></div>
-                            <div><dt class="inline text-subtle">{{ __('exchange_quotes.results.offered_rate_label') }}:</dt> <dd class="inline font-semibold text-primary">{{ number_format((float) $response->offered_rate, 2) }} {{ __('exchange_quotes.request.amd') }}</dd></div>
+                            <div><dt class="inline text-subtle">{{ __('exchange_quotes.results.posted_rate_label') }}:</dt> <dd class="inline">{{ number_format((float) $response->posted_rate, 2) }} {{ $amd }}</dd></div>
+                            <div><dt class="inline text-subtle">{{ __('exchange_quotes.results.offered_rate_label') }}:</dt> <dd class="inline font-semibold text-primary">{{ number_format((float) $response->offered_rate, 2) }} {{ $amd }}</dd></div>
                         </dl>
+
+                        {{-- The rate turned into money, which is the comparison
+                        the visitor is actually making. A rate 1.20 better is
+                        abstract; 6,000 dram is not. --}}
+                        @if (isset($offerValues[$response->id]))
+                            @php($value = $offerValues[$response->id])
+                            <div class="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl bg-primary/5 px-4 py-3">
+                                <span class="text-xs font-semibold tracking-wider text-muted uppercase">{{ $totalLabel }}</span>
+                                <span class="font-heading text-lg font-bold whitespace-nowrap text-ink tabular-nums">
+                                    {{ $money($value['total']) }} <span class="text-xs font-normal text-muted">{{ $amd }}</span>
+                                </span>
+
+                                @if ($value['extra'] !== null && $value['extra'] >= 1)
+                                    <span class="inline-flex items-center gap-1 text-sm font-semibold break-words text-primary">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                                            <path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" />
+                                        </svg>
+                                        {{ __('exchange_quotes.value.extra', ['amount' => $money($value['extra']), 'currency' => $amd]) }}
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
 
                         @if ($response->reply_text)
                             <p class="mt-3 rounded-xl bg-primary/5 px-4 py-3 text-sm leading-relaxed text-ink">{{ $response->reply_text }}</p>

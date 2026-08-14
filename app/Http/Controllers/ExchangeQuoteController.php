@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RateType;
 use App\Jobs\SendExchangeQuoteToPartnersJob;
 use App\Mail\ExchangeQuoteLinkResent;
 use App\Mail\ExchangeQuoteRequestSubmitted;
 use App\Models\Branch;
 use App\Models\Currency;
+use App\Models\CurrencyRate;
 use App\Models\ExchangeQuoteRequest;
 use App\Models\Organization;
 use App\Support\ValidationRules;
@@ -233,6 +235,75 @@ class ExchangeQuoteController extends Controller
 
         abort_unless($isOwner || $request->hasValidSignature(), 403);
 
-        return view('exchange.show', ['exchangeQuoteRequest' => $exchangeQuoteRequest]);
+        return view('exchange.show', [
+            'exchangeQuoteRequest' => $exchangeQuoteRequest,
+            ...$this->offerValue($exchangeQuoteRequest),
+        ]);
+    }
+
+    /**
+     * What each offer is actually worth, in money.
+     *
+     * The page has always shown rates - 386.20 against a posted 385.00 - and
+     * left the visitor to work out that the difference is 6,000 dram on their
+     * amount. That subtraction is the entire point of the feature, so the page
+     * does it.
+     *
+     * Measured against the best rate publicly available right now rather than
+     * against the rate that office happened to be posting when the request went
+     * out: the honest question is "did asking beat just walking into the best
+     * place on the list", not "did this office improve on itself".
+     *
+     * @return array{publicBest: float|null, offerValues: array<int, array>, bestExtra: float|null}
+     */
+    private function offerValue(ExchangeQuoteRequest $exchangeQuoteRequest): array
+    {
+        $field = $exchangeQuoteRequest->rate_field;
+        $amount = (float) $exchangeQuoteRequest->amount;
+
+        // Selling the currency, the highest buy rate wins; buying it, the
+        // lowest sell rate does.
+        $wantsHigh = $field === 'buy_rate';
+
+        $publicRates = CurrencyRate::query()
+            ->where('currency_id', $exchangeQuoteRequest->currency_id)
+            ->where('rate_type', RateType::CASH)
+            ->whereHas('organization', fn ($query) => $query->active())
+            ->pluck($field)
+            ->map(fn ($rate) => (float) $rate)
+            ->filter();
+
+        $publicBest = $publicRates->isEmpty()
+            ? null
+            : ($wantsHigh ? $publicRates->max() : $publicRates->min());
+
+        $offerValues = [];
+
+        foreach ($exchangeQuoteRequest->responses as $response) {
+            if (! $response->has_replied || $response->offered_rate === null) {
+                continue;
+            }
+
+            $offered = (float) $response->offered_rate;
+
+            $offerValues[$response->id] = [
+                // Dram either way: what you walk out with when selling the
+                // currency, what you hand over when buying it.
+                'total' => $amount * $offered,
+                'extra' => $publicBest === null
+                    ? null
+                    : $amount * ($wantsHigh ? $offered - $publicBest : $publicBest - $offered),
+            ];
+        }
+
+        return [
+            'publicBest' => $publicBest,
+            'publicBestTotal' => $publicBest === null ? null : $amount * $publicBest,
+            'offerValues' => $offerValues,
+            // The headline. Null when nobody beat the open market, because
+            // "Findex got you 0 more" is not a claim worth making.
+            'bestExtra' => collect($offerValues)->pluck('extra')->filter(fn ($extra) => $extra !== null)->max() ?: null,
+            'wantsHigh' => $wantsHigh,
+        ];
     }
 }

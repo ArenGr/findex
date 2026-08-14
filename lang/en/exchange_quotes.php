@@ -138,4 +138,14 @@ return [
         'direction_sell_rate' => 'customer is buying',
         'declined_confirmation' => 'Got it - marked as not interested. Thanks for letting us know.',
     ],
+    'value' => [
+        'headline' => 'Findex got you :amount :currency more',
+        'anonymous_note' => 'Anonymous request - exchange offices see the transaction, not you.',
+        'public_best' => 'Best public rate now',
+        'you_receive' => 'You receive',
+        'you_pay' => 'You pay',
+        'extra' => '+:amount :currency',
+        'best_offer' => 'Best offer',
+        'at_public_rate' => 'At the public rate',
+    ],
 ];

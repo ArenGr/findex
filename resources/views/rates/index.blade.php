@@ -158,9 +158,24 @@
                         when it is below the minimum - the form states its own
                         minimum, and blanking the number they typed teaches them
                         nothing. --}}
+                        @php
+                            // The exchange form denominates the amount in the
+                            // foreign currency whichever way the trade runs -
+                            // its minimum is "1,000 USD" regardless. This page
+                            // denominates it in whatever the visitor HAS, so a
+                            // dram amount has to be converted before it crosses
+                            // over, or "100,000 AMD" arrives as "100,000 USD"
+                            // and the form asks them to confirm a transaction
+                            // 370 times the size of the one they wanted.
+                            $handoverAmount = $amount === null
+                                ? null
+                                : ($isBuying && $best
+                                    ? round($convert((float) $best->{$rateField}), 2)
+                                    : $amount);
+                        @endphp
                         href="{{ route('exchange.request', array_filter([
                             'currency' => $selectedCurrency?->code,
-                            'amount' => $amount,
+                            'amount' => $handoverAmount,
                             'city' => $selectedCity,
                             'rate_field' => $rateField,
                         ])) }}"

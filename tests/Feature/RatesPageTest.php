@@ -677,16 +677,35 @@ class RatesPageTest extends TestCase
         $this->seedMarket();
         Branch::create(['organization_id' => Organization::firstOrFail()->id, 'name' => 'B', 'city' => 'Yerevan', 'is_active' => true]);
 
-        $html = $this->get('/en/rates?currency=USD&amount=5000&city=Yerevan&intent=buy')
+        $html = $this->get('/en/rates?currency=USD&amount=5000&city=Yerevan&intent=sell')
             ->assertOk()
             ->getContent();
 
-        // intent=buy means they hold dram and want the currency, which is the
-        // organization's sell side.
+        // intent=sell means they hold the currency, which is the organization's
+        // buy side - and the amount is already in that currency, so it crosses
+        // over untouched.
         $this->assertStringContainsString('currency=USD', $html);
         $this->assertMatchesRegularExpression('/exchange\?[^"]*amount=5000/', $html);
         $this->assertMatchesRegularExpression('/exchange\?[^"]*city=Yerevan/', $html);
-        $this->assertMatchesRegularExpression('/exchange\?[^"]*rate_field=sell_rate/', $html);
+        $this->assertMatchesRegularExpression('/exchange\?[^"]*rate_field=buy_rate/', $html);
+    }
+
+    /**
+     * The two pages denominate the amount differently: this one in whatever the
+     * visitor has, the exchange form always in the foreign currency - its
+     * minimum reads "1,000 USD" whichever way the trade runs. Handing a dram
+     * figure straight over would ask them to confirm a transaction some 370
+     * times the size of the one they wanted.
+     */
+    public function test_a_dram_amount_is_converted_before_it_reaches_the_exchange_form(): void
+    {
+        $this->seedMarket();
+
+        // 5,000 AMD at the cheapest sell rate of 365.00 buys 13.70 USD.
+        $html = $this->get('/en/rates?currency=USD&amount=5000&intent=buy')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/exchange\?[^"]*amount=13\.7/', $html);
+        $this->assertDoesNotMatchRegularExpression('/exchange\?[^"]*amount=5000/', $html);
     }
 
     /**

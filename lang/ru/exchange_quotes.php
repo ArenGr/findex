@@ -138,4 +138,14 @@ return [
         'direction_sell_rate' => 'клиент покупает',
         'declined_confirmation' => 'Принято - отмечено как неинтересно. Спасибо, что сообщили.',
     ],
+    'value' => [
+        'headline' => 'Findex получил для вас на :amount :currency больше',
+        'anonymous_note' => 'Анонимный запрос - обменные пункты видят сделку, а не вас.',
+        'public_best' => 'Лучший публичный курс сейчас',
+        'you_receive' => 'Вы получите',
+        'you_pay' => 'Вы заплатите',
+        'extra' => '+:amount :currency',
+        'best_offer' => 'Лучшее предложение',
+        'at_public_rate' => 'По публичному курсу',
+    ],
 ];

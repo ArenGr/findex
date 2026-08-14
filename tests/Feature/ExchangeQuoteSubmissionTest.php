@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class ExchangeQuoteSubmissionTest extends TestCase
@@ -74,6 +75,84 @@ class ExchangeQuoteSubmissionTest extends TestCase
             'guest_email' => 'guest@example.com',
             'consent' => '1',
         ], $overrides);
+    }
+
+    /**
+     * The page has always shown rates and left the visitor to work out that
+     * 386.20 against 385.00 is 6,000 dram on their amount. That subtraction is
+     * the whole point of the feature, so the page does it.
+     */
+    public function test_each_offer_is_stated_in_money_not_only_as_a_rate(): void
+    {
+        $partner = $this->exchangePartner();
+        $usd = $this->usd();
+
+        // A second office posting the best public rate to measure against.
+        $public = Organization::create([
+            'name' => 'Public best', 'slug' => 'public-best-'.uniqid(), 'type' => 'exchange',
+            'country_code' => 'AM', 'is_active' => true, 'telegram_chat_id' => '999',
+        ]);
+        CurrencyRate::create([
+            'organization_id' => $public->id, 'currency_id' => $usd->id, 'rate_type' => RateType::CASH,
+            'buy_rate' => '385.0000', 'sell_rate' => '389.0000', 'scraped_at' => now(),
+        ]);
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_name' => 'A', 'guest_email' => 'a@example.com', 'locale' => 'en',
+            'expires_at' => now()->addDay(),
+        ]);
+
+        $exchangeRequest->responses()->create([
+            'organization_id' => $partner->id,
+            'response_token' => 'tok'.uniqid(),
+            'status' => 'responded',
+            'posted_rate' => '384.5000',
+            'offered_rate' => '386.2000',
+            'responded_at' => now(),
+        ]);
+
+        $response = $this->get(URL::signedRoute('exchange.show', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
+        ]))->assertOk();
+
+        // 5,000 x 386.20 = 1,931,000 dram, against 5,000 x the best public
+        // 385.00 = 1,925,000 - so asking was worth 6,000.
+        $response->assertSee('1,931,000')
+            ->assertSee('+6,000')
+            ->assertSee('Findex got you')
+            ->assertSee('You receive')
+            // Measured against the open market, not against what this office
+            // happened to be posting when the request went out.
+            ->assertSee('Best public rate now')
+            ->assertSee('385.00');
+    }
+
+    /** Nobody beat the open market, so no claim is made about it. */
+    public function test_no_saving_is_claimed_when_the_offer_does_not_beat_the_market(): void
+    {
+        $partner = $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_name' => 'A', 'guest_email' => 'a@example.com', 'locale' => 'en',
+            'expires_at' => now()->addDay(),
+        ]);
+
+        // The partner's own posted rate is 384.50 and it offers exactly that.
+        $exchangeRequest->responses()->create([
+            'organization_id' => $partner->id,
+            'response_token' => 'tok'.uniqid(),
+            'status' => 'responded',
+            'posted_rate' => '384.5000',
+            'offered_rate' => '384.5000',
+            'responded_at' => now(),
+        ]);
+
+        $this->get(URL::signedRoute('exchange.show', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
+        ]))->assertOk()->assertDontSee('Findex got you');
     }
 
     /**
