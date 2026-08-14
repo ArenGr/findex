@@ -208,7 +208,7 @@
 
                 <div class="border-t border-placeholder pt-6">
                     <label class="flex items-start gap-2 text-sm text-ink">
-                        <input type="checkbox" name="consent" value="1" required class="mt-0.5 rounded border-border-muted text-primary focus:ring-primary">
+                        <input type="checkbox" name="consent" value="1" required class="h-5 w-5 shrink-0 mt-0.5 rounded border-border-muted text-primary focus:ring-primary">
                         <span>{{ __('exchange_quotes.request.consent') }}</span>
                     </label>
                     @error('consent')

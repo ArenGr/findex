@@ -44,7 +44,7 @@ the whole line would read as a verdict on the organization. --}}
             href="{{ $directions['url'] }}"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 underline hover:text-ink"
+            class="-my-2.5 inline-flex items-center gap-1 py-2.5 underline hover:text-ink"
             title="{{ $directions['address'] ?: $directions['name'] }}"
         >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 shrink-0" aria-hidden="true">

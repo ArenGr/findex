@@ -143,24 +143,28 @@
                         <table class="w-full border-collapse text-sm">
                             <thead>
                                 <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
-                                    <th class="px-6 py-3 text-left">{{ __('rates.currency_label') }}</th>
-                                    <th class="px-6 py-3 text-right" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}</th>
-                                    <th class="px-6 py-3 text-right" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}</th>
+                                    <th class="px-4 py-3 text-left sm:px-6">{{ __('rates.currency_label') }}</th>
+                                    <th class="px-4 py-3 text-right sm:px-6" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}</th>
+                                    <th class="px-4 py-3 text-right sm:px-6" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}</th>
                                     <th class="hidden px-4 py-3 text-right md:table-cell">{{ __('rates.updated_column') }}</th>
-                                    <th class="px-4 py-3"><span class="sr-only">{{ __('rates.view_all') }}</span></th>
+                                    <th class="hidden px-4 py-3 sm:table-cell"><span class="sr-only">{{ __('rates.view_all') }}</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($rows as $row)
                                     <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
-                                        <td class="px-6 py-4">
-                                            <span class="flex items-center gap-2">
+                                        <td class="px-4 py-4 sm:px-6">
+                                            <a
+                                                href="{{ route('rates.index', ['currency' => $row['code'], 'type' => $type]) }}"
+                                                class="flex min-h-11 items-center gap-2 sm:pointer-events-none"
+                                                aria-label="{{ __('organizations.rates_see_all', ['code' => $row['code']]) }}"
+                                            >
                                                 <span aria-hidden="true">{{ \App\Models\Currency::flag($row['code']) }}</span>
                                                 <span class="font-medium text-ink">{{ $row['code'] }}</span>
                                                 <span class="hidden text-xs break-words text-muted sm:inline">{{ $row['name'] }}</span>
-                                            </span>
+                                            </a>
                                         </td>
-                                        <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $row['best_buy'], 'font-medium' => ! $row['best_buy']])>
+                                        <td @class(['px-4 py-4 text-right text-base text-ink tabular-nums sm:px-6', 'font-semibold' => $row['best_buy'], 'font-medium' => ! $row['best_buy']])>
                                             <span class="inline-flex items-center justify-end gap-2">
                                                 @if ($row['best_buy'])
                                                     <x-rates.best-chip :label="__('organizations.rates_best_badge')" />
@@ -168,7 +172,7 @@
                                                 {{ number_format($row['buy_rate'], 2) }}
                                             </span>
                                         </td>
-                                        <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $row['best_sell'], 'font-medium' => ! $row['best_sell']])>
+                                        <td @class(['px-4 py-4 text-right text-base tabular-nums text-accent-red sm:px-6', 'font-semibold' => $row['best_sell'], 'font-medium' => ! $row['best_sell']])>
                                             <span class="inline-flex items-center justify-end gap-2">
                                                 @if ($row['best_sell'])
                                                     <x-rates.best-chip :label="__('organizations.rates_best_badge')" />
@@ -188,10 +192,14 @@
                                         {{-- Out to the comparison, which is the
                                         question this table raises and cannot
                                         answer: is this a good rate? --}}
-                                        <td class="px-4 py-4 text-right">
+                                        {{-- Hidden below sm: "See all USD rates" was being
+                                        wrapped into 33px of width and rendered one
+                                        letter per line. The currency name in the first
+                                        column is the link on a phone instead. --}}
+                                        <td class="hidden px-4 py-4 text-right sm:table-cell">
                                             <a
                                                 href="{{ route('rates.index', ['currency' => $row['code'], 'type' => $type]) }}"
-                                                class="text-xs font-medium break-words text-primary hover:underline"
+                                                class="inline-flex min-h-11 items-center text-xs font-medium break-words text-primary hover:underline"
                                             >
                                                 {{ __('organizations.rates_see_all', ['code' => $row['code']]) }}
                                             </a>
@@ -216,7 +224,7 @@
                     <h2 class="font-heading text-lg font-semibold break-words text-ink">
                         {{ __('rates.history.title', ['code' => $historyCurrency->code]) }}
                     </h2>
-                    <a href="{{ route('rates.history', ['currency' => $historyCurrency->code]) }}" class="text-sm font-medium break-words text-primary hover:underline">
+                    <a href="{{ route('rates.history', ['currency' => $historyCurrency->code]) }}" class="-my-2 inline-flex min-h-11 items-center py-2 text-sm font-medium break-words text-primary hover:underline">
                         {{ __('rates.history.link') }} &rarr;
                     </a>
                 </div>
@@ -256,7 +264,7 @@
                             <a
                                 href="https://www.google.com/maps/dir/?api=1&destination={{ $branch->latitude }},{{ $branch->longitude }}"
                                 target="_blank" rel="noopener noreferrer"
-                                class="mt-1 inline-flex items-center gap-1 text-xs font-medium break-words text-primary hover:underline"
+                                class="-mb-1 mt-1 inline-flex min-h-11 items-center gap-1 text-xs font-medium break-words text-primary hover:underline"
                             >
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 shrink-0" aria-hidden="true">
                                     <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />

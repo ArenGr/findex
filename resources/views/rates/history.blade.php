@@ -105,7 +105,7 @@
         @endif
 
         <p class="mt-8">
-            <a href="{{ route('rates.index', ['currency' => $code]) }}" class="text-sm font-medium break-words text-primary hover:underline">
+            <a href="{{ route('rates.index', ['currency' => $code]) }}" class="-my-2 inline-flex min-h-11 items-center py-2 text-sm font-medium break-words text-primary hover:underline">
                 &larr; {{ __('rates.all_heading') }}
             </a>
         </p>

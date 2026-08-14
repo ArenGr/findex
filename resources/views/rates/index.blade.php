@@ -381,7 +381,7 @@
                     also shareable and works with JS off. --}}
                     <a
                         href="{{ $link(['amount' => $quick]) }}"
-                        class="rounded-full border px-3 py-1 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                        class="inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-xs font-medium transition {{ (int) $amount === $quick ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
                     >
                         {{ number_format($quick) }}
                     </a>
@@ -390,7 +390,7 @@
                 @if ($calculating)
                     {{-- Not shrink-0: the Armenian string is wider than a 320px
                     screen and would push the page sideways. --}}
-                    <a href="{{ $link(['amount' => null]) }}" class="min-w-0 text-xs break-words text-muted underline hover:text-ink">
+                    <a href="{{ $link(['amount' => null]) }}" class="inline-flex min-h-11 min-w-0 items-center text-xs break-words text-muted underline hover:text-ink">
                         {{ __('rates.calculator_clear') }}
                     </a>
                 @endif
@@ -826,7 +826,7 @@
                 sketches: this page has been trimmed hard, and a chart here
                 would be a fourth summary above a table that is the point. --}}
                 <p class="mt-3">
-                    <a href="{{ route('rates.history', ['currency' => $selectedCurrency?->code]) }}" class="text-sm font-medium break-words text-primary hover:underline">
+                    <a href="{{ route('rates.history', ['currency' => $selectedCurrency?->code]) }}" class="inline-flex min-h-11 items-center text-sm font-medium break-words text-primary hover:underline">
                         {{ __('rates.history.link') }} &rarr;
                     </a>
                 </p>
@@ -909,7 +909,7 @@
                 <p class="min-w-0 text-sm break-words text-muted">
                     {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
                     @if ($hasNonDefaultFilter)
-                        &middot; <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
+                        &middot; <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="-my-2 inline-block py-2 underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
                     @endif
                     {{-- 0.01, not 1: the floor was written for dram totals in
                     the thousands, and silently swallowed the whole line for a
@@ -952,7 +952,7 @@
                             <a
                                 href="{{ $link(['view' => $mode]) }}"
                                 aria-current="{{ $isCurrent ? 'true' : 'false' }}"
-                                class="min-w-0 rounded-md px-3 py-1 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
+                                class="inline-flex min-h-9 min-w-0 items-center rounded-md px-3 py-2 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
                             >
                                 {{ __('rates.'.$key) }}
                             </a>
@@ -1000,7 +1000,7 @@
                                 <a
                                     href="{{ $link(['both' => $both ? 1 : null]) }}"
                                     aria-current="{{ $isCurrent ? 'true' : 'false' }}"
-                                    class="min-w-0 rounded-md px-3 py-1 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
+                                    class="inline-flex min-h-9 min-w-0 items-center rounded-md px-3 py-2 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
                                 >
                                     {{ __('rates.'.$key) }}
                                 </a>
@@ -1073,7 +1073,12 @@
                             {{-- No star beside the name: the total carries it,
                             so each row is marked once, on the number it is
                             about. --}}
-                            <a href="{{ $rate->organization_url }}" class="block font-medium break-words text-ink hover:text-primary">{{ $rate->organization_name }}</a>
+                            {{-- Padded and pulled back out again: the row keeps
+                            its height while the name presents a 44px target.
+                            The card itself cannot be the link - the meta line
+                            below holds one, and an anchor inside an anchor is
+                            invalid. --}}
+                            <a href="{{ $rate->organization_url }}" class="-my-2.5 block py-2.5 font-medium break-words text-ink hover:text-primary">{{ $rate->organization_name }}</a>
                             <x-rates.org-meta
                                 :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
                                 :scraped-at="$rate->scraped_at"
