@@ -259,20 +259,63 @@
             Currency is a set of links rather than a field: picking one
             navigates, carrying the current amount and intent.
         --}}
-        <div class="mt-8">
+        @php
+            // Four chips answer the question for almost everyone; the other
+            // seven turn one decision into eleven and push the rates
+            // themselves off the screen. They are one click away, not gone.
+            $everyday = config('rates.everyday');
+            $currencyChip = fn ($currency) => $selectedCurrency?->id === $currency->id
+                ? 'border-primary/50 bg-primary/20 text-ink'
+                : 'border-placeholder bg-white text-muted hover:text-ink';
+            [$commonCurrencies, $otherCurrencies] = $currencies->partition(
+                fn ($currency) => in_array($currency->code, $everyday, true)
+            );
+            // A currency picked from behind the button must not disappear when
+            // the page reloads on it - that reads as the choice being lost.
+            $othersOpen = $otherCurrencies->contains(fn ($currency) => $selectedCurrency?->id === $currency->id);
+        @endphp
+
+        <div class="mt-8" x-data="{ showAll: @js($othersOpen) }">
             <span class="{{ $labelClass }}">{{ __('rates.currency_label') }}</span>
-            {{-- Eleven currencies wrap to six rows on a phone, so on small
-            viewports they scroll sideways instead. --}}
+            {{-- On a phone the row scrolls sideways rather than wrapping. --}}
             <div class="mt-2 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
-                @foreach ($currencies as $currency)
+                @foreach ($commonCurrencies as $currency)
                     <a
                         href="{{ $link(['currency' => $currency->code]) }}"
-                        class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $selectedCurrency?->id === $currency->id ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                        class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $currencyChip($currency) }}"
                     >
                         <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
                         {{ $currency->code }}
                     </a>
                 @endforeach
+
+                @if ($otherCurrencies->isNotEmpty())
+                    {{-- The rest sit in the same row, so opening them extends
+                    the line of chips rather than adding a second control. --}}
+                    @foreach ($otherCurrencies as $currency)
+                        <a
+                            href="{{ $link(['currency' => $currency->code]) }}"
+                            x-show="showAll"
+                            x-cloak
+                            class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $currencyChip($currency) }}"
+                        >
+                            <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
+                            {{ $currency->code }}
+                        </a>
+                    @endforeach
+
+                    <button
+                        type="button"
+                        @click="showAll = !showAll"
+                        :aria-expanded="showAll ? 'true' : 'false'"
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-border-muted bg-white px-4 py-2 text-sm font-medium text-muted transition hover:border-primary/50 hover:text-ink"
+                    >
+                        {{-- The count says what is behind the button, so it is
+                        not a guess whether pressing it is worth it. --}}
+                        <span x-show="!showAll">+{{ $otherCurrencies->count() }}</span>
+                        <span x-text="showAll ? @js(__('rates.currency_fewer')) : @js(__('rates.currency_more'))"></span>
+                    </button>
+                @endif
             </div>
 
         </div>

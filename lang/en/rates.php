@@ -86,6 +86,8 @@ return [
     'amount_placeholder' => 'e.g. 500',
     'market_all' => 'All',
     'currency_label' => 'Currency',
+    'currency_more' => 'More currencies',
+    'currency_fewer' => 'Fewer currencies',
     'market_label' => 'Where to exchange',
     'type_label' => 'Transaction type',
     'more_filters' => 'Filters',

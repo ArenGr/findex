@@ -1349,4 +1349,59 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertSee('x-data="{ open: true }"', false);
     }
+
+    /**
+     * Eleven chips turn one decision into eleven and push the rates off the
+     * screen. The four almost everyone came for are shown; the rest are one
+     * click away rather than gone.
+     */
+    public function test_only_the_everyday_currencies_are_shown_at_first(): void
+    {
+        $this->seedMarket();
+        $chf = Currency::create(['code' => 'CHF', 'name' => 'Franc', 'symbol' => 'Fr', 'sort_order' => 4, 'is_active' => true]);
+        $gel = Currency::create(['code' => 'GEL', 'name' => 'Lari', 'symbol' => '\u{20be}', 'sort_order' => 6, 'is_active' => true]);
+
+        $response = $this->get('/en/rates?currency=USD')->assertOk();
+
+        // Both are rendered - the hidden ones are collapsed client-side, not
+        // withheld, so they cost no extra request and are in the page for
+        // anyone reading it without JavaScript.
+        $response->assertSee('currency=CHF', false)
+            ->assertSee('currency=GEL', false)
+            // ...but the page opens collapsed, and says how many are behind it.
+            ->assertSee('x-data="{ showAll: false }"', false)
+            ->assertSee('More currencies');
+
+        $this->assertSame('CHF', $chf->code);
+        $this->assertSame('GEL', $gel->code);
+    }
+
+    /**
+     * A currency picked from behind the button must not vanish when the page
+     * reloads on it - that reads as the choice having been lost.
+     */
+    public function test_landing_on_a_hidden_currency_opens_the_rest(): void
+    {
+        $this->seedMarket();
+        Currency::create(['code' => 'CHF', 'name' => 'Franc', 'symbol' => 'Fr', 'sort_order' => 4, 'is_active' => true]);
+
+        $this->get('/en/rates?currency=CHF')
+            ->assertOk()
+            ->assertSee('x-data="{ showAll: true }"', false);
+
+        // An everyday one leaves them collapsed.
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('x-data="{ showAll: false }"', false);
+    }
+
+    /** With nothing beyond the everyday four, there is nothing to expand. */
+    public function test_no_button_when_every_currency_is_already_shown(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertDontSee('More currencies');
+    }
 }

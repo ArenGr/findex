@@ -86,6 +86,8 @@ return [
     'amount_placeholder' => 'օր.՝ 500',
     'market_all' => 'Բոլորը',
     'currency_label' => 'Արժույթ',
+    'currency_more' => 'Այլ արժույթներ',
+    'currency_fewer' => 'Ավելի քիչ արժույթ',
     'market_label' => 'Որտեղ փոխանակել',
     'type_label' => 'Գործարքի տեսակ',
     'more_filters' => 'Զտիչներ',

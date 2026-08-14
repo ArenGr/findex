@@ -86,6 +86,8 @@ return [
     'amount_placeholder' => 'напр. 500',
     'market_all' => 'Все',
     'currency_label' => 'Валюта',
+    'currency_more' => 'Другие валюты',
+    'currency_fewer' => 'Меньше валют',
     'market_label' => 'Где обменять',
     'type_label' => 'Тип операции',
     'more_filters' => 'Фильтры',
