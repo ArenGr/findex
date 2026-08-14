@@ -1492,4 +1492,28 @@ class RatesPageTest extends TestCase
             ->assertSee('text-primary tabular-nums', false)
             ->assertSee('tabular-nums text-accent-red', false);
     }
+
+    /**
+     * The map plots every branch behind every matching rate, so it is not
+     * paged - and page numbers under it would claim it was, sending people
+     * looking for pins that are already on screen.
+     */
+    public function test_the_map_is_not_paged(): void
+    {
+        $usd = $this->seedMarket();
+
+        foreach (range(1, 12) as $n) {
+            $organization = $this->organization("filler-{$n}");
+            $this->rate($organization, $usd, 300.0 + $n, 400.0 - $n);
+            $this->branch($organization, "Branch {$n}", 40.1 + ($n / 100), 44.5);
+        }
+
+        // The list pages, and says so.
+        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Pages of rates');
+
+        // The map does neither, and still plots everything.
+        $map = $this->get('/en/rates?currency=USD&view=map')->assertOk();
+        $map->assertDontSee('Pages of rates');
+        $this->assertGreaterThan(10, count($map->viewData('mapBranches')));
+    }
 }

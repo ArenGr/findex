@@ -1277,7 +1277,13 @@
             </div>
             @endif
 
-            <x-rates.pagination :paginator="$rates" />
+            {{-- The map is not paged: it plots every branch behind every rate
+            these filters match, because a map showing ten of fourteen offices
+            is a map that hides four of them. Page numbers under it would say
+            otherwise. --}}
+            @if ($viewMode !== 'map')
+                <x-rates.pagination :paginator="$rates" />
+            @endif
         @else
             {{-- Never a dead end: offer the nearest combination that has data
             rather than only reporting the absence. --}}
