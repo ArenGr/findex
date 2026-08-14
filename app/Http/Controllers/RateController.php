@@ -196,6 +196,13 @@ class RateController extends Controller
             default => null,
         };
 
+        // "Open now". Evaluated in PHP over the branch table rather than in
+        // SQL: the hours are a JSON column, the dataset is a couple of dozen
+        // rows, and a JSON predicate would be written twice - once for MySQL in
+        // production and once for SQLite in the test suite.
+        $openNow = $request->boolean('open');
+        $openOrganizationIds = $openNow ? $this->organizationsOpenNow() : null;
+
         // List or map. The list is the default and stays the default: a map is
         // slower to read a table of numbers off, and most visits are exactly
         // that. Only when it is asked for do we load the library at all.
@@ -203,7 +210,7 @@ class RateController extends Controller
 
         $page = (int) $request->query('page', 1);
 
-        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page', 'freshBefore');
+        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page', 'freshBefore', 'openOrganizationIds');
 
         // Distance-sorted results are specific to wherever this one visitor
         // happens to be standing - sharing them under the filter-only cache
@@ -260,6 +267,7 @@ class RateController extends Controller
             // has no use for.
             'mapBranches' => $viewMode === 'map' ? $this->mapBranches($cached['items']) : [],
             'freshness' => $freshness,
+            'openNow' => $openNow,
             'sort' => $sortKey,
             'sortOptions' => $sortOptions,
             'direction' => $direction,
@@ -473,7 +481,7 @@ class RateController extends Controller
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
             'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
-            'freshBefore' => $freshBefore] = $filters;
+            'freshBefore' => $freshBefore, 'openOrganizationIds' => $openOrganizationIds] = $filters;
 
         // Depends on both rate data and Organization::withRatingStats()
         // (review counts/averages), so it needs both tags - a review write
@@ -486,14 +494,14 @@ class RateController extends Controller
         // entry written before that would render an ungrouped page.
         $cacheKey = 'rates.listing.'.md5(json_encode([
             'v2', app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
-            $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore,
+            $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore, $openOrganizationIds,
         ]));
 
         return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
             $cacheKey,
             now()->addMinutes(30),
-            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore) {
-                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore)
+            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore, $openOrganizationIds) {
+                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore, $openOrganizationIds)
                     ->when(
                         $sort === 'spread',
                         fn ($query) => $query->orderByRaw("(sell_rate - buy_rate) {$direction}"),
@@ -529,9 +537,9 @@ class RateController extends Controller
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
             'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
-            'freshBefore' => $freshBefore] = $filters;
+            'freshBefore' => $freshBefore, 'openOrganizationIds' => $openOrganizationIds] = $filters;
 
-        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore)
+        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore, $openOrganizationIds)
             ->get()
             ->map(function (CurrencyRate $rate) use ($latitude, $longitude, $selectedCity) {
                 // sortBy, not min(): the branch that won is the one to send
@@ -561,13 +569,16 @@ class RateController extends Controller
         ];
     }
 
-    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity, ?string $freshBefore = null): Builder
+    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity, ?string $freshBefore = null, ?array $openOrganizationIds = null): Builder
     {
         return CurrencyRate::query()
             // Passed as a resolved timestamp rather than a period, so the
             // cache key and the query cannot disagree about where "today"
             // ends.
             ->when($freshBefore, fn ($query) => $query->where('scraped_at', '>=', $freshBefore))
+            // An empty list is a real answer - nothing is open - so this
+            // checks for null rather than for emptiness.
+            ->when($openOrganizationIds !== null, fn ($query) => $query->whereIn('organization_id', $openOrganizationIds))
             // Branches live inside this closure rather than as a separate
             // ->with('organization.branches'): declared afterwards, the nested
             // form replaces the constraint on 'organization' and silently drops
@@ -648,6 +659,28 @@ class RateController extends Controller
     }
 
     /**
+     * Organizations with at least one branch open right now.
+     *
+     * Branches with no hours on file are excluded rather than assumed open:
+     * "open now" is a promise that someone is standing behind a counter, and
+     * we should not make it on a guess.
+     *
+     * @return array<int, int>
+     */
+    private function organizationsOpenNow(): array
+    {
+        return Branch::query()
+            ->where('is_active', true)
+            ->whereNotNull('opening_hours')
+            ->get()
+            ->filter(fn (Branch $branch) => $branch->isOpenAt() === true)
+            ->pluck('organization_id')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * The branches behind the rows on this page, grouped by organization.
      *
      * A rate belongs to an organization, not to a branch, so one row can put
@@ -673,13 +706,21 @@ class RateController extends Controller
             ->whereNotNull('longitude')
             ->get()
             ->groupBy('organization_id')
-            ->map(fn ($branches) => $branches->map(fn (Branch $branch) => [
-                'name' => $branch->name,
-                'address' => $branch->address,
-                'city' => $branch->city,
-                'lat' => (float) $branch->latitude,
-                'lng' => (float) $branch->longitude,
-            ])->values()->all())
+            ->map(fn ($branches) => $branches->map(function (Branch $branch) {
+                $hours = $branch->hoursOn(now());
+
+                return [
+                    'name' => $branch->name,
+                    'address' => $branch->address,
+                    'city' => $branch->city,
+                    'lat' => (float) $branch->latitude,
+                    'lng' => (float) $branch->longitude,
+                    // Three states, not two: open, shut, and no hours on file.
+                    // A branch we know nothing about is not a closed one.
+                    'open' => $branch->isOpenAt(),
+                    'hours' => $hours ? $hours[0].' - '.$hours[1] : null,
+                ];
+            })->values()->all())
             ->all();
     }
 

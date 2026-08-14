@@ -784,6 +784,68 @@ class RatesPageTest extends TestCase
     }
 
     /**
+     * "Open now" is a promise that someone is standing behind a counter, so it
+     * is asked in Yerevan time - the app runs on UTC, and comparing the raw
+     * clock would shut every branch four hours early.
+     */
+    public function test_open_now_keeps_only_organizations_with_a_branch_open(): void
+    {
+        $this->seedMarket();
+        $bank = Organization::where('slug', 'cheap-bank')->firstOrFail();
+        $exchange = Organization::where('slug', 'corner-exchange')->firstOrFail();
+
+        $office = ['mon' => ['09:30', '17:30'], 'sat' => null, 'sun' => null];
+        $allHours = ['mon' => ['09:00', '21:00'], 'sat' => ['10:00', '20:00'], 'sun' => ['10:00', '18:00']];
+
+        Branch::create(['organization_id' => $bank->id, 'name' => 'Bank branch', 'city' => 'Yerevan',
+            'is_active' => true, 'opening_hours' => $office]);
+        Branch::create(['organization_id' => $exchange->id, 'name' => 'Exchange branch', 'city' => 'Yerevan',
+            'is_active' => true, 'opening_hours' => $allHours]);
+
+        // Monday 10:00 in Yerevan is 06:00 UTC: both trade.
+        $this->travelTo('2026-08-17 06:00:00');
+        $this->assertSame(2, $this->get('/en/rates?currency=USD&open=1')->viewData('ranked')['count']);
+
+        // Monday 18:00 Yerevan: the bank has shut, the office has not.
+        $this->travelTo('2026-08-17 14:00:00');
+        $rows = $this->get('/en/rates?currency=USD&open=1')->viewData('ranked')['rows'];
+        $this->assertSame(['Corner exchange'], collect($rows)->pluck('organization_name')->all());
+
+        // Sunday 19:00 Yerevan: nobody.
+        $this->travelTo('2026-08-16 15:00:00');
+        $this->assertSame(0, $this->get('/en/rates?currency=USD&open=1')->viewData('ranked')['count']);
+
+        // ...and without the filter the table is untouched by any of it.
+        $this->assertSame(3, $this->get('/en/rates?currency=USD')->viewData('ranked')['count']);
+    }
+
+    /**
+     * A branch we have no hours for is not a closed one - but it is not one we
+     * can promise is open either, so it stays out of "open now".
+     */
+    public function test_a_branch_without_hours_is_never_claimed_to_be_open(): void
+    {
+        $this->seedMarket();
+        Branch::create([
+            'organization_id' => Organization::where('slug', 'cheap-bank')->firstOrFail()->id,
+            'name' => 'Unknown hours', 'city' => 'Yerevan', 'is_active' => true,
+        ]);
+
+        $this->travelTo('2026-08-17 06:00:00');
+
+        $this->assertSame(0, $this->get('/en/rates?currency=USD&open=1')->viewData('ranked')['count']);
+    }
+
+    /** It narrows the table, so it has to show up in the badge. */
+    public function test_open_now_counts_as_an_active_filter(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Filters (');
+        $this->get('/en/rates?currency=USD&open=1')->assertOk()->assertSee('Filters (1)');
+    }
+
+    /**
      * On a phone the filter panel is a bottom sheet, and it confirms with the
      * result rather than a bare "Done" - the table is behind the sheet, so the
      * count is the only way to see what the choices did before closing it.

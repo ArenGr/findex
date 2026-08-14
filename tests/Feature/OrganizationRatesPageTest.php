@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\RateType;
+use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\CurrencyRateHistory;
@@ -142,6 +143,44 @@ class OrganizationRatesPageTest extends TestCase
         $this->get('/en/organizations/quiet-bank')
             ->assertOk()
             ->assertDontSee('exchange rates in Armenia', false);
+    }
+
+    /**
+     * The page had the branches all along and only used them as a dropdown in
+     * the review form. Hours are three states: open, shut, and never recorded -
+     * and calling the third "closed" would send someone away from an open door.
+     */
+    public function test_branches_are_listed_with_their_hours(): void
+    {
+        $usd = $this->currency();
+        $bank = $this->organization('acba');
+        $this->rate($bank, $usd, 363.0, 367.0);
+
+        Branch::create([
+            'organization_id' => $bank->id, 'name' => 'Kentron', 'address' => 'Amiryan St 2',
+            'city' => 'Yerevan', 'is_active' => true,
+            'opening_hours' => ['mon' => ['09:30', '17:30'], 'sun' => null],
+        ]);
+        Branch::create([
+            'organization_id' => $bank->id, 'name' => 'Gyumri', 'city' => 'Gyumri', 'is_active' => true,
+        ]);
+
+        // Monday 10:00 in Yerevan.
+        $this->travelTo('2026-08-17 06:00:00');
+
+        $this->get('/en/organizations/acba')
+            ->assertOk()
+            ->assertSee('Branches')
+            ->assertSee('Kentron')
+            ->assertSee('Amiryan St 2')
+            ->assertSee('Open')
+            ->assertSee('09:30')
+            // The branch with nothing on file says so rather than claiming shut.
+            ->assertSee('Hours not published');
+
+        // Monday 18:00 Yerevan - after 17:30.
+        $this->travelTo('2026-08-17 14:00:00');
+        $this->get('/en/organizations/acba')->assertOk()->assertSee('Closed');
     }
 
     /** Checked and changed are different facts, and the second is the useful one. */

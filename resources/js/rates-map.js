@@ -81,6 +81,21 @@ function escape(value) {
 }
 
 /**
+ * Open, shut, or unknown - three states, coloured only for the two we can
+ * actually vouch for, and always spelled out in words as well.
+ */
+function openLine(point) {
+    if (point.open === null || point.open === undefined) {
+        return `<p class="mt-1 text-xs text-muted">${escape(point.openLabel)}</p>`;
+    }
+
+    const tone = point.open ? 'text-primary' : 'text-accent-red';
+    const hours = point.hours ? ` <span class="text-muted">${escape(point.hours)}</span>` : '';
+
+    return `<p class="mt-1 text-xs"><span class="font-semibold ${tone}">${escape(point.openLabel)}</span>${hours}</p>`;
+}
+
+/**
  * Everything the row would have told them, plus the two things only a map can:
  * where it is, and how to get there.
  */
@@ -98,6 +113,7 @@ function popup(point, labels) {
         </p>
         ${point.total ? `<p class="mt-1 tabular-nums text-ink"><span class="font-semibold">${escape(point.total)}</span> <span class="text-xs text-muted">${escape(labels.total)}</span></p>` : ''}
         ${line(labels.distance, point.distance)}
+        ${openLine(point)}
         <p class="mt-2 flex flex-wrap gap-3">
             <a href="${escape(point.directions)}" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-primary underline">${escape(labels.directions)}</a>
             ${point.negotiate ? `<a href="${escape(point.negotiate)}" class="text-xs font-medium text-primary underline">${escape(labels.negotiate)}</a>` : ''}

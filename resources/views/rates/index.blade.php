@@ -19,6 +19,7 @@
         'intent' => $intent,
         'amount' => $amount,
         'fresh' => $freshness,
+        'open' => $openNow ? 1 : null,
         'view' => $viewMode === 'map' ? 'map' : null,
         'both' => $detailed ? 1 : null,
     ];
@@ -30,7 +31,7 @@
 
     $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH
         || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
-        || $amount !== null || $freshness;
+        || $amount !== null || $freshness || $openNow;
 
     // Whole dram above 1,000, where a rounded half-unit is noise. Below it the
     // decimals are the number: 1 KZT at 4.60 rendered as "5", and the office
@@ -121,7 +122,7 @@
     // narrower view than "Cash" and the visitor should be told they set it.
     $activeFilterCount = collect([
         $selectedType !== \App\Enums\RateType::CASH ? $selectedType : null,
-        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null, $freshness,
+        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null, $freshness, $openNow ?: null,
     ])->filter()->count();
 
 @endphp
@@ -498,6 +499,23 @@
             </div>
         </div>
 
+        {{-- Excludes branches with no hours on file rather than assuming them
+        open: this is a promise that someone is behind a counter. --}}
+        <div>
+            <span class="{{ $labelClass }}">{{ __('rates.availability_label') }}</span>
+            <div class="mt-2 flex flex-wrap gap-2">
+                <a
+                    href="{{ $link(['open' => $openNow ? null : 1]) }}"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition {{ $openNow ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+                    </svg>
+                    {{ __('rates.open_now') }}
+                </a>
+            </div>
+        </div>
+
         {{-- The organization and city selects. Their own mobile-only collapse
         is gone: the whole panel is behind one button now, at every width. --}}
         <div>
@@ -710,6 +728,11 @@
                             'distance' => $hasLocation && isset($row->distance_km)
                                 ? __('rates.distance_km', ['km' => number_format($row->distance_km, 1)])
                                 : null,
+                            'open' => $branch['open'],
+                            'openLabel' => $branch['open'] === null
+                                ? __('rates.hours_unknown')
+                                : ($branch['open'] ? __('rates.open') : __('rates.closed')),
+                            'hours' => $branch['hours'],
                             'directions' => 'https://www.google.com/maps/dir/?api=1&destination='.$branch['lat'].','.$branch['lng'],
                             // Same rule as everywhere else: only exchange
                             // offices negotiate, and only for a currency we

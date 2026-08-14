@@ -81,6 +81,26 @@ class BranchSeeder extends Seeder
             ],
         ];
 
+        // Demo opening hours, in Yerevan local time. Two realistic patterns:
+        // banks keep office hours and shut at the weekend, exchange offices
+        // open longer and trade seven days - which is exactly the difference
+        // "Open now" exists to surface at 7pm on a Sunday.
+        $bankHours = [
+            'mon' => ['09:30', '17:30'], 'tue' => ['09:30', '17:30'], 'wed' => ['09:30', '17:30'],
+            'thu' => ['09:30', '17:30'], 'fri' => ['09:30', '17:30'], 'sat' => null, 'sun' => null,
+        ];
+
+        $exchangeHours = [
+            'mon' => ['09:00', '21:00'], 'tue' => ['09:00', '21:00'], 'wed' => ['09:00', '21:00'],
+            'thu' => ['09:00', '21:00'], 'fri' => ['09:00', '21:00'],
+            'sat' => ['10:00', '20:00'], 'sun' => ['10:00', '18:00'],
+        ];
+
+        // One branch of each kind is left without hours on purpose, so the
+        // "we do not know" path stays exercised in demo data rather than only
+        // in tests - it renders differently from "closed" and should.
+        $withoutHours = ['ACBA Gyumri', 'Northside Exchange - Avan'];
+
         foreach ([...$banks, ...$exchangeOffices] as $slug => $branches) {
             $organization = Organization::where('slug', $slug)->first();
 
@@ -97,6 +117,9 @@ class BranchSeeder extends Seeder
                         'latitude' => $branch['lat'],
                         'longitude' => $branch['lng'],
                         'is_active' => true,
+                        'opening_hours' => in_array($branch['name'], $withoutHours, true)
+                            ? null
+                            : ($organization->type === 'exchange' ? $exchangeHours : $bankHours),
                     ]
                 );
             }

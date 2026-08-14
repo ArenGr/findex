@@ -207,6 +207,43 @@
             @endforelse
         @endif
 
+        {{-- Where you can actually walk in, and whether it is worth walking
+        in right now. The page had the branches all along - only the review
+        form used them, as a dropdown. --}}
+        @if ($organization->branches->isNotEmpty())
+            <h2 class="mt-12 font-heading text-xl font-semibold break-words text-ink">{{ __('organizations.branches_heading') }}</h2>
+
+            <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+                @foreach ($organization->branches as $branch)
+                    <li class="flex min-w-0 flex-col gap-1 rounded-xl border border-placeholder p-4">
+                        <p class="font-medium break-words text-ink">{{ $branch->name }}</p>
+
+                        @if ($branch->address)
+                            <p class="text-sm break-words text-muted">{{ $branch->address }}@if ($branch->city), {{ $branch->city }}@endif</p>
+                        @elseif ($branch->city)
+                            <p class="text-sm break-words text-muted">{{ $branch->city }}</p>
+                        @endif
+
+                        <x-branch-hours :branch="$branch" />
+
+                        @if ($branch->latitude !== null && $branch->longitude !== null)
+                            <a
+                                href="https://www.google.com/maps/dir/?api=1&destination={{ $branch->latitude }},{{ $branch->longitude }}"
+                                target="_blank" rel="noopener noreferrer"
+                                class="mt-1 inline-flex items-center gap-1 text-xs font-medium break-words text-primary hover:underline"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 shrink-0" aria-hidden="true">
+                                    <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                                    <circle cx="12" cy="10" r="3" />
+                                </svg>
+                                {{ __('rates.directions') }}
+                            </a>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
         {{-- Reviews --}}
         <h2 class="mt-12 font-heading text-xl font-semibold text-ink">{{ __('organizations.reviews_heading') }}</h2>
 

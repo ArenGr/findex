@@ -95,4 +95,5 @@ return [
     'rates_see_all' => 'See all :code rates',
     'rates_best_badge' => 'Best in Armenia',
     'rates_meta_description' => ':name exchange rates in Armenia - live buy and sell rates for :count currencies, updated daily and compared against every other bank and exchange office.',
+    'branches_heading' => 'Branches',
 ];
