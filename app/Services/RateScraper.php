@@ -37,8 +37,10 @@ class RateScraper
 
     private Client $httpClient;
 
-    public function __construct(private RateParserFactory $parsers)
-    {
+    public function __construct(
+        private RateParserFactory $parsers,
+        private OutboundUrlGuard $urlGuard,
+    ) {
         $handlerStack = HandlerStack::create();
         $handlerStack->push(Middleware::retry(
             self::shouldRetry(...),
@@ -48,7 +50,16 @@ class RateScraper
         $this->httpClient = new Client([
             'handler' => $handlerStack,
             'timeout' => 20,
-            'allow_redirects' => ['max' => 5],
+            'allow_redirects' => [
+                'max' => 5,
+                // Every hop is re-checked, not just the URL we set out with.
+                // The destination of a redirect is chosen by whichever site we
+                // just asked, so a bank whose page is compromised could
+                // otherwise walk our server into the private network.
+                'on_redirect' => function ($request, $response, $uri) {
+                    $this->urlGuard->assertAllowed((string) $uri);
+                },
+            ],
             // Some sites (e.g. Ameriabank) gate the first request behind a
             // WAF challenge that sets a cookie and redirects to the same
             // URL; the retry only succeeds if that cookie is sent back.
@@ -162,6 +173,8 @@ class RateScraper
      */
     private function getHtml(string $url): string
     {
+        $this->urlGuard->assertAllowed($url);
+
         return (string) $this->httpClient->get($url)->getBody();
     }
 
