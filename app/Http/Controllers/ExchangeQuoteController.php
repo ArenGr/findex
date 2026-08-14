@@ -12,6 +12,7 @@ use App\Models\CurrencyRate;
 use App\Models\ExchangeQuoteRequest;
 use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
+use App\Services\Notifications\ExchangeNotifierInterface;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -250,8 +251,13 @@ class ExchangeQuoteController extends Controller
      * the office can look up against the request it already answered. That is
      * the whole handshake, and it carries no name, no email and no phone.
      */
-    public function accept(Request $request, string $locale, string $exchangeQuoteRequest, string $response): RedirectResponse
-    {
+    public function accept(
+        Request $request,
+        string $locale,
+        string $exchangeQuoteRequest,
+        string $response,
+        ExchangeNotifierInterface $notifier,
+    ): RedirectResponse {
         $exchangeQuoteRequest = ExchangeQuoteRequest::with('responses')->findOrFail($exchangeQuoteRequest);
 
         $isOwner = $request->user() && $request->user()->id === $exchangeQuoteRequest->user_id;
@@ -276,6 +282,13 @@ class ExchangeQuoteController extends Controller
             'status' => ExchangeQuoteResponse::STATUS_ACCEPTED,
             'accepted_at' => now(),
         ])->save();
+
+        // The office has to know somebody is coming - both so they hold the
+        // rate, and so they can tell us afterwards whether the customer turned
+        // up. That report is the only way Findex ever learns whether a request
+        // became a real transaction; there is no affiliate link to follow and
+        // no payment passing through us.
+        $notifier->notifyAccepted($chosen);
 
         return redirect()
             ->to($request->headers->get('referer') ?: route('exchange.show', [$exchangeQuoteRequest]))

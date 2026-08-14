@@ -28,6 +28,11 @@ Route::get('/exchange/respond/{token}', [ExchangePartnerResponseController::clas
 
 Route::middleware('throttle:exchange_quote_response_submit')->group(function () {
     Route::post('/exchange/respond/{token}', [ExchangePartnerResponseController::class, 'store'])->name('exchange.respond.store');
+
+    // The office reporting what happened at the counter. Same token as the
+    // page it is posted from - the shop has no account with us.
+    Route::post('/exchange/respond/{token}/outcome', [ExchangePartnerResponseController::class, 'outcome'])
+        ->name('exchange.respond.outcome');
 });
 
 Route::get('/exchange/{exchangeQuoteRequest}', [ExchangeQuoteController::class, 'show'])->name('exchange.show');

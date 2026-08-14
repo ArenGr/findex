@@ -27,4 +27,14 @@ interface ExchangeNotifierInterface
      * from notify()'s initial request rather than resending the same one.
      */
     public function remind(ExchangeQuoteResponse $response): bool;
+
+    /**
+     * Tell the office their offer was the one chosen, and give them the code
+     * the customer will read out at the counter.
+     *
+     * Without this the office has no idea anyone is coming - and cannot report
+     * back whether they arrived, which is the only way Findex ever learns
+     * whether a request became a real transaction.
+     */
+    public function notifyAccepted(ExchangeQuoteResponse $response): bool;
 }

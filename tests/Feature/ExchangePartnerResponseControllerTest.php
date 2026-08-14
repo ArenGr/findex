@@ -62,6 +62,18 @@ class ExchangePartnerResponseControllerTest extends TestCase
         ], $overrides));
     }
 
+    /** A reply the visitor went on to choose - the state outcomes apply to. */
+    private function acceptedResponse(array $overrides = []): ExchangeQuoteResponse
+    {
+        return $this->pendingResponse(array_merge([
+            'status' => ExchangeQuoteResponse::STATUS_ACCEPTED,
+            'offer_letter' => 'A',
+            'offered_rate' => '386.2000',
+            'responded_at' => now(),
+            'accepted_at' => now(),
+        ], $overrides));
+    }
+
     public function test_a_valid_pending_token_shows_the_offer_form(): void
     {
         $response = $this->pendingResponse();
@@ -180,5 +192,79 @@ class ExchangePartnerResponseControllerTest extends TestCase
         $this->post(route('exchange.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
             'offered_rate' => '385.00',
         ])->assertStatus(429);
+    }
+
+    /**
+     * The only way Findex ever learns whether a request became a real
+     * transaction. There is no affiliate link to follow and no payment passing
+     * through us - the shop tells us, or nobody does.
+     */
+    public function test_the_office_can_report_what_happened_at_the_counter(): void
+    {
+        $response = $this->acceptedResponse();
+
+        $this->post(route('exchange.respond.outcome', ['locale' => 'en', 'token' => $response->response_token]), [
+            'outcome' => 'completed',
+        ])->assertRedirect();
+
+        $response->refresh();
+
+        $this->assertSame('completed', $response->outcome);
+        $this->assertNotNull($response->outcome_at);
+        // Status is where the offer got to with us; outcome is what happened in
+        // the shop. Reporting one must not overwrite the other.
+        $this->assertSame('accepted', $response->status);
+    }
+
+    /** Revisable outcomes would make the conversion numbers worthless. */
+    public function test_an_outcome_is_recorded_once_and_not_revised(): void
+    {
+        $response = $this->acceptedResponse();
+        $url = route('exchange.respond.outcome', ['locale' => 'en', 'token' => $response->response_token]);
+
+        $this->post($url, ['outcome' => 'completed'])->assertRedirect();
+        $recordedAt = $response->refresh()->outcome_at;
+
+        // A second press is not a mistake worth a red banner - it is ignored.
+        $this->post($url, ['outcome' => 'no_show'])->assertRedirect();
+
+        $this->assertSame('completed', $response->refresh()->outcome);
+        $this->assertEquals($recordedAt, $response->outcome_at);
+    }
+
+    /** Nothing happened at a counter for an offer nobody chose. */
+    public function test_an_unaccepted_offer_has_no_outcome_to_report(): void
+    {
+        $response = $this->acceptedResponse();
+        $response->forceFill(['status' => 'responded', 'accepted_at' => null])->save();
+
+        $this->post(route('exchange.respond.outcome', ['locale' => 'en', 'token' => $response->response_token]), [
+            'outcome' => 'completed',
+        ])->assertRedirect();
+
+        $this->assertNull($response->refresh()->outcome);
+    }
+
+    public function test_an_invented_outcome_is_rejected(): void
+    {
+        $response = $this->acceptedResponse();
+
+        $this->post(route('exchange.respond.outcome', ['locale' => 'en', 'token' => $response->response_token]), [
+            'outcome' => 'paid_in_gold',
+        ])->assertSessionHasErrors('outcome');
+
+        $this->assertNull($response->refresh()->outcome);
+    }
+
+    /** The office is shown the code and asked the question, on one page. */
+    public function test_the_partner_page_shows_the_code_and_asks_the_question(): void
+    {
+        $response = $this->acceptedResponse();
+
+        $this->get(route('exchange.respond', ['locale' => 'en', 'token' => $response->response_token]))
+            ->assertOk()
+            ->assertSee($response->redemption_code)
+            ->assertSee('Did the customer come?')
+            ->assertSee('Exchange completed');
     }
 }

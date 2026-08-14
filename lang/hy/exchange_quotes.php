@@ -130,6 +130,10 @@ return [
     ],
 
     'telegram' => [
+        'accepted_message' => '✅ Ձեր առաջարկն ընտրվել է։
+Կոդ՝ :code
+:amount :currency, փոխարժեք՝ :rate
+Հաճախորդը ցույց կտա այս կոդը դրամարկղում։',
         'request_message' => "💱 <b>Նոր փոխարժեքի հարցում Findex-ից</b>\n\n💰 Գումար՝ :amount :currency (:direction)\n📊 Ձեր ընթացիկ փոխարժեքը՝ :rate\n\nՀաճախորդը ցանկանում է իմանալ՝ կցանկանա՞ք առաջարկել ավելի բարենպաստ փոխարժեք, թե՞ թողնել այն անփոփոխ։\n\nՀպեք ստորև՝ պատասխանելու համար։",
         'reminder_message' => "⏰ <b>Հիշեցում՝ փոխարժեքի հարցում</b>\n\nՁեզ դեռ սպասվում է պատասխան մի հարցումի համար։ Հպեք ստորև՝ դիտելու և պատասխանելու համար՝ մինչև այն փակվի։",
         'view_and_respond_button' => 'Դիտել և Պատասխանել',
@@ -158,5 +162,17 @@ return [
         'choose_other' => 'Ընտրել այլ առաջարկ',
         'flash' => 'Առաջարկն ընտրված է։ Ցույց տվեք Ձեր կոդը դրամարկղում։',
         'request_code' => 'Հարցում :code',
+    ],
+    'outcome' => [
+        'accepted_heading' => 'Ձեր առաջարկն ընտրվել է',
+        'accepted_body' => 'Կոդը՝ :code։ Հաճախորդն ունի :amount :currency :rate փոխարժեքով։ Նա ցույց կտա այս կոդը Ձեր դրամարկղում։',
+        'outcome_question' => 'Հաճախորդը եկա՞վ',
+        'outcome_completed_button' => 'Գործարքը կատարվեց',
+        'outcome_no_show_button' => 'Չներկայացավ',
+        'outcome_thanks' => 'Շնորհակալություն՝ գրանցվեց։',
+        'outcome_recorded' => 'Գրանցվեց՝ :outcome',
+        'outcome_completed' => 'Կատարված',
+        'outcome_no_show' => 'Չներկայացած',
+        'outcome_expired' => 'Ժամկետանց',
     ],
 ];

@@ -7,6 +7,7 @@ use App\Models\ExchangeQuoteResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -28,6 +29,33 @@ class ExchangePartnerResponseController extends Controller
             ->first();
 
         return view('exchange.respond', ['response' => $response]);
+    }
+
+    /**
+     * The office reporting what happened at the counter.
+     *
+     * Findex has no other way to know: no affiliate link, no payment through
+     * us. If the shop does not say, nobody does - which is why this is two
+     * buttons on a page they already have open rather than anything they have
+     * to log in to.
+     */
+    public function outcome(Request $request, string $locale, string $token): RedirectResponse
+    {
+        $response = ExchangeQuoteResponse::query()->where('response_token', $token)->firstOrFail();
+
+        $validated = $request->validate([
+            'outcome' => ['required', Rule::in([
+                ExchangeQuoteResponse::OUTCOME_COMPLETED,
+                ExchangeQuoteResponse::OUTCOME_NO_SHOW,
+            ])],
+        ]);
+
+        // Silently ignored rather than errored when it does not apply: the
+        // office may well press the button twice, and the second press is not
+        // a mistake worth a red banner.
+        $response->recordOutcome($validated['outcome']);
+
+        return redirect()->route('exchange.respond', ['locale' => $locale, 'token' => $token]);
     }
 
     public function store(Request $request, string $locale, string $token): RedirectResponse

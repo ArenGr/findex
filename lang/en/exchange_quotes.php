@@ -130,6 +130,7 @@ return [
     ],
 
     'telegram' => [
+        'accepted_message' => 'Your offer was chosen. Code :code - :amount :currency at :rate.',
         'request_message' => "💱 <b>New exchange rate request from Findex</b>\n\n💰 Amount: :amount :currency (:direction)\n📊 Your current rate: :rate\n\nThe customer wants to know: would you like to offer a better rate, or keep it as is?\n\nTap below to respond.",
         'reminder_message' => "⏰ <b>Reminder: an exchange rate request is still waiting</b>\n\nYou have a pending request that hasn't been answered yet. Tap below to view it and respond before it closes.",
         'view_and_respond_button' => 'View & Respond',
@@ -158,5 +159,17 @@ return [
         'choose_other' => 'Choose a different offer',
         'flash' => 'Offer chosen. Show your code at the counter.',
         'request_code' => 'Request :code',
+    ],
+    'outcome' => [
+        'accepted_heading' => 'Your offer was chosen',
+        'accepted_body' => 'Code :code. The customer has :amount :currency at :rate. They will show this code at your counter.',
+        'outcome_question' => 'Did the customer come?',
+        'outcome_completed_button' => 'Exchange completed',
+        'outcome_no_show_button' => 'Did not show up',
+        'outcome_thanks' => 'Thank you - recorded.',
+        'outcome_recorded' => 'Recorded: :outcome',
+        'outcome_completed' => 'Completed',
+        'outcome_no_show' => 'No show',
+        'outcome_expired' => 'Expired',
     ],
 ];

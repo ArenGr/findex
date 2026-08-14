@@ -17,7 +17,22 @@ class ExchangeQuoteResponse extends Model
     /** An offer the visitor picked. Still a reply, so has_replied stays true. */
     public const STATUS_ACCEPTED = 'accepted';
 
+    /*
+     * What happened in the shop, as opposed to what happened with us. An
+     * accepted offer whose customer never appeared is still accepted - status
+     * and outcome answer different questions and must not be collapsed.
+     */
+    public const OUTCOME_COMPLETED = 'completed';
+
+    public const OUTCOME_NO_SHOW = 'no_show';
+
+    public const OUTCOME_EXPIRED = 'expired';
+
+    public const OUTCOMES = [self::OUTCOME_COMPLETED, self::OUTCOME_NO_SHOW, self::OUTCOME_EXPIRED];
+
     protected $fillable = [
+        'outcome',
+        'outcome_at',
         'offer_letter',
         'accepted_at',
         'exchange_quote_request_id',
@@ -34,6 +49,7 @@ class ExchangeQuoteResponse extends Model
 
     protected $casts = [
         'accepted_at' => 'datetime',
+        'outcome_at' => 'datetime',
         'posted_rate' => 'decimal:4',
         'offered_rate' => 'decimal:4',
         'telegram_message_id' => 'integer',
@@ -51,6 +67,27 @@ class ExchangeQuoteResponse extends Model
     public function getIsAcceptedAttribute(): bool
     {
         return $this->status === self::STATUS_ACCEPTED;
+    }
+
+    /**
+     * The office can only report an outcome for an offer that was actually
+     * chosen, and only once - a shop that could revise "completed" to "no show"
+     * a week later would make the conversion numbers worthless.
+     */
+    public function getAwaitsOutcomeAttribute(): bool
+    {
+        return $this->is_accepted && $this->outcome === null;
+    }
+
+    public function recordOutcome(string $outcome): bool
+    {
+        if (! $this->awaits_outcome || ! in_array($outcome, self::OUTCOMES, true)) {
+            return false;
+        }
+
+        $this->forceFill(['outcome' => $outcome, 'outcome_at' => now()])->save();
+
+        return true;
     }
 
     /**

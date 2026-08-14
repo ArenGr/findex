@@ -130,6 +130,7 @@ return [
     ],
 
     'telegram' => [
+        'accepted_message' => 'Your offer was chosen. Code :code - :amount :currency at :rate.',
         'request_message' => "💱 <b>Новый запрос курса обмена от Findex</b>\n\n💰 Сумма: :amount :currency (:direction)\n📊 Ваш текущий курс: :rate\n\nКлиент хочет узнать: готовы ли вы предложить более выгодный курс, или оставите его как есть?\n\nНажмите ниже, чтобы ответить.",
         'reminder_message' => "⏰ <b>Напоминание: запрос курса обмена всё ещё ждёт</b>\n\nУ вас есть неотвеченный запрос. Нажмите ниже, чтобы посмотреть его и ответить, пока он не закрылся.",
         'view_and_respond_button' => 'Посмотреть и ответить',
@@ -158,5 +159,17 @@ return [
         'choose_other' => 'Выбрать другое предложение',
         'flash' => 'Предложение выбрано. Покажите код в кассе.',
         'request_code' => 'Заявка :code',
+    ],
+    'outcome' => [
+        'accepted_heading' => 'Ваше предложение выбрано',
+        'accepted_body' => 'Код :code. У клиента :amount :currency по курсу :rate. Он покажет этот код в вашей кассе.',
+        'outcome_question' => 'Клиент пришёл?',
+        'outcome_completed_button' => 'Обмен совершён',
+        'outcome_no_show_button' => 'Не пришёл',
+        'outcome_thanks' => 'Спасибо - записано.',
+        'outcome_recorded' => 'Записано: :outcome',
+        'outcome_completed' => 'Совершён',
+        'outcome_no_show' => 'Не пришёл',
+        'outcome_expired' => 'Истёк',
     ],
 ];

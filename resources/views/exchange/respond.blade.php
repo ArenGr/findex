@@ -13,10 +13,61 @@
             @php $request = $response->exchangeQuoteRequest; @endphp
 
             @if ($response->has_replied)
+                {{-- Chosen: the code, and then the one question only this shop
+                can answer. Findex has no affiliate link and no payment passing
+                through it, so if the counter does not say whether the customer
+                turned up, nobody does. --}}
+                @if ($response->is_accepted)
+                    <div class="rounded-2xl border-2 border-primary/40 bg-primary/5 p-6">
+                        <h1 class="font-heading text-xl font-semibold break-words text-ink">{{ __('exchange_quotes.outcome.accepted_heading') }}</h1>
+                        <p class="mt-2 font-heading text-3xl font-bold tracking-tight break-words text-ink">{{ $response->redemption_code }}</p>
+                        <p class="mt-2 text-sm leading-relaxed break-words text-body-text">
+                            {{ __('exchange_quotes.outcome.accepted_body', [
+                                'code' => $response->redemption_code,
+                                'amount' => number_format((float) $request->amount, 2),
+                                'currency' => $request->currency->code,
+                                'rate' => number_format((float) $response->offered_rate, 2),
+                            ]) }}
+                        </p>
+                    </div>
+
+                    @if ($response->awaits_outcome)
+                        <div class="mt-6 rounded-2xl border border-placeholder p-6">
+                            <p class="font-medium break-words text-ink">{{ __('exchange_quotes.outcome.outcome_question') }}</p>
+
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                @foreach ([
+                                    'completed' => ['label' => __('exchange_quotes.outcome.outcome_completed_button'), 'primary' => true],
+                                    'no_show' => ['label' => __('exchange_quotes.outcome.outcome_no_show_button'), 'primary' => false],
+                                ] as $outcome => $button)
+                                    <form method="POST" action="{{ route('exchange.respond.outcome', ['token' => $response->response_token]) }}">
+                                        @csrf
+                                        <input type="hidden" name="outcome" value="{{ $outcome }}">
+                                        <button
+                                            type="submit"
+                                            @class([
+                                                'inline-flex min-h-11 items-center rounded-full px-6 py-2.5 text-sm font-semibold break-words transition',
+                                                'bg-primary text-white hover:bg-primary-dark' => $button['primary'],
+                                                'border border-placeholder bg-white text-ink hover:bg-placeholder/25' => ! $button['primary'],
+                                            ])
+                                        >
+                                            {{ $button['label'] }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <p class="mt-6 rounded-xl border border-placeholder bg-placeholder/20 px-4 py-3 text-sm break-words text-ink">
+                            {{ __('exchange_quotes.outcome.outcome_recorded', ['outcome' => __('exchange_quotes.outcome.outcome_'.$response->outcome)]) }}
+                        </p>
+                    @endif
+                @else
                 <div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center">
                     <h1 class="font-heading text-xl font-semibold text-ink">{{ __('exchange_quotes.respond.success_heading') }}</h1>
                     <p class="mt-2 text-sm text-body-text">{{ __('exchange_quotes.respond.success_body') }}</p>
                 </div>
+                @endif
 
                 <div class="mt-8 rounded-2xl border border-placeholder p-6">
                     <p class="text-xs font-semibold tracking-wide text-subtle uppercase">{{ __('exchange_quotes.respond.offered_rate_label') }}</p>

@@ -42,6 +42,42 @@ class TelegramExchangeNotifier implements ExchangeNotifierInterface
         return true;
     }
 
+    public function notifyAccepted(ExchangeQuoteResponse $response): bool
+    {
+        $organization = $response->organization;
+
+        if (! $organization->telegram_chat_id) {
+            return false;
+        }
+
+        $request = $response->exchangeQuoteRequest;
+
+        $result = $this->telegram->sendMessage(
+            $organization->telegram_chat_id,
+            __('exchange_quotes.telegram.accepted_message', [
+                'code' => $response->redemption_code,
+                'amount' => number_format((float) $request->amount, 2),
+                'currency' => $request->currency->code,
+                'rate' => number_format((float) $response->offered_rate, 2),
+            ], 'hy'),
+            inlineKeyboard: [[
+                ['text' => __('exchange_quotes.telegram.view_and_respond_button', [], 'hy'), 'url' => $response->secureRespondUrl()],
+            ]]
+        );
+
+        if (($result['ok'] ?? null) === false) {
+            Log::warning('Exchange quote acceptance notification failed', [
+                'exchange_quote_response_id' => $response->id,
+                'organization_id' => $organization->id,
+                'description' => $result['description'] ?? null,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
     public function remind(ExchangeQuoteResponse $response): bool
     {
         $organization = $response->organization;
