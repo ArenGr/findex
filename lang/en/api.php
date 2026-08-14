@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title' => 'Findex API',
+    'tagline' => 'Live Armenian exchange rates for your product. One endpoint, every bank and exchange office.',
+    'endpoints' => 'Endpoints',
+    'plans' => 'Plans',
+    'free' => 'Free',
+    'per_month' => 'per month',
+    'per_day' => 'requests a day',
+    'per_minute' => 'requests a minute',
+    'unmetered' => 'Unmetered',
+    'your_keys' => 'Your API keys',
+    'create_key' => 'Create a key',
+    'key_name' => 'Key name',
+    'copy_now' => 'Copy this key now - it is not shown again.',
+    'revoke' => 'Revoke',
+    'this_month' => 'This month',
+    'no_keys' => 'No keys yet.',
+    'without_key' => 'Without a key',
+    'get_key' => 'Get an API key',
+    'auth_heading' => 'Authentication',
+    'auth_body' => 'Send your key as a bearer token. Calls without one still work, on a smaller allowance.',
+    'shown_once' => 'API keys are shown once',
+    'revoked' => 'Key revoked.',
+];

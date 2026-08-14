@@ -30,6 +30,7 @@ Route::prefix('{locale}')
 
         // Authenticated account areas, one per account type
         require __DIR__.'/web/customers/rate-alerts.php';
+        require __DIR__.'/web/customers/api-keys.php';
         require __DIR__.'/web/organizations/dashboard.php';
         require __DIR__.'/web/writers/dashboard.php';
     });
