@@ -138,6 +138,17 @@ class ExchangeQuoteController extends Controller
         return view('exchange.mine', ['exchangeQuoteRequests' => $exchangeQuoteRequests]);
     }
 
+    /**
+     * The windows a visitor can choose, in minutes. Short by design: the whole
+     * point is an office holding a rate, and nobody holds one overnight.
+     */
+    public const VALID_FOR = [
+        '15m' => 15,
+        '30m' => 30,
+        '1h' => 60,
+        'today' => 480,
+    ];
+
     public function store(Request $request): RedirectResponse
     {
         // Honeypot: see QuoteRequestController::store for why this is
@@ -158,6 +169,7 @@ class ExchangeQuoteController extends Controller
             'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
             'rate_field' => ['required', 'string', Rule::in(['buy_rate', 'sell_rate'])],
             'preferred_city' => ['nullable', 'string', Rule::in($cities)],
+            'valid_for' => ['nullable', Rule::in(array_keys(self::VALID_FOR))],
             'notes' => ['nullable', 'string', 'max:1000'],
             'guest_name' => [Rule::requiredIf(! $request->user()), 'nullable', 'string', 'min:2', 'max:60'],
             'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', ValidationRules::email(), 'max:255'],
@@ -179,6 +191,7 @@ class ExchangeQuoteController extends Controller
         }
 
         $preferredCity = $validated['preferred_city'] ?? null;
+        $validFor = $validated['valid_for'] ?? '1h';
 
         $partners = Organization::exchangePartnersForCurrency($currency->id, $preferredCity)->get();
 
@@ -202,7 +215,11 @@ class ExchangeQuoteController extends Controller
             'notes' => $validated['notes'] ?? null,
             // Shorter than travel's 14 days - exchange rates move day to
             // day, a 2-week-old "offer" would be meaningless.
-            'expires_at' => now()->addDays(7),
+            // How long the visitor is prepared to wait, rather than a flat
+            // week. A rate held for seven days is not a rate anyone is really
+            // holding - and an office answering a two-day-old request is
+            // quoting into a market that has moved.
+            'expires_at' => now()->addMinutes(self::VALID_FOR[$validFor]),
         ]);
 
         SendExchangeQuoteToPartnersJob::dispatch($exchangeQuoteRequest);

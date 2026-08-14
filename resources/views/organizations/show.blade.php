@@ -122,8 +122,17 @@
                 {{-- The offer only this organization's own page can make, and
                 only when the fan-out job would actually reach them. --}}
                 @if ($canNegotiate)
+                    {{-- Opens the same modal /rates uses; the href is the
+                    full page, so it still works with JS off. --}}
                     <a
                         href="{{ route('exchange.request') }}"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
+                            'form' => [
+                                'currency_code' => (string) (collect($rates['groups'])->first()[0]['code'] ?? ''),
+                                'rate_field' => 'buy_rate',
+                            ],
+                            'context' => ['code' => (string) (collect($rates['groups'])->first()[0]['code'] ?? '')],
+                        ]) }} }))"
                         class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium break-words text-white transition hover:bg-primary-dark"
                     >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true">
@@ -409,4 +418,8 @@
             @endforelse
         </div>
     </section>
+
+    @if ($canNegotiate)
+        <x-better-rate-modal :currencies="$quoteCurrencies" :cities="$quoteCities" />
+    @endif
 @endsection

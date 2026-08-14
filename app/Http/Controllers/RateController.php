@@ -266,6 +266,12 @@ class RateController extends Controller
             // built for the map: it is a second query and a payload the list
             // has no use for.
             'mapBranches' => $viewMode === 'map' ? $this->mapBranches($cached['items']) : [],
+            // Currencies the negotiation modal can actually offer: brokered
+            // by us and served by at least one reachable office. Same rule as
+            // the full page, so the two never disagree about what is possible.
+            'quoteCurrencies' => $currencies->filter(
+                fn ($row) => isset(config('exchange-quotes.minimum_amounts')[$row->code])
+            )->values(),
             'freshness' => $freshness,
             'openNow' => $openNow,
             'sort' => $sortKey,

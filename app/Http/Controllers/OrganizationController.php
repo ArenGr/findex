@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RateType;
+use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\Organization;
 use App\Services\OrganizationRatesData;
@@ -200,6 +201,14 @@ class OrganizationController extends Controller
             'historyCurrency' => $historyCurrency ?? null,
             'historySeries' => $historySeries ?? [],
             'historyDays' => $historyDays ?? 0,
+            // Same modal as /rates, so "Get a better rate" means one thing
+            // and behaves one way wherever it is pressed.
+            'quoteCurrencies' => Currency::where('is_active', true)
+                ->whereIn('code', array_keys(config('exchange-quotes.minimum_amounts')))
+                ->orderBy('sort_order')
+                ->get(),
+            'quoteCities' => Branch::query()->whereNotNull('city')->where('is_active', true)
+                ->distinct()->orderBy('city')->pluck('city')->all(),
             'canNegotiate' => $organization->type === 'exchange'
                 && $organization->telegram_chat_id !== null
                 && $rates['groups'] !== [],

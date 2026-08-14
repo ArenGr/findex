@@ -112,9 +112,17 @@ class OrganizationRatesPageTest extends TestCase
             $this->rate($org, $usd, 363.0, 367.0);
         }
 
-        $this->get('/en/organizations/reachable')->assertOk()->assertSee('Negotiate your rate');
-        $this->get('/en/organizations/unreachable')->assertOk()->assertDontSee('Negotiate your rate');
-        $this->get('/en/organizations/a-bank')->assertOk()->assertDontSee('Negotiate your rate');
+        // The CTA opens the same modal /rates uses, so it is asserted on the
+        // dialog it opens as well as on its label.
+        $this->get('/en/organizations/reachable')->assertOk()
+            ->assertSee('Get a better rate')
+            ->assertSee('better-rate-open', false);
+        $this->get('/en/organizations/unreachable')->assertOk()
+            ->assertDontSee('Get a better rate')
+            ->assertDontSee('better-rate-open', false);
+        $this->get('/en/organizations/a-bank')->assertOk()
+            ->assertDontSee('Get a better rate')
+            ->assertDontSee('better-rate-open', false);
     }
 
     /** Travel agencies and insurers publish no rates; the section stays away. */

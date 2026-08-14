@@ -23,7 +23,7 @@ return [
     'cta_heading' => 'Exchanging more than :amount :code?',
     'cta_body' => 'Partner exchange offices will often beat their posted rate on a large amount. Tell us once and we ask them for you.',
     'cta_heading_qualified' => 'You are exchanging :amount :code - you can ask for a better rate',
-    'cta_button' => 'Negotiate your rate',
+    'cta_button' => 'Get a better rate',
     'cta_note' => 'Free, no account needed. Replies usually arrive within a few hours.',
 
     'rate_column' => 'Rate per 1 :code',

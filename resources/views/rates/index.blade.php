@@ -173,12 +173,30 @@
                                     ? round($convert((float) $best->{$rateField}), 2)
                                     : $amount);
                         @endphp
+                        {{-- A real href, so it still works with JS off and can
+                        be opened in a new tab. The click is intercepted to open
+                        the modal instead, already holding this page's state -
+                        the question is about the rates on screen, so it belongs
+                        on top of them rather than on another page. --}}
                         href="{{ route('exchange.request', array_filter([
                             'currency' => $selectedCurrency?->code,
                             'amount' => $handoverAmount,
                             'city' => $selectedCity,
                             'rate_field' => $rateField,
                         ])) }}"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
+                            'form' => [
+                                'currency_code' => (string) ($selectedCurrency?->code ?? ''),
+                                'amount' => $handoverAmount === null ? '' : (string) $handoverAmount,
+                                'rate_field' => $rateField,
+                                'preferred_city' => (string) ($selectedCity ?? ''),
+                            ],
+                            'context' => [
+                                'code' => (string) ($selectedCurrency?->code ?? ''),
+                                'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+                                'total' => $best && $handoverAmount ? $amd($handoverAmount * (float) $best->{$rateField}) : null,
+                            ],
+                        ]) }} }))"
                         class="inline-flex min-w-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark"
                     >
                         {{-- Two speech bubbles. Not exchange arrows, which read
@@ -1396,6 +1414,8 @@
         :organizations="$alertOrganizations"
         :rate-types="$alertRateTypes"
     />
+
+    <x-better-rate-modal :currencies="$quoteCurrencies" :cities="$cities->all()" />
     {{--
         Filtering used to reload the whole document - re-parsing every asset,
         losing scroll position and flashing the header on each pill. This swaps

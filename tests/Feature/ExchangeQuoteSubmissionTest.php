@@ -271,6 +271,73 @@ class ExchangeQuoteSubmissionTest extends TestCase
     }
 
     /**
+     * "Get a better rate" is one question asked about rates already on screen,
+     * so it is a dialog over them rather than a page away. The link stays a
+     * real link, so it still works with JavaScript off.
+     */
+    public function test_the_rates_page_offers_the_modal_and_still_links_to_the_page(): void
+    {
+        $this->exchangePartner([], 'Yerevan');
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('better-rate-open', false)
+            ->assertSee('better-rate-title', false)
+            ->assertSee('Get a better rate')
+            // The old wording is gone everywhere.
+            ->assertDontSee('Negotiate your rate');
+    }
+
+    /**
+     * How long the visitor will wait, rather than a flat week. A rate held for
+     * seven days is not a rate anyone is holding, and an office answering a
+     * two-day-old request is quoting into a market that has moved.
+     */
+    public function test_the_chosen_window_sets_when_the_request_closes(): void
+    {
+        $this->exchangePartner();
+        $this->travelTo('2026-08-15 10:00:00');
+
+        foreach (['15m' => 15, '30m' => 30, '1h' => 60, 'today' => 480] as $choice => $minutes) {
+            $this->post('/en/exchange', [
+                'currency_code' => 'USD', 'amount' => 5000, 'rate_field' => 'buy_rate',
+                'valid_for' => $choice, 'consent' => '1',
+                'guest_name' => 'A visitor', 'guest_email' => 'visitor@example.com',
+            ])->assertRedirect();
+
+            $request = ExchangeQuoteRequest::latest('id')->firstOrFail();
+
+            $this->assertSame($minutes, (int) now()->diffInMinutes($request->expires_at));
+        }
+    }
+
+    /** An invented window is rejected rather than silently becoming a default. */
+    public function test_an_unknown_window_is_rejected(): void
+    {
+        $this->exchangePartner();
+
+        $this->post('/en/exchange', [
+            'currency_code' => 'USD', 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'valid_for' => 'a fortnight', 'consent' => '1',
+            'guest_name' => 'A visitor', 'guest_email' => 'visitor@example.com',
+        ])->assertSessionHasErrors('valid_for');
+    }
+
+    /** Omitting it is fine - most people will not touch the control. */
+    public function test_the_window_defaults_to_an_hour(): void
+    {
+        $this->exchangePartner();
+        $this->travelTo('2026-08-15 10:00:00');
+
+        $this->post('/en/exchange', [
+            'currency_code' => 'USD', 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'consent' => '1', 'guest_name' => 'A visitor', 'guest_email' => 'visitor@example.com',
+        ])->assertRedirect();
+
+        $this->assertSame(60, (int) now()->diffInMinutes(ExchangeQuoteRequest::latest('id')->firstOrFail()->expires_at));
+    }
+
+    /**
      * The other half of the handoff: what /rates sends, this form must read.
      * A prefill that silently ignores half the query string is worse than no
      * prefill, because the visitor cannot tell which fields carried over.
