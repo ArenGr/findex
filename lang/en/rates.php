@@ -124,4 +124,18 @@ return [
     'reset_filters' => 'Reset filters',
     'results_count' => '{0} No rates|{1} 1 rate|[2,*] :count rates',
     'apply_filters' => '{0} No rates|{1} Show 1 rate|[2,*] Show :count rates',
+    'history' => [
+        'heading' => ':code exchange rate history in Armenia',
+        'subheading' => 'How the best :code rates in Armenia have moved. :count days of data so far.',
+        'range' => 'Last :days days',
+        'best_buy' => 'Best buy rate',
+        'best_sell' => 'Best sell rate',
+        'highest' => 'Highest seen',
+        'lowest' => 'Lowest seen',
+        'vs_average' => ':value% vs the :days-day average',
+        'more_soon' => 'Longer ranges appear as we collect more days.',
+        'title' => 'History for :code',
+        'link' => 'See rate history',
+        'meta' => 'Daily best buy and sell rates for :code in Armenia, from every bank and exchange office Findex tracks.',
+    ],
 ];

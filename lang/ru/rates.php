@@ -128,4 +128,18 @@ return [
     // (21 takes the singular, 11 does not), which trans_choice ranges
     // cannot express, so covering 0-20 honestly beats faking the rest.
     'apply_filters' => '{0} Нет курсов|{1} Показать 1 курс|[2,4] Показать :count курса|[5,*] Показать :count курсов',
+    'history' => [
+        'heading' => 'История курса :code в Армении',
+        'subheading' => 'Как менялись лучшие курсы :code в Армении. Пока :count дней данных.',
+        'range' => 'Последние :days дней',
+        'best_buy' => 'Лучший курс покупки',
+        'best_sell' => 'Лучший курс продажи',
+        'highest' => 'Максимум',
+        'lowest' => 'Минимум',
+        'vs_average' => ':value% к среднему за :days дней',
+        'more_soon' => 'Более длинные периоды появятся по мере накопления данных.',
+        'title' => 'История :code',
+        'link' => 'Смотреть историю курса',
+        'meta' => 'Ежедневные лучшие курсы покупки и продажи :code в Армении из всех банков и обменных пунктов, которые отслеживает Findex.',
+    ],
 ];

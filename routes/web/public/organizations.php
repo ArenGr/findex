@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\RateController;
+use App\Http\Controllers\RateHistoryController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,10 @@ Route::get('/organizations', [OrganizationController::class, 'index'])->name('or
 Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
 Route::get('/compare', [CompareController::class, 'show'])->name('organizations.compare');
 Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
+
+// Deliberately its own page rather than a panel on /rates: charts are a
+// second question, and §19 asks the main page not to carry them.
+Route::get('/rates/history', [RateHistoryController::class, 'index'])->name('rates.history');
 
 // Dedicated SEO landing pages for a single organization type - see
 // OrganizationController::categoryPage() for why these exist separately

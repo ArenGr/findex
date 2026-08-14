@@ -822,6 +822,15 @@
                     @endforeach
                 </div>
 
+                {{-- A link rather than the inline preview chart the brief
+                sketches: this page has been trimmed hard, and a chart here
+                would be a fourth summary above a table that is the point. --}}
+                <p class="mt-3">
+                    <a href="{{ route('rates.history', ['currency' => $selectedCurrency?->code]) }}" class="text-sm font-medium break-words text-primary hover:underline">
+                        {{ __('rates.history.link') }} &rarr;
+                    </a>
+                </p>
+
             {{--
                 The answer, before the table, and filled rather than tinted -
                 a pale strip the width of the page reads as a caption on the
