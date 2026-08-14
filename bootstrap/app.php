@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Middleware\AddSecurityHeaders;
+use App\Http\Middleware\AuthenticateApiKey;
 use App\Http\Middleware\EnsureOrganizationType;
 use App\Http\Middleware\EnsureUserIsNotBanned;
 use App\Http\Middleware\EnsureUserRole;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\ThrottleApiRequests;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -73,6 +75,14 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // The public API: recognise a key if one is offered, then apply
+        // whatever that caller's plan allows. Order matters - the throttle
+        // reads the key the first one resolved.
+        $middleware->appendToGroup('api', [
+            AuthenticateApiKey::class,
+            ThrottleApiRequests::class,
+        ]);
+
         // Applied to every web response (see AddSecurityHeaders for why
         // there's no CSP yet).
         $middleware->web(append: [
