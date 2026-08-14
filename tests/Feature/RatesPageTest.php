@@ -240,26 +240,25 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * Sorts are named after what the visitor wants rather than after a column,
-     * so an unknown or stale one falls back to the default instead of erroring
-     * or quietly ordering by nothing.
+     * Sorting runs off the column headings, so the keys are column names. An
+     * unknown or stale one falls back to the default rather than erroring or
+     * quietly ordering by nothing.
      */
-    public function test_the_named_sorts_are_offered_and_an_unknown_one_falls_back(): void
+    public function test_the_column_sorts_are_offered_and_an_unknown_one_falls_back(): void
     {
         $this->seedMarket();
 
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertViewHas('sort', 'best')
-            ->assertViewHas('sortOptions', ['best', 'updated', 'spread'])
-            ->assertSee('Lowest spread')
-            ->assertSee('Recently updated');
+            ->assertViewHas('sortOptions', ['best', 'buy', 'sell', 'spread', 'updated']);
 
-        // "Closest" is only meaningful once we have somewhere to measure from.
+        // "Closest" has no column of its own but sorts the same table, and is
+        // only meaningful once we have somewhere to measure from.
         $this->get('/en/rates?currency=USD&lat=40.1792&lng=44.4991')
             ->assertOk()
             ->assertViewHas('sort', 'distance')
-            ->assertViewHas('sortOptions', ['best', 'updated', 'spread', 'distance']);
+            ->assertViewHas('sortOptions', ['best', 'buy', 'sell', 'spread', 'updated', 'distance']);
 
         // A bookmarked link from when location sharing was on.
         $this->get('/en/rates?currency=USD&sort=distance')->assertOk()->assertViewHas('sort', 'best');
@@ -430,27 +429,20 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * The Simple/Detailed toggle changes exactly one thing - whether the table
-     * carries the spread column - and it is offered whether or not an amount
-     * has been entered. It used to appear only while calculating, and to swap
-     * the whole rate pair in and out, which made it read as a page-level mode
-     * rather than a table option.
+     * A column the table can be ranked by is not one to hide behind a view
+     * toggle, so spread is always there - with or without an amount, and
+     * whether or not the old both=1 is still on a bookmarked link.
      */
-    public function test_detailed_view_adds_the_spread_column_and_nothing_else(): void
+    public function test_the_spread_column_is_always_present(): void
     {
         $this->seedMarket();
 
-        foreach (['', '&amount=100'] as $amount) {
-            $this->get('/en/rates?currency=USD'.$amount)
+        foreach (['', '&amount=100', '&both=1'] as $extra) {
+            $this->get('/en/rates?currency=USD'.$extra)
                 ->assertOk()
-                ->assertViewHas('detailed', false)
-                ->assertSee('Detailed')
-                ->assertDontSee('Spread');
-
-            $this->get('/en/rates?currency=USD&both=1'.$amount)
-                ->assertOk()
-                ->assertViewHas('detailed', true)
-                ->assertSee('Spread');
+                ->assertSee('Spread')
+                // The toggle that used to control it is gone.
+                ->assertDontSee('Detailed');
         }
     }
 
@@ -459,7 +451,7 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        foreach (['', '&amount=100', '&both=1', '&both=1&amount=100'] as $extra) {
+        foreach (['', '&amount=100', '&sort=spread', '&sort=updated&amount=100'] as $extra) {
             $this->get('/en/rates?currency=USD'.$extra)
                 ->assertOk()
                 ->assertSee('>Buy', false)
@@ -748,15 +740,21 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * Sorting and the spread column both describe the table. With no table on
-     * screen they would be controls that visibly do nothing.
+     * Narrowing by name describes the table. A map shows every branch by
+     * position, so there it would be a control that visibly does nothing - and
+     * the sortable headings go with the table they head.
      */
     public function test_table_only_controls_stand_down_in_map_view(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Lowest spread')->assertSee('Detailed');
-        $this->get('/en/rates?currency=USD&view=map')->assertOk()->assertDontSee('Lowest spread')->assertDontSee('Detailed');
+        $this->get('/en/rates?currency=USD')->assertOk()
+            ->assertSee('Search by name')
+            ->assertSee('Spread');
+
+        $this->get('/en/rates?currency=USD&view=map')->assertOk()
+            ->assertDontSee('Search by name')
+            ->assertDontSee('Spread');
     }
 
     /**
@@ -1314,5 +1312,122 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertDontSee('More currencies');
+    }
+
+    /**
+     * Each column has one direction that answers the question people ask of
+     * it, and a first press gives that: the highest buy rate, the lowest sell
+     * rate, the tightest spread.
+     */
+    public function test_a_column_sorts_the_way_it_is_usually_asked(): void
+    {
+        $this->seedMarket();
+
+        // Corner exchange 384/388, Cheap bank 360/365, Pricey bank 358/370.
+        $first = fn (string $query) => collect(
+            $this->get('/en/rates?currency=USD&'.$query)->viewData('ranked')['rows']
+        )->first()->organization_name;
+
+        $this->assertSame('Corner exchange', $first('sort=buy'), 'buy: highest first');
+        $this->assertSame('Cheap bank', $first('sort=sell'), 'sell: lowest first');
+        $this->assertSame('Corner exchange', $first('sort=spread'), 'spread: tightest first');
+    }
+
+    /** Pressing the same heading again reverses it. */
+    public function test_a_direction_can_be_reversed_and_a_bad_one_ignored(): void
+    {
+        $this->seedMarket();
+
+        $first = fn (string $query) => collect(
+            $this->get('/en/rates?currency=USD&'.$query)->viewData('ranked')['rows']
+        )->first()->organization_name;
+
+        $this->assertSame('Pricey bank', $first('sort=buy&dir=asc'), 'buy reversed: lowest first');
+        $this->assertSame('Pricey bank', $first('sort=spread&dir=desc'), 'spread reversed: widest first');
+
+        // Nonsense falls back to the column's own direction rather than
+        // ordering by nothing.
+        $this->assertSame('Corner exchange', $first('sort=buy&dir=sideways'));
+        $this->get('/en/rates?currency=USD&sort=buy&dir=DESC')->assertOk()->assertViewHas('direction', 'desc');
+    }
+
+    /**
+     * The heading marks the column actually ordering the table - including on
+     * arrival, where the ordering runs on whichever rate column the visitor's
+     * intent points at rather than on anything they pressed.
+     */
+    public function test_the_default_ordering_marks_its_own_column(): void
+    {
+        $this->seedMarket();
+
+        // Selling USD ranks on the buy column; buying it ranks on sell.
+        $this->get('/en/rates?currency=USD&intent=sell')->assertOk()
+            ->assertSee('sort=sell', false)
+            ->assertSee('sorted highest first');
+
+        $this->get('/en/rates?currency=USD&intent=buy')->assertOk()
+            ->assertSee('sorted lowest first');
+    }
+
+    /**
+     * Finding one organization among fourteen was a job the page had no answer
+     * for. The search is a filter over rows already fetched, so it costs no
+     * query and never fragments the listing cache.
+     */
+    public function test_searching_narrows_the_table_by_name(): void
+    {
+        $this->seedMarket();
+
+        $names = fn (string $query) => collect(
+            $this->get('/en/rates?currency=USD&'.$query)->viewData('ranked')['rows']
+        )->pluck('organization_name')->all();
+
+        $this->assertSame(['Corner exchange'], $names('q=corner'));
+        // Case and partial words both match - people type what they remember.
+        $this->assertSame(['Corner exchange'], $names('q=CORNER'));
+        $this->assertEqualsCanonicalizing(['Cheap bank', 'Pricey bank'], $names('q=bank'));
+        $this->assertSame([], $names('q=nothing here'));
+    }
+
+    /**
+     * A search that found nothing is a different miss from a filter
+     * combination with no rows: suggesting another rate type would be
+     * answering a question nobody asked.
+     */
+    public function test_an_empty_search_result_offers_to_clear_the_search(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&q=zzzz')
+            ->assertOk()
+            // Escaped, because the term is whatever was typed.
+            ->assertSee('No organization here matches &quot;zzzz&quot;.', false)
+            ->assertSee('Clear search')
+            ->assertDontSee('No rates match');
+    }
+
+    /** A search term is state like any other, so it survives every control. */
+    public function test_the_search_term_is_carried_by_the_other_controls(): void
+    {
+        $this->seedMarket();
+
+        $html = $this->get('/en/rates?currency=USD&q=bank&sort=spread')->assertOk()->getContent();
+
+        // On the links that change something else...
+        $this->assertStringContainsString('q=bank', $html);
+        // ...and back into the field itself, so it does not look cleared.
+        $this->assertStringContainsString('value="bank"', $html);
+        // The sort survives the search form's own submit.
+        $this->assertStringContainsString('name="sort" value="spread"', $html);
+    }
+
+    /** Long enough to be a name, short enough not to be a payload. */
+    public function test_an_overlong_search_term_is_truncated_rather_than_refused(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&q='.str_repeat('a', 500))
+            ->assertOk()
+            ->assertViewHas('search', str_repeat('a', 60));
     }
 }

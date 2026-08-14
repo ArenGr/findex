@@ -13,7 +13,7 @@
         'organization' => $selectedOrganization?->slug,
         'city' => $selectedCity,
         'sort' => $sort,
-        'direction' => $direction,
+        'dir' => $direction,
         'lat' => $latitude,
         'lng' => $longitude,
         'intent' => $intent,
@@ -21,7 +21,7 @@
         'fresh' => $freshness,
         'open' => $openNow ? 1 : null,
         'view' => $viewMode === 'map' ? 'map' : null,
-        'both' => $detailed ? 1 : null,
+        'q' => $search !== '' ? $search : null,
     ];
 
     $link = fn (array $overrides = []) => route('rates.index', array_filter(
@@ -31,7 +31,8 @@
 
     $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH
         || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
-        || $amount !== null || $freshness || $openNow;
+        || $amount !== null || $freshness || $openNow || $search !== '';
+
 
     // Whole dram above 1,000, where a rounded half-unit is noise. Below it the
     // decimals are the number: 1 KZT at 4.60 rendered as "5", and the office
@@ -50,6 +51,24 @@
     // total is derived from.
     $rateField = \App\Http\Controllers\RateController::rateFieldForIntent($intent);
     $isBuying = $intent === 'buy';
+
+    // "best" is not a column - it is the ordering the page arrives in, which
+    // runs on whichever rate column the visitor's intent points at. Naming that
+    // column here means the heading carries the arrow, rather than the table
+    // being sorted by something with no mark on it.
+    $activeSortColumn = $sort === 'best' ? ($isBuying ? 'sell' : 'buy') : $sort;
+
+    // The direction each column is usually asked in: the highest buy rate, the
+    // lowest sell rate, the tightest spread, the newest update. A first press
+    // gives that; pressing the same heading again reverses it.
+    $naturalSort = ['buy' => 'desc', 'sell' => 'asc', 'spread' => 'asc', 'updated' => 'desc'];
+
+    $sortHref = fn (string $column) => $link([
+        'sort' => $column,
+        'dir' => $activeSortColumn === $column
+            ? ($direction === 'asc' ? 'desc' : 'asc')
+            : $naturalSort[$column],
+    ]);
 
     // "I have X, I want Y" instead of Buy/Sell. Buy and sell are written from
     // the institution's side - the column headed "Sell" is the one a buyer pays
@@ -869,15 +888,55 @@
                     @endif
                 </p>
 
-                {{-- Only offered while calculating: that table shows one rate
-                named from the visitor's side, because reading the pair
-                correctly means knowing that "Buy" is the rate the bank buys at,
-                not the one you buy at. The plain table is the pair.
+                {{-- Finding one organization in the table is a different job
+                from ranking all of them, and it was the one the page had no
+                answer for: you read fourteen names looking for yours.
 
-                A two-state control rather than the sentence that used to sit
-                here: it says which of the two views you are in, which one link
-                naming only the other view never did. Still two links, so it
-                works with JS off and stays shareable. --}}
+                A GET form, so the result is a URL like every other state on
+                this page - shareable, bookmarkable, and working with JS off.
+                Only offered over a list; there is nothing to narrow on a map,
+                which shows every branch by position. --}}
+                @if ($viewMode !== 'map')
+                    {{-- Its own line on a phone: sharing one with the count and the
+                    List/Map pair leaves it about 90px wide, which is narrower
+                    than the placeholder asking to be typed into. --}}
+                    <form method="GET" action="{{ route('rates.index') }}" class="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1 sm:max-w-xs">
+                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'fresh', 'open'] as $carried)
+                            @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
+                            @if (! empty($value))
+                                <input type="hidden" name="{{ $carried }}" value="{{ $value }}">
+                            @endif
+                        @endforeach
+
+                        <label for="q" class="sr-only">{{ __('rates.search_label') }}</label>
+                        <div class="relative min-w-0 flex-1">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+                            </svg>
+                            <input
+                                type="search" name="q" id="q"
+                                value="{{ $search }}"
+                                placeholder="{{ __('rates.search_placeholder') }}"
+                                class="w-full min-w-0 rounded-lg border border-placeholder bg-white ps-9 pe-3 py-2 text-xs text-ink focus:border-primary focus:outline-none"
+                            >
+                        </div>
+
+                        {{-- The submit is what makes it work without JS. With
+                        JS the field self-submits on the search input's own
+                        clear button too, so "x" empties the table filter
+                        rather than just the box. --}}
+                        <button type="submit" class="sr-only focus:not-sr-only focus:rounded-lg focus:border focus:border-primary focus:px-3 focus:py-2 focus:text-xs">
+                            {{ __('rates.search_label') }}
+                        </button>
+                    </form>
+
+                    @if ($search !== '')
+                        <a href="{{ $link(['q' => null]) }}" class="-my-2 inline-block py-2 text-xs text-muted underline hover:text-ink">
+                            {{ __('rates.search_clear') }}
+                        </a>
+                    @endif
+                @endif
+
                 {{-- List or map. The list is the default and the map is never
                 loaded until asked for - see rates-map.js. --}}
                 <div class="flex min-w-0 flex-wrap items-center gap-2">
@@ -894,55 +953,6 @@
                         @endforeach
                     </div>
                 </div>
-
-                {{-- Sorting and the spread column both describe the table, so
-                neither is offered when there is no table on screen. --}}
-                @if ($viewMode !== 'map')
-                {{--
-                    Named sorts rather than clickable column headings. A heading
-                    that sorts asks the visitor to work out which column answers
-                    their question and which way it runs; "Best rate" and
-                    "Closest" just answer it. The headings lose their arrows with
-                    it, which is one less thing moving around in the table.
-                --}}
-                <form method="GET" action="{{ route('rates.index') }}" class="flex min-w-0 flex-wrap items-center gap-2">
-                    @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'both'] as $carried)
-                        @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
-                        @if (! empty($value))
-                            <input type="hidden" name="{{ $carried }}" value="{{ $value }}">
-                        @endif
-                    @endforeach
-
-                    <label for="sort" class="{{ $labelClass }}">{{ __('rates.sort_label') }}</label>
-                    <select
-                        name="sort" id="sort"
-                        onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
-                        class="min-w-0 rounded-lg border border-placeholder bg-white px-3 py-1.5 text-xs font-medium text-ink focus:border-primary focus:outline-none"
-                    >
-                        @foreach ($sortOptions as $option)
-                            <option value="{{ $option }}" @selected($sort === $option)>{{ __('rates.sort_'.$option) }}</option>
-                        @endforeach
-                    </select>
-                </form>
-
-                {{-- Changes exactly one thing: whether the table carries the
-                spread column. --}}
-                <div class="flex min-w-0 flex-wrap items-center gap-2">
-                    <span class="{{ $labelClass }}">{{ __('rates.view_label') }}</span>
-                        <div class="flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
-                            @foreach (['view_simple' => false, 'view_detailed' => true] as $key => $both)
-                                @php $isCurrent = $detailed === $both; @endphp
-                                <a
-                                    href="{{ $link(['both' => $both ? 1 : null]) }}"
-                                    aria-current="{{ $isCurrent ? 'true' : 'false' }}"
-                                    class="inline-flex min-h-9 min-w-0 items-center rounded-md px-3 py-2 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
-                                >
-                                    {{ __('rates.'.$key) }}
-                                </a>
-                            @endforeach
-                        </div>
-                </div>
-                @endif
             </div>
 
             @if ($viewMode === 'map')
@@ -1114,16 +1124,26 @@
                             rate pair is always here, always in the same two
                             places; an amount adds a column, it does not swap the
                             table for a different one. --}}
-                            <th class="px-6 py-3 text-right" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}</th>
-                            <th class="px-6 py-3 text-right" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}</th>
+                            <th class="px-6 py-3 text-right" title="{{ __('rates.buy_hint') }}">
+                                <x-rates.sort-heading column="buy" :href="$sortHref('buy')" :active="$activeSortColumn === 'buy'" :direction="$direction">
+                                    {{ __('rates.buy_column') }}
+                                </x-rates.sort-heading>
+                            </th>
+                            <th class="px-6 py-3 text-right" title="{{ __('rates.sell_hint') }}">
+                                <x-rates.sort-heading column="sell" :href="$sortHref('sell')" :active="$activeSortColumn === 'sell'" :direction="$direction">
+                                    {{ __('rates.sell_column') }}
+                                </x-rates.sort-heading>
+                            </th>
 
-                            {{-- Detailed only: the gap between the two columns
-                            printed either side of it. --}}
-                            @if ($detailed)
-                                <th class="hidden px-4 py-3 text-right lg:table-cell" title="{{ __('rates.spread_hint') }}">
+                            {{-- The gap between the two columns printed either
+                            side of it. Always here now that it can be sorted
+                            on: a column you can rank the table by is not one
+                            to hide behind a view toggle. --}}
+                            <th class="hidden px-4 py-3 text-right lg:table-cell" title="{{ __('rates.spread_hint') }}">
+                                <x-rates.sort-heading column="spread" :href="$sortHref('spread')" :active="$activeSortColumn === 'spread'" :direction="$direction">
                                     {{ __('rates.spread_column') }}
-                                </th>
-                            @endif
+                                </x-rates.sort-heading>
+                            </th>
 
                             @if ($calculating)
                                 {{-- Tinted, because this is the number the
@@ -1143,7 +1163,11 @@
                             of its own once the width allows one, so freshness
                             can be compared down the list rather than read row by
                             row. --}}
-                            <th class="hidden px-4 py-3 text-right md:table-cell">{{ __('rates.updated_column') }}</th>
+                            <th class="hidden px-4 py-3 text-right md:table-cell">
+                                <x-rates.sort-heading column="updated" :href="$sortHref('updated')" :active="$activeSortColumn === 'updated'" :direction="$direction">
+                                    {{ __('rates.updated_column') }}
+                                </x-rates.sort-heading>
+                            </th>
 
                             {{-- Unlabelled: the pin says it, and a heading over
                             a 40px button would be wider than the column. --}}
@@ -1220,11 +1244,9 @@
                                     </span>
                                 </td>
 
-                                @if ($detailed)
-                                    <td class="hidden px-4 py-4 text-right text-muted tabular-nums lg:table-cell">
-                                        {{ number_format((float) $rate->sell_rate - (float) $rate->buy_rate, 2) }}
-                                    </td>
-                                @endif
+                                <td class="hidden px-4 py-4 text-right text-muted tabular-nums lg:table-cell">
+                                    {{ number_format((float) $rate->sell_rate - (float) $rate->buy_rate, 2) }}
+                                </td>
 
                                 @if ($calculating)
                                     <td @class(['bg-placeholder/25 px-6 py-4 text-right text-base whitespace-nowrap text-ink tabular-nums', 'font-bold' => $winsTotal, 'font-medium' => ! $winsTotal])>
@@ -1278,10 +1300,19 @@
             {{-- Never a dead end: offer the nearest combination that has data
             rather than only reporting the absence. --}}
             <div class="mt-8 rounded-2xl border border-dashed border-placeholder px-6 py-16 text-center">
-                <p class="text-sm text-muted">{{ __('rates.no_rates_match') }}</p>
+                {{-- A search that found nothing is a different miss from a
+                filter combination with no rows, and suggesting a rate type
+                would be answering a question nobody asked. --}}
+                <p class="text-sm break-words text-muted">
+                    {{ $search !== '' ? __('rates.search_empty', ['term' => $search]) : __('rates.no_rates_match') }}
+                </p>
 
                 <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
-                    @if ($suggestedType)
+                    @if ($search !== '')
+                        <a href="{{ $link(['q' => null]) }}" class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
+                            {{ __('rates.search_clear') }}
+                        </a>
+                    @elseif ($suggestedType)
                         <a href="{{ $link(['type' => $suggestedType]) }}" class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
                             {{ __('rates.try_other_type', ['type' => __('organizations.rate_types.' . $suggestedType)]) }}
                         </a>

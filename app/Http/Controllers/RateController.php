@@ -111,17 +111,15 @@ class RateController extends Controller
         [$latitude, $longitude] = $this->coordinatesFromQuery($request);
         $hasLocation = $latitude !== null && $longitude !== null;
 
-        // Sorts are named after what the visitor wants, not after the column
-        // they happen to run on. "Best rate" already knows which of the two
-        // rate columns that is and which way it runs - which was exactly the
-        // question the clickable column headers used to ask them to answer.
+        // Sorting is done from the column headings, so the sort keys are named
+        // after columns. 'best' is not one of them: it is the ordering the page
+        // arrives in, which already knows which of the two rate columns answers
+        // the visitor's intent and which way it runs.
         //
-        // Deliberately not offering "most you receive" as a separate option:
-        // the total is amount x buy_rate or amount / sell_rate, both monotonic
-        // in the rate, so it produces the identical ordering to "best rate".
-        // Two labels for one sort is the sort of thing this page has too much
-        // of already.
-        $sortOptions = ['best', 'updated', 'spread'];
+        // 'distance' has no column of its own - it is set by "find nearby" and
+        // shown under each name - but it sorts the same table, so it lives in
+        // the same list.
+        $sortOptions = ['best', 'buy', 'sell', 'spread', 'updated'];
 
         if ($hasLocation) {
             $sortOptions[] = 'distance';
@@ -133,16 +131,41 @@ class RateController extends Controller
             // the sort; otherwise the direction does.
             : ($hasLocation ? 'distance' : 'best');
 
-        // Resolved to a column and a direction for the query layer, which is
-        // unchanged and still speaks in columns.
-        [$sort, $direction] = match ($sortKey) {
-            'updated' => ['scraped_at', 'desc'],
-            'spread' => ['spread', 'asc'],
-            'distance' => ['distance', 'asc'],
+        // Every column has one direction that answers the question people are
+        // actually asking of it - the highest buy rate, the lowest sell rate,
+        // the tightest spread, the newest update - and that is what a first
+        // press gives. Pressing the same heading again reverses it.
+        $naturalDirection = match ($sortKey) {
+            'buy' => 'desc',
+            'sell', 'spread', 'distance' => 'asc',
+            'updated' => 'desc',
             // Selling the currency, the highest buy rate wins; buying it, the
             // lowest sell rate does.
-            default => $intent === 'sell' ? ['buy_rate', 'desc'] : ['sell_rate', 'asc'],
+            default => $intent === 'sell' ? 'desc' : 'asc',
         };
+
+        $requestedDirection = strtolower((string) $request->query('dir'));
+        $direction = in_array($requestedDirection, ['asc', 'desc'], true)
+            ? $requestedDirection
+            : $naturalDirection;
+
+        // Resolved to a column for the query layer, which is unchanged and
+        // still speaks in columns.
+        $sort = match ($sortKey) {
+            'buy' => 'buy_rate',
+            'sell' => 'sell_rate',
+            'spread' => 'spread',
+            'updated' => 'scraped_at',
+            'distance' => 'distance',
+            default => $intent === 'sell' ? 'buy_rate' : 'sell_rate',
+        };
+
+        // Fourteen rows is the most this page ever shows, so a name search is a
+        // filter over what is already on screen rather than a query. Kept out
+        // of the cache key below for the same reason it is cheap: baking a free
+        // text field into a key fragments the cache once per phrase typed.
+        $search = trim((string) $request->query('q'));
+        $search = mb_substr($search, 0, 60);
 
         // Only "bank" and "exchange" organizations ever carry currency rates,
         // but which of the two actually appear depends on real data - built
@@ -232,6 +255,15 @@ class RateController extends Controller
         // and this is the part that must not go stale with it.
         $cached['items'] = $this->withLastChanged($cached['items']);
 
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+            $cached['items'] = array_values(array_filter(
+                $cached['items'],
+                fn (array $row) => str_contains(mb_strtolower((string) $row['organization_name']), $needle),
+            ));
+            $cached['total'] = count($cached['items']);
+        }
+
         // Rebuilt fresh every request (cheap - it's just wrapping the small
         // cached array), not itself cached: LengthAwarePaginator is an
         // object, and config/cache.php's 'serializable_classes' => false
@@ -277,6 +309,7 @@ class RateController extends Controller
             'sort' => $sortKey,
             'sortOptions' => $sortOptions,
             'direction' => $direction,
+            'search' => $search,
             'intent' => $intent,
             'amount' => $amount,
             'rates' => $rates,
@@ -289,7 +322,6 @@ class RateController extends Controller
             // inviting everyone to ask.
             'quoteMinimum' => config('exchange-quotes.minimum_amounts')[$selectedCurrency?->code] ?? null,
             'centralBankRate' => $this->centralBankRate($selectedCurrency),
-            'detailed' => $request->boolean('both'),
             'hasLocation' => $hasLocation,
             'latitude' => $latitude,
             'longitude' => $longitude,
