@@ -196,6 +196,11 @@ class RateController extends Controller
             default => null,
         };
 
+        // List or map. The list is the default and stays the default: a map is
+        // slower to read a table of numbers off, and most visits are exactly
+        // that. Only when it is asked for do we load the library at all.
+        $viewMode = $request->query('view') === 'map' ? 'map' : 'list';
+
         $page = (int) $request->query('page', 1);
 
         $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page', 'freshBefore');
@@ -249,6 +254,11 @@ class RateController extends Controller
             'selectedOrganization' => $selectedOrganization,
             'cities' => $cities,
             'selectedCity' => $selectedCity,
+            'viewMode' => $viewMode,
+            // Every geocoded branch of every organization on the page. Only
+            // built for the map: it is a second query and a payload the list
+            // has no use for.
+            'mapBranches' => $viewMode === 'map' ? $this->mapBranches($cached['items']) : [],
             'freshness' => $freshness,
             'sort' => $sortKey,
             'sortOptions' => $sortOptions,
@@ -634,6 +644,42 @@ class RateController extends Controller
 
         return collect($items)
             ->map(fn (array $row) => [...$row, 'changed_at' => $changed[$row['id']] ?? null])
+            ->all();
+    }
+
+    /**
+     * The branches behind the rows on this page, grouped by organization.
+     *
+     * A rate belongs to an organization, not to a branch, so one row can put
+     * several pins on the map - each showing the same rate at a different
+     * address. Branches without coordinates are dropped rather than pinned at
+     * the origin, which would put them in the Gulf of Guinea.
+     *
+     * @param  array<int, array>  $items
+     * @return array<int, array<int, array>>
+     */
+    private function mapBranches(array $items): array
+    {
+        $organizationIds = collect($items)->pluck('organization_id')->unique()->all();
+
+        if ($organizationIds === []) {
+            return [];
+        }
+
+        return Branch::query()
+            ->whereIn('organization_id', $organizationIds)
+            ->where('is_active', true)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get()
+            ->groupBy('organization_id')
+            ->map(fn ($branches) => $branches->map(fn (Branch $branch) => [
+                'name' => $branch->name,
+                'address' => $branch->address,
+                'city' => $branch->city,
+                'lat' => (float) $branch->latitude,
+                'lng' => (float) $branch->longitude,
+            ])->values()->all())
             ->all();
     }
 

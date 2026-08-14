@@ -19,6 +19,7 @@
         'intent' => $intent,
         'amount' => $amount,
         'fresh' => $freshness,
+        'view' => $viewMode === 'map' ? 'map' : null,
         'both' => $detailed ? 1 : null,
     ];
 
@@ -688,6 +689,44 @@
             // Green buy, red sell - the pairing every currency board in the
             // country uses, so it is the one visitors arrive already able to
             // read. The average stays ink: it is a reference, not an offer.
+            // One rate can put several pins on the map: the rate belongs to the
+            // organization, the address to the branch. Assembled here rather
+            // than in the controller because the total needs $convert, which is
+            // presentation arithmetic and lives with the rest of it.
+            $mapPoints = [];
+
+            if ($viewMode === 'map') {
+                foreach ($ranked['rows'] as $row) {
+                    foreach ($mapBranches[$row->organization_id] ?? [] as $branch) {
+                        $mapPoints[] = [
+                            'lat' => $branch['lat'],
+                            'lng' => $branch['lng'],
+                            'name' => $row->organization_name,
+                            'branch' => $branch['name'],
+                            'address' => $branch['address'],
+                            'rate' => number_format((float) $row->{$rateField}, 2),
+                            'best' => $row->rank === 1,
+                            'total' => $calculating ? $amd($convert((float) $row->{$rateField})).' '.$targetCode : null,
+                            'distance' => $hasLocation && isset($row->distance_km)
+                                ? __('rates.distance_km', ['km' => number_format($row->distance_km, 1)])
+                                : null,
+                            'directions' => 'https://www.google.com/maps/dir/?api=1&destination='.$branch['lat'].','.$branch['lng'],
+                            // Same rule as everywhere else: only exchange
+                            // offices negotiate, and only for a currency we
+                            // broker quotes in.
+                            'negotiate' => $row->organization_type === 'exchange' && $quoteMinimum !== null
+                                ? route('exchange.request', array_filter([
+                                    'currency' => $selectedCurrency?->code,
+                                    'amount' => $amount,
+                                    'city' => $branch['city'],
+                                    'rate_field' => $rateField,
+                                ]))
+                                : null,
+                        ];
+                    }
+                }
+            }
+
             $summaryCards = [
                 [
                     'label' => __('rates.summary_best_buy'),
@@ -857,6 +896,26 @@
                 here: it says which of the two views you are in, which one link
                 naming only the other view never did. Still two links, so it
                 works with JS off and stays shareable. --}}
+                {{-- List or map. The list is the default and the map is never
+                loaded until asked for - see rates-map.js. --}}
+                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    <div class="flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
+                        @foreach (['view_list' => null, 'view_map' => 'map'] as $key => $mode)
+                            @php $isCurrent = $viewMode === ($mode ?? 'list'); @endphp
+                            <a
+                                href="{{ $link(['view' => $mode]) }}"
+                                aria-current="{{ $isCurrent ? 'true' : 'false' }}"
+                                class="min-w-0 rounded-md px-3 py-1 text-xs font-medium break-words transition {{ $isCurrent ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
+                            >
+                                {{ __('rates.'.$key) }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Sorting and the spread column both describe the table, so
+                neither is offered when there is no table on screen. --}}
+                @if ($viewMode !== 'map')
                 {{--
                     Named sorts rather than clickable column headings. A heading
                     that sorts asks the visitor to work out which column answers
@@ -901,8 +960,54 @@
                             @endforeach
                         </div>
                 </div>
+                @endif
             </div>
 
+            @if ($viewMode === 'map')
+                {{--
+                    The map replaces the list rather than sitting beside it: two
+                    renderings of the same fourteen rows, both on screen, is the
+                    duplication this page has been shedding.
+
+                    Rendered server-side as JSON and handed to a loader that
+                    imports Leaflet on demand - the library is 149KB and no
+                    other view of this page needs a byte of it.
+                --}}
+                @if ($mapPoints === [])
+                    <div class="mt-4 rounded-xl border border-dashed border-placeholder px-6 py-16 text-center">
+                        <p class="text-sm text-muted">{{ __('rates.map_empty') }}</p>
+                    </div>
+                @else
+                    {{-- Mounted by app.js rather than by Alpine: this panel is
+                    morphed on every filter click, and a subtree that arrives via
+                    morph never gets x-init run over it, so the map silently
+                    failed to appear whenever you reached it by pressing "Map"
+                    rather than by loading the URL. --}}
+                    <div data-rates-map class="mt-4">
+                        <script type="application/json" data-rates-map-payload>
+                            {!! json_encode([
+                                'points' => $mapPoints,
+                                'labels' => [
+                                    'rate' => __('rates.map_rate_label'),
+                                    'total' => __('rates.map_total_label'),
+                                    'distance' => __('rates.map_distance_label'),
+                                    'directions' => __('rates.directions'),
+                                    'negotiate' => __('rates.cta_button'),
+                                ],
+                            ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}
+                        </script>
+
+                        {{-- A fixed height, because a div with no content has
+                        none and Leaflet would render into nothing. --}}
+                        <div
+                            data-rates-map-canvas
+                            class="h-[28rem] w-full overflow-hidden rounded-xl border border-placeholder bg-placeholder/20 sm:h-[34rem]"
+                            role="application"
+                            aria-label="{{ __('rates.view_map') }}"
+                        ></div>
+                    </div>
+                @endif
+            @else
             {{-- Mobile: a row list. A table has no room for a readable name
             once the rate and the total both need space. --}}
             <div class="mt-4 overflow-hidden rounded-xl border border-placeholder sm:hidden">
@@ -1139,6 +1244,7 @@
                     </tbody>
                 </table>
             </div>
+            @endif
         @else
             {{-- Never a dead end: offer the nearest combination that has data
             rather than only reporting the absence. --}}
@@ -1227,6 +1333,11 @@
                     if (focusedId) {
                         document.getElementById(focusedId)?.focus({ preventScroll: true });
                     }
+
+                    // Anything that has to mount itself into the swapped panel
+                    // gets told the swap is done - Alpine does not initialise a
+                    // morphed-in subtree, so the map cannot rely on x-init.
+                    window.dispatchEvent(new CustomEvent('rates:panel-updated'));
 
                     if (push) {
                         window.history.pushState({ ratesUrl: url }, '', url);

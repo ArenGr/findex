@@ -703,6 +703,87 @@ class RatesPageTest extends TestCase
     }
 
     /**
+     * The map is never the default and its library is never loaded until it is
+     * asked for: most visits are here to read a table of numbers, which a map
+     * is slower at.
+     */
+    public function test_the_list_is_the_default_and_the_map_is_opt_in(): void
+    {
+        $this->seedMarket();
+
+        // Without a mapped branch the map view shows its empty state instead of
+        // a canvas, which is a different assertion (see below).
+        Branch::create([
+            'organization_id' => Organization::where('slug', 'cheap-bank')->firstOrFail()->id,
+            'name' => 'Kentron', 'city' => 'Yerevan',
+            'latitude' => 40.1792, 'longitude' => 44.4991, 'is_active' => true,
+        ]);
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertViewHas('viewMode', 'list')
+            ->assertSee('<table', false)
+            ->assertDontSee('data-rates-map', false);
+
+        $this->get('/en/rates?currency=USD&view=map')
+            ->assertOk()
+            ->assertViewHas('viewMode', 'map')
+            ->assertSee('data-rates-map', false)
+            // The map replaces the table rather than joining it: two renderings
+            // of the same rows is the duplication this page keeps shedding.
+            ->assertDontSee('<table', false);
+
+        $this->get('/en/rates?currency=USD&view=nonsense')->assertOk()->assertViewHas('viewMode', 'list');
+    }
+
+    /**
+     * A rate belongs to an organization and an address belongs to a branch, so
+     * one row can put several pins on the map.
+     */
+    public function test_every_geocoded_branch_becomes_a_pin(): void
+    {
+        $this->seedMarket();
+        $bank = Organization::where('slug', 'cheap-bank')->firstOrFail();
+
+        Branch::create(['organization_id' => $bank->id, 'name' => 'Kentron', 'city' => 'Yerevan',
+            'latitude' => 40.1792, 'longitude' => 44.4991, 'is_active' => true]);
+        Branch::create(['organization_id' => $bank->id, 'name' => 'Arabkir', 'city' => 'Yerevan',
+            'latitude' => 40.2000, 'longitude' => 44.5100, 'is_active' => true]);
+        // No coordinates: pinning it would put it in the Gulf of Guinea.
+        Branch::create(['organization_id' => $bank->id, 'name' => 'Nowhere', 'city' => 'Yerevan', 'is_active' => true]);
+        // Inactive branches are not places you can walk into.
+        Branch::create(['organization_id' => $bank->id, 'name' => 'Closed', 'city' => 'Yerevan',
+            'latitude' => 40.21, 'longitude' => 44.52, 'is_active' => false]);
+
+        $branches = $this->get('/en/rates?currency=USD&view=map')->assertOk()->viewData('mapBranches');
+
+        $this->assertCount(2, $branches[$bank->id]);
+        $this->assertEqualsCanonicalizing(['Kentron', 'Arabkir'], array_column($branches[$bank->id], 'name'));
+    }
+
+    /** Nothing to plot is said plainly rather than shown as an empty grey box. */
+    public function test_the_map_says_so_when_no_branch_has_been_mapped(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD&view=map')
+            ->assertOk()
+            ->assertSee('No mapped branches for these rates yet.');
+    }
+
+    /**
+     * Sorting and the spread column both describe the table. With no table on
+     * screen they would be controls that visibly do nothing.
+     */
+    public function test_table_only_controls_stand_down_in_map_view(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Lowest spread')->assertSee('Detailed');
+        $this->get('/en/rates?currency=USD&view=map')->assertOk()->assertDontSee('Lowest spread')->assertDontSee('Detailed');
+    }
+
+    /**
      * On a phone the filter panel is a bottom sheet, and it confirms with the
      * result rather than a bare "Done" - the table is behind the sheet, so the
      * count is the only way to see what the choices did before closing it.
