@@ -30,8 +30,11 @@
         }
         .card { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
         .label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-        .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-        .rate { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        /* Fluid, because the host decides the box and 200px is a box people
+           genuinely use - two six-character rates at a fixed 26px do not fit
+           one, and a widget that overflows its iframe looks broken. */
+        .rate { font-size: clamp(17px, 8.5vw, 26px); font-weight: 700; font-variant-numeric: tabular-nums; }
         .buy { color: var(--buy); } .sell { color: var(--sell); }
         .who { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
         .foot { margin-top: 10px; font-size: 11px; color: var(--muted); }
