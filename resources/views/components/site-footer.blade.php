@@ -61,12 +61,16 @@
                 </a>
             </div>
 
+            {{-- min-w-0 and break-words together: a grid track defaults to
+            minmax(auto, 1fr), so a single unbreakable word - "Политика
+            конфиденциальности" at 320px - widens its track and pushes the
+            whole page sideways rather than wrapping. --}}
             @foreach ($columns as $column)
-                <div>
-                    <p class="text-xs font-semibold tracking-wider text-subtle uppercase">{{ $column['title'] }}</p>
+                <div class="min-w-0">
+                    <p class="text-xs font-semibold tracking-wider break-words text-subtle uppercase">{{ $column['title'] }}</p>
                     <ul class="mt-4 space-y-3 text-sm text-body-text">
                         @foreach ($column['links'] as $link)
-                            <li><a href="{{ $link['href'] }}" class="hover:text-primary">{{ $link['label'] }}</a></li>
+                            <li class="min-w-0"><a href="{{ $link['href'] }}" class="break-words hover:text-primary">{{ $link['label'] }}</a></li>
                         @endforeach
                     </ul>
                 </div>
