@@ -1,5 +1,18 @@
 @php
     $columns = [
+        // The rate product's own pages. They existed with nothing linking to
+        // them, which for the history and API pages meant nobody would ever
+        // arrive. Here rather than in the header nav: crowding the nav is the
+        // thing to avoid, and API promotion belongs somewhere quiet.
+        [
+            'title' => __('footer.columns.rates.title'),
+            'links' => [
+                ['label' => __('footer.columns.rates.links.rates'), 'href' => route('rates.index')],
+                ['label' => __('footer.columns.rates.links.history'), 'href' => route('rates.history')],
+                ['label' => __('footer.columns.rates.links.compare'), 'href' => route('organizations.compare')],
+                ['label' => __('footer.columns.rates.links.api'), 'href' => route('api.docs')],
+            ],
+        ],
         [
             'title' => __('footer.columns.company.title'),
             'links' => [

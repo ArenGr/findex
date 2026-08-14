@@ -655,11 +655,20 @@
             {{-- Stated once, as a reference. It used to sit in the transaction
             type row as a peer of Cash and Card, which sent visitors to rows
             they could not act on. --}}
-            <p class="mt-5 text-sm break-words text-muted">
-                {{ __('rates.central_bank_reference', [
-                    'rate' => number_format((float) $centralBankRate['rate'], 2),
-                    'code' => $selectedCurrency?->code,
-                ]) }}
+            {{-- The caveat rides with the number rather than being left for
+            the visitor to know already: an official rate printed beside a table
+            of worse ones invites "why is nobody giving me 365?", and the answer
+            is that nobody ever could. --}}
+            <p class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm break-words text-muted">
+                <span class="min-w-0">
+                    {{ __('rates.central_bank_reference', [
+                        'rate' => number_format((float) $centralBankRate['rate'], 2),
+                        'code' => $selectedCurrency?->code,
+                    ]) }}
+                </span>
+                <x-info-popover :label="__('rates.central_bank_label')" align="left">
+                    {{ __('rates.central_bank_hint') }}
+                </x-info-popover>
             </p>
         @endif
 
@@ -1318,6 +1327,10 @@
             </div>
         @endif
 
+
+        <p class="mt-8 border-t border-placeholder pt-5 text-xs leading-relaxed break-words text-muted">
+            {{ __('rates.disclaimer') }}
+        </p>
 
     </section>
 

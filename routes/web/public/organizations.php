@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CompareController;
+use App\Http\Controllers\CurrencyLandingController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\RateHistoryController;
@@ -20,6 +21,13 @@ Route::get('/rates', [RateController::class, 'index'])->name('rates.index');
 // Deliberately its own page rather than a panel on /rates: charts are a
 // second question, and §19 asks the main page not to carry them.
 Route::get('/rates/history', [RateHistoryController::class, 'index'])->name('rates.history');
+
+// One landing page per currency, for the search "USD to AMD rate today".
+// Registered after /rates/history so the fixed path is never swallowed by the
+// parameter, and constrained to three letters so it cannot become a catch-all.
+Route::get('/rates/{currency}', [CurrencyLandingController::class, 'show'])
+    ->where('currency', '[A-Za-z]{3}')
+    ->name('rates.currency');
 
 // Dedicated SEO landing pages for a single organization type - see
 // OrganizationController::categoryPage() for why these exist separately

@@ -122,7 +122,12 @@ class OrganizationRatesPageTest extends TestCase
     {
         $this->organization('an-insurer', 'insurance');
 
-        $this->get('/en/organizations/an-insurer')->assertOk()->assertDontSee('Exchange rates');
+        // Asserted on the heading, not on the words: the footer now links to
+        // /rates with the same label, and "the phrase appears nowhere" was
+        // never what this test meant.
+        $this->get('/en/organizations/an-insurer')
+            ->assertOk()
+            ->assertDontSee('<h2 class="mt-12 font-heading text-xl font-semibold break-words text-ink">Exchange rates', false);
     }
 
     /**

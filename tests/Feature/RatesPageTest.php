@@ -865,6 +865,33 @@ class RatesPageTest extends TestCase
     }
 
     /**
+     * An official rate printed beside a table of worse ones invites "why is
+     * nobody giving me 365?" - and the answer is that nobody ever could. The
+     * caveat travels with the number rather than being left to be known.
+     */
+    public function test_the_central_bank_rate_says_it_is_not_available_to_anyone(): void
+    {
+        $usd = $this->seedMarket();
+        $this->rate($this->organization('central-bank'), $usd, 366.0, 366.0, 'central_bank');
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('Central Bank reference rate')
+            ->assertSee('It is not a rate you can exchange at')
+            ->assertDontSee('Central Bank official rate');
+    }
+
+    /** Scraped numbers, so the page says what that means for trusting them. */
+    public function test_the_page_carries_a_disclaimer_about_the_rates(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('the rate you are given at the counter is the one that counts');
+    }
+
+    /**
      * On a phone the filter panel is a bottom sheet, and it confirms with the
      * result rather than a bare "Done" - the table is behind the sheet, so the
      * count is the only way to see what the choices did before closing it.
@@ -956,7 +983,7 @@ class RatesPageTest extends TestCase
         $response = $this->get('/en/rates?currency=USD');
 
         $response->assertOk()
-            ->assertSee('Central Bank official rate: 366.17')
+            ->assertSee('Central Bank reference rate: 366.17')
             ->assertDontSee('>Central Bank<', false);
 
         $this->assertNotContains('central_bank', $response->viewData('availableTypes')->all());

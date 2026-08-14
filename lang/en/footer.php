@@ -9,6 +9,15 @@ return [
         .'financial institutions can change - always verify the final terms on the institution\'s own official sources.',
 
     'columns' => [
+        'rates' => [
+            'title' => 'Rates',
+            'links' => [
+                'rates' => 'Exchange rates',
+                'history' => 'Rate history',
+                'compare' => 'Compare',
+                'api' => 'API',
+            ],
+        ],
         'company' => [
             'title' => 'Company',
             'links' => [
