@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Organization;
+use App\Services\OrganizationRatesData;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -140,7 +141,7 @@ class OrganizationController extends Controller
      * implicit binding does not resolve correctly for a route parameter
      * that comes after a dynamic {locale} prefix segment.
      */
-    public function show(string $locale, string $organization): View
+    public function show(string $locale, string $organization, OrganizationRatesData $ratesData): View
     {
         $organization = Organization::active()->where('slug', $organization)->firstOrFail();
 
@@ -150,11 +151,25 @@ class OrganizationController extends Controller
             ? $organization->reviews->firstWhere('user_id', auth()->id())
             : null;
 
+        // Banks and exchange offices publish rates; travel agencies and
+        // insurers do not, and asking for theirs would be a guaranteed empty
+        // section on every one of their pages.
+        $rates = $organization->hasRatesPage()
+            ? $ratesData->build($organization)
+            : ['groups' => [], 'updated_at' => null, 'currency_count' => 0];
+
         return view('organizations.show', [
             'organization' => $organization,
             'averageRating' => $organization->reviews->avg('rating'),
             'reviewsCount' => $organization->reviews->count(),
             'myReview' => $myReview,
+            'rates' => $rates,
+            // Only exchange offices negotiate walk-in cash, and only once they
+            // are reachable on Telegram - the same rule the fan-out job uses,
+            // so the page cannot offer something the job would drop.
+            'canNegotiate' => $organization->type === 'exchange'
+                && $organization->telegram_chat_id !== null
+                && $rates['groups'] !== [],
         ]);
     }
 }

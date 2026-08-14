@@ -2,6 +2,16 @@
 
 @section('title', $organization->name . ' — Findex')
 
+@if ($rates['currency_count'] > 0)
+    {{-- Named after what the page actually answers, which is what someone
+    searching "ACBA exchange rates" is looking for. Only claimed when there are
+    rates to back it up. --}}
+    @section('description', __('organizations.rates_meta_description', [
+        'name' => $organization->name,
+        'count' => $rates['currency_count'],
+    ]))
+@endif
+
 @section('content')
     <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
 
@@ -90,6 +100,111 @@
 
         @if ($organization->description)
             <p class="mt-6 text-sm leading-relaxed text-body-text">{{ $organization->description }}</p>
+        @endif
+
+        {{--
+            The rates themselves, which this page did not show at all - the one
+            thing someone searching "<bank> exchange rates" came for, and the
+            reason these pages exist as an entry point rather than only as a
+            destination from /rates.
+        --}}
+        @if ($organization->hasRatesPage())
+            <div class="mt-12 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                <div class="min-w-0">
+                    <h2 class="font-heading text-xl font-semibold break-words text-ink">{{ __('organizations.rates_heading') }}</h2>
+                    @if ($rates['updated_at'])
+                        <p class="mt-1 text-sm text-muted">
+                            {{ __('organizations.rates_updated', ['time' => \Illuminate\Support\Carbon::parse($rates['updated_at'])->diffForHumans()]) }}
+                        </p>
+                    @endif
+                </div>
+
+                {{-- The offer only this organization's own page can make, and
+                only when the fan-out job would actually reach them. --}}
+                @if ($canNegotiate)
+                    <a
+                        href="{{ route('exchange.request') }}"
+                        class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium break-words text-white transition hover:bg-primary-dark"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true">
+                            <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+                            <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                        </svg>
+                        {{ __('rates.cta_button') }}
+                    </a>
+                @endif
+            </div>
+
+            @forelse ($rates['groups'] as $type => $rows)
+                <div class="mt-6">
+                    <h3 class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('organizations.rate_types.' . $type) }}</h3>
+
+                    <div class="relative mt-2 overflow-x-auto rounded-xl border border-placeholder">
+                        <table class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
+                                    <th class="px-6 py-3 text-left">{{ __('rates.currency_label') }}</th>
+                                    <th class="px-6 py-3 text-right" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}</th>
+                                    <th class="px-6 py-3 text-right" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}</th>
+                                    <th class="hidden px-4 py-3 text-right md:table-cell">{{ __('rates.updated_column') }}</th>
+                                    <th class="px-4 py-3"><span class="sr-only">{{ __('rates.view_all') }}</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($rows as $row)
+                                    <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
+                                        <td class="px-6 py-4">
+                                            <span class="flex items-center gap-2">
+                                                <span aria-hidden="true">{{ \App\Models\Currency::flag($row['code']) }}</span>
+                                                <span class="font-medium text-ink">{{ $row['code'] }}</span>
+                                                <span class="hidden text-xs break-words text-muted sm:inline">{{ $row['name'] }}</span>
+                                            </span>
+                                        </td>
+                                        <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $row['best_buy'], 'font-medium' => ! $row['best_buy']])>
+                                            <span class="inline-flex items-center justify-end gap-2">
+                                                @if ($row['best_buy'])
+                                                    <x-rates.best-chip :label="__('organizations.rates_best_badge')" />
+                                                @endif
+                                                {{ number_format($row['buy_rate'], 2) }}
+                                            </span>
+                                        </td>
+                                        <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $row['best_sell'], 'font-medium' => ! $row['best_sell']])>
+                                            <span class="inline-flex items-center justify-end gap-2">
+                                                @if ($row['best_sell'])
+                                                    <x-rates.best-chip :label="__('organizations.rates_best_badge')" />
+                                                @endif
+                                                {{ number_format($row['sell_rate'], 2) }}
+                                            </span>
+                                        </td>
+                                        <td class="hidden px-4 py-4 text-right text-xs whitespace-nowrap md:table-cell">
+                                            @if ($row['scraped_at'])
+                                                <x-rates.freshness
+                                                    :scraped-at="$row['scraped_at']"
+                                                    :stale="\Illuminate\Support\Carbon::parse($row['scraped_at'])->diffInHours(now()) >= 24"
+                                                    :changed-at="$row['changed_at']"
+                                                />
+                                            @endif
+                                        </td>
+                                        {{-- Out to the comparison, which is the
+                                        question this table raises and cannot
+                                        answer: is this a good rate? --}}
+                                        <td class="px-4 py-4 text-right">
+                                            <a
+                                                href="{{ route('rates.index', ['currency' => $row['code'], 'type' => $type]) }}"
+                                                class="text-xs font-medium break-words text-primary hover:underline"
+                                            >
+                                                {{ __('organizations.rates_see_all', ['code' => $row['code']]) }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @empty
+                <p class="mt-4 text-sm text-muted">{{ __('organizations.rates_none', ['name' => $organization->name]) }}</p>
+            @endforelse
         @endif
 
         {{-- Reviews --}}

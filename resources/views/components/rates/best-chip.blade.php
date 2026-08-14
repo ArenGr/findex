@@ -1,13 +1,13 @@
-@props(['count' => 1])
+@props(['count' => 1, 'label' => null])
 
 @php
     // Six banks quoting 368.00 all win, and six stars with no explanation read
     // as a bug rather than as a tie. The label says how many share it, so the
     // repetition is accounted for wherever the star is read from - tooltip,
     // screen reader, or hover.
-    $label = $count > 1
+    $label = $label ?? ($count > 1
         ? __('rates.best_badge_shared', ['count' => $count])
-        : __('rates.best_badge');
+        : __('rates.best_badge'));
 @endphp
 
 {{-- The same star the review rating draws, in the same yellow, so "marked
