@@ -124,8 +124,9 @@ class ExchangeQuoteSubmissionTest extends TestCase
             ->assertSee('Findex got you')
             ->assertSee('You receive')
             // Measured against the open market, not against what this office
-            // happened to be posting when the request went out.
-            ->assertSee('Best public rate now')
+            // happened to be posting when the request went out. Stated in the
+            // request summary beside the offers, so both are read together.
+            ->assertSee('Current public best')
             ->assertSee('385.00');
     }
 

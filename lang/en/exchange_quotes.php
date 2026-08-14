@@ -172,4 +172,18 @@ return [
         'outcome_no_show' => 'No show',
         'outcome_expired' => 'Expired',
     ],
+    'offers' => [
+        'heading' => 'Private offers available',
+        'summary' => 'Request summary',
+        'selling' => 'Selling',
+        'buying' => 'Buying',
+        'public_best' => 'Current public best',
+        'amount_requested' => 'Amount requested',
+        'rate' => 'Rate',
+        'best_offer' => 'Best offer',
+        'waiting' => 'Waiting for a reply',
+        'declined' => 'Not interested',
+        'none_yet' => 'Nobody has replied yet.',
+        'none_yet_note' => 'Offers arrive here as exchange offices answer - you do not need to keep this page open.',
+    ],
 ];
