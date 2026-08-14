@@ -127,3 +127,12 @@ button {
     --text-4xl: 2.5rem;
     --text-4xl--line-height: 2.75rem;
 }
+
+/* Leaflet numbers its own panes, controls and popups from 400 up to 1000, and
+   it does so against the document's root stacking context - .leaflet-container
+   sets `position: relative` with no z-index, so it never contains them. A z-50
+   dialog therefore opens *underneath* the map. Isolating the container keeps
+   Leaflet's numbering to itself without touching any of it. */
+.leaflet-container {
+    isolation: isolate;
+}
