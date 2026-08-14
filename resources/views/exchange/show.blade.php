@@ -3,6 +3,18 @@
 @section('title', __('exchange_quotes.results.heading') . ' — Findex')
 
 @php
+    // Guests reach this page by signature and have no session to authorize
+    // them, so the action they post to has to carry one too.
+    $acceptUrl = fn ($response) => request()->hasValidSignature()
+        ? \Illuminate\Support\Facades\URL::signedRoute('exchange.offers.accept', [
+            'exchangeQuoteRequest' => $response->exchange_quote_request_id,
+            'response' => $response->id,
+        ])
+        : route('exchange.offers.accept', [
+            'exchangeQuoteRequest' => $response->exchange_quote_request_id,
+            'response' => $response->id,
+        ]);
+
     // Money formatting shared by the whole page, defined here rather than
     // beside its first use: this view has several top-level branches and the
     // helpers are needed in more than one of them.
@@ -162,6 +174,45 @@
             </p>
         </div>
 
+        @php($accepted = $exchangeQuoteRequest->responses->firstWhere('is_accepted', true))
+
+        {{--
+            The code, and nothing else the counter needs. No name, no email,
+            no phone - the office looks this up against the request it already
+            answered, which is the whole handshake.
+        --}}
+        @if ($accepted)
+            <div class="mt-6 overflow-hidden rounded-2xl border-2 border-primary/40 bg-primary/5">
+                <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 px-6 py-5">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('exchange_quotes.accept.your_code') }}</p>
+                        <p class="mt-1 font-heading text-3xl font-bold tracking-tight break-words text-ink sm:text-4xl">
+                            {{ $accepted->redemption_code ?? $exchangeQuoteRequest->public_code }}
+                        </p>
+                        <p class="mt-2 text-sm break-words text-muted">{{ __('exchange_quotes.accept.show_at_counter') }}</p>
+                    </div>
+
+                    <dl class="min-w-0 space-y-1 text-sm">
+                        <div class="flex flex-wrap gap-x-2">
+                            <dt class="text-muted">{{ $accepted->organization->name }}</dt>
+                        </div>
+                        <div class="flex flex-wrap gap-x-2">
+                            <dt class="text-muted">{{ __('exchange_quotes.accept.rate_agreed') }}:</dt>
+                            <dd class="font-semibold text-ink tabular-nums">{{ number_format((float) $accepted->offered_rate, 2) }} {{ $amd }}</dd>
+                        </div>
+                        <div class="flex flex-wrap gap-x-2">
+                            <dt class="text-muted">{{ __('exchange_quotes.request.amount') }}:</dt>
+                            <dd class="text-ink tabular-nums">{{ number_format((float) $exchangeQuoteRequest->amount, 2) }} {{ $exchangeQuoteRequest->currency->code }}</dd>
+                        </div>
+                        <div class="flex flex-wrap gap-x-2">
+                            <dt class="text-muted">{{ __('exchange_quotes.accept.valid_until') }}:</dt>
+                            <dd class="text-ink">{{ $exchangeQuoteRequest->expires_at->translatedFormat('d F, H:i') }}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        @endif
+
         {{-- Request summary "ticket" --}}
         <div class="mt-6 rounded-2xl border border-placeholder p-5 shadow-sm">
             <div class="flex items-center gap-4">
@@ -284,6 +335,11 @@
                                                 ✨ {{ __('exchange_quotes.results.improved_badge') }}
                                             </span>
                                         @endif
+                                        @if ($response->is_accepted)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-white">
+                                                {{ __('exchange_quotes.accept.chosen') }} &middot; {{ $response->redemption_code }}
+                                            </span>
+                                        @endif
                                     </div>
 
                                     @if (isset($offerValues[$response->id]))
@@ -382,6 +438,25 @@
 
                         @if ($response->reply_text)
                             <p class="mt-3 rounded-xl bg-primary/5 px-4 py-3 text-sm leading-relaxed text-ink">{{ $response->reply_text }}</p>
+                        @endif
+
+                        {{-- Only while the request is open: once it closes the
+                        office is no longer holding that rate, and a button that
+                        promises otherwise is worse than no button. --}}
+                        @if ($exchangeQuoteRequest->is_open)
+                            <form method="POST" action="{{ $acceptUrl($response) }}" class="mt-4">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    @class([
+                                        'w-full rounded-full px-6 py-2.5 text-sm font-semibold break-words transition sm:w-auto',
+                                        'bg-primary text-white hover:bg-primary-dark' => ! $response->is_accepted,
+                                        'border border-primary/50 bg-white text-ink hover:bg-placeholder/25' => $response->is_accepted,
+                                    ])
+                                >
+                                    {{ $response->is_accepted ? __('exchange_quotes.accept.choose_other') : __('exchange_quotes.accept.choose') }}
+                                </button>
+                            </form>
                         @endif
 
                         @if ($repliedCount >= 2)

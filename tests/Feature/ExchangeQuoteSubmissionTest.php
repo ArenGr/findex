@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\ExchangeQuoteRequest;
+use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\Telegram\TelegramClient;
@@ -153,6 +154,119 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->get(URL::signedRoute('exchange.show', [
             'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
         ]))->assertOk()->assertDontSee('Findex got you');
+    }
+
+    /**
+     * Picking an offer tells the exchange office nothing about the visitor. It
+     * produces a code - FX-48372-A - which the office looks up against the
+     * request it already answered. That is the entire handshake.
+     */
+    public function test_accepting_an_offer_yields_a_code_and_no_personal_data(): void
+    {
+        [$exchangeRequest, $response] = $this->requestWithOffer();
+
+        $this->assertMatchesRegularExpression('/^FX-\d{5}$/', $exchangeRequest->public_code);
+
+        $this->post(URL::signedRoute('exchange.offers.accept', [
+            'locale' => 'en',
+            'exchangeQuoteRequest' => $exchangeRequest->id,
+            'response' => $response->id,
+        ]))->assertRedirect();
+
+        $response->refresh();
+
+        $this->assertSame('accepted', $response->status);
+        $this->assertNotNull($response->accepted_at);
+        $this->assertSame($exchangeRequest->public_code.'-A', $response->redemption_code);
+
+        $page = $this->get(URL::signedRoute('exchange.show', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
+        ]))->assertOk();
+
+        $page->assertSee($response->redemption_code)
+            ->assertSee('Show this code at the exchange office.')
+            // The code stands in for the person - none of this may appear.
+            ->assertDontSee($exchangeRequest->guest_name)
+            ->assertDontSee($exchangeRequest->guest_email);
+    }
+
+    /** Changing your mind is allowed while the request is open. */
+    public function test_choosing_a_second_offer_releases_the_first(): void
+    {
+        [$exchangeRequest, $first] = $this->requestWithOffer();
+
+        $second = $exchangeRequest->responses()->create([
+            'organization_id' => $this->exchangePartner()->id,
+            'response_token' => 'tok'.uniqid(),
+            'status' => 'responded',
+            'offer_letter' => 'B',
+            'posted_rate' => '384.5000',
+            'offered_rate' => '385.0000',
+            'responded_at' => now(),
+        ]);
+
+        foreach ([$first, $second] as $choice) {
+            $this->post(URL::signedRoute('exchange.offers.accept', [
+                'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id, 'response' => $choice->id,
+            ]))->assertRedirect();
+        }
+
+        $this->assertSame('responded', $first->refresh()->status);
+        $this->assertSame('accepted', $second->refresh()->status);
+        $this->assertNull($first->accepted_at);
+    }
+
+    /**
+     * A closed request cannot be acted on - the office is no longer holding
+     * that rate, and letting someone walk to a counter on a dead code is the
+     * worst outcome this feature has.
+     */
+    public function test_a_closed_request_cannot_have_an_offer_accepted(): void
+    {
+        [$exchangeRequest, $response] = $this->requestWithOffer();
+        $exchangeRequest->forceFill(['expires_at' => now()->subDay()])->save();
+
+        $this->post(URL::signedRoute('exchange.offers.accept', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id, 'response' => $response->id,
+        ]))->assertStatus(410);
+
+        $this->assertSame('responded', $response->refresh()->status);
+    }
+
+    /** Without the signature there is nothing authorizing the change. */
+    public function test_accepting_requires_the_same_authorization_as_viewing(): void
+    {
+        [$exchangeRequest, $response] = $this->requestWithOffer();
+
+        $this->post(route('exchange.offers.accept', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id, 'response' => $response->id,
+        ]))->assertStatus(403);
+
+        $this->assertSame('responded', $response->refresh()->status);
+    }
+
+    /** @return array{0: ExchangeQuoteRequest, 1: ExchangeQuoteResponse} */
+    private function requestWithOffer(): array
+    {
+        $partner = $this->exchangePartner();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $this->usd()->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_name' => 'Zorayr', 'guest_email' => 'zorayr@example.com', 'locale' => 'en',
+            'expires_at' => now()->addDay(),
+        ]);
+
+        $response = $exchangeRequest->responses()->create([
+            'organization_id' => $partner->id,
+            'response_token' => 'tok'.uniqid(),
+            'status' => 'responded',
+            'offer_letter' => 'A',
+            'posted_rate' => '384.5000',
+            'offered_rate' => '386.2000',
+            'responded_at' => now(),
+        ]);
+
+        return [$exchangeRequest, $response];
     }
 
     /**

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\URL;
 class ExchangeQuoteRequest extends Model
 {
     protected $fillable = [
+        'public_code',
         'user_id',
         'guest_name',
         'guest_email',
@@ -28,6 +29,27 @@ class ExchangeQuoteRequest extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * The code a visitor quotes, and the only thing an exchange office needs in
+     * order to find this request. Five digits is enough to be unambiguous read
+     * aloud and short enough to write on a hand - and it carries nothing about
+     * the person, which is the point.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $request) {
+            if ($request->public_code !== null) {
+                return;
+            }
+
+            do {
+                $code = 'FX-'.str_pad((string) random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+            } while (static::where('public_code', $code)->exists());
+
+            $request->public_code = $code;
+        });
+    }
 
     /**
      * The account name if filed while signed in, otherwise the guest's own name.

@@ -148,4 +148,15 @@ return [
         'best_offer' => 'Best offer',
         'at_public_rate' => 'At the public rate',
     ],
+    'accept' => [
+        'choose' => 'Choose this offer',
+        'your_code' => 'Your code',
+        'show_at_counter' => 'Show this code at the exchange office.',
+        'chosen' => 'Chosen',
+        'rate_agreed' => 'Rate agreed',
+        'valid_until' => 'Valid until',
+        'choose_other' => 'Choose a different offer',
+        'flash' => 'Offer chosen. Show your code at the counter.',
+        'request_code' => 'Request :code',
+    ],
 ];

@@ -10,6 +10,7 @@ use App\Models\Branch;
 use App\Models\Currency;
 use App\Models\CurrencyRate;
 use App\Models\ExchangeQuoteRequest;
+use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
@@ -239,6 +240,46 @@ class ExchangeQuoteController extends Controller
             'exchangeQuoteRequest' => $exchangeQuoteRequest,
             ...$this->offerValue($exchangeQuoteRequest),
         ]);
+    }
+
+    /**
+     * Picking an offer.
+     *
+     * Nothing about the visitor is sent anywhere: the office is told nothing at
+     * this point at all. What the visitor gets is a code - FX-48372-A - which
+     * the office can look up against the request it already answered. That is
+     * the whole handshake, and it carries no name, no email and no phone.
+     */
+    public function accept(Request $request, string $locale, string $exchangeQuoteRequest, string $response): RedirectResponse
+    {
+        $exchangeQuoteRequest = ExchangeQuoteRequest::with('responses')->findOrFail($exchangeQuoteRequest);
+
+        $isOwner = $request->user() && $request->user()->id === $exchangeQuoteRequest->user_id;
+
+        abort_unless($isOwner || $request->hasValidSignature(), 403);
+
+        // A closed request cannot be acted on: the offers behind it have
+        // expired and the office is no longer holding that rate.
+        abort_unless($exchangeQuoteRequest->is_open, 410);
+
+        $chosen = $exchangeQuoteRequest->responses->firstWhere('id', (int) $response);
+
+        abort_if($chosen === null || ! $chosen->has_replied, 404);
+
+        // Changing your mind is allowed while the request is open, so the
+        // others drop back to a plain reply rather than being frozen out.
+        $exchangeQuoteRequest->responses()
+            ->where('status', ExchangeQuoteResponse::STATUS_ACCEPTED)
+            ->update(['status' => ExchangeQuoteResponse::STATUS_RESPONDED, 'accepted_at' => null]);
+
+        $chosen->forceFill([
+            'status' => ExchangeQuoteResponse::STATUS_ACCEPTED,
+            'accepted_at' => now(),
+        ])->save();
+
+        return redirect()
+            ->to($request->headers->get('referer') ?: route('exchange.show', [$exchangeQuoteRequest]))
+            ->with('status', 'offer-accepted');
     }
 
     /**

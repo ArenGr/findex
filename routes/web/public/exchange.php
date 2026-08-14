@@ -32,6 +32,11 @@ Route::middleware('throttle:exchange_quote_response_submit')->group(function () 
 
 Route::get('/exchange/{exchangeQuoteRequest}', [ExchangeQuoteController::class, 'show'])->name('exchange.show');
 
+// Picking an offer. Same authorization as the results page it is posted from -
+// the owner, or a valid signature - so a guest can accept without an account.
+Route::post('/exchange/{exchangeQuoteRequest}/offers/{response}', [ExchangeQuoteController::class, 'accept'])
+    ->name('exchange.offers.accept');
+
 // Open to guests, same abuse guard as tourism - each submission fans out to
 // every matching partner, so this also protects partners.
 Route::middleware(['banned', 'throttle:exchange_quote_requests'])->group(function () {

@@ -14,7 +14,12 @@ class ExchangeQuoteResponse extends Model
 
     public const STATUS_DECLINED = 'declined';
 
+    /** An offer the visitor picked. Still a reply, so has_replied stays true. */
+    public const STATUS_ACCEPTED = 'accepted';
+
     protected $fillable = [
+        'offer_letter',
+        'accepted_at',
         'exchange_quote_request_id',
         'organization_id',
         'response_token',
@@ -28,6 +33,7 @@ class ExchangeQuoteResponse extends Model
     ];
 
     protected $casts = [
+        'accepted_at' => 'datetime',
         'posted_rate' => 'decimal:4',
         'offered_rate' => 'decimal:4',
         'telegram_message_id' => 'integer',
@@ -39,7 +45,26 @@ class ExchangeQuoteResponse extends Model
 
     public function getHasRepliedAttribute(): bool
     {
-        return $this->status === self::STATUS_RESPONDED;
+        return in_array($this->status, [self::STATUS_RESPONDED, self::STATUS_ACCEPTED], true);
+    }
+
+    public function getIsAcceptedAttribute(): bool
+    {
+        return $this->status === self::STATUS_ACCEPTED;
+    }
+
+    /**
+     * What the visitor reads out at the counter: the request's code plus this
+     * offer's letter. Null until the office has actually been given a letter,
+     * which happens when the response is created.
+     */
+    public function getRedemptionCodeAttribute(): ?string
+    {
+        if ($this->offer_letter === null) {
+            return null;
+        }
+
+        return $this->exchangeQuoteRequest->public_code.'-'.$this->offer_letter;
     }
 
     public function getIsDeclinedAttribute(): bool

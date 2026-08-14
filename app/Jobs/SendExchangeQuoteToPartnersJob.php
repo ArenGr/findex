@@ -44,6 +44,11 @@ class SendExchangeQuoteToPartnersJob implements ShouldQueue
                 ->where('rate_type', RateType::CASH)])
             ->get();
 
+        // A, B, C... in the order the offices were contacted, fixed at that
+        // moment. The letter is half of the code a visitor reads out at a
+        // counter, so it must never shift afterwards.
+        $letter = 'A';
+
         foreach ($partners as $partner) {
             $postedRate = $partner->currencyRates->first()?->{$this->exchangeQuoteRequest->rate_field};
 
@@ -57,7 +62,10 @@ class SendExchangeQuoteToPartnersJob implements ShouldQueue
                 'response_token' => Str::random(40),
                 'status' => ExchangeQuoteResponse::STATUS_PENDING,
                 'posted_rate' => $postedRate,
+                'offer_letter' => $letter,
             ]);
+
+            $letter++;
 
             $response->setRelation('organization', $partner);
             $response->setRelation('exchangeQuoteRequest', $this->exchangeQuoteRequest);
