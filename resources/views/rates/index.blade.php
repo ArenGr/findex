@@ -18,7 +18,6 @@
         'lng' => $longitude,
         'intent' => $intent,
         'amount' => $amount,
-        'fresh' => $freshness,
         'open' => $openNow ? 1 : null,
         'view' => $viewMode === 'map' ? 'map' : null,
         'q' => $search !== '' ? $search : null,
@@ -31,7 +30,7 @@
 
     $hasNonDefaultFilter = $selectedType !== \App\Enums\RateType::CASH
         || $selectedOrgType || $selectedOrganization || $selectedCity || $hasLocation
-        || $amount !== null || $freshness || $openNow || $search !== '';
+        || $amount !== null || $openNow || $search !== '';
 
 
     // Whole dram above 1,000, where a rounded half-unit is noise. Below it the
@@ -141,7 +140,7 @@
     // narrower view than "Cash" and the visitor should be told they set it.
     $activeFilterCount = collect([
         $selectedType !== \App\Enums\RateType::CASH ? $selectedType : null,
-        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null, $freshness, $openNow ?: null,
+        $selectedOrgType, $selectedOrganization, $selectedCity, $hasLocation ?: null, $openNow ?: null,
     ])->filter()->count();
 
 @endphp
@@ -388,148 +387,115 @@
                 </button>
             </div>
 
-        {{-- Market tabs. Banks and exchange offices quote very different
-        levels, so they are separated rather than interleaved. --}}
-        @if ($orgTypes->count() > 1)
-            <div>
-                <span class="{{ $labelClass }}">{{ __('rates.market_label') }}</span>
-                <div class="mt-2 flex flex-wrap gap-2">
-                <a
-                    href="{{ $link(['org_type' => null, 'organization' => null]) }}"
-                    class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === null ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                >
-                    {{ __('rates.market_all') }}
-                </a>
-                @foreach ($orgTypes as $orgType)
-                    <a
-                        href="{{ $link(['org_type' => $orgType, 'organization' => null]) }}"
-                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedOrgType === $orgType ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                    >
-                        {{ __('rates.markets.' . $orgType) }}
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        {{--
+            One control per question, each stating its own answer while shut -
+            "Market / Banks" rather than a row of pills where the chosen one is
+            told apart only by its tint. Thirteen pills became four controls
+            that fit on one line.
 
-        {{-- Transaction type: only the ones this currency actually has, so a
-        pill never leads to an empty table. --}}
-        <div>
-            <span class="{{ $labelClass }}">{{ __('rates.type_label') }}</span>
-            <div class="mt-2 flex flex-wrap gap-2">
-                @foreach ($availableTypes as $typeValue)
-                    <a
-                        href="{{ $link(['type' => $typeValue]) }}"
-                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $selectedType->value === $typeValue ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                    >
-                        {{ __('organizations.rate_types.' . $typeValue) }}
-                    </a>
-                @endforeach
-            </div>
+            Every option inside is a real link, so the panel is shareable and
+            works with JavaScript off - see the component for how.
+        --}}
+        <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-start">
+            {{-- Banks and exchange offices quote very different levels, so they
+            are separated rather than interleaved. --}}
+            @if ($orgTypes->count() > 1)
+                <x-rates.filter-menu
+                    :label="__('rates.market_label')"
+                    :active="$selectedOrgType !== null"
+                    :options="[
+                        [
+                            'label' => __('rates.market_all'),
+                            'href' => $link(['org_type' => null, 'organization' => null]),
+                            'selected' => $selectedOrgType === null,
+                        ],
+                        ...$orgTypes->map(fn ($orgType) => [
+                            'label' => __('rates.markets.' . $orgType),
+                            'href' => $link(['org_type' => $orgType, 'organization' => null]),
+                            'selected' => $selectedOrgType === $orgType,
+                        ])->all(),
+                    ]"
+                />
+            @endif
+
+            {{-- Only the types this currency actually has, so an option never
+            leads to an empty table. --}}
+            <x-rates.filter-menu
+                :label="__('rates.type_label')"
+                :active="$selectedType !== \App\Enums\RateType::CASH"
+                :options="collect($availableTypes)->map(fn ($typeValue) => [
+                    'label' => __('organizations.rate_types.' . $typeValue),
+                    'href' => $link(['type' => $typeValue]),
+                    'selected' => $selectedType->value === $typeValue,
+                ])->all()"
+            />
+
+            {{-- Only once a market is chosen. Under "All" the list mixes banks
+            and exchange offices, and no single label is honest about what it
+            contains. --}}
+            @if ($selectedOrgType !== null && $organizations->isNotEmpty())
+                <x-rates.filter-menu
+                    :label="__('rates.filter_org.'.$selectedOrgType)"
+                    :active="$selectedOrganization !== null"
+                    :options="[
+                        [
+                            'label' => __('rates.filter_org_all.'.$selectedOrgType),
+                            'href' => $link(['organization' => null]),
+                            'selected' => $selectedOrganization === null,
+                        ],
+                        ...$organizations->map(fn ($organization) => [
+                            'label' => $organization->name,
+                            'href' => $link(['organization' => $organization->slug]),
+                            'selected' => $selectedOrganization?->id === $organization->id,
+                        ])->all(),
+                    ]"
+                />
+            @endif
+
+            @if ($cities->isNotEmpty())
+                <x-rates.filter-menu
+                    :label="__('rates.filter_city')"
+                    :hint="__('rates.filter_city_hint')"
+                    :active="$selectedCity !== null"
+                    :options="[
+                        [
+                            'label' => __('rates.filter_city_all'),
+                            'href' => $link(['city' => null]),
+                            'selected' => $selectedCity === null,
+                        ],
+                        ...$cities->map(fn ($city) => [
+                            'label' => $city,
+                            'href' => $link(['city' => $city]),
+                            'selected' => $selectedCity === $city,
+                        ])->all(),
+                    ]"
+                />
+            @endif
         </div>
 
-        {{-- "Only rates worth trusting". Day and week rather than minutes: the
-        scrapers run daily, so a minutes option would always empty the table and
-        read as a fault rather than as a filter. --}}
-        <div>
-            <span class="{{ $labelClass }}">{{ __('rates.freshness_label') }}</span>
-            <div class="mt-2 flex flex-wrap gap-2">
-                @foreach ([null => 'freshness_any', 'day' => 'freshness_day', 'week' => 'freshness_week'] as $value => $key)
-                    @php $value = $value ?: null; @endphp
-                    <a
-                        href="{{ $link(['fresh' => $value]) }}"
-                        class="rounded-full border px-4 py-2 text-sm font-medium transition {{ $freshness === $value ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                    >
-                        {{ __('rates.'.$key) }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
+        {{-- Two switches rather than menus: they are on or off, and a menu
+        holding "Any time / Open now" would be a longer way of saying that.
+        "Open now" excludes branches with no hours on file rather than assuming
+        them open - it is a promise that someone is behind a counter. --}}
+        <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <a
+                href="{{ $link(['open' => $openNow ? null : 1]) }}"
+                aria-pressed="{{ $openNow ? 'true' : 'false' }}"
+                class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition {{ $openNow ? 'border-primary/50 bg-primary/10 text-ink' : 'border-placeholder bg-white text-muted hover:border-border-muted hover:text-ink' }}"
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+                </svg>
+                {{ __('rates.open_now') }}
+            </a>
 
-        {{-- Excludes branches with no hours on file rather than assuming them
-        open: this is a promise that someone is behind a counter. --}}
-        <div>
-            <span class="{{ $labelClass }}">{{ __('rates.availability_label') }}</span>
-            <div class="mt-2 flex flex-wrap gap-2">
-                <a
-                    href="{{ $link(['open' => $openNow ? null : 1]) }}"
-                    class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition {{ $openNow ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
-                    </svg>
-                    {{ __('rates.open_now') }}
-                </a>
-            </div>
-        </div>
-
-        {{-- The organization and city selects. Their own mobile-only collapse
-        is gone: the whole panel is behind one button now, at every width. --}}
-        <div>
-            <div class="flex flex-wrap items-end gap-x-3 gap-y-3">
-                <form method="GET" action="{{ route('rates.index') }}" class="contents">
-                    <input type="hidden" name="currency" value="{{ $selectedCurrency?->code }}">
-                    <input type="hidden" name="type" value="{{ $selectedType->value }}">
-                    <input type="hidden" name="org_type" value="{{ $selectedOrgType }}">
-                    <input type="hidden" name="intent" value="{{ $intent }}">
-                    {{-- lat/lng were previously omitted here, so changing bank or
-                    city silently dropped an active "find nearby". --}}
-                    <input type="hidden" name="amount" value="{{ $amount }}">
-                    @if ($hasLocation)
-                        <input type="hidden" name="lat" value="{{ $latitude }}">
-                        <input type="hidden" name="lng" value="{{ $longitude }}">
-                    @endif
-
-                    {{-- Only once a market is chosen. Under "All" the list mixes
-                    banks and exchange offices, and no single label is honest about
-                    what it contains. --}}
-                    @if ($selectedOrgType !== null)
-                        <div>
-                            <label for="filter-organization" class="{{ $labelClass }}">
-                                {{ __('rates.filter_org.'.$selectedOrgType) }}
-                            </label>
-                            <select
-                                name="organization"
-                                id="filter-organization"
-                                onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
-                                class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
-                            >
-                                <option value="">{{ __('rates.filter_org_all.'.$selectedOrgType) }}</option>
-                                @foreach ($organizations as $organization)
-                                    <option value="{{ $organization->slug }}" @selected($selectedOrganization?->id === $organization->id)>
-                                        {{ $organization->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    @if ($cities->isNotEmpty())
-                        <div>
-                            <label for="filter-city" class="{{ $labelClass }}">{{ __('rates.filter_city') }}</label>
-                            <select
-                                name="city"
-                                id="filter-city"
-                                onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"
-                                title="{{ __('rates.filter_city_hint') }}"
-                                class="mt-2 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink focus:border-primary focus:outline-none"
-                            >
-                                <option value="">{{ __('rates.filter_city_all') }}</option>
-                                @foreach ($cities as $city)
-                                    <option value="{{ $city }}" @selected($selectedCity === $city)>{{ $city }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-                </form>
-
-                {{--
-                    Client-side only - the server can't know the visitor's
-                    coordinates until the browser's own prompt hands them over.
-                    Once granted, reloads the current URL with lat/lng merged
-                    in, keeping every other filter intact.
-                --}}
-                <div x-data="{
+            {{--
+                Client-side only - the server can't know the visitor's
+                coordinates until the browser's own prompt hands them over.
+                Once granted, reloads the current URL with lat/lng merged in,
+                keeping every other filter intact.
+            --}}
+            <div x-data="{
                     state: 'idle',
                     findNearby() {
                         if (!navigator.geolocation) { this.state = 'error'; return; }
@@ -549,26 +515,24 @@
                 }">
                     @if ($hasLocation)
                         <a
-                            href="{{ $link(['lat' => null, 'lng' => null, 'sort' => null, 'direction' => null]) }}"
-                            class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary"
+                            href="{{ $link(['lat' => null, 'lng' => null, 'sort' => null, 'dir' => null]) }}"
+                            class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-primary/50 bg-primary/10 px-3.5 py-2 text-sm font-semibold text-ink"
                         >
                             📍 {{ __('rates.nearby_active') }}
-                            <span aria-hidden="true">&times;</span>
+                            <span aria-hidden="true" class="text-muted">&times;</span>
                         </a>
                     @else
                         <button
                             type="button"
                             @click="findNearby()"
                             :disabled="state === 'locating'"
-                            class="inline-flex items-center gap-1 rounded-full border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink hover:border-primary disabled:opacity-60"
+                            class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-placeholder bg-white px-3.5 py-2 text-sm font-semibold text-muted transition hover:border-border-muted hover:text-ink disabled:opacity-60"
                         >
                             <span x-show="state !== 'locating'">📍 {{ __('rates.find_nearby') }}</span>
                             <span x-show="state === 'locating'" x-cloak>{{ __('rates.locating') }}</span>
                         </button>
                         <p x-show="state === 'error'" x-cloak class="mt-1 text-xs text-red-600">{{ __('rates.location_error') }}</p>
                     @endif
-                </div>
-
             </div>
         </div>
 
@@ -901,7 +865,7 @@
                     List/Map pair leaves it about 90px wide, which is narrower
                     than the placeholder asking to be typed into. --}}
                     <form method="GET" action="{{ route('rates.index') }}" class="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1 sm:max-w-xs">
-                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'fresh', 'open'] as $carried)
+                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'open'] as $carried)
                             @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
                             @if (! empty($value))
                                 <input type="hidden" name="{{ $carried }}" value="{{ $value }}">

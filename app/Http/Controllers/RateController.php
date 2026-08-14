@@ -202,23 +202,6 @@ class RateController extends Controller
             ? $request->query('city')
             : null;
 
-        // "Only rates worth trusting". Deliberately a day/week choice rather
-        // than the minutes the brief suggests: the scrapers run on a daily
-        // cadence, so "updated in the last 5 minutes" would always return an
-        // empty table and read as a broken filter.
-        $freshness = in_array($request->query('fresh'), ['day', 'week'], true)
-            ? $request->query('fresh')
-            : null;
-
-        // Rounded down to the hour so the cache key is stable for an hour at a
-        // time. Without that, every request would compute a slightly different
-        // cut-off, produce a different key, and never hit the cache.
-        $freshBefore = match ($freshness) {
-            'day' => now()->subDay()->startOfHour()->toDateTimeString(),
-            'week' => now()->subWeek()->startOfHour()->toDateTimeString(),
-            default => null,
-        };
-
         // "Open now". Evaluated in PHP over the branch table rather than in
         // SQL: the hours are a JSON column, the dataset is a couple of dozen
         // rows, and a JSON predicate would be written twice - once for MySQL in
@@ -233,7 +216,7 @@ class RateController extends Controller
 
         $page = (int) $request->query('page', 1);
 
-        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page', 'freshBefore', 'openOrganizationIds');
+        $filters = compact('selectedCurrency', 'selectedType', 'selectedOrganization', 'selectedOrgType', 'selectedCity', 'sort', 'direction', 'page', 'openOrganizationIds');
 
         // Distance-sorted results are specific to wherever this one visitor
         // happens to be standing - sharing them under the filter-only cache
@@ -304,7 +287,6 @@ class RateController extends Controller
             'quoteCurrencies' => $currencies->filter(
                 fn ($row) => isset(config('exchange-quotes.minimum_amounts')[$row->code])
             )->values(),
-            'freshness' => $freshness,
             'openNow' => $openNow,
             'sort' => $sortKey,
             'sortOptions' => $sortOptions,
@@ -519,7 +501,7 @@ class RateController extends Controller
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
             'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
-            'freshBefore' => $freshBefore, 'openOrganizationIds' => $openOrganizationIds] = $filters;
+            'openOrganizationIds' => $openOrganizationIds] = $filters;
 
         // Depends on both rate data and Organization::withRatingStats()
         // (review counts/averages), so it needs both tags - a review write
@@ -532,14 +514,14 @@ class RateController extends Controller
         // entry written before that would render an ungrouped page.
         $cacheKey = 'rates.listing.'.md5(json_encode([
             'v2', app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
-            $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore, $openOrganizationIds,
+            $selectedOrgType, $selectedCity, $sort, $direction, $page, $openOrganizationIds,
         ]));
 
         return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
             $cacheKey,
             now()->addMinutes(30),
-            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page, $freshBefore, $openOrganizationIds) {
-                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore, $openOrganizationIds)
+            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page, $openOrganizationIds) {
+                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $openOrganizationIds)
                     ->when(
                         $sort === 'spread',
                         fn ($query) => $query->orderByRaw("(sell_rate - buy_rate) {$direction}"),
@@ -575,9 +557,9 @@ class RateController extends Controller
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
             'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
-            'freshBefore' => $freshBefore, 'openOrganizationIds' => $openOrganizationIds] = $filters;
+            'openOrganizationIds' => $openOrganizationIds] = $filters;
 
-        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $freshBefore, $openOrganizationIds)
+        $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $openOrganizationIds)
             ->get()
             ->map(function (CurrencyRate $rate) use ($latitude, $longitude, $selectedCity) {
                 // sortBy, not min(): the branch that won is the one to send
@@ -607,13 +589,12 @@ class RateController extends Controller
         ];
     }
 
-    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity, ?string $freshBefore = null, ?array $openOrganizationIds = null): Builder
+    private function baseQuery($selectedCurrency, RateType $selectedType, $selectedOrganization, ?string $selectedOrgType, ?string $selectedCity, ?array $openOrganizationIds = null): Builder
     {
         return CurrencyRate::query()
             // Passed as a resolved timestamp rather than a period, so the
             // cache key and the query cannot disagree about where "today"
             // ends.
-            ->when($freshBefore, fn ($query) => $query->where('scraped_at', '>=', $freshBefore))
             // An empty list is a real answer - nothing is open - so this
             // checks for null rather than for emptiness.
             ->when($openOrganizationIds !== null, fn ($query) => $query->whereIn('organization_id', $openOrganizationIds))

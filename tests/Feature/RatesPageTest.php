@@ -320,18 +320,35 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        $response = $this->get('/en/rates?currency=USD&lat=40.1792&lng=44.4991')->assertOk();
+        // Branches, or the city menu has nothing to offer and this would test
+        // only half of what its name says.
+        $this->branch(Organization::where('slug', 'cheap-bank')->firstOrFail(), 'Centre', 40.18, 44.51);
+        $this->branch(Organization::where('slug', 'pricey-bank')->firstOrFail(), 'North', 40.79, 43.85, 'Gyumri');
 
-        // Every GET form on the page must carry lat/lng, or submitting one
-        // silently drops an active "find nearby". Derived rather than
-        // hard-coded, so adding a form cannot quietly satisfy this by leaving
-        // the new one out.
-        $html = $response->getContent();
-        $forms = substr_count($html, 'method="GET"');
+        // org_type, so the bank menu is offered alongside the city one.
+        $html = $this->get('/en/rates?currency=USD&org_type=bank&lat=40.1792&lng=44.4991')
+            ->assertOk()
+            ->getContent();
 
-        $this->assertGreaterThanOrEqual(2, $forms, 'precondition: the page has several GET forms');
-        $this->assertSame($forms, substr_count($html, 'name="lat" value="40.1792"'), 'every GET form must carry lat');
-        $this->assertSame($forms, substr_count($html, 'name="lng" value="44.4991"'), 'every GET form must carry lng');
+        // Derived from the page rather than hard-coded: every link that
+        // changes bank or city has to carry the coordinates, so adding another
+        // one cannot quietly satisfy this by leaving them out.
+        preg_match_all('/href="([^"]*city=[^"]*)"/', $html, $cityLinks);
+        preg_match_all('/href="([^"]*organization=[^"]*)"/', $html, $bankLinks);
+
+        $this->assertNotEmpty($cityLinks[1], 'precondition: the panel offers city links');
+        $this->assertNotEmpty($bankLinks[1], 'precondition: the panel offers bank links');
+        $matches = [1 => [...$cityLinks[1], ...$bankLinks[1]]];
+
+        foreach ($matches[1] as $href) {
+            $href = html_entity_decode($href);
+            $this->assertStringContainsString('lat=40.1792', $href, "link drops lat: {$href}");
+            $this->assertStringContainsString('lng=44.4991', $href, "link drops lng: {$href}");
+        }
+
+        // And the search form, which is the one GET form left on the page.
+        $this->assertStringContainsString('name="lat" value="40.1792"', $html);
+        $this->assertStringContainsString('name="lng" value="44.4991"', $html);
     }
 
     public function test_the_quote_cta_states_the_amount_that_qualifies(): void
@@ -509,52 +526,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertDontSee('Rates older than a day');
-    }
-
-    /**
-     * "Only rates worth trusting". Day and week rather than the minutes the
-     * brief suggests: the scrapers run daily, so a minutes option would always
-     * empty the table and read as a fault rather than as a filter.
-     */
-    public function test_the_freshness_filter_drops_rates_older_than_the_window(): void
-    {
-        $usd = $this->seedMarket();
-        CurrencyRate::query()
-            ->whereHas('organization', fn ($query) => $query->where('type', 'exchange'))
-            ->update(['scraped_at' => now()->subWeeks(2)]);
-
-        $this->assertSame(3, $this->get('/en/rates?currency=USD')->viewData('ranked')['count']);
-        $this->assertSame(2, $this->get('/en/rates?currency=USD&fresh=day')->viewData('ranked')['count']);
-        $this->assertSame(2, $this->get('/en/rates?currency=USD&fresh=week')->viewData('ranked')['count']);
-
-        // An unknown window is ignored rather than emptying the table.
-        $this->assertSame(3, $this->get('/en/rates?currency=USD&fresh=decade')->viewData('ranked')['count']);
-    }
-
-    /** It counts towards the badge, or a narrowed table looks like a full one. */
-    public function test_the_freshness_filter_counts_as_an_active_filter(): void
-    {
-        $this->seedMarket();
-
-        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Filters (');
-        $this->get('/en/rates?currency=USD&fresh=day')->assertOk()->assertSee('Filters (1)');
-    }
-
-    /**
-     * A freshness-filtered page and an unfiltered one must not share a cache
-     * entry - they are different result sets under the same currency and type.
-     */
-    public function test_the_freshness_filter_is_part_of_the_cache_key(): void
-    {
-        $this->seedMarket();
-        CurrencyRate::query()
-            ->whereHas('organization', fn ($query) => $query->where('type', 'exchange'))
-            ->update(['scraped_at' => now()->subWeeks(2)]);
-
-        // Warm the unfiltered entry first, so a shared key would serve three.
-        $this->get('/en/rates?currency=USD')->assertOk();
-
-        $this->assertSame(2, $this->get('/en/rates?currency=USD&fresh=day')->viewData('ranked')['count']);
     }
 
     /**
@@ -938,7 +909,7 @@ class RatesPageTest extends TestCase
         $response = $this->get('/en/rates?currency=USD');
 
         $response->assertOk()
-            ->assertSee('Central Bank reference rate: 366.17')
+            ->assertSee('Central Bank reference rate: 1 USD = 366.17 AMD')
             ->assertDontSee('>Central Bank<', false);
 
         $this->assertNotContains('central_bank', $response->viewData('availableTypes')->all());
