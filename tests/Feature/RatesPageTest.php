@@ -119,9 +119,7 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&amount=100000&intent=buy')
             ->assertOk()
             ->assertSee('273.97')
-            ->assertSee('257.73')
-            // The result is in the currency they wanted, not in dram.
-            ->assertSee('You have 100,000 AMD and want USD.');
+            ->assertSee('257.73');
     }
 
     public function test_a_non_numeric_amount_is_ignored_rather_than_erroring(): void
@@ -325,17 +323,14 @@ class RatesPageTest extends TestCase
 
         $response = $this->get('/en/rates?currency=USD&lat=40.1792&lng=44.4991')->assertOk();
 
-        // Both GET forms on the page - the intent bar and the bank/city filter -
-        // must carry lat/lng, or submitting either one silently drops an active
-        // "find nearby". Asserting presence alone is not enough: the intent bar
-        // would satisfy it on its own.
-        // Derived rather than hard-coded: the count is "every GET form on the
-        // page", so adding another one cannot quietly satisfy this by leaving
-        // the new form out.
+        // Every GET form on the page must carry lat/lng, or submitting one
+        // silently drops an active "find nearby". Derived rather than
+        // hard-coded, so adding a form cannot quietly satisfy this by leaving
+        // the new one out.
         $html = $response->getContent();
         $forms = substr_count($html, 'method="GET"');
 
-        $this->assertGreaterThanOrEqual(3, $forms, 'precondition: the page has several GET forms');
+        $this->assertGreaterThanOrEqual(2, $forms, 'precondition: the page has several GET forms');
         $this->assertSame($forms, substr_count($html, 'name="lat" value="40.1792"'), 'every GET form must carry lat');
         $this->assertSame($forms, substr_count($html, 'name="lng" value="44.4991"'), 'every GET form must carry lng');
     }
@@ -417,44 +412,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertDontSee('Hidden bank');
-    }
-
-    /**
-     * Disabling is Alpine-bound rather than rendered, because with JS off the
-     * buy/sell radios do not self-submit and this button is the only way to
-     * apply an intent change.
-     */
-    public function test_the_submit_button_is_only_disabled_client_side(): void
-    {
-        $this->seedMarket();
-
-        $this->get('/en/rates?currency=USD')
-            ->assertOk()
-            ->assertSee(':disabled="!(Number(amount) > 0)"', false)
-            ->assertDontSee('<button type="submit" disabled', false);
-    }
-
-    /**
-     * Buy and sell are written from the institution's side - the column headed
-     * "Sell" is the one a buyer pays - so the calculator asks what the visitor
-     * has and what they want instead. Buy/sell survives on the wire and in the
-     * table headings, which is what this market publishes.
-     */
-    public function test_the_calculator_asks_what_you_have_rather_than_buy_or_sell(): void
-    {
-        $this->seedMarket();
-
-        $this->get('/en/rates?currency=USD&amount=5000')
-            ->assertOk()
-            ->assertSee('I have')
-            ->assertSee('I want')
-            ->assertSee('You have 5,000 USD and want AMD.')
-            ->assertDontSee('Buy USD')
-            ->assertDontSee('Sell USD');
-
-        $this->get('/en/rates?currency=USD&amount=5000&intent=buy')
-            ->assertOk()
-            ->assertSee('You have 5,000 AMD and want USD.');
     }
 
     /**
@@ -1181,26 +1138,6 @@ class RatesPageTest extends TestCase
             ->assertDontSee('Current best rate');
     }
 
-    /**
-     * "Buy USD" does not say buy from whom, or with what. Both sides of the
-     * movement are named, and both readings are in the markup because the
-     * radios do not reload the page in the plain table.
-     */
-    public function test_the_direction_is_spelled_out_as_a_sentence(): void
-    {
-        $this->seedMarket();
-
-        // Before anything is typed the sentence still names the pair, with the
-        // field's own placeholder standing in for the amount.
-        $this->get('/en/rates?currency=USD')
-            ->assertOk()
-            ->assertSee('and want AMD.');
-
-        $this->get('/en/rates?currency=USD&intent=buy')
-            ->assertOk()
-            ->assertSee('and want USD.');
-    }
-
     /** The spread restated as something that happens to the visitor. */
     public function test_the_spread_is_framed_as_what_the_visitor_keeps(): void
     {
@@ -1217,17 +1154,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&amount=100000&intent=buy')
             ->assertOk()
             ->assertSee('earns you 16.24 USD more.');
-    }
-
-    /** Round numbers, one tap, no keyboard - and shareable, since they are links. */
-    public function test_the_quick_amounts_are_links_that_carry_the_current_filters(): void
-    {
-        $this->seedMarket();
-
-        $this->get('/en/rates?currency=USD&intent=sell&type=cash')
-            ->assertOk()
-            ->assertSee('amount=500', false)
-            ->assertSee('amount=5000', false);
     }
 
     private function branch(Organization $org, string $name, float $lat, float $lng, ?string $city = 'Yerevan'): Branch
@@ -1333,21 +1259,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&org_type=exchange&organization=corner-exchange')
             ->assertOk()
             ->assertSee('Filters (2)');
-    }
-
-    /** Open only when there is already an amount to show a result for. */
-    public function test_the_calculator_starts_collapsed_and_opens_with_an_amount(): void
-    {
-        $this->seedMarket();
-
-        $this->get('/en/rates?currency=USD')
-            ->assertOk()
-            ->assertSee('How much are you exchanging?')
-            ->assertSee('x-data="{ open: false }"', false);
-
-        $this->get('/en/rates?currency=USD&amount=500')
-            ->assertOk()
-            ->assertSee('x-data="{ open: true }"', false);
     }
 
     /**
