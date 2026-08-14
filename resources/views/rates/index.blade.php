@@ -350,17 +350,81 @@
             open and the page works exactly as before.
         --}}
         <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-6">
-            <button
-                type="button"
-                @click="open = !open"
-                :aria-expanded="open"
-                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/20 text-ink' : 'border-placeholder bg-white text-muted hover:text-ink' }}"
-            >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                    <path d="M3 6h18M7 12h10M11 18h2" />
-                </svg>
-                {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
-            </button>
+            {{-- Narrowing by name and narrowing by market are the same kind of
+            act, so they sit together rather than one here and one down beside
+            the table where it read as a table setting. --}}
+            <div class="flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    @click="open = !open"
+                    :aria-expanded="open"
+                    class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/10 text-ink' : 'border-placeholder bg-white text-muted hover:border-border-muted hover:text-ink' }}"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                        <path d="M3 6h18M7 12h10M11 18h2" />
+                    </svg>
+                    {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
+                </button>
+
+                {{-- Finding one organization in the table is a different job
+                from ranking all of them, and it was the one the page had no
+                answer for: you read fourteen names looking for yours.
+
+                A GET form, so the result is a URL like every other state on
+                this page - shareable, bookmarkable, and working with JS off.
+                Only offered over a list; there is nothing to narrow on a map,
+                which shows every branch by position. --}}
+                @if ($viewMode !== 'map')
+                    <form method="GET" action="{{ route('rates.index') }}" class="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:max-w-sm sm:flex-1">
+                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'open'] as $carried)
+                            @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
+                            @if (! empty($value))
+                                <input type="hidden" name="{{ $carried }}" value="{{ $value }}">
+                            @endif
+                        @endforeach
+
+                        <label for="q" class="sr-only">{{ __('rates.search_label') }}</label>
+                        <div class="relative min-w-0 flex-1">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+                            </svg>
+                            {{-- Searches itself once there is enough typed to
+                            mean something. Three characters, because one or two
+                            match most of the list and firing on every keystroke
+                            would ask the server about "b" on the way to "bank".
+                            Emptying it searches again, which is how you get the
+                            whole table back without reaching for a button.
+
+                            The button below still exists for Enter and for no
+                            JS at all; this only saves the press. --}}
+                            <input
+                                type="search" name="q" id="q"
+                                value="{{ $search }}"
+                                placeholder="{{ __('rates.search_placeholder') }}"
+                                autocomplete="off"
+                                @input.debounce.350ms="if ($el.value.trim().length >= 3 || $el.value.trim() === '') $el.form.requestSubmit()"
+                                @search="$el.form.requestSubmit()"
+                                class="min-h-11 w-full min-w-0 rounded-xl border border-placeholder bg-white py-2 ps-9 pe-3 text-sm text-ink focus:border-primary focus:outline-none"
+                            >
+                        </div>
+
+                        {{-- The submit is what makes it work without JS. With
+                        JS the field self-submits on the search input's own
+                        clear button too, so "x" empties the table filter
+                        rather than just the box. --}}
+                        <button type="submit" class="sr-only focus:not-sr-only focus:rounded-lg focus:border focus:border-primary focus:px-3 focus:py-2 focus:text-xs">
+                            {{ __('rates.search_label') }}
+                        </button>
+                    </form>
+
+                    @if ($search !== '')
+                        <a href="{{ $link(['q' => null]) }}" class="-my-2 inline-block py-2 text-xs text-muted underline hover:text-ink">
+                            {{ __('rates.search_clear') }}
+                        </a>
+                    @endif
+                @endif
+
+            </div>
 
         {{-- Mobile only. A panel that pushes the table off screen is worse than
         no panel: you cannot see what your choices did. --}}
@@ -396,7 +460,11 @@
             Every option inside is a real link, so the panel is shareable and
             works with JavaScript off - see the component for how.
         --}}
-        <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-start">
+        {{-- min-w-0 so this can shrink, and only then wrap: a flex item at its
+        default min-width: auto refuses to go below its content, so four
+        triggers that did not fit ran off the side of a tablet instead of
+        moving onto a second line. --}}
+        <div class="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-1 sm:flex-row sm:flex-wrap sm:items-start">
             {{-- Banks and exchange offices quote very different levels, so they
             are separated rather than interleaved. --}}
             @if ($orgTypes->count() > 1)
@@ -456,6 +524,7 @@
                 <x-rates.filter-menu
                     :label="__('rates.filter_city')"
                     :hint="__('rates.filter_city_hint')"
+                    searchable
                     :active="$selectedCity !== null"
                     :options="[
                         [
@@ -477,7 +546,7 @@
         holding "Any time / Open now" would be a longer way of saying that.
         "Open now" excludes branches with no hours on file rather than assuming
         them open - it is a promise that someone is behind a counter. --}}
-        <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        <div class="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto">
             <a
                 href="{{ $link(['open' => $openNow ? null : 1]) }}"
                 aria-pressed="{{ $openNow ? 'true' : 'false' }}"
@@ -566,11 +635,7 @@
                 {{ __('rates.central_bank_reference', [
                     'rate' => number_format((float) $centralBankRate['rate'], 2),
                     'code' => $selectedCurrency?->code,
-                ]) }}<span class="ml-1.5 inline-flex translate-y-1.5 align-middle">
-                    <x-info-popover :label="__('rates.central_bank_label')" align="left">
-                        {{ __('rates.central_bank_hint') }}
-                    </x-info-popover>
-                </span>
+                ]) }}
             </div>
         @endif
 
@@ -824,10 +889,9 @@
                 second "All rates" heading was restating both.
             --}}
             <div class="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <p class="min-w-0 text-sm break-words text-muted">
-                    {{ trans_choice('rates.results_count', $rowCount, ['count' => $rowCount]) }}
+                <p class="min-w-0 text-sm break-words text-muted empty:hidden">
                     @if ($hasNonDefaultFilter)
-                        &middot; <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="-my-2 inline-block py-2 underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
+                        <a href="{{ route('rates.index', array_filter(['currency' => $selectedCurrency?->code])) }}" class="-my-2 inline-block py-2 underline hover:text-ink">{{ __('rates.reset_filters') }}</a>
                     @endif
                     {{-- 0.01, not 1: the floor was written for dram totals in
                     the thousands, and silently swallowed the whole line for a
@@ -836,13 +900,13 @@
                         {{-- "difference between best and worst" is a fact about
                         the table; "you keep X by picking the best" is a fact
                         about the visitor. Same number. --}}
-                        &middot; {{ __('rates.market_saving_sell', [
+                        {{ __('rates.market_saving_sell', [
                             'amount' => $amd($marketSaving),
                             'currency' => $targetCode,
                         ]) }}
                     @endif
                     @if ($allStale)
-                        &middot; <span class="inline-flex items-center gap-1 text-[#B4791F]">
+                        <span class="inline-flex items-center gap-1 text-[#B4791F]">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true">
                                 <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0" />
                                 <path d="M12 9v4" /><path d="M12 17h.01" />
@@ -851,55 +915,6 @@
                         </span>
                     @endif
                 </p>
-
-                {{-- Finding one organization in the table is a different job
-                from ranking all of them, and it was the one the page had no
-                answer for: you read fourteen names looking for yours.
-
-                A GET form, so the result is a URL like every other state on
-                this page - shareable, bookmarkable, and working with JS off.
-                Only offered over a list; there is nothing to narrow on a map,
-                which shows every branch by position. --}}
-                @if ($viewMode !== 'map')
-                    {{-- Its own line on a phone: sharing one with the count and the
-                    List/Map pair leaves it about 90px wide, which is narrower
-                    than the placeholder asking to be typed into. --}}
-                    <form method="GET" action="{{ route('rates.index') }}" class="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1 sm:max-w-xs">
-                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'open'] as $carried)
-                            @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
-                            @if (! empty($value))
-                                <input type="hidden" name="{{ $carried }}" value="{{ $value }}">
-                            @endif
-                        @endforeach
-
-                        <label for="q" class="sr-only">{{ __('rates.search_label') }}</label>
-                        <div class="relative min-w-0 flex-1">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true">
-                                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-                            </svg>
-                            <input
-                                type="search" name="q" id="q"
-                                value="{{ $search }}"
-                                placeholder="{{ __('rates.search_placeholder') }}"
-                                class="w-full min-w-0 rounded-lg border border-placeholder bg-white ps-9 pe-3 py-2 text-xs text-ink focus:border-primary focus:outline-none"
-                            >
-                        </div>
-
-                        {{-- The submit is what makes it work without JS. With
-                        JS the field self-submits on the search input's own
-                        clear button too, so "x" empties the table filter
-                        rather than just the box. --}}
-                        <button type="submit" class="sr-only focus:not-sr-only focus:rounded-lg focus:border focus:border-primary focus:px-3 focus:py-2 focus:text-xs">
-                            {{ __('rates.search_label') }}
-                        </button>
-                    </form>
-
-                    @if ($search !== '')
-                        <a href="{{ $link(['q' => null]) }}" class="-my-2 inline-block py-2 text-xs text-muted underline hover:text-ink">
-                            {{ __('rates.search_clear') }}
-                        </a>
-                    @endif
-                @endif
 
                 {{-- List or map. The list is the default and the map is never
                 loaded until asked for - see rates-map.js. --}}
@@ -974,7 +989,7 @@
                 get a footer of their own.
             --}}
             <div class="mt-4 space-y-3 sm:hidden">
-                @foreach ($ranked['rows'] as $rate)
+                @foreach ($pageRows as $rate)
                     @php
                         $total = $calculating ? $convert((float) $rate->{$rateField}) : null;
                         $winsMobile = $calculating ? $rate->rank === 1 : $isBestRate((float) $rate->buy_rate, $bestBuy);
@@ -1023,7 +1038,7 @@
                         <div class="my-3 grid grid-cols-2 gap-4 border-y border-placeholder py-3">
                             <div class="min-w-0">
                                 <span class="block text-xs font-semibold tracking-wider text-muted uppercase">{{ __('rates.buy_column') }}</span>
-                                <span class="mt-0.5 block text-xl font-bold whitespace-nowrap text-ink tabular-nums">{{ number_format($rate->buy_rate, 2) }}</span>
+                                <span class="mt-0.5 block text-xl font-bold whitespace-nowrap text-primary tabular-nums">{{ number_format($rate->buy_rate, 2) }}</span>
                             </div>
                             <div class="min-w-0">
                                 <span class="block text-xs font-semibold tracking-wider text-muted uppercase">{{ __('rates.sell_column') }}</span>
@@ -1139,7 +1154,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($ranked['rows'] as $rate)
+                        @foreach ($pageRows as $rate)
                             @php $total = $calculating ? $convert((float) $rate->{$rateField}) : null; @endphp
                             <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
                                 <td class="px-6 py-4">
@@ -1188,8 +1203,11 @@
                                     $winsTotal = $calculating && $rate->rank === 1;
                                 @endphp
 
-                                {{-- The winning figure is bolder as well as starred. --}}
-                                <td @class(['px-6 py-4 text-right text-base text-ink tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
+                                {{-- The same green as the buy-side summary card,
+                                against the red on sell: the pair reads as two
+                                sides in the table exactly as it does above it.
+                                The winning figure is bolder as well as starred. --}}
+                                <td @class(['px-6 py-4 text-right text-base text-primary tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
                                     <span class="inline-flex items-center justify-end gap-2">
                                         @if ($winsBuy)
                                             <x-rates.best-chip :count="$bestBuyCount" />
@@ -1197,8 +1215,6 @@
                                         {{ number_format($rate->buy_rate, 2) }}
                                     </span>
                                 </td>
-                                {{-- The same red as the sell-side summary card, so buy and
-                                sell read the same way in both places. --}}
                                 <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
                                     <span class="inline-flex items-center justify-end gap-2">
                                         @if ($winsSell)
@@ -1260,6 +1276,8 @@
                 </table>
             </div>
             @endif
+
+            <x-rates.pagination :paginator="$rates" />
         @else
             {{-- Never a dead end: offer the nearest combination that has data
             rather than only reporting the absence. --}}

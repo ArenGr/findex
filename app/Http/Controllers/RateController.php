@@ -19,6 +19,14 @@ use Illuminate\View\View;
 
 class RateController extends Controller
 {
+    /**
+     * Ten rows a page. Fourteen was the most any currency and type ever
+     * showed, so a single list was never long - but it was long enough that
+     * the rows at the bottom were read after scrolling past the fold, and ten
+     * fits a screen.
+     */
+    private const PER_PAGE = 10;
+
     // Backstop only - RateCache::invalidate() (see the CurrencyRate/
     // MortgageOffer/Currency/Organization/Branch booted() hooks) is the
     // real invalidation path; this just bounds the worst case if a write
@@ -247,14 +255,23 @@ class RateController extends Controller
             $cached['total'] = count($cached['items']);
         }
 
+        // Ranked over every matching row before anything is paged away, so
+        // rank 1 is the best rate in the market rather than the best of the
+        // ten currently on screen - which is what the star, the summary cards
+        // and the savings line all claim to be about.
+        $ranked = $this->rankRows(
+            collect($cached['items'])->map(fn (array $row) => (object) $row)->all(),
+            $intent,
+        );
+
         // Rebuilt fresh every request (cheap - it's just wrapping the small
         // cached array), not itself cached: LengthAwarePaginator is an
         // object, and config/cache.php's 'serializable_classes' => false
         // means Redis can only round-trip the plain array above.
         $rates = new LengthAwarePaginator(
-            collect($cached['items'])->map(fn (array $row) => (object) $row),
-            $cached['total'],
-            20,
+            collect($ranked['rows'])->forPage($page, self::PER_PAGE)->values(),
+            $ranked['count'],
+            self::PER_PAGE,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
@@ -295,10 +312,11 @@ class RateController extends Controller
             'intent' => $intent,
             'amount' => $amount,
             'rates' => $rates,
-            // One ranked list covering every market, so the page answers "who
-            // has the best rate" outright. Same rows as $rates, with the winner
-            // and the best-to-worst gap resolved.
-            'ranked' => $this->rankRows($rates->items(), $intent),
+            // Every matching row, ranked - what the page says about the market
+            // is said about all of it.
+            'ranked' => $ranked,
+            // The ten of them this page shows.
+            'pageRows' => $rates->items(),
             // Below this the transaction isn't large enough for an exchange
             // office to renegotiate, so the CTA states the bar instead of
             // inviting everyone to ask.
@@ -500,38 +518,43 @@ class RateController extends Controller
     private function fetchCachedRates(array $filters): array
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
-            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
+            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction,
             'openOrganizationIds' => $openOrganizationIds] = $filters;
 
         // Depends on both rate data and Organization::withRatingStats()
         // (review counts/averages), so it needs both tags - a review write
         // invalidates this without touching the simpler rate-only caches
-        // above, and vice versa. Keyed on every filter input plus the page
-        // and locale (row URLs like organizations.show are locale-prefixed,
+        // above, and vice versa. Keyed on every filter input and the locale
+        // (row URLs like organizations.show are locale-prefixed,
         // so a locale-less key would leak one locale's links into another's
         // cached render - see rates-table.blade.php for the same caveat).
-        // 'v2' bumps every key at once: rows gained organization_type, and an
-        // entry written before that would render an ungrouped page.
+        // 'v3' bumps every key at once: entries are now the whole filtered
+        // set rather than one page of it, so an older entry would render as a
+        // truncated market with the wrong best rate marked.
         $cacheKey = 'rates.listing.'.md5(json_encode([
-            'v2', app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
-            $selectedOrgType, $selectedCity, $sort, $direction, $page, $openOrganizationIds,
+            'v3', app()->getLocale(), $selectedCurrency?->id, $selectedType->value, $selectedOrganization?->id,
+            $selectedOrgType, $selectedCity, $sort, $direction, $openOrganizationIds,
         ]));
 
         return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
             $cacheKey,
             now()->addMinutes(30),
-            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $page, $openOrganizationIds) {
-                $paginator = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $openOrganizationIds)
+            function () use ($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $sort, $direction, $openOrganizationIds) {
+                // Every matching row, not one page of them. Fourteen is the
+                // most any currency and type has, and the page is ranked,
+                // averaged and starred against the whole market - paging in
+                // SQL would have made "best rate" mean "best on this page".
+                $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $openOrganizationIds)
                     ->when(
                         $sort === 'spread',
                         fn ($query) => $query->orderByRaw("(sell_rate - buy_rate) {$direction}"),
                         fn ($query) => $query->orderBy($sort, $direction)
                     )
-                    ->paginate(20, page: $page);
+                    ->get();
 
                 return [
-                    'total' => $paginator->total(),
-                    'items' => $paginator->getCollection()
+                    'total' => $rows->count(),
+                    'items' => $rows
                         ->map(fn (CurrencyRate $rate) => $this->rateRow($rate, $this->directionsBranch($rate, $selectedCity)))
                         ->all(),
                 ];
@@ -556,7 +579,7 @@ class RateController extends Controller
     private function fetchNearbyRates(array $filters, float $latitude, float $longitude): array
     {
         ['selectedCurrency' => $selectedCurrency, 'selectedType' => $selectedType, 'selectedOrganization' => $selectedOrganization,
-            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction, 'page' => $page,
+            'selectedOrgType' => $selectedOrgType, 'selectedCity' => $selectedCity, 'sort' => $sort, 'direction' => $direction,
             'openOrganizationIds' => $openOrganizationIds] = $filters;
 
         $rows = $this->baseQuery($selectedCurrency, $selectedType, $selectedOrganization, $selectedOrgType, $selectedCity, $openOrganizationIds)
@@ -585,7 +608,7 @@ class RateController extends Controller
 
         return [
             'total' => $sorted->count(),
-            'items' => $sorted->values()->slice(($page - 1) * 20, 20)->all(),
+            'items' => $sorted->values()->all(),
         ];
     }
 

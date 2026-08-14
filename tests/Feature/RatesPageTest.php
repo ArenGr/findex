@@ -790,23 +790,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&open=1')->assertOk()->assertSee('Filters (1)');
     }
 
-    /**
-     * An official rate printed beside a table of worse ones invites "why is
-     * nobody giving me 365?" - and the answer is that nobody ever could. The
-     * caveat travels with the number rather than being left to be known.
-     */
-    public function test_the_central_bank_rate_says_it_is_not_available_to_anyone(): void
-    {
-        $usd = $this->seedMarket();
-        $this->rate($this->organization('central-bank'), $usd, 366.0, 366.0, 'central_bank');
-
-        $this->get('/en/rates?currency=USD')
-            ->assertOk()
-            ->assertSee('Central Bank reference rate')
-            ->assertSee('It is not a rate you can exchange at')
-            ->assertDontSee('Central Bank official rate');
-    }
-
     /** Scraped numbers, so the page says what that means for trusting them. */
     public function test_the_page_carries_a_disclaimer_about_the_rates(): void
     {
@@ -1400,5 +1383,113 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&q='.str_repeat('a', 500))
             ->assertOk()
             ->assertViewHas('search', str_repeat('a', 60));
+    }
+
+    /**
+     * Ten rows a page, but the page is ranked, averaged and starred against
+     * the whole market. Paging in SQL would have quietly redefined "best rate"
+     * as "best of the ten currently on screen".
+     */
+    public function test_paging_shows_ten_rows_while_ranking_the_whole_market(): void
+    {
+        $usd = $this->seedMarket();
+
+        // Twelve more, all worse than the 384.00 the corner exchange buys at,
+        // so the winner is on page one and the filler runs onto page two.
+        foreach (range(1, 12) as $n) {
+            $this->rate($this->organization("filler-{$n}"), $usd, 300.0 + $n, 400.0 - $n);
+        }
+
+        $first = $this->get('/en/rates?currency=USD')->assertOk();
+        $second = $this->get('/en/rates?currency=USD&page=2')->assertOk();
+
+        $this->assertCount(10, $first->viewData('pageRows'));
+        $this->assertCount(5, $second->viewData('pageRows'));
+
+        // Both pages agree on the market, because both were ranked over it.
+        foreach ([$first, $second] as $response) {
+            $this->assertSame(15, $response->viewData('ranked')['count']);
+            $this->assertSame(384.0, (float) $response->viewData('ranked')['best_value']);
+        }
+
+        // And rank 1 is a page-one row, not the best of whatever page you are on.
+        $this->assertSame(1, collect($first->viewData('pageRows'))->firstWhere('organization_name', 'Corner exchange')->rank);
+        $this->assertNotContains(1, collect($second->viewData('pageRows'))->pluck('rank')->all());
+    }
+
+    /** A page past the end is empty rather than an error or a silent page one. */
+    public function test_a_page_beyond_the_last_is_not_an_error(): void
+    {
+        $this->seedMarket();
+
+        $response = $this->get('/en/rates?currency=USD&page=99')->assertOk();
+
+        $this->assertSame([], $response->viewData('pageRows'));
+        // The market is still described in full above the empty page.
+        $this->assertSame(3, $response->viewData('ranked')['count']);
+    }
+
+    /** The search narrows the market, so it narrows the paging with it. */
+    public function test_searching_repages_the_result(): void
+    {
+        $usd = $this->seedMarket();
+
+        foreach (range(1, 12) as $n) {
+            $this->rate($this->organization("filler-{$n}"), $usd, 300.0 + $n, 400.0 - $n);
+        }
+
+        $response = $this->get('/en/rates?currency=USD&q=bank')->assertOk();
+
+        // Cheap bank and Pricey bank - "filler-N" matches neither.
+        $this->assertSame(2, $response->viewData('ranked')['count']);
+        $this->assertCount(2, $response->viewData('pageRows'));
+    }
+
+    /**
+     * One page of results needs no pagination, and printing "1" under a table
+     * that is all there is says the opposite.
+     */
+    public function test_no_pagination_when_everything_fits(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertDontSee('Pages of rates');
+    }
+
+    /** Paging is a view of the same filtered market, so it carries the state. */
+    public function test_page_links_carry_the_current_filters(): void
+    {
+        $usd = $this->seedMarket();
+
+        foreach (range(1, 12) as $n) {
+            $this->rate($this->organization("filler-{$n}"), $usd, 300.0 + $n, 400.0 - $n);
+        }
+
+        $html = $this->get('/en/rates?currency=USD&sort=spread&dir=desc')->assertOk()->getContent();
+
+        preg_match_all('/href="([^"]*page=2[^"]*)"/', $html, $matches);
+        $this->assertNotEmpty($matches[1], 'precondition: there is a second page to link to');
+
+        foreach ($matches[1] as $href) {
+            $href = html_entity_decode($href);
+            $this->assertStringContainsString('sort=spread', $href);
+            $this->assertStringContainsString('dir=desc', $href);
+        }
+    }
+
+    /**
+     * Buy is what you are paid and sell is what you pay, and the summary cards
+     * have always said so in green and red. The table says it the same way.
+     */
+    public function test_the_rate_pair_is_coloured_the_same_way_in_the_table(): void
+    {
+        $this->seedMarket();
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('text-primary tabular-nums', false)
+            ->assertSee('tabular-nums text-accent-red', false);
     }
 }

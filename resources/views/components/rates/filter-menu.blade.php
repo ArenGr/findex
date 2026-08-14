@@ -1,4 +1,4 @@
-@props(['label', 'options', 'active' => false, 'hint' => null])
+@props(['label', 'options', 'active' => false, 'hint' => null, 'searchable' => false])
 
 @php
     // The one currently chosen, so the closed control reads as an answer
@@ -18,7 +18,14 @@
 <details
     x-data="{
         shift: 0,
-        close() { $el.removeAttribute('open'); },
+        term: '',
+        {{-- Client-side, over links already on the page: the list is a dozen
+        names at most, so asking the server to narrow it would be a round trip
+        to hide four rows. --}}
+        matches(label) {
+            return this.term === '' || label.toLowerCase().includes(this.term.toLowerCase());
+        },
+        close() { $el.removeAttribute('open'); this.term = ''; },
         {{--
             A panel is capped at 20rem, but a cap is not a position: one that
             opens 500px into a 768px screen still runs off the side of it.
@@ -28,6 +35,7 @@
         --}}
         place() {
             this.shift = 0;
+            this.$nextTick(() => this.$refs.search?.focus());
             this.$nextTick(() => {
                 const box = this.$refs.menu?.getBoundingClientRect();
                 if (!box) {
@@ -44,7 +52,7 @@
         },
     }"
     {{-- <details> fires this natively however it was opened. --}}
-    @toggle="$el.open ? place() : shift = 0"
+    @toggle="$el.open ? place() : (shift = 0, term = '')"
     @click.outside="close()"
     @keydown.escape.window="close()"
     @resize.window="if ($el.open) place()"
@@ -83,9 +91,34 @@
         :style="shift ? `transform: translateX(${shift}px)` : ''"
         class="mt-2 w-full overflow-y-auto rounded-xl border border-placeholder bg-white p-1.5 sm:absolute sm:start-0 sm:top-full sm:z-30 sm:max-h-72 sm:w-max sm:min-w-full sm:max-w-[min(20rem,calc(100vw-3rem))] sm:shadow-lg sm:ring-1 sm:ring-ink/5"
     >
+        @if ($searchable)
+            {{-- Focused on open, so a menu that is worth searching can be
+            searched without a second press. --}}
+            <div class="relative mb-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 start-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+                </svg>
+                <input
+                    type="text"
+                    x-model="term"
+                    x-ref="search"
+                    placeholder="{{ __('rates.search_placeholder') }}"
+                    aria-label="{{ $label }}"
+                    autocomplete="off"
+                    {{-- The first option still showing, not the first in the
+                    markup: x-show hides with a style, so a :not([hidden])
+                    selector matches every one of them and Enter would always
+                    pick "All". --}}
+                    @keydown.enter.prevent="Array.from($refs.menu.querySelectorAll('a')).find((link) => link.offsetParent !== null)?.click()"
+                    class="w-full rounded-lg border border-placeholder bg-white py-2 ps-8 pe-2 text-sm text-ink focus:border-primary focus:outline-none"
+                >
+            </div>
+        @endif
+
         @foreach ($options as $option)
             <a
                 href="{{ $option['href'] }}"
+                @if ($searchable) x-show="matches(@js($option['label']))" @endif
                 @if ($option['selected']) aria-current="true" @endif
                 class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm break-words transition {{ $option['selected'] ? 'bg-primary/10 font-semibold text-ink' : 'text-muted hover:bg-placeholder/40 hover:text-ink' }}"
             >

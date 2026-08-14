@@ -52,9 +52,7 @@ return [
     'opening_hours' => 'Часы работы',
     'hours_unknown' => 'Часы не указаны',
     'unchanged_since' => 'Курс не менялся с :time',
-    'central_bank_reference' => 'Справочный курс Центрального банка: :rate AMD за 1 :code.',
-    'central_bank_label' => 'Справочный курс Центрального банка',
-    'central_bank_hint' => 'Центральный банк публикует его как официальный ориентир. По этому курсу обменять нельзя - банки и обменные пункты устанавливают свои курсы покупки и продажи, они и показаны в таблице ниже.',
+    'central_bank_reference' => 'Справочный курс Центрального банка: 1 :code = :rate драм',
     'disclaimer' => 'Курсы собираются у каждой организации и приводятся для информации. В течение дня они меняются, и решающим является курс, который вам назовут в кассе - уточните его до обмена.',
     'buy_column' => 'Покупка',
     'sell_column' => 'Продажа',
@@ -66,6 +64,9 @@ return [
     'you_receive_column' => 'Вы получите',
     'market_all' => 'Все',
     'currency_label' => 'Валюта',
+    'pagination_label' => 'Страницы курсов',
+    'pagination_previous' => 'Предыдущая страница',
+    'pagination_next' => 'Следующая страница',
     'search_label' => 'Поиск организаций',
     'search_placeholder' => 'Поиск по названию',
     'search_clear' => 'Очистить поиск',
@@ -115,7 +116,6 @@ return [
     'updated_relative' => 'Обновлено :time',
     'no_rates_match' => 'По этим фильтрам курсы не найдены. Попробуйте другую валюту, тип или банк.',
     'reset_filters' => 'Сбросить фильтры',
-    'results_count' => '{0} Нет курсов|{1} :count курс|[2,4] :count курса|[5,*] :count курсов',
     // Correct for every count this page can produce - a currency and rate
     // type never yields more than ~14 rows. Russian's rule is modulo-based
     // (21 takes the singular, 11 does not), which trans_choice ranges
