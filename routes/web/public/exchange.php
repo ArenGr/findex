@@ -42,6 +42,11 @@ Route::get('/exchange/{exchangeQuoteRequest}', [ExchangeQuoteController::class, 
 Route::post('/exchange/{exchangeQuoteRequest}/offers/{response}', [ExchangeQuoteController::class, 'accept'])
     ->name('exchange.offers.accept');
 
+// Closing the window early. Same authorization again, and the same shape as
+// letting the clock run out - see ExchangeQuoteController::cancel.
+Route::post('/exchange/{exchangeQuoteRequest}/cancel', [ExchangeQuoteController::class, 'cancel'])
+    ->name('exchange.cancel');
+
 // Open to guests, same abuse guard as tourism - each submission fans out to
 // every matching partner, so this also protects partners.
 Route::middleware(['banned', 'throttle:exchange_quote_requests'])->group(function () {

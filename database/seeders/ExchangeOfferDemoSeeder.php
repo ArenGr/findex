@@ -68,7 +68,9 @@ class ExchangeOfferDemoSeeder extends Seeder
             'guest_email' => self::GUEST_EMAIL,
             'locale' => 'en',
             'preferred_city' => 'Yerevan',
-            'expires_at' => now()->addDay(),
+            // One of the real windows, so the demo shows what a request
+            // actually looks like rather than a day-long one nobody can make.
+            'expires_at' => now()->addHour(),
         ]);
 
         // What the market is publicly offering, so the "extra value" figures on

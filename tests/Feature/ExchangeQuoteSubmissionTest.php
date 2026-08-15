@@ -121,7 +121,9 @@ class ExchangeQuoteSubmissionTest extends TestCase
         // 385.00 = 1,925,000 - so asking was worth 6,000.
         $response->assertSee('1,931,000')
             ->assertSee('+6,000')
-            ->assertSee('Findex got you')
+            // Named against its baseline. "Findex got you X" credited us with
+            // a number the reader could not check.
+            ->assertSee('Net gain vs public')
             ->assertSee('You receive')
             // Measured against the open market, not against what this office
             // happened to be posting when the request went out. Stated in the
@@ -298,7 +300,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->exchangePartner();
         $this->travelTo('2026-08-15 10:00:00');
 
-        foreach (['15m' => 15, '30m' => 30, '1h' => 60, 'today' => 480] as $choice => $minutes) {
+        foreach (['15m' => 15, '30m' => 30, '1h' => 60] as $choice => $minutes) {
             $this->post('/en/exchange', [
                 'currency_code' => 'USD', 'amount' => 5000, 'rate_field' => 'buy_rate',
                 'valid_for' => $choice, 'consent' => '1',
@@ -381,7 +383,9 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $exchangeQuoteRequest = ExchangeQuoteRequest::sole();
         $response->assertRedirect($exchangeQuoteRequest->signedResultsUrl());
         $this->assertNull($exchangeQuoteRequest->user_id);
-        $this->assertSame('Test Guest', $exchangeQuoteRequest->guest_name);
+        // Not asked for and not stored: the office never sees it, so the
+        // form does not collect it.
+        $this->assertNull($exchangeQuoteRequest->guest_name);
         $this->assertSame('1000.00', $exchangeQuoteRequest->amount);
         $this->assertSame(1, $exchangeQuoteRequest->responses()->count());
         // The posted_rate snapshot must match the org's buy_rate (this
@@ -559,5 +563,163 @@ class ExchangeQuoteSubmissionTest extends TestCase
 
         $response->assertSessionHasErrors('preferred_city');
         $this->assertSame(0, ExchangeQuoteRequest::count());
+    }
+
+    /**
+     * The offers page is read at four different moments in one errand, and
+     * shows exactly one of them. A layout that serves all four at once serves
+     * the moment you are actually in worst.
+     */
+    public function test_the_offers_page_shows_one_state_at_a_time(): void
+    {
+        $partner = $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_email' => 'a@example.com', 'locale' => 'en', 'expires_at' => now()->addHour(),
+        ]);
+        $response = $exchangeRequest->responses()->create([
+            'organization_id' => $partner->id, 'response_token' => 'tok'.uniqid(),
+            'status' => 'pending', 'posted_rate' => '384.5000',
+        ]);
+
+        $page = fn () => $this->get(URL::signedRoute('exchange.show', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
+        ]))->assertOk();
+
+        // Nothing has arrived: no comparison, because there is nothing to
+        // compare, and no offers heading over an empty list.
+        $page()->assertSee('Waiting for offers')
+            ->assertDontSee('Received offers')
+            ->assertDontSee('Request expired');
+
+        // One arrives.
+        $response->update(['status' => 'responded', 'offered_rate' => '386.2000', 'responded_at' => now()]);
+        $page()->assertSee('Received offers (1)')
+            ->assertDontSee('Waiting for offers');
+
+        // It is chosen.
+        $response->update(['status' => 'accepted', 'accepted_at' => now()]);
+        $page()->assertSee('Offer accepted')
+            ->assertDontSee('Received offers');
+    }
+
+    /** Nothing arrived before the clock ran out. */
+    public function test_an_empty_expired_request_says_so_and_offers_a_way_on(): void
+    {
+        $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_email' => 'a@example.com', 'locale' => 'en', 'expires_at' => now()->subMinute(),
+        ]);
+
+        $this->get(URL::signedRoute('exchange.show', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
+        ]))->assertOk()
+            ->assertSee('Request expired')
+            ->assertSee('Try again')
+            ->assertSee('Compare public rates')
+            // The record of what was asked, for anyone re-reading it later.
+            ->assertSee($exchangeRequest->public_code);
+    }
+
+    /**
+     * How long offices may answer and how long you may read your own request
+     * are different questions. Signing the link with expires_at answered them
+     * with one number, so the moment the window shut the link 403'd - and the
+     * page written for exactly that moment became unreachable. Harmless while
+     * windows were a week; the windows are now fifteen minutes.
+     */
+    public function test_the_results_link_outlives_the_offer_window(): void
+    {
+        $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_email' => 'a@example.com', 'locale' => 'en', 'expires_at' => now()->addMinutes(15),
+        ]);
+
+        $url = $exchangeRequest->signedResultsUrl();
+
+        $this->travelTo(now()->addHour());
+        $this->get($url)->assertOk()->assertSee('Request expired');
+
+        $this->travelTo(now()->addDays(20));
+        $this->get($url)->assertOk();
+    }
+
+    /**
+     * Accepting stays bounded by the window even though reading does not - the
+     * longer-lived link must not become a way to accept a lapsed offer.
+     */
+    public function test_an_offer_cannot_be_accepted_after_the_window_closes(): void
+    {
+        $partner = $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_email' => 'a@example.com', 'locale' => 'en', 'expires_at' => now()->addMinutes(15),
+        ]);
+        $response = $exchangeRequest->responses()->create([
+            'organization_id' => $partner->id, 'response_token' => 'tok'.uniqid(),
+            'status' => 'responded', 'posted_rate' => '384.5000',
+            'offered_rate' => '386.2000', 'responded_at' => now(),
+        ]);
+
+        $this->travelTo(now()->addHour());
+
+        $this->post(URL::signedRoute('exchange.offers.accept', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id, 'response' => $response->id,
+        ]))->assertStatus(410);
+    }
+
+    /** Cancelling closes the window rather than deleting the record. */
+    public function test_cancelling_closes_the_request(): void
+    {
+        $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_email' => 'a@example.com', 'locale' => 'en', 'expires_at' => now()->addHour(),
+        ]);
+
+        $this->post(URL::signedRoute('exchange.cancel', [
+            'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
+        ]))->assertRedirect();
+
+        $this->assertFalse($exchangeRequest->fresh()->is_open);
+        // Still there to read.
+        $this->assertNotNull(ExchangeQuoteRequest::find($exchangeRequest->id));
+    }
+
+    /**
+     * The modal promises the office sees the amount and nothing else, three
+     * times over. This is the assertion that keeps that promise true.
+     */
+    public function test_the_office_is_never_shown_who_asked(): void
+    {
+        $partner = $this->exchangePartner();
+        $usd = $this->usd();
+
+        $exchangeRequest = ExchangeQuoteRequest::create([
+            'currency_id' => $usd->id, 'amount' => 5000, 'rate_field' => 'buy_rate',
+            'guest_name' => 'Ada Lovelace', 'guest_email' => 'ada@example.com',
+            'locale' => 'en', 'expires_at' => now()->addHour(),
+        ]);
+        $response = $exchangeRequest->responses()->create([
+            'organization_id' => $partner->id, 'response_token' => 'tok'.uniqid(),
+            'status' => 'pending', 'posted_rate' => '384.5000',
+        ]);
+
+        $this->get(route('exchange.respond', ['locale' => 'en', 'token' => $response->response_token]))
+            ->assertOk()
+            ->assertDontSee('Ada Lovelace')
+            ->assertDontSee('ada@example.com');
     }
 }

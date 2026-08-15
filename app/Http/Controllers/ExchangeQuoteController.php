@@ -146,7 +146,6 @@ class ExchangeQuoteController extends Controller
         '15m' => 15,
         '30m' => 30,
         '1h' => 60,
-        'today' => 480,
     ];
 
     public function store(Request $request): RedirectResponse
@@ -171,12 +170,14 @@ class ExchangeQuoteController extends Controller
             'preferred_city' => ['nullable', 'string', Rule::in($cities)],
             'valid_for' => ['nullable', Rule::in(array_keys(self::VALID_FOR))],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'guest_name' => [Rule::requiredIf(! $request->user()), 'nullable', 'string', 'min:2', 'max:60'],
+            // One field, and only for guests. The office never sees it - it
+            // is how the signed offers link reaches someone who is not signed
+            // in, and what /exchange/resend re-sends. A name would be asked
+            // for and then shown to nobody; consent to being contacted by an
+            // office describes something that does not happen.
             'guest_email' => [Rule::requiredIf(! $request->user()), 'nullable', ValidationRules::email(), 'max:255'],
-            'consent' => ['accepted'],
         ], attributes: [
-            'guest_name' => __('tourism.request.your_name'),
-            'guest_email' => __('tourism.request.your_email'),
+            'guest_email' => __('exchange_quotes.modal.email_label'),
         ]);
 
         $currency = Currency::where('code', $validated['currency_code'])->where('is_active', true)->firstOrFail();
@@ -205,7 +206,6 @@ class ExchangeQuoteController extends Controller
 
         $exchangeQuoteRequest = ExchangeQuoteRequest::create([
             'user_id' => $request->user()?->id,
-            'guest_name' => $request->user() ? null : $validated['guest_name'],
             'guest_email' => $request->user() ? null : $validated['guest_email'],
             'locale' => app()->getLocale(),
             'currency_id' => $currency->id,
@@ -232,12 +232,45 @@ class ExchangeQuoteController extends Controller
                 ->send(new ExchangeQuoteRequestSubmitted($exchangeQuoteRequest, $resultsUrl, $partners->count()));
         }
 
+        // A guest has no account to look this up in later, so the way back to
+        // an open request is remembered here as well as emailed.
+        $request->session()->put('exchange.active_request', [
+            'id' => $exchangeQuoteRequest->id,
+            'url' => $resultsUrl,
+        ]);
+
         return ($request->user()
             ? redirect()->route('exchange.show', $exchangeQuoteRequest)
             : redirect($resultsUrl))->with([
                 'status' => 'exchange-quote-submitted',
                 'contacted_count' => $partners->count(),
             ]);
+    }
+
+    /**
+     * Cancelling closes the window rather than deleting anything: the request
+     * happened, offices were asked, and some may already have answered. Closing
+     * it early is the same state the clock would have reached on its own, so it
+     * reuses is_open rather than adding a column that means almost the same.
+     */
+    public function cancel(Request $request, string $locale, string $exchangeQuoteRequest): RedirectResponse
+    {
+        $exchangeQuoteRequest = ExchangeQuoteRequest::findOrFail($exchangeQuoteRequest);
+
+        $isOwner = $request->user() && $request->user()->id === $exchangeQuoteRequest->user_id;
+
+        abort_unless($isOwner || $request->hasValidSignature(), 403);
+
+        // An accepted offer is a deal, not a pending question - there is
+        // nothing left to cancel.
+        abort_if($exchangeQuoteRequest->responses()->where('status', ExchangeQuoteResponse::STATUS_ACCEPTED)->exists(), 403);
+
+        if ($exchangeQuoteRequest->is_open) {
+            $exchangeQuoteRequest->update(['expires_at' => now()]);
+        }
+
+        return redirect()->to($exchangeQuoteRequest->signedResultsUrl())
+            ->with('status', 'exchange-quote-cancelled');
     }
 
     /**

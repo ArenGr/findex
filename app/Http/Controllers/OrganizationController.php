@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\RateType;
 use App\Models\Branch;
 use App\Models\Currency;
+use App\Models\ExchangeQuoteRequest;
+use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
 use App\Services\OrganizationRatesData;
 use App\Services\RateHistoryService;
@@ -145,7 +147,7 @@ class OrganizationController extends Controller
      * implicit binding does not resolve correctly for a route parameter
      * that comes after a dynamic {locale} prefix segment.
      */
-    public function show(string $locale, string $organization, OrganizationRatesData $ratesData, RateHistoryService $history): View
+    public function show(Request $request, string $locale, string $organization, OrganizationRatesData $ratesData, RateHistoryService $history): View
     {
         $organization = Organization::active()->where('slug', $organization)->firstOrFail();
 
@@ -209,9 +211,45 @@ class OrganizationController extends Controller
                 ->get(),
             'quoteCities' => Branch::query()->whereNotNull('city')->where('is_active', true)
                 ->distinct()->orderBy('city')->pluck('city')->all(),
+            // An open request of the viewer's own, so the page says "you
+            // already asked" rather than offering to ask again.
+            'activeQuoteRequest' => $this->activeQuoteRequest($request),
             'canNegotiate' => $organization->type === 'exchange'
                 && $organization->telegram_chat_id !== null
                 && $rates['groups'] !== [],
         ]);
+    }
+
+    /**
+     * The viewer's own open better-rate request, if there is one.
+     *
+     * Signed-in visitors are looked up by account; guests by the session note
+     * left when they submitted, because they have no account to look up. Both
+     * re-check that the request is still open rather than trusting the note -
+     * a window that closed while the tab sat there has closed.
+     */
+    private function activeQuoteRequest(Request $request): ?array
+    {
+        $quoteRequest = $request->user()
+            ? ExchangeQuoteRequest::where('user_id', $request->user()->id)->open()->latest('id')->first()
+            : ExchangeQuoteRequest::find($request->session()->get('exchange.active_request.id'));
+
+        if ($quoteRequest === null || ! $quoteRequest->is_open) {
+            return null;
+        }
+
+        // An accepted offer is a settled deal, not an open question.
+        if ($quoteRequest->responses()->where('status', ExchangeQuoteResponse::STATUS_ACCEPTED)->exists()) {
+            return null;
+        }
+
+        return [
+            'amount' => (float) $quoteRequest->amount,
+            'currency' => $quoteRequest->currency->code,
+            'asked' => $quoteRequest->created_at->diffForHumans(),
+            'url' => $request->user()
+                ? route('exchange.show', $quoteRequest)
+                : ($request->session()->get('exchange.active_request.url') ?? $quoteRequest->signedResultsUrl()),
+        ];
     }
 }

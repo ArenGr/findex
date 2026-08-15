@@ -119,30 +119,104 @@
                     @endif
                 </div>
 
-                {{-- The offer only this organization's own page can make, and
-                only when the fan-out job would actually reach them. --}}
+                {{-- Not a "verified" badge: nothing in the schema verifies
+                anyone. It says the one thing that is actually true and actually
+                useful - this office is reachable, so asking it will reach
+                somebody. Same flag the CTA below is gated on. --}}
                 @if ($canNegotiate)
-                    {{-- Opens the same modal /rates uses; the href is the
-                    full page, so it still works with JS off. --}}
-                    <a
-                        href="{{ route('exchange.request') }}"
-                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
-                            'form' => [
-                                'currency_code' => (string) (collect($rates['groups'])->first()[0]['code'] ?? ''),
-                                'rate_field' => 'buy_rate',
-                            ],
-                            'context' => ['code' => (string) (collect($rates['groups'])->first()[0]['code'] ?? '')],
-                        ]) }} }))"
-                        class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium break-words text-white transition hover:bg-primary-dark"
-                    >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true">
-                            <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
-                            <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold break-words text-ink">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true">
+                            <path d="m5 13 4 4L19 7" />
                         </svg>
-                        {{ __('rates.cta_button') }}
-                    </a>
+                        {{ __('exchange_quotes.modal.accepts_requests') }}
+                    </span>
                 @endif
             </div>
+
+            @if ($canNegotiate)
+                @php $firstCode = (string) (collect($rates['groups'])->first()[0]['code'] ?? ''); @endphp
+
+                @if ($activeQuoteRequest)
+                    {{--
+                        One is already running, so the page stops selling the
+                        idea and points at it instead. Offering "get a better
+                        rate" to somebody who is mid-request is how you end up
+                        with two requests and two sets of offers.
+                    --}}
+                    <div class="mt-6 rounded-2xl border-2 border-primary/40 bg-primary/5 p-5">
+                        <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+                            <div class="min-w-0">
+                                <h2 class="font-heading text-base font-bold break-words text-ink">{{ __('exchange_quotes.modal.active_title') }}</h2>
+                                <p class="mt-2 font-heading text-xl font-bold break-words text-ink tabular-nums">
+                                    {{ number_format($activeQuoteRequest['amount']) }} {{ $activeQuoteRequest['currency'] }}
+                                    <span aria-hidden="true" class="text-muted">&rarr;</span>
+                                    {{ __('exchange_quotes.request.amd') }}
+                                </p>
+                                <p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm break-words text-muted">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                                            <span class="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 motion-safe:animate-ping"></span>
+                                            <span class="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+                                        </span>
+                                        {{ __('exchange_quotes.modal.active_waiting') }}
+                                    </span>
+                                    <span>{{ __('exchange_quotes.modal.active_asked', ['time' => $activeQuoteRequest['asked']]) }}</span>
+                                </p>
+                            </div>
+
+                            <a
+                                href="{{ $activeQuoteRequest['url'] }}"
+                                class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border-muted bg-white px-5 py-2.5 text-sm font-semibold break-words text-ink transition hover:border-primary"
+                            >
+                                {{ __('exchange_quotes.modal.view_request') }}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                                    <path d="M5 12h14M13 6l6 6-6 6" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                @else
+                    {{--
+                        The offer only this organization's own page can make,
+                        and only when the fan-out would actually reach them. It
+                        says what it is for rather than only naming itself: a
+                        bare "Get a better rate" button assumes the visitor
+                        already knows that is a thing they can do.
+                    --}}
+                    <div class="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-placeholder bg-placeholder/20 p-5 sm:flex-row sm:items-center">
+                        <div class="flex min-w-0 items-start gap-3">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true">
+                                <path d="M16 7h6v6" /><path d="m22 7-8.5 8.5-5-5L2 17" />
+                            </svg>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold break-words text-ink">{{ __('exchange_quotes.modal.cta_title') }}</p>
+                                <p class="mt-1 text-sm leading-relaxed break-words text-muted">{{ __('exchange_quotes.modal.cta_body') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+                            {{-- Opens the same modal /rates uses; the href is
+                            the full page, so it still works with JS off. --}}
+                            <a
+                                href="{{ route('exchange.request') }}"
+                                onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
+                                    'form' => ['currency_code' => $firstCode, 'rate_field' => 'buy_rate'],
+                                    'context' => ['code' => $firstCode, 'organization' => $organization->name],
+                                ]) }} }))"
+                                class="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
+                            >
+                                {{ __('rates.cta_button') }}
+                            </a>
+                            <span class="inline-flex items-center justify-center gap-1.5 text-xs break-words text-muted sm:justify-end">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                                    <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                {{ __('exchange_quotes.modal.anonymous_chip') }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
+            @endif
 
             @forelse ($rates['groups'] as $type => $rows)
                 <div class="mt-6">
