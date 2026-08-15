@@ -281,7 +281,16 @@
             // Four chips answer the question for almost everyone; the other
             // seven turn one decision into eleven and push the rates
             // themselves off the screen. They are one click away, not gone.
+            // config/rates.php is newer than some deployed config caches, and
+            // a cache built before it existed returns null here - which took
+            // the whole page down on a missing file rather than on a missing
+            // rate. Falling back to every currency degrades to the behaviour
+            // this control replaced; falling back to [] would have hidden all
+            // eleven behind the button, which is worse than showing them.
             $everyday = config('rates.everyday');
+            $everyday = is_array($everyday) && $everyday !== []
+                ? $everyday
+                : $currencies->pluck('code')->all();
             $currencyChip = fn ($currency) => $selectedCurrency?->id === $currency->id
                 ? 'border-primary/50 bg-primary/20 text-ink'
                 : 'border-placeholder bg-white text-muted hover:text-ink';

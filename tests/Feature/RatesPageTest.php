@@ -1516,4 +1516,35 @@ class RatesPageTest extends TestCase
         $map->assertDontSee('Pages of rates');
         $this->assertGreaterThan(10, count($map->viewData('mapBranches')));
     }
+
+    /**
+     * A deploy whose config cache predates config/rates.php returns null for
+     * the everyday list, and that took the whole rates page down with an
+     * in_array() TypeError - a missing file breaking the page that shows the
+     * rates. It now degrades to showing every currency, which is what this
+     * control replaced.
+     */
+    public function test_a_missing_everyday_config_does_not_break_the_page(): void
+    {
+        $this->seedMarket();
+        Currency::create(['code' => 'CHF', 'name' => 'Franc', 'symbol' => 'Fr', 'sort_order' => 4, 'is_active' => true]);
+
+        config(['rates.everyday' => null]);
+
+        $this->get('/en/rates?currency=USD')
+            ->assertOk()
+            ->assertSee('currency=CHF', false)
+            // Every currency is on show, so nothing is unreachable.
+            ->assertDontSee('More currencies');
+    }
+
+    /** An empty list is the same mistake with a different shape. */
+    public function test_an_empty_everyday_config_does_not_hide_every_currency(): void
+    {
+        $this->seedMarket();
+
+        config(['rates.everyday' => []]);
+
+        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('More currencies');
+    }
 }
