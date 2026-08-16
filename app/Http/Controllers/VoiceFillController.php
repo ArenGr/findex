@@ -25,6 +25,11 @@ class VoiceFillController extends Controller
      */
     public function store(Request $request, VoiceTripFillService $voiceFill): JsonResponse
     {
+        // Hidden means off, not just invisible: this endpoint spends money per
+        // call, so leaving it reachable while the card is gone would be a
+        // button nobody can see and anybody can press.
+        abort_unless(config('services.openai.voice_fill'), 404);
+
         $validator = Validator::make($request->all(), [
             // Short recordings only - MediaRecorder output on the frontend
             // is capped at 60 seconds, so anything near this limit already

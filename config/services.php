@@ -67,6 +67,23 @@ return [
 
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
+
+        /*
+        |----------------------------------------------------------------------
+        | AI travel concierge
+        |----------------------------------------------------------------------
+        |
+        | The "describe your trip out loud" card on the tourism request form,
+        | and the endpoint behind it. Off for now; set VOICE_FILL_ENABLED=true
+        | to bring it back - no deploy, just the env and a config:cache.
+        |
+        | It lives here rather than in a config file of its own so that a box
+        | running a stale config cache reads null and hides the feature, which
+        | is the safe direction. A new file would read null and, before this
+        | flag existed, took a page down instead.
+        |
+        */
+        'voice_fill' => env('VOICE_FILL_ENABLED', false),
     ],
 
     'telegram' => [

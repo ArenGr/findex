@@ -397,15 +397,6 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true">
                                 <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
                             </svg>
-                            {{-- Searches itself once there is enough typed to
-                            mean something. Three characters, because one or two
-                            match most of the list and firing on every keystroke
-                            would ask the server about "b" on the way to "bank".
-                            Emptying it searches again, which is how you get the
-                            whole table back without reaching for a button.
-
-                            The button below still exists for Enter and for no
-                            JS at all; this only saves the press. --}}
                             <input
                                 type="search" name="q" id="q"
                                 value="{{ $search }}"

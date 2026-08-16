@@ -294,6 +294,10 @@
             {{-- Two columns on large screens: form left, sticky summary+consent+submit sidebar right (items-start stops the taller left column from stretching it). Collapses to one column below lg. --}}
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
                 <div class="space-y-8">
+            {{-- Hidden for now behind services.openai.voice_fill. The methods it
+            calls still live in the shared x-data above; they are unreachable
+            without this card, and cost nothing while they sit there. --}}
+            @if (config('services.openai.voice_fill'))
             {{-- Voice concierge card - writes into the same x-data as the rest of the form via applyVoiceFields(). --}}
             <div class="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm sm:p-6">
                 <div class="flex items-start gap-3">
@@ -385,6 +389,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <div class="rounded-2xl border border-placeholder bg-white p-6 shadow-sm sm:p-8">
                 <div class="space-y-8">
