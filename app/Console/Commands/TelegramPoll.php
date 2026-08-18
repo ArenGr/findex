@@ -33,7 +33,7 @@ class TelegramPoll extends Command
      */
     public function handle(TelegramClient $telegram, PartnerReplyHandler $partnerHandler, RatesBotHandler $ratesHandler): int
     {
-        if (! config('services.telegram.bot_token')) {
+        if (!config('services.telegram.bot_token')) {
             $this->error('TELEGRAM_BOT_TOKEN is not set in .env.');
 
             return self::FAILURE;
@@ -44,17 +44,27 @@ class TelegramPoll extends Command
         $offset = 0;
 
         while (true) {
-            $updates = $telegram->getUpdates($offset, timeout: 30);
+            try {
+                $updates = $telegram->getUpdates($offset);
+            } catch (\Throwable $e) {
+                // A long poll that drops is routine, not fatal: the laptop
+                // sleeps, the wifi blips, Telegram restarts, or a second
+                // getUpdates elsewhere steals the slot and leaves this one
+                // hanging until it times out. Without this the command exits
+                // on the first such hiccup and the bot goes quiet with no
+                // obvious cause - which is exactly the failure this command
+                // exists to make visible.
+                $this->warn("Poll failed, retrying: {$e->getMessage()}");
+                sleep(3);
+
+                continue;
+            }
 
             foreach ($updates as $update) {
                 $offset = $update['update_id'] + 1;
 
                 try {
-                    // Tourism partner connect links and quote-request replies
-                    // take priority; anything left over falls through to the
-                    // general currency-rate assistant - mirrors
-                    // TelegramWebhookController's routing.
-                    if (! $partnerHandler->handleUpdate($update)) {
+                    if (!$partnerHandler->handleUpdate($update)) {
                         $ratesHandler->handleUpdate($update);
                     }
                 } catch (\Throwable $e) {

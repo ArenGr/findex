@@ -11,12 +11,6 @@ use Illuminate\Http\Response;
 
 /**
  * Embeddable widgets.
- *
- * These render on other people's websites, which shapes every decision here:
- * no session, no cookies, no site chrome, and X-Frame-Options is dropped so the
- * page can actually be framed. Everything they display comes from
- * MarketRateService - the same numbers the public API sells - rather than from
- * a second copy of the rate logic that would eventually disagree with it.
  */
 class WidgetController extends Controller
 {

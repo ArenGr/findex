@@ -28,6 +28,13 @@
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
+        <!-- Pinned so the rate-limiting tests assert against a fixed number
+             rather than whatever the developer's own .env happens to say.
+             Without this, raising the limit locally to make the flow
+             testable by hand silently breaks the test that proves the limit
+             works at all. -->
+        <env name="RATE_LIMIT_QUOTE_REQUESTS_PER_HOUR" value="5"/>
+        <env name="RATE_LIMIT_EXCHANGE_QUOTE_REQUESTS_PER_HOUR" value="5"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>

@@ -45,6 +45,9 @@ the same class for why (iOS Safari's expanding/collapsing address bar). --}}
                 'org.dashboard.reports.index' => __('org.nav.reports'),
                 'org.dashboard.team.index' => __('org.nav.team'),
                 ...($organization->hasTourismPage() ? [
+                    // First of the tourism entries: answering requests is the
+                    // day-to-day work, the settings below it are set once.
+                    'org.dashboard.travel-requests.index' => __('tourism.inbox.heading'),
                     'org.dashboard.tourism.index' => __('tourism.nav_label'),
                     'org.dashboard.quote-templates.index' => __('org.nav.quote_templates'),
                 ] : []),
@@ -100,6 +103,8 @@ the same class for why (iOS Safari's expanding/collapsing address bar). --}}
                     'quote-template-updated' => __('org.quote_templates.updated'),
                     'quote-template-deleted' => __('org.quote_templates.deleted'),
                     'lead-preferences-updated' => __('tourism.dashboard.lead_preferences_updated'),
+                    'travel-offer-saved' => __('tourism.inbox.offer_saved'),
+                    'travel-request-declined' => __('tourism.inbox.request_declined'),
                     'email-verified' => __('auth.verify_email.verified_confirmation'),
                 ];
             @endphp

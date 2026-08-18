@@ -38,6 +38,7 @@ class QuoteResponse extends Model
         'telegram_message_id',
         'reply_text',
         'responded_at',
+        'valid_until',
         'reminded_at',
         'contact_phone',
         'contact_whatsapp',
@@ -48,6 +49,8 @@ class QuoteResponse extends Model
     protected $casts = [
         'telegram_message_id' => 'integer',
         'responded_at' => 'datetime',
+        'valid_until' => 'datetime',
+        'viewed_at' => 'datetime',
         'reminded_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -56,6 +59,48 @@ class QuoteResponse extends Model
     public function getHasRepliedAttribute(): bool
     {
         return $this->status === self::STATUS_RESPONDED;
+    }
+
+    /**
+     * The agency has opened the request but not answered it yet - the only
+     * thing that lets the status page say "reviewing" without inventing it.
+     */
+    public function getIsReviewingAttribute(): bool
+    {
+        return $this->status === self::STATUS_PENDING && $this->viewed_at !== null;
+    }
+
+    /**
+     * Past the deadline the agency itself set. An offer with no stated
+     * deadline never expires - the agency chose not to put a clock on it,
+     * and inventing one would retire an offer it is still honouring.
+     */
+    public function getIsExpiredAttribute(): bool
+    {
+        return $this->valid_until !== null && $this->valid_until->isPast();
+    }
+
+    /**
+     * Whether the agency may still submit or revise its offer. Tied to the
+     * request being open rather than to anything on the response: once the
+     * traveler has closed the request or it has run out, a new price can't
+     * reach them, so accepting one would be a silent no-op.
+     */
+    public function getIsEditableAttribute(): bool
+    {
+        return $this->status !== self::STATUS_DECLINED && $this->quoteRequest->is_open;
+    }
+
+    /**
+     * Recorded the first time the agency opens the request, and only then -
+     * a later visit doesn't move it, so "viewed 2 hours ago" keeps meaning
+     * when they first saw it.
+     */
+    public function markViewed(): void
+    {
+        if ($this->viewed_at === null) {
+            $this->forceFill(['viewed_at' => now()])->save();
+        }
     }
 
     public function getIsDeclinedAttribute(): bool

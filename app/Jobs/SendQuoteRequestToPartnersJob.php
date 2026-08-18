@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
+use App\Services\Notifications\AgencyRequestMailer;
 use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -33,8 +34,11 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
      */
     public function handle(PartnerNotifierInterface $notifier): void
     {
+        // null when the traveler is open to suggestions and named no
+        // country - which widens the match to every agency serving any
+        // destination, rather than matching nobody.
         $partners = Organization::tourismPartnersForDestination(
-            $this->quoteRequest->destination_country,
+            $this->quoteRequest->destinations ?: null,
             $this->quoteRequest->party_size,
             $this->quoteRequest->budget_for_filtering,
         )->get();
@@ -55,6 +59,12 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
                     'quote_request_id' => $this->quoteRequest->id,
                     'organization_id' => $partner->id,
                 ]);
+
+                // Usually because the agency has no Telegram chat connected,
+                // which is now a perfectly ordinary way to work (see the
+                // dashboard inbox) rather than a misconfiguration - so it
+                // gets told by email instead of not at all.
+                AgencyRequestMailer::notify($response);
             }
         }
     }

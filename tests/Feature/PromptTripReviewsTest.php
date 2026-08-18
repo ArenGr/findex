@@ -27,7 +27,7 @@ class PromptTripReviewsTest extends TestCase
         $quoteRequest = QuoteRequest::create(array_merge([
             'guest_name' => 'Test Guest', 'guest_email' => 'guest@example.com', 'locale' => 'en',
             'destination_country' => 'GE', 'check_in' => now()->subDays(20), 'check_out' => now()->subDays(10),
-            'adults' => 2, 'children' => 0, 'all_inclusive' => false, 'insurance' => false,
+            'adults' => 2, 'children' => 0, 'insurance' => false,
             'expires_at' => now()->subDays(10),
         ], $quoteRequestOverrides));
 
@@ -70,7 +70,7 @@ class PromptTripReviewsTest extends TestCase
         QuoteRequest::create([
             'guest_name' => 'Test Guest', 'guest_email' => 'guest@example.com', 'locale' => 'en',
             'destination_country' => 'GE', 'check_in' => now()->subDays(20), 'check_out' => now()->subDays(10),
-            'adults' => 2, 'children' => 0, 'all_inclusive' => false, 'insurance' => false,
+            'adults' => 2, 'children' => 0, 'insurance' => false,
             'expires_at' => now()->subDays(10),
         ]);
 

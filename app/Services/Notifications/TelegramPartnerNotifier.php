@@ -115,19 +115,43 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
     {
         $r = $response->quoteRequest;
 
+        // The preferences worth a partner's attention, skipping every "any"
+        // - listing the things the traveler didn't state as if they were
+        // requirements is how a short brief becomes an unreadable one.
         $extras = collect([
-            $r->all_inclusive ? __('tourism.telegram.all_inclusive', [], 'hy') : null,
+            $r->flight_preference !== QuoteRequest::FLIGHT_FLEXIBLE
+                ? __('tourism.flights.'.$r->flight_preference, [], 'hy')
+                : null,
+            $r->hotel_preference !== QuoteRequest::HOTEL_ANY
+                ? __('tourism.hotel_class.'.$r->hotel_preference, [], 'hy')
+                : null,
+            $r->meal_preference !== QuoteRequest::MEAL_ANY
+                ? __('tourism.meals.'.$r->meal_preference, [], 'hy')
+                : null,
             $r->insurance ? __('tourism.telegram.insurance', [], 'hy') : null,
+            $r->has_flexible_dates
+                ? __('tourism.telegram.flexible_dates', ['days' => $r->flexible_days], 'hy')
+                : null,
         ])->filter()->implode(', ');
+
+        // Armenian labels, not the requester's locale - see the docblock
+        // above. Reading the keys with an explicit 'hy' is why these can't
+        // just reuse QuoteRequest::$priority_labels.
+        $priorities = collect($r->priorities ?? [])
+            ->filter(fn ($priority) => in_array($priority, QuoteRequest::PRIORITIES, true))
+            ->map(fn ($priority) => __('tourism.priorities.'.$priority, [], 'hy'))
+            ->implode(', ');
 
         return __('tourism.telegram.request_message', [
             'destination' => __('destinations.'.$r->destination_country, [], 'hy'),
+            'from' => $r->departure_location ?: __('tourism.telegram.any_departure', [], 'hy'),
             'hotel' => $r->hotel_name ?: __('tourism.telegram.any_hotel', [], 'hy'),
             'check_in' => $r->check_in->locale('hy')->translatedFormat('d F Y'),
             'check_out' => $r->check_out->locale('hy')->translatedFormat('d F Y'),
             'adults' => $r->adults,
             'children' => $r->children,
             'extras' => $extras !== '' ? $extras : __('tourism.telegram.no_extras', [], 'hy'),
+            'priorities' => $priorities !== '' ? $priorities : '-',
             'budget' => $this->budgetLabel($r),
             'notes' => $r->notes ?: '-',
         ], 'hy');

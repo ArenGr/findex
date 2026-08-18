@@ -96,10 +96,12 @@ class MyTripsPageTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('tourism.mine', ['locale' => 'en']));
 
+        // Counted by QuoteRequest::scopeWithProgressCounts(), which every
+        // request-facing screen now shares.
         $response->assertViewHas('quoteRequests', function ($quoteRequests) {
             $quoteRequest = $quoteRequests->first();
 
-            return $quoteRequest->responses_count === 2 && $quoteRequest->replied_responses_count === 1;
+            return $quoteRequest->contacted_count === 2 && $quoteRequest->responded_count === 1;
         });
     }
 

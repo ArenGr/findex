@@ -231,7 +231,14 @@ class Organization extends Model
      * what the filter exists to keep out.
      */
     #[Scope]
-    protected function tourismPartnersForDestination(Builder $query, string $countryCode, ?int $partySize = null, ?float $budgetAmd = null): Builder
+    /**
+     * @param  string|array<int, string>|null  $countryCode  One destination, several, or null for
+     *                                                       "anywhere" - a traveller open to suggestions names no country, so every
+     *                                                       agency serving any active destination is a candidate. Several destinations
+     *                                                       match an agency serving *any* of them, not all: an agency that covers one
+     *                                                       leg of the trip still has something worth quoting.
+     */
+    protected function tourismPartnersForDestination(Builder $query, string|array|null $countryCode, ?int $partySize = null, ?float $budgetAmd = null): Builder
     {
         // $partySize/$budgetAmd === null deliberately still excludes any
         // partner who's set a minimum, rather than skipping the filter -
@@ -241,9 +248,18 @@ class Organization extends Model
         // QuoteRequestController::budgetCeilingForMatching().
         return $query->active()
             ->where('type', 'tourism')
-            ->whereNotNull('telegram_chat_id')
+            // Reachable one way or the other: a connected Telegram chat we
+            // can push the request to, or a dashboard account that can find
+            // it in the travel-requests inbox. Before that inbox existed
+            // Telegram was the only way to answer at all, so requiring it
+            // was the same thing as requiring reachability - it isn't any
+            // more, and an agency that works from the dashboard would
+            // silently receive nothing.
+            ->where(fn ($query) => $query
+                ->whereNotNull('telegram_chat_id')
+                ->orWhereHas('users'))
             ->whereHas('tourismDestinations', fn ($query) => $query
-                ->where('country_code', $countryCode)
+                ->when($countryCode !== null, fn ($query) => $query->whereIn('country_code', (array) $countryCode))
                 ->where(fn ($query) => $query->where('is_paused', false)
                     ->orWhere('paused_until', '<', now())))
             ->where(function ($query) use ($partySize) {
@@ -377,8 +393,18 @@ class Organization extends Model
      */
     public function isTopRated(): bool
     {
-        $rating = $this->attributes['reviews_avg_rating'] ?? $this->averageRating();
-        $count = $this->attributes['reviews_count'] ?? $this->reviewsCount();
+        // array_key_exists, not ?? - an organization with no reviews at all
+        // has an eager-loaded reviews_avg_rating of null, and ?? would read
+        // that as "not loaded" and fire the live query anyway. Which is to
+        // say: exactly the organizations with nothing to average were the
+        // ones still costing a query per row.
+        $rating = array_key_exists('reviews_avg_rating', $this->attributes)
+            ? $this->attributes['reviews_avg_rating']
+            : $this->averageRating();
+
+        $count = array_key_exists('reviews_count', $this->attributes)
+            ? $this->attributes['reviews_count']
+            : $this->reviewsCount();
 
         return $rating !== null && $rating >= self::TOP_RATED_MIN_RATING && $count >= self::TOP_RATED_MIN_REVIEWS;
     }

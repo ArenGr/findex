@@ -30,7 +30,6 @@ class OrganizationTourismStatsTest extends TestCase
             'check_out' => now()->addDays(17),
             'adults' => 2,
             'children' => 0,
-            'all_inclusive' => false,
             'insurance' => false,
             'expires_at' => now()->addDays(14),
         ]);

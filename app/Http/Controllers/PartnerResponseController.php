@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\QuoteResponseReceived;
 use App\Models\QuoteResponse;
+use App\Services\TravelOfferSubmission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -31,6 +29,11 @@ class PartnerResponseController extends Controller
             ->with(['quoteRequest', 'organization', 'suggestions.claimedBy'])
             ->first();
 
+        // Opening the request is what "reviewing" means on the traveler's
+        // status page - recorded here, at the only moment we actually learn
+        // it (see QuoteResponse::markViewed, which only records the first).
+        $response?->markViewed();
+
         // Only templates relevant to this specific request - generic
         // (destination_country null) or matching this trip's destination -
         // so the partner isn't picking through templates for countries
@@ -45,7 +48,7 @@ class PartnerResponseController extends Controller
         return view('tourism.respond', ['response' => $response, 'templates' => $templates]);
     }
 
-    public function store(Request $request, string $locale, string $token): RedirectResponse
+    public function store(Request $request, string $locale, string $token, TravelOfferSubmission $submission): RedirectResponse
     {
         $response = QuoteResponse::query()->where('response_token', $token)->with('quoteRequest')->firstOrFail();
 
@@ -53,56 +56,11 @@ class PartnerResponseController extends Controller
             return redirect()->route('tourism.respond', ['locale' => $locale, 'token' => $token]);
         }
 
-        $validated = $request->validate([
-            'reply_text' => ['nullable', 'string', 'max:2000'],
-            'contact_phone' => ['nullable', 'string', 'max:30'],
-            'contact_whatsapp' => ['nullable', 'string', 'max:30'],
-            'contact_telegram' => ['nullable', 'string', 'max:50'],
-            'contact_instagram' => ['nullable', 'string', 'max:50'],
-            'suggestions' => ['required', 'array', 'min:1', 'max:'.QuoteResponse::MAX_SUGGESTIONS],
-            'suggestions.*.price_amount' => ['required', 'numeric', 'min:0', 'max:9999999.99'],
-            'suggestions.*.price_currency' => ['required', Rule::in(QuoteResponse::CURRENCIES)],
-            'suggestions.*.offered_hotel_name' => ['nullable', 'string', 'max:255'],
-            'suggestions.*.flight_details' => ['nullable', 'string', 'max:2000'],
-            'suggestions.*.inclusions' => ['nullable', 'string', 'max:2000'],
-            'suggestions.*.attachment' => ['nullable', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
-            'suggestions.*.promo_code' => ['nullable', 'string', 'max:50'],
-            'suggestions.*.promo_note' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $response->update([
-            'reply_text' => $validated['reply_text'] ?? null,
-            'contact_phone' => $validated['contact_phone'] ?? null,
-            'contact_whatsapp' => $validated['contact_whatsapp'] ?? null,
-            'contact_telegram' => $validated['contact_telegram'] ?? null,
-            'contact_instagram' => $validated['contact_instagram'] ?? null,
-            'status' => QuoteResponse::STATUS_RESPONDED,
-            'responded_at' => now(),
-        ]);
-
-        foreach ($validated['suggestions'] as $index => $suggestion) {
-            $response->suggestions()->create([
-                'price_amount' => $suggestion['price_amount'],
-                'price_currency' => $suggestion['price_currency'],
-                'offered_hotel_name' => $suggestion['offered_hotel_name'] ?? null,
-                'flight_details' => $suggestion['flight_details'] ?? null,
-                'inclusions' => $suggestion['inclusions'] ?? null,
-                'attachment_path' => $request->hasFile("suggestions.{$index}.attachment")
-                    ? $request->file("suggestions.{$index}.attachment")->store('quote-attachments', 'public')
-                    : null,
-                'promo_code' => $suggestion['promo_code'] ?? null,
-                'promo_note' => $suggestion['promo_note'] ?? null,
-            ]);
-        }
-
-        $response->load('organization');
-        $requesterEmail = $response->quoteRequest->requester_email;
-
-        if ($requesterEmail) {
-            Mail::to($requesterEmail)
-                ->locale($response->quoteRequest->locale)
-                ->send(new QuoteResponseReceived($response, $response->quoteRequest->signedResultsUrl()));
-        }
+        // Shared with the dashboard inbox (see TravelOfferSubmission) so an
+        // offer means the same thing whichever way the agency sent it -
+        // including marking the request as having offers and emailing the
+        // traveler on the first reply.
+        $submission->persist($response, $request->validate($submission->rules()), $request);
 
         return redirect()->route('tourism.respond', ['locale' => $locale, 'token' => $token]);
     }

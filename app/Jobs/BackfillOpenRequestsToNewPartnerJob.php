@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Organization;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
+use App\Services\Notifications\AgencyRequestMailer;
 use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -36,7 +37,14 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
             return;
         }
 
-        $openRequests = QuoteRequest::where('destination_country', $this->countryCode)
+        // Requests naming this destination anywhere in their list, plus the
+        // ones open to suggestions - a newly served destination is exactly
+        // the kind of thing "surprise me" was asking for.
+        $openRequests = QuoteRequest::query()
+            ->where(fn ($query) => $query
+                ->whereJsonContains('destination_countries', $this->countryCode)
+                ->orWhere('destination_country', $this->countryCode)
+                ->orWhere('open_to_suggestions', true))
             ->open()
             ->whereDoesntHave('responses', fn ($query) => $query->where('organization_id', $organization->id))
             ->get();
@@ -48,7 +56,7 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
             // get leads it would have been filtered out of had it already
             // been serving this destination.
             $qualifies = Organization::tourismPartnersForDestination(
-                $this->countryCode,
+                $quoteRequest->destinations ?: null,
                 $quoteRequest->party_size,
                 $quoteRequest->budget_for_filtering,
             )->whereKey($organization->id)->exists();
@@ -72,6 +80,10 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
                     'quote_request_id' => $quoteRequest->id,
                     'organization_id' => $organization->id,
                 ]);
+
+                // Same email fallback as the initial fan-out - see
+                // SendQuoteRequestToPartnersJob.
+                AgencyRequestMailer::notify($response);
             }
         }
     }

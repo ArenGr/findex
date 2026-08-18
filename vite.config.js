@@ -20,6 +20,12 @@ export default defineConfig({
                 bunny('Allerta Stencil', {
                     weights: [400],
                 }),
+                // The travel request flow's own face (see the --font-manrope
+                // block in app.css) - self-hosted through Bunny like the two
+                // above rather than hot-linked to Google.
+                bunny('Manrope', {
+                    weights: [400, 500, 600, 700, 800],
+                }),
             ],
         }),
         tailwindcss(),

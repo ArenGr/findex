@@ -30,7 +30,7 @@ class TourismContactInfoTest extends TestCase
         $quoteRequest = QuoteRequest::create([
             'guest_name' => 'Test Guest', 'guest_email' => 'guest@example.com', 'locale' => 'en',
             'destination_country' => 'GE', 'check_in' => now()->addDays(10), 'check_out' => now()->addDays(17),
-            'adults' => 2, 'children' => 0, 'all_inclusive' => false, 'insurance' => false,
+            'adults' => 2, 'children' => 0, 'insurance' => false,
             'expires_at' => now()->addDays(14),
         ]);
 
@@ -47,7 +47,7 @@ class TourismContactInfoTest extends TestCase
         return $quoteRequest;
     }
 
-    public function test_results_page_shows_contact_buttons_when_org_provided_them(): void
+    public function test_offers_page_shows_contact_buttons_when_org_provided_them(): void
     {
         $quoteRequest = $this->respondedRequest([
             'contact_phone' => '+37499123456',
@@ -58,7 +58,7 @@ class TourismContactInfoTest extends TestCase
         $user = User::factory()->create();
         $quoteRequest->update(['user_id' => $user->id]);
 
-        $response = $this->actingAs($user)->get(route('tourism.show', ['locale' => 'en', 'quoteRequest' => $quoteRequest->id]));
+        $response = $this->actingAs($user)->get(route('tourism.offers', ['locale' => 'en', 'quoteRequest' => $quoteRequest->id]));
 
         $response->assertOk();
         $response->assertSee(__('tourism.results.contact_heading'));
@@ -68,13 +68,13 @@ class TourismContactInfoTest extends TestCase
         $response->assertSee('https://instagram.com/my_agency', false);
     }
 
-    public function test_results_page_hides_contact_section_when_org_provided_nothing(): void
+    public function test_offers_page_hides_contact_section_when_org_provided_nothing(): void
     {
         $quoteRequest = $this->respondedRequest();
         $user = User::factory()->create();
         $quoteRequest->update(['user_id' => $user->id]);
 
-        $response = $this->actingAs($user)->get(route('tourism.show', ['locale' => 'en', 'quoteRequest' => $quoteRequest->id]));
+        $response = $this->actingAs($user)->get(route('tourism.offers', ['locale' => 'en', 'quoteRequest' => $quoteRequest->id]));
 
         $response->assertOk();
         $response->assertDontSee(__('tourism.results.contact_heading'));

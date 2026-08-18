@@ -1,7 +1,14 @@
 import Alpine from 'alpinejs';
 import morph from '@alpinejs/morph';
+import travelRequestForm from './travel-request-form.js';
 
 window.Alpine = Alpine;
+
+// The /tourism request form's state. Registered as a named component rather
+// than written inline: the object is far too large to read inside an x-data
+// attribute, and a single double quote in one would close the attribute and
+// silently drop every property after it.
+Alpine.data('travelRequestForm', travelRequestForm);
 
 // Used by /rates to patch the filtered results in place. Morphing rather than
 // replacing innerHTML keeps the existing nodes, so nothing unchanged repaints

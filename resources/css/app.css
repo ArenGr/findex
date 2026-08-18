@@ -126,6 +126,69 @@ button {
     --text-3xl--line-height: 2.5rem;
     --text-4xl: 2.5rem;
     --text-4xl--line-height: 2.75rem;
+
+    /*
+     * The travel design system, from the approved Stitch designs for the
+     * quote request flow. Kept as its own set of names rather than folded
+     * into the Findex palette above: the two overlap but don't agree (the
+     * brand's --color-primary #607e34 is this system's *primary-container*,
+     * and its own primary is the darker #48651d), so redefining the shared
+     * names would repaint every other page on the site.
+     *
+     * Scoped by use, not by page: anything rendering a travel quote reads
+     * from here, everything else keeps reading the palette above.
+     */
+    --font-manrope: 'Manrope', var(--font-sans);
+
+    --color-surface-alt: #f9faf1;
+    --color-surface-container: #eeeee6;
+    --color-surface-container-low: #f4f4eb;
+    --color-border-subtle: #e2e3db;
+    --color-outline: #74796a;
+    --color-on-surface: #1a1c17;
+    --color-ink-muted: #44483b;
+    --color-primary-container: #607e34;
+    --color-on-primary-container: #fbffeb;
+    --color-error: #ba1a1a;
+
+    /* This system's own primary - darker than the brand green it sits
+       beside, and only ever used inside the travel flow. */
+    --color-travel-primary: #48651d;
+
+    /*
+     * The travel type scale, stated in absolute pixels on purpose. The
+     * text-xs/sm/base scale above was deliberately bumped ~25% sitewide,
+     * so reusing it here would render every one of these designs a size
+     * too large - these carry their own metrics instead.
+     */
+    --text-label-caps: 12px;
+    --text-label-caps--line-height: 16px;
+    --text-label-caps--letter-spacing: 0.05em;
+    --text-label-caps--font-weight: 600;
+
+    --text-body-sm: 14px;
+    --text-body-sm--line-height: 20px;
+
+    --text-body-md: 16px;
+    --text-body-md--line-height: 24px;
+
+    --text-body-lg: 18px;
+    --text-body-lg--line-height: 28px;
+
+    --text-headline-md: 24px;
+    --text-headline-md--line-height: 32px;
+    --text-headline-md--letter-spacing: -0.01em;
+    --text-headline-md--font-weight: 700;
+
+    --text-headline-lg: 32px;
+    --text-headline-lg--line-height: 40px;
+    --text-headline-lg--letter-spacing: -0.02em;
+    --text-headline-lg--font-weight: 700;
+
+    --text-headline-lg-mobile: 28px;
+    --text-headline-lg-mobile--line-height: 36px;
+    --text-headline-lg-mobile--letter-spacing: -0.02em;
+    --text-headline-lg-mobile--font-weight: 700;
 }
 
 /* Leaflet numbers its own panes, controls and popups from 400 up to 1000, and

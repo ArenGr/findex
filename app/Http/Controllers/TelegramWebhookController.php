@@ -26,6 +26,7 @@ class TelegramWebhookController extends Controller
     ): Response {
         $secret = config('services.telegram.webhook_secret');
 
+        dd($secret);
         if (! $secret || ! hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token'))) {
             abort(HttpResponse::HTTP_NOT_FOUND);
         }

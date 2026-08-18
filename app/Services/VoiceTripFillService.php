@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\QuoteRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -37,7 +38,10 @@ class VoiceTripFillService
      *     check_out: ?string,
      *     adults: ?int,
      *     children: ?int,
-     *     all_inclusive: ?bool,
+     *     departure_location: ?string,
+     *     flight_preference: ?string,
+     *     hotel_preference: ?string,
+     *     meal_preference: ?string,
      *     insurance: ?bool,
      *     hotel_name: ?string,
      *     budget_min_amd: ?int,
@@ -136,7 +140,10 @@ class VoiceTripFillService
             - check_out: date in YYYY-MM-DD format, or null
             - adults: integer number of adult travelers, or null
             - children: integer number of children, or null
-            - all_inclusive: true if an all-inclusive package was requested, false if explicitly declined, null if not mentioned
+            - departure_location: the city or airport they are flying out of, or null
+            - flight_preference: "included" if flights should be part of the quote, "not_needed" if they already have flights or are travelling overland, "flexible" if they want the agency to advise, null if not mentioned
+            - hotel_preference: "3", "4" or "5" for a minimum hotel star rating, "any" if they said they don't mind, null if not mentioned
+            - meal_preference: one of "breakfast", "half_board", "full_board", "all_inclusive", "any" if they said they don't mind, null if not mentioned
             - insurance: true if travel insurance was requested, false if explicitly declined, null if not mentioned
             - hotel_name: a specific hotel name if one was mentioned, or null
             - budget_min_amd: minimum budget in Armenian dram (AMD) as an integer, or null
@@ -157,7 +164,14 @@ class VoiceTripFillService
             'check_out' => $this->dateOrNull($raw['check_out'] ?? null),
             'adults' => isset($raw['adults']) ? max(1, min(20, (int) $raw['adults'])) : null,
             'children' => isset($raw['children']) ? max(0, min(20, (int) $raw['children'])) : null,
-            'all_inclusive' => is_bool($raw['all_inclusive'] ?? null) ? $raw['all_inclusive'] : null,
+            'departure_location' => ! empty($raw['departure_location']) ? mb_substr((string) $raw['departure_location'], 0, 120) : null,
+            // Each checked against the list the form actually offers rather
+            // than passed through - the model is perfectly capable of
+            // answering "four stars" or "полупансион", and a value the
+            // select can't hold would silently fail to apply.
+            'flight_preference' => $this->oneOf($raw['flight_preference'] ?? null, QuoteRequest::FLIGHT_PREFERENCES),
+            'hotel_preference' => $this->oneOf($raw['hotel_preference'] ?? null, QuoteRequest::HOTEL_PREFERENCES),
+            'meal_preference' => $this->oneOf($raw['meal_preference'] ?? null, QuoteRequest::MEAL_PREFERENCES),
             'insurance' => is_bool($raw['insurance'] ?? null) ? $raw['insurance'] : null,
             'hotel_name' => ! empty($raw['hotel_name']) ? mb_substr((string) $raw['hotel_name'], 0, 255) : null,
             // Clamped to the same ceiling QuoteRequestController::store()
@@ -168,6 +182,14 @@ class VoiceTripFillService
             'budget_max_amd' => isset($raw['budget_max_amd']) ? max(0, min(99999999, (int) $raw['budget_max_amd'])) : null,
             'notes' => ! empty($raw['notes']) ? mb_substr((string) $raw['notes'], 0, 1000) : null,
         ];
+    }
+
+    /**
+     * @param  array<int, string>  $allowed
+     */
+    private function oneOf(mixed $value, array $allowed): ?string
+    {
+        return is_string($value) && in_array($value, $allowed, true) ? $value : null;
     }
 
     private function dateOrNull(?string $date): ?string

@@ -32,7 +32,7 @@ class QuoteSuggestionClaimTest extends TestCase
         $quoteRequest = QuoteRequest::create([
             'guest_name' => 'Test Guest', 'guest_email' => 'guest@example.com', 'locale' => 'en',
             'destination_country' => 'GE', 'check_in' => now()->addDays(10), 'check_out' => now()->addDays(17),
-            'adults' => 2, 'children' => 0, 'all_inclusive' => false, 'insurance' => false,
+            'adults' => 2, 'children' => 0, 'insurance' => false,
             'expires_at' => now()->addDays(14),
         ]);
 

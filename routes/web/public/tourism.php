@@ -38,7 +38,29 @@ Route::middleware('throttle:quote_response_submit')->group(function () {
     Route::post('/tourism/respond/{token}', [PartnerResponseController::class, 'store'])->name('tourism.respond.store');
 });
 
+// The request's own page: where it stands, who was contacted, how many
+// have answered. Where submission lands and where the confirmation email
+// points - see QuoteRequest::signedResultsUrl().
 Route::get('/tourism/{quoteRequest}', [QuoteRequestController::class, 'show'])->name('tourism.show');
+
+// Everything below is gated the same way as the status page above - the
+// owning account, or a valid signature. A guest has no account, so the
+// status page mints a fresh signed link for each of these (see
+// QuoteRequest::signedUrlFor()); Laravel's signature covers the exact
+// route, so one can't be reused to reach another.
+Route::get('/tourism/{quoteRequest}/offers', [QuoteRequestController::class, 'offers'])->name('tourism.offers');
+
+Route::get('/tourism/{quoteRequest}/compare', [QuoteRequestController::class, 'compare'])->name('tourism.compare');
+
+Route::get('/tourism/{quoteRequest}/offers/{suggestion}', [QuoteRequestController::class, 'offer'])->name('tourism.offers.show');
+
+Route::post('/tourism/{quoteRequest}/offers/{suggestion}/select', [QuoteRequestController::class, 'selectOffer'])
+    ->name('tourism.offers.select');
+
+// Ending a request early - the traveler has picked someone, or is no
+// longer travelling. Same authorization as the pages above, and the same
+// outcome as letting the clock run out.
+Route::post('/tourism/{quoteRequest}/close', [QuoteRequestController::class, 'close'])->name('tourism.close');
 
 Route::middleware(['auth', 'banned'])->group(function () {
     Route::post('/tourism/{quoteRequest}/suggestions/{suggestion}/claim', [QuoteRequestController::class, 'claimSuggestion'])
