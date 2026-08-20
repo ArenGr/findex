@@ -196,7 +196,8 @@ class EmailVerificationTest extends TestCase
         $user = User::factory()->unverified()->create();
 
         $this->actingAs($user)->post(route('tourism.request.store', ['locale' => 'en']), [
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,
@@ -217,7 +218,8 @@ class EmailVerificationTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->post(route('tourism.request.store', ['locale' => 'en']), [
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,
@@ -237,7 +239,8 @@ class EmailVerificationTest extends TestCase
         User::factory()->organization($organization)->create();
 
         $this->post(route('tourism.request.store', ['locale' => 'en']), [
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,

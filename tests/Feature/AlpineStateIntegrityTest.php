@@ -36,7 +36,7 @@ class AlpineStateIntegrityTest extends TestCase
 
         $this->assertNotFalse($markerPosition, "Expected to find {$marker} in the rendered page.");
 
-        $start = strrpos(substr($html, 0, $markerPosition), 'x-data="');
+        $start = strrpos(substr($html, 0, $markerPosition + strlen($marker)), 'x-data="');
         $this->assertNotFalse($start, "Expected {$marker} to sit inside an x-data attribute.");
 
         $start += strlen('x-data="');
@@ -59,21 +59,28 @@ class AlpineStateIntegrityTest extends TestCase
         }
     }
 
+    /**
+     * The request form's behaviour now lives in a JS module and the
+     * attribute only carries its config as JSON (see
+     * resources/js/travel-request-form.js). That removes most of the
+     * truncation risk - Blade's @js() escapes quotes - but the config still
+     * has to arrive whole, because a summary panel bound to a half-parsed
+     * config fails exactly as silently as before.
+     */
     public function test_the_request_forms_state_survives_rendering(): void
     {
         $html = $this->get(route('tourism.request', ['locale' => 'en']))->assertOk()->getContent();
 
-        $state = $this->alpineState($html, 'destination:');
+        $state = $this->alpineState($html, 'travelRequestForm(');
 
-        // Every property the summary sidebar and the chip groups bind to.
-        // The bug this guards against dropped exactly these, because they
-        // are defined near the end of a long object.
         $this->assertStateIsComplete($state, [
-            'packageLabels',
-            'chosenPriorityLabels',
-            'datesLabel',
-            'priorityLocked',
-            'clearVoiceFields',
+            'maxDestinations',
+            'maxPriorities',
+            'childAges',
+            'dateFlexibility',
+            // Last key in the config - if the JSON were cut short anywhere,
+            // this is what would go missing.
+            'labels',
         ]);
     }
 

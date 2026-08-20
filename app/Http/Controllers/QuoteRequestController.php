@@ -14,12 +14,15 @@ use App\Services\CurrencyConverter;
 use App\Services\Notifications\PartnerNotifierInterface;
 use App\Services\TourismPriceData;
 use App\Services\TravelOfferComparison;
+use App\Support\SafeRedirectUrl;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Intl\Countries;
 
 class QuoteRequestController extends Controller
@@ -347,32 +350,9 @@ class QuoteRequestController extends Controller
             ]);
         }
 
-        $partySize = $validated['adults'] + ($validated['children'] ?? 0);
-        $budgetForFiltering = $this->budgetCeilingForMatching($validated);
-
-        // null widens the match to every agency serving any destination -
-        // which is what a traveler open to suggestions is asking for.
-        $partners = Organization::tourismPartnersForDestination(
-            $destinations ?: null,
-            $partySize,
-            $budgetForFiltering !== null ? (float) $budgetForFiltering : null,
-        )->get();
-
-        if ($partners->isEmpty()) {
-            return back()->withInput()->withErrors([
-                'destination_countries' => __('tourism.request.no_partners_for_destination'),
-            ]);
-        }
-
-        // A double-tapped submit button (or a back-then-resubmit) would
-        // otherwise fan the same trip out to every agency twice, and leave
-        // the traveler comparing two identical request pages. Landing them
-        // on the one they already have is the honest outcome - nothing was
-        // lost, and the offers they're waiting for are all on it.
-        if ($existing = $this->existingOpenRequest($request, $validated, $destinations[0] ?? null)) {
-            return redirect()->route('tourism.show', $existing)->with('status', 'quote-request-duplicate');
-        }
-
+        // Built before it is saved, so the partner match below runs against
+        // the real thing - the same scope the queued fan-out uses, rather
+        // than a second copy of the matching rules that can drift from it.
         $quoteRequest = new QuoteRequest([
             'user_id' => $request->user()?->id,
             'guest_name' => $request->user() ? null : $validated['guest_name'],
@@ -405,6 +385,25 @@ class QuoteRequestController extends Controller
         // Sets destination_countries and keeps destination_country pointing
         // at the first of them - see QuoteRequest::setDestinations().
         $quoteRequest->setDestinations($destinations);
+
+        // Capped, and the same question the queued fan-out will ask.
+        $partners = Organization::tourismPartnersForRequest($quoteRequest)->get();
+
+        if ($partners->isEmpty()) {
+            return back()->withInput()->withErrors([
+                'destination_countries' => __('tourism.request.no_partners_for_destination'),
+            ]);
+        }
+
+        // A double-tapped submit button (or a back-then-resubmit) would
+        // otherwise fan the same trip out to every agency twice, and leave
+        // the traveler comparing two identical request pages. Landing them
+        // on the one they already have is the honest outcome - nothing was
+        // lost, and the offers they're waiting for are all on it.
+        if ($existing = $this->existingOpenRequest($request, $validated, $destinations[0] ?? null)) {
+            return redirect()->route('tourism.show', $existing)->with('status', 'quote-request-duplicate');
+        }
+
         $quoteRequest->save();
 
         SendQuoteRequestToPartnersJob::dispatch($quoteRequest);
@@ -474,29 +473,6 @@ class QuoteRequestController extends Controller
         $validated['budget_max_amd'] = $band['max'];
 
         return $validated;
-    }
-
-    /**
-     * The budget ceiling for the live, submit-time partner match -
-     * deliberately not reused for QuoteRequest::budget_for_filtering
-     * (used later by SendQuoteRequestToPartnersJob/
-     * BackfillOpenRequestsToNewPartnerJob), since null means two different
-     * things depending on how it got here: neither field submitted at all
-     * is a genuine "no budget signal", which tourismPartnersForDestination()
-     * intentionally treats as a low-quality lead (see LeadQualityFilterTest)
-     * - but a min-only submission means the visitor dragged the slider's
-     * max handle to its cap ("no upper limit", not "no info"), so it must
-     * NOT collapse to null or pass the min through as if it were a
-     * ceiling. PHP_FLOAT_MAX guarantees every partner's threshold clears
-     * it, correctly reading as "at least this much, no real ceiling".
-     */
-    private function budgetCeilingForMatching(array $validated): ?float
-    {
-        if (isset($validated['budget_max_amd'])) {
-            return (float) $validated['budget_max_amd'];
-        }
-
-        return isset($validated['budget_min_amd']) ? PHP_FLOAT_MAX : null;
     }
 
     /**
@@ -592,6 +568,43 @@ class QuoteRequestController extends Controller
     }
 
     /**
+     * Downloads an offer's attachment.
+     *
+     * Exists so the file itself can live on the private disk: the same
+     * owner-or-signature gate as every other page about this request, rather
+     * than a public URL that works forever for anyone who obtains it.
+     */
+    public function offerAttachment(Request $request, string $locale, string $quoteRequest, string $suggestion): StreamedResponse
+    {
+        $quoteRequest = $this->accessibleRequest($request, $quoteRequest);
+
+        $offer = $quoteRequest->offers->firstWhere('id', (int) $suggestion);
+
+        // Scoped to this request, so an id belonging to someone else's offer
+        // is simply not found here.
+        abort_if($offer === null || ! $offer->attachment_path, 404);
+
+        return self::downloadAttachment($offer);
+    }
+
+    /**
+     * Streams a stored attachment under a readable filename - the stored
+     * name is a random hash, which is not what anyone wants in their
+     * downloads folder.
+     */
+    public static function downloadAttachment(QuoteSuggestion $offer): StreamedResponse
+    {
+        abort_unless(Storage::exists($offer->attachment_path), 404);
+
+        $extension = pathinfo($offer->attachment_path, PATHINFO_EXTENSION);
+
+        return Storage::download(
+            $offer->attachment_path,
+            'findex-offer-'.$offer->id.($extension ? '.'.$extension : ''),
+        );
+    }
+
+    /**
      * Choosing an offer. This is the end of Findex's involvement - it
      * records which offer the traveler went with and tells the agency to
      * expect them. No payment, no reservation: the agency handles the
@@ -620,8 +633,11 @@ class QuoteRequestController extends Controller
 
         $offer->select();
 
+        // Back where they were - but only if that is still this site. The
+        // Referer is browser-supplied, so an unchecked one is an open
+        // redirect (see SafeRedirectUrl).
         return redirect()
-            ->to($request->headers->get('referer') ?: $quoteRequest->signedOffersUrl())
+            ->to(SafeRedirectUrl::resolve($request, $request->headers->get('referer'), $quoteRequest->signedOffersUrl()))
             ->with('status', 'offer-selected');
     }
 

@@ -44,7 +44,7 @@
                     <x-offer-facts :offer="$offer" :request="$quoteRequest" />
 
                     @if ($offer->attachment_path)
-                        <a href="{{ Storage::url($offer->attachment_path) }}" target="_blank" rel="noopener" class="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+                        <a href="{{ $quoteRequest->signedUrlFor('tourism.offers.attachment', ['suggestion' => $offer->id]) }}" target="_blank" rel="noopener" class="mt-4 inline-block text-sm font-medium text-primary hover:underline">
                             {{ __('tourism.results.attachment_label') }} &darr;
                         </a>
                     @endif

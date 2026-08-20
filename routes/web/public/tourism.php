@@ -34,6 +34,13 @@ Route::middleware(['banned', 'throttle:quote_link_resend'])->group(function () {
 // for the same reason as "mine" and "resend" above.
 Route::get('/tourism/respond/{token}', [PartnerResponseController::class, 'show'])->name('tourism.respond');
 
+// The agency's own attachment, reached with the same response token as the
+// page it is linked from - the file is on the private disk, so this is the
+// only route to it. Registered beside the other respond routes, ahead of the
+// {quoteRequest} wildcard below.
+Route::get('/tourism/respond/{token}/attachment/{suggestion}', [PartnerResponseController::class, 'attachment'])
+    ->name('tourism.respond.attachment');
+
 Route::middleware('throttle:quote_response_submit')->group(function () {
     Route::post('/tourism/respond/{token}', [PartnerResponseController::class, 'store'])->name('tourism.respond.store');
 });
@@ -53,6 +60,12 @@ Route::get('/tourism/{quoteRequest}/offers', [QuoteRequestController::class, 'of
 Route::get('/tourism/{quoteRequest}/compare', [QuoteRequestController::class, 'compare'])->name('tourism.compare');
 
 Route::get('/tourism/{quoteRequest}/offers/{suggestion}', [QuoteRequestController::class, 'offer'])->name('tourism.offers.show');
+
+// Gated exactly like the offer page above - the attachment is one
+// traveller's pricing and lives on the private disk, not behind a
+// permanent public URL.
+Route::get('/tourism/{quoteRequest}/offers/{suggestion}/attachment', [QuoteRequestController::class, 'offerAttachment'])
+    ->name('tourism.offers.attachment');
 
 Route::post('/tourism/{quoteRequest}/offers/{suggestion}/select', [QuoteRequestController::class, 'selectOffer'])
     ->name('tourism.offers.select');

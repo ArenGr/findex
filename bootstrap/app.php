@@ -54,6 +54,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // latency or per-run bootstrap cost to matter.
         $schedule->command('queue:work --stop-when-empty --tries=3')->everyMinute()->withoutOverlapping();
 
+        // Clears children's ages off long-expired travel requests - see
+        // PurgeExpiredTravelRequestDetails for why this is a field wipe
+        // rather than a Prunable model. Daily is ample for a 30-day grace.
+        $schedule->command('tourism:purge-expired-details')->dailyAt('03:15')->withoutOverlapping();
+
         // Prunes currency_rate_history/mortgage_offer_history rows older
         // than config('history.retention_months') - see those models'
         // Prunable implementation.

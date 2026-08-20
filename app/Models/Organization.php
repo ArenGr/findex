@@ -230,7 +230,31 @@ class Organization extends Model
      * when it's known to be too low, since an unverifiable lead is exactly
      * what the filter exists to keep out.
      */
+    /**
+     * The agencies one specific request should reach: the destination and
+     * lead-quality filters below, then capped.
+     *
+     * Both callers - the submit-time count shown to the traveller and the
+     * queued fan-out that actually creates the responses - go through here,
+     * so the number they are told and the number contacted cannot drift
+     * apart.
+     *
+     * Random order because past the cap somebody has to be left out, and
+     * there is no honest basis for always leaving out the same agencies.
+     */
     #[Scope]
+    protected function tourismPartnersForRequest(Builder $query, QuoteRequest $request): Builder
+    {
+        return $query
+            ->tourismPartnersForDestination(
+                $request->destinations ?: null,
+                $request->party_size,
+                $request->matching_budget_ceiling,
+            )
+            ->inRandomOrder()
+            ->limit(QuoteRequest::MAX_PARTNERS_PER_REQUEST);
+    }
+
     /**
      * @param  string|array<int, string>|null  $countryCode  One destination, several, or null for
      *                                                       "anywhere" - a traveller open to suggestions names no country, so every
@@ -238,6 +262,7 @@ class Organization extends Model
      *                                                       match an agency serving *any* of them, not all: an agency that covers one
      *                                                       leg of the trip still has something worth quoting.
      */
+    #[Scope]
     protected function tourismPartnersForDestination(Builder $query, string|array|null $countryCode, ?int $partySize = null, ?float $budgetAmd = null): Builder
     {
         // $partySize/$budgetAmd === null deliberately still excludes any

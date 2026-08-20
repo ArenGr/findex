@@ -2,8 +2,6 @@
 
 @php
     use App\Models\QuoteRequest;
-    use Illuminate\Support\Facades\Lang;
-    use Symfony\Component\Intl\Countries;
 
     // The preferences the traveler actually narrowed. "Any" and "flexible"
     // are left out on purpose - a brief that lists every unstated
@@ -18,20 +16,21 @@
         $request->insurance ? __('tourism.request.insurance') : null,
     ])->filter();
 
-    $flag = mb_chr(127462 + (ord($request->destination_country[0]) - 65))
-        . mb_chr(127462 + (ord($request->destination_country[1]) - 65));
+    // A request may name several destinations, or none at all when the
+    // traveller is open to suggestions - so both the heading and the flag
+    // come off the list rather than the single destination_country column,
+    // which is null in that case.
+    $destinations = $request->destinations;
+    $destinationName = $destinations === []
+        ? __('tourism.request.summary_open_to_suggestions')
+        : implode(', ', $request->destination_labels);
 
-    // lang/*/destinations.php only covers the curated set an agency can
-    // register as served; a request may name any country (see
-    // QuoteRequestController::worldCountries), so anything else falls back
-    // to Symfony's own translated country name rather than showing a bare
-    // key or a two-letter code.
-    $destinationKey = 'destinations.' . $request->destination_country;
-    $destinationName = Lang::has($destinationKey)
-        ? __($destinationKey)
-        : (Countries::exists($request->destination_country)
-            ? Countries::getName($request->destination_country, app()->getLocale())
-            : $request->destination_country);
+    // The flag of the first destination. Regional indicator symbols are
+    // just the two ISO letters shifted into a Unicode block, so this is
+    // correct for any country without a lookup table.
+    $flag = $destinations === []
+        ? '🌍'
+        : mb_chr(127462 + (ord($destinations[0][0]) - 65)) . mb_chr(127462 + (ord($destinations[0][1]) - 65));
 @endphp
 
 <div {{ $attributes }}>
@@ -55,7 +54,9 @@
             @endif
 
             @if ($request->has_flexible_dates)
-                <p class="mt-0.5 text-sm text-muted">{{ __('tourism.request.summary_flexible', ['days' => $request->flexible_days]) }}</p>
+                <p class="mt-0.5 text-sm text-muted">
+                    {{ __('tourism.date_flexibility.' . $request->date_flexibility) }}
+                </p>
             @endif
         </div>
     </div>

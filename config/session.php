@@ -169,7 +169,13 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Defaults to on everywhere except local/testing, rather than to null.
+    // Unset, this leaves the session cookie without the Secure flag, so a
+    // browser will send it over plain HTTP - which is all a downgrade needs
+    // to capture a logged-in session. Production has to opt *out* now, not
+    // remember to opt in; http:// local development still works because
+    // APP_ENV is local there.
+    'secure' => (bool) env('SESSION_SECURE_COOKIE', ! in_array(env('APP_ENV'), ['local', 'testing'], true)),
 
     /*
     |--------------------------------------------------------------------------

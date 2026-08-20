@@ -124,6 +124,7 @@ class PartnerResponseControllerTest extends TestCase
     public function test_submitting_a_single_suggestion_stores_it_and_emails_the_requester(): void
     {
         Mail::fake();
+        Storage::fake('local');
         Storage::fake('public');
         $response = $this->pendingResponse();
 
@@ -152,7 +153,12 @@ class PartnerResponseControllerTest extends TestCase
         $this->assertSame('USD', $suggestion->price_currency);
         $this->assertSame('Grand Batumi Hotel', $suggestion->offered_hotel_name);
         $this->assertNotNull($suggestion->attachment_path);
-        Storage::disk('public')->assertExists($suggestion->attachment_path);
+
+        // The private disk - a quote attachment must not be reachable at a
+        // permanent public URL (see TravelOfferSubmission and the download
+        // routes that replaced it).
+        Storage::disk('local')->assertExists($suggestion->attachment_path);
+        Storage::disk('public')->assertMissing($suggestion->attachment_path);
 
         Mail::assertQueued(QuoteResponseReceived::class, fn ($mail) => $mail->quoteResponse->is($response));
     }

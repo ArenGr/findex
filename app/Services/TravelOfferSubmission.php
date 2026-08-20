@@ -117,8 +117,14 @@ class TravelOfferSubmission
             ];
 
             if ($request->hasFile("suggestions.{$index}.attachment")) {
+                // The private disk, not 'public'. A quote attachment is one
+                // traveller's pricing, and a file on the public disk is a
+                // permanent unauthenticated URL - no expiry, no revocation,
+                // readable by anyone it is ever forwarded to. Served instead
+                // through a route that checks who is asking (see
+                // QuoteRequestController::offerAttachment()).
                 $attributes['attachment_path'] = $request->file("suggestions.{$index}.attachment")
-                    ->store('quote-attachments', 'public');
+                    ->store('quote-attachments');
             }
             // No new file on a revision leaves the existing attachment
             // alone - re-uploading the same PDF to change a price would be

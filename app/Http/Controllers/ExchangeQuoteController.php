@@ -13,6 +13,7 @@ use App\Models\ExchangeQuoteRequest;
 use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
 use App\Services\Notifications\ExchangeNotifierInterface;
+use App\Support\SafeRedirectUrl;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -341,7 +342,7 @@ class ExchangeQuoteController extends Controller
         $notifier->notifyAccepted($chosen);
 
         return redirect()
-            ->to($request->headers->get('referer') ?: route('exchange.show', [$exchangeQuoteRequest]))
+            ->to(SafeRedirectUrl::resolve($request, $request->headers->get('referer'), route('exchange.show', [$exchangeQuoteRequest])))
             ->with('status', 'offer-accepted');
     }
 

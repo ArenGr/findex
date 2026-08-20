@@ -30,6 +30,19 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @fonts
+
+    {{-- FreeSans is the body face, so it paints the instant anything renders -
+         worth starting before the CSS is parsed. Only the subsets this locale
+         actually needs: Latin always (digits, punctuation and brand names
+         appear in every language), plus the script the page is written in.
+         @fonts handles preloading for the Bunny families; FreeSans is declared
+         by hand, so its preloads are too. See tools/subset-freesans.py. --}}
+    @foreach (['latin', match (app()->getLocale()) { 'hy' => 'armenian', 'ru' => 'cyrillic', default => null }] as $subset)
+        @if ($subset)
+            <link rel="preload" as="font" type="font/woff2" crossorigin
+                  href="{{ asset("fonts/subset/freesans-400-{$subset}.woff2") }}">
+        @endif
+    @endforeach
 </head>
 {{-- min-h-dvh, not min-h-screen (100vh) - iOS Safari's address bar
 expands/collapses as you scroll, and 100vh is measured against the

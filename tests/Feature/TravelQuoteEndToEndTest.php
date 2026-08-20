@@ -61,11 +61,12 @@ class TravelQuoteEndToEndTest extends TestCase
         $this->actingAs($traveller)
             ->post(route('tourism.request.store', ['locale' => 'en']), [
                 'departure_location' => 'Yerevan',
-                'destination_country' => 'GE',
+                'destination_countries' => ['GE'],
                 'check_in' => now()->addDays(30)->toDateString(),
                 'check_out' => now()->addDays(37)->toDateString(),
                 'adults' => 2,
                 'children' => 1,
+                'child_ages' => [8],
                 'flight_preference' => QuoteRequest::FLIGHT_INCLUDED,
                 'hotel_preference' => '4',
                 'meal_preference' => QuoteRequest::MEAL_ALL_INCLUSIVE,

@@ -6,6 +6,7 @@ use App\Enums\RateType;
 use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\RateAlert;
+use App\Support\SafeRedirectUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -100,13 +101,11 @@ class RateAlertController extends Controller
      */
     private function afterStore(Request $request): RedirectResponse
     {
-        $returnTo = (string) $request->input('return_to');
-
-        if ($returnTo !== '' && parse_url($returnTo, PHP_URL_HOST) === $request->getHost()) {
-            return redirect()->to($returnTo);
-        }
-
-        return redirect()->route('alerts.index');
+        return redirect()->to(SafeRedirectUrl::resolve(
+            $request,
+            $request->input('return_to'),
+            route('alerts.index'),
+        ));
     }
 
     /**

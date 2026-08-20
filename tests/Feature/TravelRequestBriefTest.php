@@ -48,11 +48,13 @@ class TravelRequestBriefTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,
             'children' => 1,
+            'child_ages' => [8],
             'guest_name' => 'Test Guest',
             'guest_email' => 'guest@example.com',
             'consent' => '1',
@@ -70,7 +72,8 @@ class TravelRequestBriefTest extends TestCase
 
         $response->assertOk();
         $response->assertSee(__('tourism.request.departure_location'));
-        $response->assertSee(__('tourism.request.flexible_dates'));
+        $response->assertSee(__('tourism.request.dates_exact'));
+        $response->assertSee(__('tourism.request.dates_flexible'));
 
         foreach (QuoteRequest::FLIGHT_PREFERENCES as $value) {
             $response->assertSee(__('tourism.flights.'.$value));
@@ -124,7 +127,7 @@ class TravelRequestBriefTest extends TestCase
 
         $this->submit([
             'departure_location' => 'Yerevan',
-            'flexible_days' => 3,
+            'date_flexibility' => QuoteRequest::DATES_PLUS_3,
             'flight_preference' => QuoteRequest::FLIGHT_INCLUDED,
             'hotel_preference' => '4',
             'meal_preference' => QuoteRequest::MEAL_ALL_INCLUSIVE,
@@ -135,7 +138,7 @@ class TravelRequestBriefTest extends TestCase
         $request = QuoteRequest::sole();
 
         $this->assertSame('Yerevan', $request->departure_location);
-        $this->assertSame(3, $request->flexible_days);
+        $this->assertSame(QuoteRequest::DATES_PLUS_3, $request->date_flexibility);
         $this->assertTrue($request->has_flexible_dates);
         $this->assertSame(QuoteRequest::FLIGHT_INCLUDED, $request->flight_preference);
         $this->assertSame('4', $request->hotel_preference);
@@ -162,8 +165,174 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(QuoteRequest::HOTEL_ANY, $request->hotel_preference);
         $this->assertSame(QuoteRequest::MEAL_ANY, $request->meal_preference);
         $this->assertSame([], $request->priorities);
-        $this->assertNull($request->flexible_days);
+        $this->assertNull($request->date_flexibility);
         $this->assertFalse($request->has_flexible_dates);
+    }
+
+    /* -----------------------------------------------------------------
+     * Multiple destinations, and the "open to suggestions" alternative
+     * ----------------------------------------------------------------- */
+
+    public function test_several_destinations_are_stored_as_a_list(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['destination_countries' => ['GE', 'GR']])->assertRedirect();
+
+        $request = QuoteRequest::sole();
+
+        $this->assertSame(['GE', 'GR'], $request->destinations);
+
+        // The single-destination column stays in step, holding the first -
+        // the Telegram brief, the emails and the destination alerts all
+        // still read it (see QuoteRequest::setDestinations()).
+        $this->assertSame('GE', $request->destination_country);
+    }
+
+    public function test_a_request_must_name_a_destination_or_be_open_to_suggestions(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['destination_countries' => []])
+            ->assertSessionHasErrors('destination_countries');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    /**
+     * Naming nowhere is fine as long as the traveller says so - it matches
+     * every agency serving any destination rather than none.
+     */
+    public function test_open_to_suggestions_is_accepted_without_a_destination(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['destination_countries' => [], 'open_to_suggestions' => '1'])->assertRedirect();
+
+        $request = QuoteRequest::sole();
+
+        $this->assertTrue($request->open_to_suggestions);
+        $this->assertSame([], $request->destinations);
+        $this->assertNull($request->destination_country);
+        $this->assertSame(1, $request->responses()->count());
+    }
+
+    public function test_more_destinations_than_allowed_are_rejected(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['destination_countries' => array_slice(['GE', 'GR', 'CY', 'IT', 'FR', 'ES'], 0, QuoteRequest::MAX_DESTINATIONS + 1)])
+            ->assertSessionHasErrors('destination_countries');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    public function test_a_repeated_destination_is_rejected(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['destination_countries' => ['GE', 'GE']])
+            ->assertSessionHasErrors('destination_countries.1');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    /* -----------------------------------------------------------------
+     * Children and their ages
+     * ----------------------------------------------------------------- */
+
+    public function test_an_age_is_stored_for_every_child(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['children' => 2, 'child_ages' => [4, 11]])->assertRedirect();
+
+        $this->assertSame([4, 11], QuoteRequest::sole()->child_ages);
+    }
+
+    public function test_a_missing_child_age_is_rejected(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['children' => 2, 'child_ages' => [4]])
+            ->assertSessionHasErrors('child_ages');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    public function test_an_implausible_child_age_is_rejected(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['children' => 1, 'child_ages' => [42]])
+            ->assertSessionHasErrors('child_ages.0');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    public function test_no_children_needs_no_ages(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['children' => 0, 'child_ages' => []])->assertRedirect();
+
+        $this->assertSame([], QuoteRequest::sole()->child_ages);
+    }
+
+    /* -----------------------------------------------------------------
+     * Custom budget
+     * ----------------------------------------------------------------- */
+
+    public function test_a_custom_budget_range_is_stored(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['budget_min_amd' => 640000, 'budget_max_amd' => 880000])->assertRedirect();
+
+        $request = QuoteRequest::sole();
+
+        $this->assertSame('640000.00', $request->budget_min_amd);
+        $this->assertSame('880000.00', $request->budget_max_amd);
+    }
+
+    public function test_a_custom_budget_with_the_ends_reversed_is_rejected(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['budget_min_amd' => 900000, 'budget_max_amd' => 500000])
+            ->assertSessionHasErrors('budget_max_amd');
+
+        $this->assertSame(0, QuoteRequest::count());
+    }
+
+    /**
+     * A band and a custom range answer the same question. The band wins, so
+     * the two can't be combined into a range nobody chose.
+     */
+    public function test_a_band_overrides_any_custom_range_sent_with_it(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit([
+            'budget_band' => '500k_1m',
+            'budget_min_amd' => 10,
+            'budget_max_amd' => 20,
+        ])->assertRedirect();
+
+        $request = QuoteRequest::sole();
+
+        $this->assertSame('500000.00', $request->budget_min_amd);
+        $this->assertSame('1000000.00', $request->budget_max_amd);
+    }
+
+    public function test_a_departure_location_is_required(): void
+    {
+        $this->tourismPartner();
+
+        $this->submit(['departure_location' => null])
+            ->assertSessionHasErrors('departure_location');
+
+        $this->assertSame(0, QuoteRequest::count());
     }
 
     public function test_a_preference_outside_the_offered_list_is_rejected(): void
@@ -216,7 +385,7 @@ class TravelRequestBriefTest extends TestCase
     {
         $this->tourismPartner();
 
-        $this->submit(['flexible_days' => 30])->assertSessionHasErrors('flexible_days');
+        $this->submit(['date_flexibility' => 'whenever'])->assertSessionHasErrors('date_flexibility');
 
         $this->assertSame(0, QuoteRequest::count());
     }
@@ -366,7 +535,8 @@ class TravelRequestBriefTest extends TestCase
             'guest_name' => 'Test Guest',
             'guest_email' => 'guest@example.com',
             'locale' => 'en',
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'check_in' => now()->subDays(5)->toDateString(),
             'check_out' => now()->subDays(1)->toDateString(),
             'adults' => 2,

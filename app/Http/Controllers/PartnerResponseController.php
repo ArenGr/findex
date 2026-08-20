@@ -7,6 +7,7 @@ use App\Services\TravelOfferSubmission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The secure, unauthenticated page a partner lands on after tapping "View &
@@ -46,6 +47,26 @@ class PartnerResponseController extends Controller
             : collect();
 
         return view('tourism.respond', ['response' => $response, 'templates' => $templates]);
+    }
+
+    /**
+     * The agency downloading a file it attached to its own offer.
+     *
+     * The response_token is the credential here, exactly as it is for the
+     * page the link sits on - the file itself lives on the private disk, so
+     * this is the only way to it (see TravelOfferSubmission).
+     */
+    public function attachment(string $locale, string $token, string $suggestion): StreamedResponse
+    {
+        $response = QuoteResponse::query()->where('response_token', $token)->firstOrFail();
+
+        // Scoped to this response, so one agency's token cannot fetch
+        // another's attachment by guessing a suggestion id.
+        $offer = $response->suggestions()->whereKey($suggestion)->first();
+
+        abort_if($offer === null || ! $offer->attachment_path, 404);
+
+        return QuoteRequestController::downloadAttachment($offer);
     }
 
     public function store(Request $request, string $locale, string $token, TravelOfferSubmission $submission): RedirectResponse

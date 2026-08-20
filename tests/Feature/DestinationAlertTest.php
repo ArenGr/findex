@@ -59,7 +59,8 @@ class DestinationAlertTest extends TestCase
     public function test_submitting_a_request_for_an_unserved_destination_offers_the_alert_form(): void
     {
         $response = $this->post(route('tourism.request.store', ['locale' => 'en']), [
-            'destination_country' => 'TH',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['TH'],
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,
@@ -68,7 +69,7 @@ class DestinationAlertTest extends TestCase
             'consent' => '1',
         ]);
 
-        $response->assertSessionHasErrors(['destination_country']);
+        $response->assertSessionHasErrors(['destination_countries']);
     }
 
     public function test_new_destination_dispatches_the_notify_job(): void

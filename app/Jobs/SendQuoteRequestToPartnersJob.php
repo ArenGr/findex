@@ -34,14 +34,11 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
      */
     public function handle(PartnerNotifierInterface $notifier): void
     {
-        // null when the traveler is open to suggestions and named no
-        // country - which widens the match to every agency serving any
-        // destination, rather than matching nobody.
-        $partners = Organization::tourismPartnersForDestination(
-            $this->quoteRequest->destinations ?: null,
-            $this->quoteRequest->party_size,
-            $this->quoteRequest->budget_for_filtering,
-        )->get();
+        // Capped, and matched the same way the submit-time count was - see
+        // Organization::tourismPartnersForRequest(). A request open to
+        // suggestions names no country and would otherwise reach every
+        // agency on the platform.
+        $partners = Organization::tourismPartnersForRequest($this->quoteRequest)->get();
 
         foreach ($partners as $partner) {
             $response = QuoteResponse::create([

@@ -50,7 +50,7 @@ return new class extends Migration
         DB::table('quote_requests')
             ->whereNotNull('destination_country')
             ->update([
-                'destination_countries' => DB::raw("json_array(destination_country)"),
+                'destination_countries' => DB::raw('json_array(destination_country)'),
             ]);
 
         DB::table('quote_requests')->where('flexible_days', 3)->update(['date_flexibility' => QuoteRequest::DATES_PLUS_3]);

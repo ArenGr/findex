@@ -26,7 +26,9 @@ class TelegramWebhookController extends Controller
     ): Response {
         $secret = config('services.telegram.webhook_secret');
 
-        dd($secret);
+        // Nothing may run before this check. The route is public and
+        // unauthenticated, so anything above it - a dump, a log line, an
+        // early return - executes for every anonymous caller.
         if (! $secret || ! hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token'))) {
             abort(HttpResponse::HTTP_NOT_FOUND);
         }

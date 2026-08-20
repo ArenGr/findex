@@ -35,13 +35,14 @@ class QuoteRequestSubmissionTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'hotel_name' => 'Test Hotel',
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,
             'children' => 1,
-            'departure_location' => 'Yerevan',
+            'child_ages' => [8],
             'flight_preference' => QuoteRequest::FLIGHT_INCLUDED,
             'hotel_preference' => '4',
             'meal_preference' => QuoteRequest::MEAL_ALL_INCLUSIVE,
@@ -98,7 +99,7 @@ class QuoteRequestSubmissionTest extends TestCase
     {
         $response = $this->post(route('tourism.request.store', ['locale' => 'en']), $this->validPayload());
 
-        $response->assertSessionHasErrors('destination_country');
+        $response->assertSessionHasErrors('destination_countries');
         $this->assertSame(0, QuoteRequest::count());
     }
 

@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+@import "./fonts-freesans.css";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -39,16 +40,25 @@ button {
  * FreeSans is self-hosted (not on Google/Bunny Fonts) - see the Findex
  * style guide ("Colors and fonts"): FreeSans for English/Armenian body
  * and UI text, Montserrat for decorative headings, Allerta Stencil for
- * the logo wordmark only. Registered via the `local()` font provider in
- * vite.config.js so it gets a metric-matched fallback face (avoids the
- * layout shift in the header nav when FreeSans swaps in after load).
+ * the logo wordmark only.
+ *
+ * Its @font-face rules are declared in fonts-freesans.css, imported at the
+ * top of this file, rather than through laravel-vite-plugin's font
+ * provider - the provider cannot express unicode-range, so it shipped one
+ * ~109 KB file per weight to every visitor regardless of script.
  */
 
 @theme {
-    --font-sans: var(--font-freesans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-heading: 'Montserrat', var(--font-sans);
-    --font-logo: 'Allerta Stencil', var(--font-sans);
+    /* Declared here now that FreeSans is hand-rolled rather than handled by
+       laravel-vite-plugin's font provider, which used to inject this. */
+    --font-freesans: "FreeSans";
+
+    --font-sans:
+        var(--font-freesans), ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
+    --font-heading: "Montserrat", var(--font-sans);
+    --font-logo: "Allerta Stencil", var(--font-sans);
 
     /* Findex brand palette (see resources/views/style-guide.blade.php) */
     --color-primary: #607e34;
@@ -138,7 +148,7 @@ button {
      * Scoped by use, not by page: anything rendering a travel quote reads
      * from here, everything else keeps reading the palette above.
      */
-    --font-manrope: 'Manrope', var(--font-sans);
+    --font-manrope: "Manrope", var(--font-sans);
 
     --color-surface-alt: #f9faf1;
     --color-surface-container: #eeeee6;

@@ -77,7 +77,7 @@
                         </dl>
 
                         @if ($suggestion->attachment_path)
-                            <a href="{{ Storage::url($suggestion->attachment_path) }}" target="_blank" rel="noopener" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+                            <a href="{{ route('tourism.respond.attachment', ['locale' => app()->getLocale(), 'token' => $response->response_token, 'suggestion' => $suggestion->id]) }}" target="_blank" rel="noopener" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">
                                 {{ __('tourism.results.attachment_label') }} &darr;
                             </a>
                         @endif

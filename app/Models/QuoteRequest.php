@@ -100,6 +100,18 @@ class QuoteRequest extends Model
      */
     public const MAX_DESTINATIONS = 5;
 
+    /**
+     * How many agencies one request may be sent to.
+     *
+     * Without a ceiling, a request naming no destination ("open to
+     * suggestions") fans out to every active agency on the platform, so a
+     * handful of submissions can page the entire market - and the rate
+     * limit alone only bounds how often, not how widely. This is set well
+     * above the number of replies anyone would read, so a traveller still
+     * gets a genuinely competitive set.
+     */
+    public const MAX_PARTNERS_PER_REQUEST = 25;
+
     public const MAX_CHILDREN = 10;
 
     /** Ages an agency can price a child fare against. */
@@ -375,12 +387,47 @@ class QuoteRequest extends Model
      * partner's minimum is checked against it rather than the min (a
      * request with only a min stated falls back to that, since it's the
      * only figure available).
+     *
+     * Deliberately conservative for a min-only budget: treating "500k+" as
+     * an unbounded ceiling would override the threshold a partner set
+     * precisely to keep small leads out. The submit-time check used to do
+     * exactly that and disagree with this, so a traveller could be told
+     * five agencies were contacted when three were - both now read this.
      */
     public function getBudgetForFilteringAttribute(): ?float
     {
         $value = $this->budget_max_amd ?? $this->budget_min_amd;
 
         return $value !== null ? (float) $value : null;
+    }
+
+    /**
+     * The ceiling used when deciding who a request is sent to, at
+     * submission and in the fan-out that follows it.
+     *
+     * Differs from budget_for_filtering above in one case, deliberately: a
+     * minimum with no maximum ("2M+") is an open-ended budget, not a
+     * ceiling equal to its floor. Reusing the floor there would exclude the
+     * partners such a lead is worth the most to, so it reads as "no upper
+     * limit" instead - PHP_FLOAT_MAX clears every partner threshold.
+     *
+     * Both submit-time and the queued fan-out read this, so the number of
+     * agencies a traveller is told about is the number actually contacted.
+     * They used to disagree: the controller was inclusive here while the
+     * job used the conservative budget_for_filtering, so a min-only budget
+     * could report agencies that were then never sent anything.
+     *
+     * BackfillOpenRequestsToNewPartnerJob still uses the conservative
+     * budget_for_filtering on purpose - see the note on
+     * QuoteRequestBudgetRangeTest.
+     */
+    public function getMatchingBudgetCeilingAttribute(): ?float
+    {
+        if ($this->budget_max_amd !== null) {
+            return (float) $this->budget_max_amd;
+        }
+
+        return $this->budget_min_amd !== null ? PHP_FLOAT_MAX : null;
     }
 
     /**

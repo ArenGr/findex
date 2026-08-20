@@ -27,7 +27,8 @@ class QuoteRequestBudgetRangeTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
-            'destination_country' => 'GE',
+            'departure_location' => 'Yerevan',
+            'destination_countries' => ['GE'],
             'check_in' => now()->addDays(10)->toDateString(),
             'check_out' => now()->addDays(17)->toDateString(),
             'adults' => 2,

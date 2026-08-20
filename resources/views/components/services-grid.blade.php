@@ -5,10 +5,10 @@
     // tinted icon backdrop is enough to read as distinct per category
     // without turning the section into a rainbow.
     $services = [
-        ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.png', 'href' => route('rates.index'), 'border' => 'border-currency-line', 'tint' => 'bg-currency-tint'],
-        ['key' => 'credit_card', 'image' => 'images/services/credit-card.png', 'href' => route('banks.index'), 'border' => 'border-cards-line', 'tint' => 'bg-cards-tint'],
-        ['key' => 'insurance', 'image' => 'images/services/insurance.png', 'href' => route('insurance.auto.request'), 'border' => 'border-insurance-line', 'tint' => 'bg-insurance-tint'],
-        ['key' => 'travel', 'image' => 'images/services/travel.png', 'href' => route('tourism.request'), 'border' => 'border-travel-line', 'tint' => 'bg-travel-tint'],
+        ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.webp', 'href' => route('rates.index'), 'border' => 'border-currency-line', 'tint' => 'bg-currency-tint'],
+        ['key' => 'credit_card', 'image' => 'images/services/credit-card.webp', 'href' => route('banks.index'), 'border' => 'border-cards-line', 'tint' => 'bg-cards-tint'],
+        ['key' => 'insurance', 'image' => 'images/services/insurance.webp', 'href' => route('insurance.auto.request'), 'border' => 'border-insurance-line', 'tint' => 'bg-insurance-tint'],
+        ['key' => 'travel', 'image' => 'images/services/travel.webp', 'href' => route('tourism.request'), 'border' => 'border-travel-line', 'tint' => 'bg-travel-tint'],
     ];
 @endphp
 
@@ -53,6 +53,10 @@
                             <img
                                 src="{{ asset($service['image']) }}?v={{ filemtime(public_path($service['image'])) }}"
                                 alt=""
+                                width="320"
+                                height="214"
+                                loading="lazy"
+                                decoding="async"
                                 class="h-25 w-40 object-contain transition duration-300 group-hover:scale-105"
                             >
                         </span>
