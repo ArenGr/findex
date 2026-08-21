@@ -145,6 +145,19 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Laravel flashes old input back to the form on a validation
+        // failure, which would put these in the session. The owner's ID
+        // number and the bank account number Sil's calculator demands are
+        // the two values this app takes but never stores (see
+        // QuoteIdentity, MarketQuoteDetails), and the session is storage.
+        $exceptions->dontFlash([
+            'current_password',
+            'password',
+            'password_confirmation',
+            'owner_id_number',
+            'market_bank_account',
+        ]);
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

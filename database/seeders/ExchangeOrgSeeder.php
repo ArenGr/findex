@@ -12,9 +12,10 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Called from DatabaseSeeder::run() - demo data, not production data, but
- * kept in the default run so `migrate:fresh --seed` produces a fully working
- * demo environment on its own. Creates a few exchange-office partners with
+ * Demo data, and NOT part of the default `migrate:fresh --seed` run: the
+ * rates it writes are invented, and once stored they are indistinguishable
+ * from scraped ones on the comparison pages. Run it explicitly when you need
+ * exchange-office partners locally. Creates a few exchange-office partners with
  * cash rates for USD/EUR/RUR plus a broader set (GBP/CHF/GEL/AED/CNY/KZT/
  * CAD/AUD, spread unevenly across partners like a real exchange market
  * would - not every office trades every currency), so:

@@ -2,43 +2,85 @@
 
 namespace App\Parsers;
 
-use App\Enums\CurrencyCode;
 use App\Enums\RateType;
 
 class InecoRateParser implements RateParser
 {
     /**
-     * Inecobank renders the rates as visible text in the page, e.g.
-     * "USD 365.5 370 EUR 415 426.5 RUB 4 4.8". We strip the tags and read the
-     * currency/buy/sell triples out of the resulting text.
+     * Inecobank's public pages sit behind a Cloudflare Managed Challenge -
+     * a JS challenge no plain HTTP client can solve, which is why this
+     * bank's source sat inactive. Its rates endpoint is not challenged and
+     * answers a plain GET with JSON:
      *
-     * The board only shows a single (cash) rate per currency - Inecobank's
-     * page doesn't distinguish card/transfer/cross rates the way ACBA's does.
+     *   https://www.inecobank.am/api/rates
      *
-     * NOTE: adjust once a real Inecobank fixture is available - the live page
-     * is behind Cloudflare, so this is based on the previously observed layout.
+     *   {"success":true,"items":[
+     *      {"code":"USD",
+     *       "cash":{"buy":362,"sell":367},
+     *       "cashless":{"buy":362.5,"sell":367},
+     *       "online":{"buy":362.73,"sell":367},
+     *       "card":{"buy":362.5,"sell":368},
+     *       "cb":{"buy":365.26,"sell":365.26}}, ...
+     *   ]}
+     *
+     * Every category is present for every currency whether or not the bank
+     * trades it that way; the ones it doesn't carry nulls rather than being
+     * absent (GBP has no cash rate, XAU has nothing at all).
      */
+    private const CATEGORIES = [
+        'cash' => RateType::CASH,
+        'cashless' => RateType::NON_CASH,
+        'card' => RateType::CARD,
+        'cb' => RateType::CENTRAL_BANK,
+    ];
+
+    /**
+     * The endpoint also publishes an "online" rate - a better spread offered
+     * inside the bank's own app. RateType has no case for it, and the
+     * nearest ones mean something else (TRANSFER is wire transfers), so
+     * filing it under one of those would misdescribe it on the comparison
+     * page. Left out until the enum has somewhere honest to put it.
+     */
+    private const UNMAPPED_CATEGORY = 'online';
+
     public function parse(string $html): array
     {
-        $text = strip_tags($html);
-        $codes = implode('|', CurrencyCode::codes());
+        $data = json_decode($html, true);
+        $items = $data['items'] ?? null;
 
-        preg_match_all(
-            '/\b('.$codes.')\b\s+([0-9,.]+)\s+([0-9,.]+)/i',
-            $text,
-            $matches,
-            PREG_SET_ORDER
-        );
+        if (! is_array($items)) {
+            return [];
+        }
 
         $rates = [];
 
-        foreach ($matches as $match) {
-            $rates[] = [
-                'code' => strtoupper($match[1]),
-                'rate_type' => RateType::CASH->value,
-                'buy' => (float) str_replace(',', '.', $match[2]),
-                'sell' => (float) str_replace(',', '.', $match[3]),
-            ];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $code = $item['code'] ?? null;
+
+            if (! is_string($code) || trim($code) === '') {
+                continue;
+            }
+
+            foreach (self::CATEGORIES as $key => $rateType) {
+                $buy = data_get($item, "{$key}.buy");
+                $sell = data_get($item, "{$key}.sell");
+
+                if (! is_numeric($buy) || ! is_numeric($sell)
+                    || (float) $buy <= 0.0 || (float) $sell <= 0.0) {
+                    continue;
+                }
+
+                $rates[] = [
+                    'code' => strtoupper(trim($code)),
+                    'rate_type' => $rateType->value,
+                    'buy' => (float) $buy,
+                    'sell' => (float) $sell,
+                ];
+            }
         }
 
         return $rates;

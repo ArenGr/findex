@@ -20,7 +20,6 @@ class AutoInsuranceRequest extends Model
         'locale',
         'vehicle_plate',
         'owner_type',
-        'owner_id_number',
         'contract_term_months',
         'engine_power_hp',
         'driver_experience_years',

@@ -96,4 +96,28 @@ return [
     'rates_best_badge' => 'Лучший в Армении',
     'rates_meta_description' => 'Курсы валют :name в Армении - актуальные курсы покупки и продажи :count валют, обновляются ежедневно и сравниваются со всеми другими банками и обменными пунктами.',
     'branches_heading' => 'Отделения',
+
+    // Bank-page sections: sticky nav, overview tiles, branch
+    // filtering and the similar-organizations cards.
+    'nav_overview' => 'Обзор',
+    'nav_rates' => 'Курсы валют',
+    'nav_branches' => 'Филиалы',
+    'nav_reviews' => 'Отзывы',
+    'overview_heading' => 'Обзор',
+    'stat_rating' => 'Рейтинг',
+    'stat_branches' => 'Филиалы',
+    'stat_region' => 'Регион',
+    'stat_type' => 'Тип',
+    'visit_website' => 'Перейти на сайт',
+    'branches_search' => 'Поиск по улице или городу…',
+    'branches_all_regions' => 'Все регионы',
+    'branches_open_now' => 'Открыто сейчас',
+    'branches_show_all' => 'Показать все :count филиалов',
+    'branches_show_fewer' => 'Показать меньше',
+    'branches_no_match' => 'Ни один филиал не соответствует запросу.',
+    'similar_heading' => 'Похожие организации',
+    'similar_rate_label' => 'Ориентировочный курс :code',
+    'similar_view' => 'Смотреть курсы',
+    'branch_count' => '{0} Нет филиалов|{1} :count филиал|[2,4] :count филиала|[5,*] :count филиалов',
+    'no_rating' => 'Пока без оценки',
 ];

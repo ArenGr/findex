@@ -2,7 +2,6 @@
 
 @php
     $open = $branch->isOpenAt();
-    $today = $branch->hoursOn(now());
 @endphp
 
 {{--
@@ -12,6 +11,10 @@
 
     Open and closed are spelled out in words as well as coloured: colour alone
     reaches neither a screen reader nor anyone who cannot separate the two.
+
+    This answers for right now only. The week's schedule sits beside it in
+    x-branch-week, which is where today's times are printed - repeating them
+    here put the same figures on screen twice.
 --}}
 <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
     @if ($open === null)
@@ -20,9 +23,5 @@
         <span @class(['font-semibold', 'text-primary' => $open, 'text-accent-red' => ! $open])>
             {{ $open ? __('rates.open') : __('rates.closed') }}
         </span>
-
-        @if ($today)
-            <span class="text-muted tabular-nums">{{ $today[0] }} &ndash; {{ $today[1] }}</span>
-        @endif
     @endif
 </span>

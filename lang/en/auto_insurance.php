@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'loading' => [
+        'title' => 'Getting your quotes…',
+        'subtitle' => "We're fetching live prices for you. This usually takes less than 30 seconds.",
+    ],
+
     'nav_label' => 'Auto Insurance',
 
     'companies' => [
@@ -35,14 +40,44 @@ return [
             6 => '6 months',
             12 => '12 months',
         ],
+        'market_heading' => 'Contact and payout details',
+        'market_explainer' => 'Insurers quote through the Motor Insurers Bureau, which needs a phone number, an email and a bank account before it returns a price. These are sent only with this quote request and are never stored by Findex.',
+        'market_phone' => 'Phone number',
+        'market_email' => 'Email address',
+        'market_bank_account' => 'Bank account number',
+        'market_bank_account_hint' => 'Required by the insurer, sent only with that quote request, and never stored by Findex.',
         'consent' => "I agree that these vehicle details will be shared with Findex's partner insurers so they can prepare a quote.",
         'submit' => 'Get quotes',
+        'data_secure_note' => 'Sent securely to fetch quotes. Never stored by Findex.',
+        'aside_secure_title' => 'Secure & private',
+        'aside_secure_body' => 'Your details go straight to the insurers to fetch a price. Findex never stores your ID or bank account.',
+        'aside_next_title' => 'What happens next?',
+        'aside_next_1' => 'We ask every partner insurer for a live price.',
+        'aside_next_2' => 'Quotes land on one page, cheapest first.',
+        'aside_next_3' => 'Pick an insurer and go straight to them.',
     ],
 
     'results' => [
         'heading' => 'Your Auto Insurance Quotes',
+        'ready_heading' => 'Your insurance quotes are ready',
+        'ready_subtitle' => 'We found :count offers for your vehicle. Compare prices and choose what works best.',
+        'quotes_received' => ':count quotes received',
+        'trail_vehicle' => 'Vehicle',
+        'trail_details' => 'Details',
+        'trail_compare' => 'Compare',
+        'product_name' => 'Compulsory motor TPL',
+        'total_for' => 'Total for :term',
+        'edit_details' => 'Edit details',
+        'sorted_by_price' => 'Lowest price first',
+        'sort_label' => 'Sort by',
+        'sort_price' => 'Lowest price',
+        'offers_heading' => ':count insurance offers',
+        'empty_heading' => "We couldn't find an online quote",
+        'empty_body' => 'No participating insurer returned a price for these details. Review your information and try again.',
+        'empty_retry' => 'Review details and try again',
         'submitted' => 'Done! :count partner insurers responded - compare their quotes below.',
         'vehicle_summary' => 'Plate :plate · :term',
+        'visit_site' => 'Visit :insurer',
         'best_price_badge' => 'Best price',
         'premium_label' => 'Premium',
         'term_label' => 'Policy term',

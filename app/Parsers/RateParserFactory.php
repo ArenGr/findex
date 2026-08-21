@@ -23,6 +23,13 @@ class RateParserFactory
         'vtb' => VtbRateParser::class,
         'idbank' => IdbankRateParser::class,
         'artsakhbank' => ArtsakhbankRateParser::class,
+        'amio' => AmioRateParser::class,
+        'conversebank' => ConverseRateParser::class,
+        'ardshinbank' => ArdshinbankRateParser::class,
+        'armswissbank' => ArmswissbankRateParser::class,
+        'mellat' => MellatRateParser::class,
+        'byblos' => ByblosRateParser::class,
+        'fastbank' => FastBankRateParser::class,
     ];
 
     /**

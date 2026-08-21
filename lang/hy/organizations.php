@@ -96,4 +96,28 @@ return [
     'rates_best_badge' => 'Լավագույնը Հայաստանում',
     'rates_meta_description' => ':name-ի փոխարժեքները Հայաստանում՝ :count արժույթի առք ու վաճառքի ընթացիկ փոխարժեքներ, թարմացվում են ամեն օր և համեմատվում մյուս բոլոր բանկերի ու փոխանակման կետերի հետ։',
     'branches_heading' => 'Մասնաճյուղեր',
+
+    // Bank-page sections: sticky nav, overview tiles, branch
+    // filtering and the similar-organizations cards.
+    'nav_overview' => 'Ընդհանուր',
+    'nav_rates' => 'Փոխարժեքներ',
+    'nav_branches' => 'Մասնաճյուղեր',
+    'nav_reviews' => 'Կարծիքներ',
+    'overview_heading' => 'Ընդհանուր',
+    'stat_rating' => 'Վարկանիշ',
+    'stat_branches' => 'Մասնաճյուղեր',
+    'stat_region' => 'Երկիր',
+    'stat_type' => 'Տեսակ',
+    'visit_website' => 'Այցելել կայք',
+    'branches_search' => 'Փնտրել ըստ փողոցի կամ քաղաքի…',
+    'branches_all_regions' => 'Բոլոր տարածքները',
+    'branches_open_now' => 'Բաց է հիմա',
+    'branches_show_all' => 'Ցուցադրել բոլոր :count մասնաճյուղերը',
+    'branches_show_fewer' => 'Ցուցադրել ավելի քիչ',
+    'branches_no_match' => 'Այդ որոնմանը համապատասխանող մասնաճյուղ չկա։',
+    'similar_heading' => 'Նմանատիպ կազմակերպություններ',
+    'similar_rate_label' => ':code ներկայացուցչական փոխարժեք',
+    'similar_view' => 'Դիտել փոխարժեքները',
+    'branch_count' => '{0} Մասնաճյուղեր չկան|{1} :count մասնաճյուղ|[2,*] :count մասնաճյուղ',
+    'no_rating' => 'Դեռ գնահատված չէ',
 ];

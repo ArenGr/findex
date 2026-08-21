@@ -60,6 +60,41 @@ class AlpineStateIntegrityTest extends TestCase
     }
 
     /**
+     * The branch filter on an organization page holds its whole component in
+     * the attribute - search, region, open-now and the show-all toggle. A
+     * stray double quote there takes the filtering down silently, and with it
+     * the only route to the branches past the sixth.
+     */
+    public function test_the_branch_filters_state_survives_rendering(): void
+    {
+        $organization = Organization::create([
+            'name' => 'Acba', 'slug' => 'acba', 'type' => 'bank',
+            'country_code' => 'AM', 'is_active' => true,
+        ]);
+
+        foreach (range(1, 8) as $n) {
+            $organization->branches()->create([
+                'name' => "Branch {$n}",
+                'address' => "{$n} Test Street",
+                'city' => 'Yerevan',
+                'is_active' => true,
+                'opening_hours' => ['mon' => ['09:00', '17:00']],
+            ]);
+        }
+
+        $html = $this->get('/en/organizations/acba')->assertOk()->getContent();
+
+        $state = $this->alpineState($html, 'openNow');
+
+        $this->assertStateIsComplete($state, ['search', 'city', 'openNow', 'expanded', 'preview', 'refresh']);
+
+        // A bare "<" inside the attribute is legal HTML but reads as a tag to
+        // anything parsing the page roughly, so the comparison is written the
+        // other way round.
+        $this->assertStringNotContainsString('<', $state, 'The x-data attribute must not contain a raw "<".');
+    }
+
+    /**
      * The request form's behaviour now lives in a JS module and the
      * attribute only carries its config as JSON (see
      * resources/js/travel-request-form.js). That removes most of the

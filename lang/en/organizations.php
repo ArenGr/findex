@@ -96,4 +96,28 @@ return [
     'rates_best_badge' => 'Best in Armenia',
     'rates_meta_description' => ':name exchange rates in Armenia - live buy and sell rates for :count currencies, updated daily and compared against every other bank and exchange office.',
     'branches_heading' => 'Branches',
+
+    // Bank-page sections: sticky nav, overview tiles, branch
+    // filtering and the similar-organizations cards.
+    'nav_overview' => 'Overview',
+    'nav_rates' => 'Exchange rates',
+    'nav_branches' => 'Branches',
+    'nav_reviews' => 'Reviews',
+    'overview_heading' => 'Overview',
+    'stat_rating' => 'Rating',
+    'stat_branches' => 'Branches',
+    'stat_region' => 'Region',
+    'stat_type' => 'Type',
+    'visit_website' => 'Visit website',
+    'branches_search' => 'Search by street or city…',
+    'branches_all_regions' => 'All regions',
+    'branches_open_now' => 'Open now',
+    'branches_show_all' => 'Show all :count branches',
+    'branches_show_fewer' => 'Show fewer',
+    'branches_no_match' => 'No branch matches that search.',
+    'similar_heading' => 'Similar organizations',
+    'similar_rate_label' => 'Representative :code rate',
+    'similar_view' => 'View rates',
+    'branch_count' => '{0} No branches|{1} :count branch|[2,*] :count branches',
+    'no_rating' => 'Not rated yet',
 ];

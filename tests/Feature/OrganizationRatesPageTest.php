@@ -65,6 +65,55 @@ class OrganizationRatesPageTest extends TestCase
     }
 
     /**
+     * The groups are alternatives, not a sequence - the cash rate and the card
+     * rate for one currency answer different questions - so they share a table
+     * and a set of tabs rather than stacking four of them down the page.
+     */
+    public function test_each_transaction_type_gets_a_tab_and_only_the_first_is_shown(): void
+    {
+        $usd = $this->currency();
+        $bank = $this->organization('acba');
+
+        $this->rate($bank, $usd, 363.0, 367.0, RateType::CASH->value);
+        $this->rate($bank, $usd, 362.0, 368.0, RateType::CARD->value);
+
+        $html = $this->get('/en/organizations/acba')->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="rate-tab-cash"', $html);
+        $this->assertStringContainsString('id="rate-tab-card"', $html);
+
+        // The first panel paints immediately; the rest stay hidden until a tab
+        // is chosen. Without the cloak they all flash on screen at load.
+        $this->assertMatchesRegularExpression(
+            '/id="rate-panel-cash"(?![^>]*x-cloak)/',
+            preg_replace('/\s+/', ' ', $html),
+            'The first panel should not be cloaked.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/x-cloak[^>]*id="rate-panel-card"|id="rate-panel-card"[^>]*x-cloak/',
+            preg_replace('/\s+/', ' ', $html),
+            'Every panel after the first should be cloaked.',
+        );
+    }
+
+    /**
+     * A bank quoting one kind of rate needs no tabs to choose between - it
+     * keeps the plain heading it always had.
+     */
+    public function test_a_single_transaction_type_is_shown_without_tabs(): void
+    {
+        $usd = $this->currency();
+        $bank = $this->organization('idbank');
+
+        $this->rate($bank, $usd, 363.0, 367.0, RateType::CASH->value);
+
+        $html = $this->get('/en/organizations/idbank')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('role="tab"', $html);
+        $this->assertStringContainsString('Cash', $html);
+    }
+
+    /**
      * Whether this organization holds the best rate in the country is the one
      * fact a visitor cannot work out from this page alone, so it is the one
      * thing worth marking.

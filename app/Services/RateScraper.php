@@ -10,99 +10,37 @@ use App\Models\CurrencyRateHistory;
 use App\Models\Organization;
 use App\Models\ScrapingJob;
 use App\Parsers\RateParserFactory;
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 class RateScraper
 {
     /**
-     * Currency-code aliases. Some banks still publish the legacy RUR code for
-     * the Russian ruble; we store everything under the current ISO code.
+     * Currency-code aliases, applied before a row is matched against
+     * CurrencyCode::codes().
+     *
+     * This app canonicalises the Russian ruble on the legacy RUR, not the
+     * current ISO RUB - see CurrencyCode::RUB and the
+     * fix_rub_currency_code_to_rur migration. Armenian bank sites use both
+     * spellings, so the ISO one has to be folded in here.
+     *
+     * It previously mapped only 'RUR' => 'RUR', which is a no-op: every bank
+     * publishing RUB (IDBank and AMIO among them) had its ruble row quietly
+     * discarded as an untracked currency, and the comparison pages simply
+     * showed no ruble for those banks.
      */
     private const CURRENCY_ALIASES = [
-        'RUR' => 'RUR',
+        'RUB' => 'RUR',
+
+        // Armswissbank quotes the offshore yuan (CNH) where every other
+        // bank quotes CNY. They are the same currency traded in two
+        // markets; for a retail exchange comparison the distinction is
+        // immaterial, and without this the bank shows no yuan at all.
+        'CNH' => 'CNY',
     ];
-
-    /**
-     * Retries for transient failures only (connection/timeout errors, 5xx,
-     * 429) - a plain 403/404 means the site is actively blocking us or the
-     * URL is wrong, and hammering it again won't help. Kept short since
-     * this runs in a daily cron job for many organizations in sequence, not
-     * as a background retry queue.
-     */
-    private const MAX_RETRIES = 2;
-
-    private Client $httpClient;
 
     public function __construct(
         private RateParserFactory $parsers,
-        private OutboundUrlGuard $urlGuard,
-    ) {
-        $handlerStack = HandlerStack::create();
-        $handlerStack->push(Middleware::retry(
-            self::shouldRetry(...),
-            self::retryDelay(...),
-        ));
-
-        $this->httpClient = new Client([
-            'handler' => $handlerStack,
-            'timeout' => 20,
-            'allow_redirects' => [
-                'max' => 5,
-                // Every hop is re-checked, not just the URL we set out with.
-                // The destination of a redirect is chosen by whichever site we
-                // just asked, so a bank whose page is compromised could
-                // otherwise walk our server into the private network.
-                'on_redirect' => function ($request, $response, $uri) {
-                    $this->urlGuard->assertAllowed((string) $uri);
-                },
-            ],
-            // Some sites (e.g. Ameriabank) gate the first request behind a
-            // WAF challenge that sets a cookie and redirects to the same
-            // URL; the retry only succeeds if that cookie is sent back.
-            'cookies' => true,
-            'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language' => 'en-US,en;q=0.9',
-                // Only advertise encodings Guzzle/cURL can transparently decode.
-                'Accept-Encoding' => 'gzip, deflate',
-                'Referer' => 'https://www.google.com/',
-                'Upgrade-Insecure-Requests' => '1',
-            ],
-        ]);
-    }
-
-    private static function shouldRetry(
-        int $retries,
-        RequestInterface $request,
-        ?ResponseInterface $response = null,
-        ?\Throwable $exception = null,
-    ): bool {
-        if ($retries >= self::MAX_RETRIES) {
-            return false;
-        }
-
-        // A network-level failure (DNS, connection refused, timeout, ...)
-        // has no response at all - always worth a retry.
-        if ($exception !== null) {
-            return true;
-        }
-
-        $status = $response?->getStatusCode();
-
-        return $status !== null && ($status >= 500 || $status === 429);
-    }
-
-    private static function retryDelay(int $retries): int
-    {
-        // Guzzle passes a 1-based retry count here (1, 2, ...), unlike the
-        // 0-based count shouldRetry() sees. Milliseconds: 1s, then 3s.
-        return (int) (1000 * (2 * ($retries - 1) + 1));
-    }
+        private ScraperHttpClient $http,
+    ) {}
 
     /**
      * Scrape currency rates for an organization.
@@ -137,7 +75,7 @@ class RateScraper
             $url = $source->getFullUrl();
             $job->log('info', "Fetching from: {$url}");
 
-            $html = $this->getHtml($url);
+            $html = $this->http->get($url, $source->request_headers ?? []);
 
             // Parse and extract rates
             $recordsFound = $this->parseAndSaveRates($organization, $html, $url, $job);
@@ -165,17 +103,6 @@ class RateScraper
 
             return $job;
         }
-    }
-
-    /**
-     * Fetch a URL's HTML. Always live - no caching, so this always reflects
-     * whatever the bank is currently publishing.
-     */
-    private function getHtml(string $url): string
-    {
-        $this->urlGuard->assertAllowed($url);
-
-        return (string) $this->httpClient->get($url)->getBody();
     }
 
     /**

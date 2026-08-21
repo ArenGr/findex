@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\RateType;
 use App\Models\Branch;
 use App\Models\Currency;
+use App\Models\CurrencyRate;
 use App\Models\ExchangeQuoteRequest;
 use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
@@ -188,11 +189,37 @@ class OrganizationController extends Controller
             }
         }
 
+        // Where to go next when this organization is not the answer. Same
+        // type only - offering an insurer to somebody comparing bank rates is
+        // noise - and each carries its headline currency so the card can be
+        // compared at a glance rather than only clicked.
+        $similar = Organization::active()
+            ->where('type', $organization->type)
+            ->whereKeyNot($organization->id)
+            ->withAvg('reviews as reviews_avg_rating', 'rating')
+            ->when($organization->hasRatesPage(), fn ($query) => $query
+                ->whereHas('currencyRates'))
+            ->inRandomOrder()
+            ->limit(3)
+            ->get();
+
+        $headlineCode = (string) (collect($rates['groups'])->first()[0]['code'] ?? 'USD');
+
+        $similarRates = CurrencyRate::query()
+            ->whereIn('organization_id', $similar->pluck('id'))
+            ->where('rate_type', RateType::CASH)
+            ->whereHas('currency', fn ($query) => $query->where('code', $headlineCode))
+            ->get()
+            ->keyBy('organization_id');
+
         return view('organizations.show', [
             'organization' => $organization,
             'averageRating' => $organization->reviews->avg('rating'),
             'reviewsCount' => $organization->reviews->count(),
             'myReview' => $myReview,
+            'similar' => $similar,
+            'similarRates' => $similarRates,
+            'headlineCode' => $headlineCode,
             'rates' => $rates,
             // Only exchange offices negotiate walk-in cash, and only once they
             // are reachable on Telegram - the same rule the fan-out job uses,

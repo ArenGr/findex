@@ -7,14 +7,15 @@ use App\Models\Organization;
 use Illuminate\Database\Seeder;
 
 /**
- * Demo branch locations (with real Yerevan-district and regional-city
- * coordinates) for the banks (OrganizationSeeder) and exchange offices
- * (ExchangeOrgSeeder) - without this, RateController's city filter and the
- * /rates "find nearby" distance sort have nothing to show (both are
- * entirely driven by the Branch table, which nothing else populates).
+ * Invented branch locations, and NOT part of the default seed run.
  *
- * Called from DatabaseSeeder::run() after both of those, so every
- * organization slug referenced here already exists.
+ * The addresses and opening hours here were made up; only the coordinates
+ * are real places. Attached to real banks they read as fact on the map and
+ * in the "open now" filter, so they are no longer seeded.
+ *
+ * Real branch data is scraped from the banks: see BranchScraper and
+ * `php artisan scrape:branches`. Kept for local work where you need the
+ * city filter populated without hitting the network.
  */
 class BranchSeeder extends Seeder
 {

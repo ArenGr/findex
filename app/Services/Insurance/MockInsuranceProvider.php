@@ -7,12 +7,19 @@ use App\Models\AutoInsuranceRequest;
 use App\Models\Organization;
 
 /**
- * Stands in for real per-partner insurance APIs, which don't exist yet -
+ * Stands in for the insurers that have no integration of their own yet -
  * this generates a plausible, deterministic premium so the request/results
  * flow can be demoed to partners end to end. Deterministic (no randomness)
  * so the same request always reproduces the same quotes: variance across
  * partners comes from their organization id, not chance, so a demo never
  * looks flaky on a re-run.
+ *
+ * It ignores the QuoteIdentity entirely: a real insurer prices from the
+ * Bureau registry keyed on that plate and ID (see IngoAppaProvider), which
+ * this has no access to, so it works from the rating factors on the request
+ * instead. Those are nullable and the intake form no longer asks for them,
+ * so in practice every factor below falls back to 1.0 and the spread across
+ * partners comes from the per-partner variance alone.
  */
 class MockInsuranceProvider implements InsuranceQuoteProviderInterface
 {
@@ -62,7 +69,7 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
 
     private const ACCIDENT_FREE_MAX_YEARS = 5;
 
-    public function quote(AutoInsuranceRequest $request, Organization $partner): array
+    public function quote(AutoInsuranceRequest $request, QuoteIdentity $identity, Organization $partner): array
     {
         $base = self::BASE_ANNUAL_PREMIUM[$request->owner_type];
         $termFactor = self::TERM_FACTOR[$request->contract_term_months];

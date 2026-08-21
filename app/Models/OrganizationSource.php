@@ -13,12 +13,14 @@ class OrganizationSource extends Model
         'organization_id',
         'source_type',
         'url',
+        'request_headers',
         'is_active',
         'last_scraped_at',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'request_headers' => 'array',
         'last_scraped_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use App\Services\Insurance\InsuranceQuoteProviderInterface;
-use App\Services\Insurance\MockInsuranceProvider;
+use App\Services\Insurance\CachedMarketQuoteSource;
+use App\Services\Insurance\MarketQuoteSourceInterface;
+use App\Services\Insurance\SilMarketQuoteSource;
 use App\Services\Notifications\ExchangeNotifierInterface;
 use App\Services\Notifications\PartnerNotifierInterface;
 use App\Services\Notifications\TelegramExchangeNotifier;
@@ -12,6 +13,7 @@ use App\Services\Report\LlmReportAnalyzer;
 use App\Services\Report\ReportAnalyzerInterface;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -43,12 +45,22 @@ class AppServiceProvider extends ServiceProvider
         // exchange quote flow - see SendExchangeQuoteToPartnersJob.
         $this->app->bind(ExchangeNotifierInterface::class, TelegramExchangeNotifier::class);
 
-        // Real per-partner insurance APIs don't exist yet - MockInsuranceProvider
-        // stands in so the request/results flow can be demoed end to end.
-        // Swapping in a real integration (likely a per-partner adapter, the
-        // same pattern RateParserFactory already uses) only touches this
-        // binding, not AutoInsuranceQuoteService or the controller.
-        $this->app->bind(InsuranceQuoteProviderInterface::class, MockInsuranceProvider::class);
+        // Auto-insurance quotes come from one source: Sil's calculator
+        // returns the whole Bureau premium table in a single call, mapped to
+        // our insurers by icId (see SilMarketQuoteSource / AutoInsurance
+        // QuoteService). The per-insurer direct providers (IngoAppaProvider,
+        // ArmeniaInsuranceProvider) and the factory/mock remain in the
+        // codebase but are no longer wired into the live flow.
+        //
+        // Wrapped in a cache so a refresh or a retry does not re-hit Sil -
+        // the one thing worth shielding now that it is the sole source. Keyed
+        // on a hash of the pricing inputs, never the inputs themselves.
+        $this->app->bind(MarketQuoteSourceInterface::class, function ($app) {
+            return new CachedMarketQuoteSource(
+                $app->make(SilMarketQuoteSource::class),
+                $app->make(CacheRepository::class),
+            );
+        });
     }
 
     /**
