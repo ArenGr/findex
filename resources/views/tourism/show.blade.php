@@ -43,8 +43,49 @@
         </a>
 
         @if (session('status') === 'quote-request-submitted')
-            <div class="mt-4 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
-                {{ __('tourism.status_page.just_submitted', ['count' => session('contacted_count', $quoteRequest->contacted_count)]) }}
+            {{-- The confirmation moment: a clear "done", then the three-step
+                 Findex process the traveler is now in. Shown only on the fresh
+                 submission flash - a later visit gets the detailed, real-time
+                 progress card below instead of this celebratory one. --}}
+            @php
+                $processSteps = [
+                    __('tourism.status_page.process_sent'),
+                    __('tourism.status_page.process_preparing'),
+                    __('tourism.status_page.process_compare'),
+                ];
+            @endphp
+            <div class="mt-4 rounded-2xl border border-primary/30 bg-primary/5 p-6">
+                <div class="flex items-start gap-4">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <div class="min-w-0">
+                        <h2 class="font-heading text-lg font-bold text-ink">{{ __('tourism.status_page.confirm_heading') }}</h2>
+                        <p class="mt-1 text-sm text-muted">{{ __('tourism.status_page.just_submitted', ['count' => session('contacted_count', $quoteRequest->contacted_count)]) }}</p>
+                    </div>
+                </div>
+
+                <ol class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-0">
+                    @foreach ($processSteps as $i => $processLabel)
+                        <li class="flex flex-1 items-center gap-3">
+                            <span @class([
+                                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                                'bg-primary text-white' => $i === 0,
+                                'border border-placeholder bg-white text-muted' => $i !== 0,
+                            ])>
+                                @if ($i === 0)
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><polyline points="20 6 9 17 4 12"/></svg>
+                                @else
+                                    {{ $i + 1 }}
+                                @endif
+                            </span>
+                            <span class="text-sm {{ $i === 0 ? 'font-semibold text-ink' : 'text-muted' }}">{{ $processLabel }}</span>
+                            @unless ($loop->last)
+                                <span class="mx-2 hidden h-px flex-1 bg-placeholder sm:block" aria-hidden="true"></span>
+                            @endunless
+                        </li>
+                    @endforeach
+                </ol>
             </div>
         @endif
 

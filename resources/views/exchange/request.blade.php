@@ -35,14 +35,14 @@
         @endif
 
         @if ($currencies->isEmpty())
-            <div class="rounded-2xl border border-dashed border-placeholder p-8 text-center">
+            <div class="rounded-3xl border border-dashed border-placeholder bg-white p-8 text-center shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
                 <p class="text-sm text-muted">{{ __('exchange_quotes.request.no_partners_for_currency') }}</p>
             </div>
         @else
             <form
                 method="POST"
                 action="{{ route('exchange.request.store') }}"
-                class="space-y-8 rounded-2xl border border-placeholder p-6 shadow-sm sm:p-8"
+                class="space-y-8 rounded-3xl border border-placeholder bg-white p-6 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] sm:p-8"
                 novalidate
                 x-data="{
                     currency: '{{ old('currency_code', $selectedCurrency->code) }}',
@@ -215,7 +215,7 @@
                         <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
                     @enderror
 
-                    <button type="submit" class="mt-6 w-full bg-primary px-6 py-3 text-sm font-medium text-white transition hover:bg-primary-dark sm:w-auto">
+                    <button type="submit" class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-medium text-white shadow-sm transition hover:bg-primary-dark active:scale-[0.98] sm:w-auto">
                         {{ __('exchange_quotes.request.submit') }}
                     </button>
                 </div>

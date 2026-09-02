@@ -161,9 +161,11 @@ button {
     --color-on-primary-container: #fbffeb;
     --color-error: #ba1a1a;
 
-    /* This system's own primary - darker than the brand green it sits
-       beside, and only ever used inside the travel flow. */
-    --color-travel-primary: #48651d;
+    /* The travel flow's accent. Aligned to the brand green (#607E34) so the
+       redesigned travel-request page matches the approved design exactly,
+       rather than the darker shade it used before. Only used inside the
+       travel flow. */
+    --color-travel-primary: #607E34;
 
     /*
      * The travel type scale, stated in absolute pixels on purpose. The
@@ -171,13 +173,13 @@ button {
      * so reusing it here would render every one of these designs a size
      * too large - these carry their own metrics instead.
      */
-    --text-label-caps: 12px;
-    --text-label-caps--line-height: 16px;
+    --text-label-caps: 13px;
+    --text-label-caps--line-height: 18px;
     --text-label-caps--letter-spacing: 0.05em;
     --text-label-caps--font-weight: 600;
 
-    --text-body-sm: 14px;
-    --text-body-sm--line-height: 20px;
+    --text-body-sm: 15px;
+    --text-body-sm--line-height: 22px;
 
     --text-body-md: 16px;
     --text-body-md--line-height: 24px;

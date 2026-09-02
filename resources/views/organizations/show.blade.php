@@ -702,7 +702,7 @@
                     <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
                 @enderror
 
-                <button type="submit" class="mt-5 bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+                <button type="submit" class="mt-5 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]">
                     {{ $myReview ? __('organizations.update_review') : __('organizations.submit_review') }}
                 </button>
 

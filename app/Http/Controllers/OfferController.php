@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeatureToggle;
+use App\Models\MortgageOffer;
+use App\Services\MortgageMarket;
 use Illuminate\View\View;
 
 class OfferController extends Controller
@@ -62,13 +64,51 @@ class OfferController extends Controller
      * the locale segment's value instead of its own. Same convention as
      * ArticleController::show()/OrganizationController::show().
      */
-    public function show(string $locale, string $category): View
+    public function show(string $locale, string $category, MortgageMarket $market): View
     {
         // The route's regex constraint (see pages.php) already rejects
         // anything not in CATEGORIES; this is the switched-off case, which
         // is a runtime value the route can't express.
         abort_unless(in_array($category, self::enabledCategories(), true), 404);
 
-        return view(self::CUSTOM_VIEWS[$category] ?? 'banks.sample', ['category' => $category]);
+        $data = ['category' => $category];
+
+        // The mortgages page follows the two-tier pattern: a market benchmark
+        // and a product-by-product overview for context (computed here),
+        // above the interactive offers table that ranks client-side.
+        if ($category === 'mortgages') {
+            $data += $this->mortgageData($market);
+        }
+
+        return view(self::CUSTOM_VIEWS[$category] ?? 'banks.sample', $data);
+    }
+
+    /**
+     * The mortgage page's market-context tier: a headline benchmark for the
+     * default AMD secondary cohort, and a product-by-product overview across
+     * every collected cohort. The per-bank offers table itself ranks
+     * client-side in the calculator (x-mortgage-offers-table), so it can
+     * re-rank live as the visitor changes their scenario.
+     *
+     * @return array{
+     *     mortgageBenchmark: array<string, mixed>,
+     *     mortgageOverview: list<array<string, mixed>>,
+     * }
+     */
+    private function mortgageData(MortgageMarket $market): array
+    {
+        $offers = MortgageOffer::query()
+            ->whereHas('organization', fn ($query) => $query->active())
+            ->with('organization')
+            ->get();
+
+        $secondaryAmd = $offers
+            ->where('category', 'secondary_market')
+            ->where('currency', 'AMD');
+
+        return [
+            'mortgageBenchmark' => $market->benchmark($secondaryAmd),
+            'mortgageOverview' => $market->overview($offers),
+        ];
     }
 }

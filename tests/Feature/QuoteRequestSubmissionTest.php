@@ -103,6 +103,31 @@ class QuoteRequestSubmissionTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
+    public function test_the_status_page_shows_the_confirmation_moment_right_after_submitting(): void
+    {
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->andReturn(['ok' => true]);
+        });
+        $this->tourismPartner();
+        $user = User::factory()->create();
+
+        // Following the redirect lands on the status page with the fresh
+        // "quote-request-submitted" flash, which is what surfaces the
+        // confirmation card and the three-step Findex process.
+        $response = $this->actingAs($user)
+            ->followingRedirects()
+            ->post(
+                route('tourism.request.store', ['locale' => 'en']),
+                $this->validPayload(['guest_name' => null, 'guest_email' => null])
+            );
+
+        $response->assertOk();
+        $response->assertSee(__('tourism.status_page.confirm_heading'));
+        $response->assertSee(__('tourism.status_page.process_sent'));
+        $response->assertSee(__('tourism.status_page.process_preparing'));
+        $response->assertSee(__('tourism.status_page.process_compare'));
+    }
+
     public function test_honeypot_field_silently_discards_the_submission(): void
     {
         $this->tourismPartner();

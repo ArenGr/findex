@@ -1,7 +1,8 @@
 <section class="{{ $card }}">
-    <div class="mb-6 flex items-center gap-3">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-travel-primary/10">
-            <x-travel-icon name="flight_takeoff" class="h-5 w-5 text-travel-primary" />
+    <div class="mb-5 flex items-center gap-3">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-primary/10 transition-colors" :class="tripComplete && '!bg-travel-primary'">
+            <x-travel-icon name="check" class="h-[18px] w-[18px] text-white" x-show="tripComplete" x-cloak />
+            <x-travel-icon name="flight_takeoff" class="h-[18px] w-[18px] text-travel-primary" x-show="!tripComplete" />
         </span>
         <h2 class="text-headline-md">{{ __('tourism.request.section_trip') }}</h2>
     </div>
@@ -15,6 +16,7 @@
                 name="departure_location"
                 id="departure_location"
                 value="{{ old('departure_location') }}"
+                x-model="departure"
                 required
                 autocomplete="off"
                 placeholder="{{ __('tourism.request.departure_location_placeholder') }}"
@@ -28,10 +30,12 @@
         {{-- Destinations. Several are allowed (see QuoteRequest::MAX_DESTINATIONS);
              naming none is also valid, as long as "open to suggestions" is
              ticked - the two are cross-checked server-side. --}}
-        <div class="flex flex-col gap-1" @click.outside="destinationPickerOpen = false">
-            <span class="{{ $label }}" id="destinations-label">{{ __('tourism.request.destination') }}</span>
+        <div class="flex flex-col gap-1.5" @click.outside="destinationPickerOpen = false">
+            <label for="destination-search" class="{{ $label }}">{{ __('tourism.request.destination') }}</label>
 
-            <div class="flex flex-wrap items-center gap-2" role="group" aria-labelledby="destinations-label">
+            {{-- Selected destinations, shown as removable chips above the input.
+                 They carry the real submitted values (country codes). --}}
+            <div x-show="destinations.length" x-cloak class="flex flex-wrap gap-2">
                 <template x-for="code in destinations" :key="code">
                     <span class="inline-flex items-center gap-1 rounded-full bg-travel-primary/10 px-3 py-1 text-body-sm text-travel-primary">
                         <span x-text="countryFlag(code)"></span>
@@ -47,61 +51,70 @@
                         <input type="hidden" name="destination_countries[]" :value="code">
                     </span>
                 </template>
+            </div>
 
-                <div class="relative">
-                    <button
-                        type="button"
-                        x-show="!destinationsFull"
-                        @click="destinationPickerOpen = !destinationPickerOpen; $nextTick(() => destinationPickerOpen && $refs.destinationSearch.focus())"
-                        :aria-expanded="destinationPickerOpen"
-                        class="rounded-full px-1 text-body-sm font-medium text-travel-primary hover:underline focus-visible:ring-2 focus-visible:ring-travel-primary focus-visible:outline-none"
-                    >
-                        {{ __('tourism.request.destination_add') }}
-                    </button>
+            {{-- A real, always-visible input. Typing filters the country list;
+                 picking one adds it as a chip. It stays a country picker under
+                 the hood because the server validates against real country
+                 codes - free text would be rejected. --}}
+            <div x-show="!destinationsFull" class="relative">
+                <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted">
+                    <x-travel-icon name="location" class="h-[17px] w-[17px]" />
+                </span>
+                <input
+                    type="text"
+                    id="destination-search"
+                    x-model="destinationSearch"
+                    x-ref="destinationSearch"
+                    autocomplete="off"
+                    @focus="destinationPickerOpen = true"
+                    @keydown.escape="destinationPickerOpen = false"
+                    :placeholder="destinations.length ? @js(__('tourism.request.destination_add_another')) : @js(__('tourism.request.destination_placeholder'))"
+                    class="{{ $field }} pl-10"
+                >
 
-                    <div
-                        x-show="destinationPickerOpen"
-                        x-cloak
-                        x-transition
-                        class="absolute z-20 mt-2 w-72 max-w-[80vw] rounded-lg border border-border-subtle bg-white shadow-lg"
-                    >
-                        <div class="p-2">
-                            <input
-                                type="text"
-                                x-model="destinationSearch"
-                                x-ref="destinationSearch"
-                                placeholder="{{ __('tourism.request.destination_search_placeholder') }}"
-                                aria-label="{{ __('tourism.request.destination_search_placeholder') }}"
-                                class="block w-full rounded-md border border-border-subtle px-3 py-2 text-body-sm focus:border-travel-primary focus:outline-none"
-                                @keydown.escape="destinationPickerOpen = false"
-                            >
-                        </div>
-                        <ul class="max-h-64 overflow-y-auto px-2 pb-2">
-                            <template x-for="country in availableCountries.slice(0, 60)" :key="country.code">
-                                <li>
-                                    <button
-                                        type="button"
-                                        @click="addDestination(country.code)"
-                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-body-sm text-on-surface hover:bg-travel-primary/5"
-                                    >
-                                        <span x-text="country.flag"></span>
-                                        <span x-text="country.name"></span>
-                                    </button>
-                                </li>
-                            </template>
-                        </ul>
-                        <p x-show="!availableCountries.length" class="px-4 pb-3 text-body-sm text-ink-muted">
+                <div
+                    x-show="destinationPickerOpen"
+                    x-cloak
+                    x-transition
+                    class="absolute z-20 mt-1 w-full rounded-lg border border-border-subtle bg-white shadow-lg"
+                >
+                    <ul class="max-h-64 overflow-y-auto p-1">
+                        <template x-for="country in availableCountries.slice(0, 60)" :key="country.code">
+                            <li>
+                                <button
+                                    type="button"
+                                    @click="addDestination(country.code)"
+                                    class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-body-sm text-on-surface hover:bg-travel-primary/5"
+                                >
+                                    <span x-text="country.flag"></span>
+                                    <span x-text="country.name"></span>
+                                </button>
+                            </li>
+                        </template>
+                        <li x-show="!availableCountries.length" class="px-3 py-2 text-body-sm text-ink-muted">
                             {{ __('tourism.request.destination_no_results') }}
-                        </p>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <p x-show="destinationsFull" x-cloak class="mt-1 text-body-sm text-ink-muted">
+            <p x-show="destinationsFull" x-cloak class="text-body-sm text-ink-muted">
                 {{ __('tourism.request.destination_limit', ['max' => $maxDestinations]) }}
             </p>
 
-            <label class="mt-2 flex cursor-pointer items-center gap-2">
+            {{-- Add another (focuses the input), only once at least one is chosen. --}}
+            <button
+                type="button"
+                x-show="destinations.length && !destinationsFull"
+                x-cloak
+                @click="destinationPickerOpen = true; $nextTick(() => $refs.destinationSearch.focus())"
+                class="w-fit text-body-sm font-medium text-travel-primary hover:underline focus-visible:ring-2 focus-visible:ring-travel-primary focus-visible:outline-none"
+            >
+                {{ __('tourism.request.destination_add') }}
+            </button>
+
+            <label class="mt-1 flex cursor-pointer items-center gap-2">
                 <input
                     type="checkbox"
                     name="open_to_suggestions"
@@ -132,13 +145,13 @@
         <div class="flex flex-col gap-1">
             <span class="{{ $label }}" id="dates-label">{{ __('tourism.request.dates_label') }}</span>
 
-            <div class="mb-3 flex w-fit rounded-lg bg-surface-container-low p-1" role="group" aria-labelledby="dates-label">
+            <div class="mb-3 flex w-fit rounded-lg border border-border-subtle bg-surface-container-low p-1" role="group" aria-labelledby="dates-label">
                 <button
                     type="button"
                     @click="setDateMode(false)"
                     :aria-pressed="!datesAreFlexible"
-                    :class="!datesAreFlexible ? 'bg-white text-on-surface shadow-sm' : 'text-ink-muted'"
-                    class="rounded-md px-4 py-1.5 text-body-sm font-medium transition-colors"
+                    :class="!datesAreFlexible ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface'"
+                    class="rounded-md px-4 py-2 text-body-sm font-medium transition-colors"
                 >
                     {{ __('tourism.request.dates_exact') }}
                 </button>
@@ -146,33 +159,50 @@
                     type="button"
                     @click="setDateMode(true)"
                     :aria-pressed="datesAreFlexible"
-                    :class="datesAreFlexible ? 'bg-white text-on-surface shadow-sm' : 'text-ink-muted'"
-                    class="rounded-md px-4 py-1.5 text-body-sm font-medium transition-colors"
+                    :class="datesAreFlexible ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface'"
+                    class="rounded-md px-4 py-2 text-body-sm font-medium transition-colors"
                 >
                     {{ __('tourism.request.dates_flexible') }}
                 </button>
             </div>
 
-            <div class="relative flex items-center rounded-lg border border-border-subtle bg-white transition-colors focus-within:border-travel-primary focus-within:ring-1 focus-within:ring-travel-primary @error('check_in') border-error @enderror @error('check_out') border-error @enderror">
-                <input
-                    type="date"
-                    name="check_in"
-                    id="check_in"
-                    x-model="checkIn"
-                    required
-                    aria-label="{{ __('tourism.request.check_in') }}"
-                    class="w-1/2 border-none bg-transparent px-4 py-3 text-body-sm focus:ring-0 focus:outline-none"
-                >
-                <span class="h-6 w-px bg-border-subtle"></span>
-                <input
-                    type="date"
-                    name="check_out"
-                    id="check_out"
-                    x-model="checkOut"
-                    required
-                    aria-label="{{ __('tourism.request.check_out') }}"
-                    class="w-1/2 border-none bg-transparent px-4 py-3 text-body-sm focus:ring-0 focus:outline-none"
-                >
+            {{-- Two separate, labelled fields - a joined box read as one
+                 control to a screen reader and gave the two dates no identity
+                 of their own. --}}
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="flex flex-col gap-1">
+                    <label for="check_in" class="{{ $label }}">{{ __('tourism.request.check_in') }}</label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted">
+                            <x-travel-icon name="calendar_month" class="h-[18px] w-[18px]" />
+                        </span>
+                        <input
+                            type="date"
+                            name="check_in"
+                            id="check_in"
+                            x-model="checkIn"
+                            required
+                            class="{{ $field }} pl-10 @error('check_in') border-error @enderror"
+                        >
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label for="check_out" class="{{ $label }}">{{ __('tourism.request.check_out') }}</label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted">
+                            <x-travel-icon name="calendar_month" class="h-[18px] w-[18px]" />
+                        </span>
+                        <input
+                            type="date"
+                            name="check_out"
+                            id="check_out"
+                            x-model="checkOut"
+                            required
+                            :min="checkIn || null"
+                            class="{{ $field }} pl-10 @error('check_out') border-error @enderror"
+                        >
+                    </div>
+                </div>
             </div>
 
             <div x-show="datesAreFlexible" x-cloak class="mt-3 flex flex-wrap gap-2">

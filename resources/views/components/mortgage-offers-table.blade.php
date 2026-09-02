@@ -40,23 +40,51 @@
             ->whereHas('organization', fn ($query) => $query->active())
             ->with('organization')
             ->get()
-            ->map(fn ($offer) => [
-                'id' => $offer->organization->id,
-                'name' => $offer->organization->name,
-                'url' => route('organizations.show', $offer->organization),
-                'logo' => $offer->organization->logo,
-                'initial' => mb_strtoupper(mb_substr($offer->organization->name, 0, 1)),
-                'rate_min' => (float) $offer->interest_rate_min,
-                'rate_max' => (float) $offer->interest_rate_max,
-                'term_min_months' => $offer->term_min_months,
-                'term_max_months' => $offer->term_max_months,
-                'min_down_payment_percent' => $offer->min_down_payment_percent !== null ? (float) $offer->min_down_payment_percent : 0,
-                'min_amount' => $offer->min_amount !== null ? (float) $offer->min_amount : 0,
-                'max_amount' => $offer->max_amount !== null ? (float) $offer->max_amount : 999999999999,
-                'source_url' => $offer->source_url,
-                'rating' => (float) ($ratingsByOrgId[$offer->organization_id]->reviews_avg_rating ?? 0),
-                'reviews_count' => (int) ($ratingsByOrgId[$offer->organization_id]->reviews_count ?? 0),
-            ])
+            // A lapsed promotion isn't part of today's market, so it never
+            // enters the table (same rule as MortgageComparison / the
+            // benchmark).
+            ->reject(fn ($offer) => $offer->promo_ends_at !== null && $offer->promo_ends_at->isPast())
+            ->map(function ($offer) use ($ratingsByOrgId) {
+                // Rank on APR when the bank publishes it, else nominal.
+                $eff = $offer->apr_min !== null ? (float) $offer->apr_min : (float) $offer->interest_rate_min;
+
+                $badges = [];
+                if ($offer->rate_type !== \App\Enums\MortgageRateType::FIXED) {
+                    $badges[] = 'floating';
+                }
+                if ($offer->promo_ends_at !== null) {
+                    $badges[] = 'promo';
+                }
+                if ($offer->apr_min === null) {
+                    $badges[] = 'rate_only';
+                }
+                if ($offer->scraped_at !== null && $offer->scraped_at->lt(now()->subDays(45))) {
+                    $badges[] = 'stale';
+                }
+
+                return [
+                    'id' => $offer->organization->id,
+                    'name' => $offer->organization->name,
+                    'url' => route('organizations.show', $offer->organization),
+                    'logo' => $offer->organization->logo,
+                    'initial' => mb_strtoupper(mb_substr($offer->organization->name, 0, 1)),
+                    'rate_min' => (float) $offer->interest_rate_min,
+                    'rate_max' => (float) $offer->interest_rate_max,
+                    'apr_min' => $offer->apr_min !== null ? (float) $offer->apr_min : null,
+                    'apr_max' => $offer->apr_max !== null ? (float) $offer->apr_max : null,
+                    'eff_rate' => $eff,
+                    'basis' => $offer->apr_min !== null ? 'apr' : 'nominal',
+                    'badges' => $badges,
+                    'term_min_months' => $offer->term_min_months,
+                    'term_max_months' => $offer->term_max_months,
+                    'min_down_payment_percent' => $offer->min_down_payment_percent !== null ? (float) $offer->min_down_payment_percent : 0,
+                    'min_amount' => $offer->min_amount !== null ? (float) $offer->min_amount : 0,
+                    'max_amount' => $offer->max_amount !== null ? (float) $offer->max_amount : 999999999999,
+                    'source_url' => $offer->source_url,
+                    'rating' => (float) ($ratingsByOrgId[$offer->organization_id]->reviews_avg_rating ?? 0),
+                    'reviews_count' => (int) ($ratingsByOrgId[$offer->organization_id]->reviews_count ?? 0),
+                ];
+            })
             ->values();
 
         return [$currency => $rows];
@@ -74,6 +102,15 @@
             downPaymentPercent: 20,
             termMonths: 60,
             offersByCurrency: @js($offersByCurrency),
+            badgeLabels: @js([
+                'floating' => __('offers.mortgage_ranking.badge_floating'),
+                'promo' => __('offers.mortgage_ranking.badge_promo'),
+                'stale' => __('offers.mortgage_ranking.badge_stale'),
+            ]),
+            basisLabels: @js([
+                'apr' => __('offers.mortgage_ranking.basis_apr'),
+                'nominal' => __('offers.mortgage_ranking.basis_nominal'),
+            ]),
 
             get loanAmount() {
                 return Math.max(0, (this.propertyPrice[this.currencyTab] || 0) * (1 - this.downPaymentPercent / 100));
@@ -99,14 +136,14 @@
 
                     if (!eligible) return;
 
-                    if (!bestPerBank[row.id] || row.rate_min < bestPerBank[row.id].rate_min) {
+                    if (!bestPerBank[row.id] || row.eff_rate < bestPerBank[row.id].eff_rate) {
                         bestPerBank[row.id] = row;
                     }
                 });
 
                 return Object.values(bestPerBank)
-                    .map((row) => ({ ...row, payment: this.monthlyPayment(row.rate_min, this.loanAmount, this.termMonths) }))
-                    .sort((a, b) => a.payment - b.payment);
+                    .map((row) => ({ ...row, payment: this.monthlyPayment(row.eff_rate, this.loanAmount, this.termMonths) }))
+                    .sort((a, b) => a.eff_rate - b.eff_rate || a.payment - b.payment);
             },
         }"
     >
@@ -207,12 +244,16 @@
                                         </svg>
                                         <span class="text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
                                     </div>
+                                    <div class="mt-1 flex flex-wrap gap-1">
+                                        <template x-for="b in row.badges.filter((x) => x !== 'rate_only')" :key="b">
+                                            <span class="rounded-full bg-placeholder/50 px-2 py-0.5 text-[11px] text-ink" x-text="badgeLabels[b]"></span>
+                                        </template>
+                                    </div>
                                 </div>
 
                                 <div class="hidden w-24 shrink-0 text-right sm:block">
-                                    <p class="text-sm font-semibold text-ink">
-                                        <span x-text="row.rate_min === row.rate_max ? row.rate_min : row.rate_min + '-' + row.rate_max"></span>%
-                                    </p>
+                                    <p class="text-sm font-semibold text-ink"><span x-text="row.eff_rate"></span>%</p>
+                                    <p class="text-[11px] text-subtle" x-text="basisLabels[row.basis]"></p>
                                 </div>
 
                                 <div class="hidden w-24 shrink-0 text-right md:block">

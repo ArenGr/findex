@@ -50,7 +50,12 @@
                     {{ $attributes->except('class') }}
                     class="peer sr-only"
                 >
-                <span class="flex items-center gap-2 rounded-full border border-border-subtle bg-transparent px-4 py-2 text-body-sm text-on-surface transition-colors peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-focus-visible:ring-2 peer-focus-visible:ring-travel-primary/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-outline">
+                <span class="flex items-center gap-2 rounded-full border border-border-subtle bg-transparent px-4 py-2.5 text-body-sm text-on-surface transition-colors peer-checked:border-travel-primary peer-checked:bg-travel-primary/10 peer-checked:font-medium peer-checked:text-travel-primary peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-primary/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-outline">
+                    {{-- Shown only when the pill is selected (via the peer input),
+                         so the choice reads as chosen without relying on colour. --}}
+                    <span data-check class="hidden shrink-0">
+                        <x-travel-icon name="check" class="h-[16px] w-[16px]" />
+                    </span>
                     @isset ($icons[$value])
                         <x-travel-icon :name="$icons[$value]" class="h-[18px] w-[18px]" />
                     @endisset

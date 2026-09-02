@@ -99,14 +99,17 @@
 @endphp
 
 @section('content')
-    <section id="rates-panel" class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    {{-- HERO (from the approved redesign): heading, subheading, the two CTAs
+         and a decorative currency-circle composition. Reuses the existing
+         better-rate / rate-alert anchors and their handlers verbatim, in the
+         app's own header/footer and Findex brand colours. --}}
+    <section class="border-b border-placeholder bg-[radial-gradient(circle_at_75%_35%,rgba(96,126,52,0.10),transparent_28%)]">
+        <div class="mx-auto grid max-w-[1180px] items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:px-10">
             <div class="min-w-0">
-                <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('rates.all_heading') }}</h1>
-                <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('rates.all_subheading') }}</p>
-            </div>
+                <h1 class="font-heading text-4xl font-bold break-words text-ink md:text-5xl">{{ __('rates.all_heading') }}</h1>
+                <p class="mt-4 max-w-xl text-lg leading-8 break-words text-muted">{{ __('rates.all_subheading') }}</p>
 
-            <div class="flex flex-wrap items-center gap-3 md:shrink-0">
+                <div class="mt-7 flex flex-wrap items-center gap-3">
                 @if ($quoteMinimum !== null)
                     @php $qualifies = $amount >= $quoteMinimum; @endphp
                     <a
@@ -176,8 +179,22 @@
                 <x-info-popover :label="__('rates.alert_cta')">
                     {{ __('rates.alert_hint') }}
                 </x-info-popover>
+                </div>
+            </div>
+
+            {{-- Decorative currency composition, desktop only, Findex greens. --}}
+            <div class="relative hidden h-[220px] lg:block" aria-hidden="true">
+                <div class="absolute right-8 bottom-2 h-20 w-96 rounded-[50%] bg-primary/5"></div>
+                <div class="absolute right-20 bottom-12 h-20 w-72 rounded-[50%] bg-primary/5 shadow-sm"></div>
+                <div class="absolute top-12 right-[330px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/70 text-3xl font-semibold text-white shadow-lg">$</div>
+                <div class="absolute top-5 right-[230px] flex h-16 w-16 items-center justify-center rounded-full bg-primary text-3xl font-semibold text-white shadow-lg">€</div>
+                <div class="absolute top-0 right-[125px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/60 text-3xl font-semibold text-white shadow-lg">₽</div>
+                <div class="absolute top-14 right-10 flex h-16 w-16 items-center justify-center rounded-full bg-primary-dark text-3xl font-semibold text-white shadow-lg">֏</div>
             </div>
         </div>
+    </section>
+
+    <section id="rates-panel" class="mx-auto max-w-[1180px] px-6 py-10 lg:px-10">
         @php
             $everyday = config('rates.everyday');
             $everyday = is_array($everyday) && $everyday !== []
@@ -231,201 +248,6 @@
                 @endif
             </div>
 
-        </div>
-
-        <div x-data="{ open: window.__ratesFiltersOpen ?? false }" x-effect="window.__ratesFiltersOpen = open" class="mt-6">
-            <div class="flex flex-wrap items-center gap-3">
-                <button
-                    type="button"
-                    @click="open = !open"
-                    :aria-expanded="open"
-                    class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition {{ $activeFilterCount ? 'border-primary/50 bg-primary/10 text-ink' : 'border-placeholder bg-white text-muted hover:border-border-muted hover:text-ink' }}"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                        <path d="M3 6h18M7 12h10M11 18h2" />
-                    </svg>
-                    {{ __('rates.more_filters') }}@if ($activeFilterCount) ({{ $activeFilterCount }})@endif
-                </button>
-                @if ($viewMode !== 'map')
-                    <form method="GET" action="{{ route('rates.index') }}" class="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:max-w-sm sm:flex-1">
-                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'open'] as $carried)
-                            @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
-                            @if (! empty($value))
-                                <input type="hidden" name="{{ $carried }}" value="{{ $value }}">
-                            @endif
-                        @endforeach
-
-                        <label for="q" class="sr-only">{{ __('rates.search_label') }}</label>
-                        <div class="relative min-w-0 flex-1">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true">
-                                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-                            </svg>
-                            <input
-                                type="search" name="q" id="q"
-                                value="{{ $search }}"
-                                placeholder="{{ __('rates.search_placeholder') }}"
-                                autocomplete="off"
-                                @input.debounce.350ms="if ($el.value.trim().length >= 3 || $el.value.trim() === '') $el.form.requestSubmit()"
-                                @search="$el.form.requestSubmit()"
-                                class="min-h-11 w-full min-w-0 rounded-xl border border-placeholder bg-white py-2 ps-9 pe-3 text-sm text-ink focus:border-primary focus:outline-none"
-                            >
-                        </div>
-                        <button type="submit" class="sr-only focus:not-sr-only focus:rounded-lg focus:border focus:border-primary focus:px-3 focus:py-2 focus:text-xs">
-                            {{ __('rates.search_label') }}
-                        </button>
-                    </form>
-
-                    @if ($search !== '')
-                        <a href="{{ $link(['q' => null]) }}" class="-my-2 inline-block py-2 text-xs text-muted underline hover:text-ink">
-                            {{ __('rates.search_clear') }}
-                        </a>
-                    @endif
-                @endif
-
-            </div>
-
-        <div x-show="open" x-cloak x-transition.opacity @click="open = false" class="fixed inset-0 z-40 bg-ink/40 sm:hidden"></div>
-        <div
-            x-show="open" x-cloak
-            role="group" aria-label="{{ __('rates.more_filters') }}"
-            class="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col items-start gap-y-5 overflow-y-auto rounded-t-2xl border-t border-placeholder bg-white px-5 pt-5 pb-5 sm:static sm:z-auto sm:mt-5 sm:max-h-none sm:flex-row sm:flex-wrap sm:gap-x-10 sm:overflow-visible sm:rounded-xl sm:border"
-        >
-            <div class="flex w-full items-center justify-between sm:hidden">
-                <span class="font-heading text-base font-bold text-ink">{{ __('rates.more_filters') }}</span>
-                <button type="button" @click="open = false" class="-mr-1 rounded-full p-2 text-muted hover:bg-placeholder/30 hover:text-ink" aria-label="{{ __('alerts.modal.cancel') }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-5 w-5" aria-hidden="true">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        <div class="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-1 sm:flex-row sm:flex-wrap sm:items-start">
-            @if ($orgTypes->count() > 1)
-                <x-rates.filter-menu
-                    :label="__('rates.market_label')"
-                    :active="$selectedOrgType !== null"
-                    :options="[
-                        [
-                            'label' => __('rates.market_all'),
-                            'href' => $link(['org_type' => null, 'organization' => null]),
-                            'selected' => $selectedOrgType === null,
-                        ],
-                        ...$orgTypes->map(fn ($orgType) => [
-                            'label' => __('rates.markets.' . $orgType),
-                            'href' => $link(['org_type' => $orgType, 'organization' => null]),
-                            'selected' => $selectedOrgType === $orgType,
-                        ])->all(),
-                    ]"
-                />
-            @endif
-
-            <x-rates.filter-menu
-                :label="__('rates.type_label')"
-                :active="$selectedType !== \App\Enums\RateType::CASH"
-                :options="collect($availableTypes)->map(fn ($typeValue) => [
-                    'label' => __('organizations.rate_types.' . $typeValue),
-                    'href' => $link(['type' => $typeValue]),
-                    'selected' => $selectedType->value === $typeValue,
-                ])->all()"
-            />
-
-            @if ($selectedOrgType !== null && $organizations->isNotEmpty())
-                <x-rates.filter-menu
-                    :label="__('rates.filter_org.'.$selectedOrgType)"
-                    :active="$selectedOrganization !== null"
-                    :options="[
-                        [
-                            'label' => __('rates.filter_org_all.'.$selectedOrgType),
-                            'href' => $link(['organization' => null]),
-                            'selected' => $selectedOrganization === null,
-                        ],
-                        ...$organizations->map(fn ($organization) => [
-                            'label' => $organization->name,
-                            'href' => $link(['organization' => $organization->slug]),
-                            'selected' => $selectedOrganization?->id === $organization->id,
-                        ])->all(),
-                    ]"
-                />
-            @endif
-
-            @if ($cities->isNotEmpty())
-                <x-rates.filter-menu
-                    :label="__('rates.filter_city')"
-                    :hint="__('rates.filter_city_hint')"
-                    searchable
-                    :active="$selectedCity !== null"
-                    :options="[
-                        [
-                            'label' => __('rates.filter_city_all'),
-                            'href' => $link(['city' => null]),
-                            'selected' => $selectedCity === null,
-                        ],
-                        ...$cities->map(fn ($city) => [
-                            'label' => $city,
-                            'href' => $link(['city' => $city]),
-                            'selected' => $selectedCity === $city,
-                        ])->all(),
-                    ]"
-                />
-            @endif
-        </div>
-
-        <div class="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto">
-            <a
-                href="{{ $link(['open' => $openNow ? null : 1]) }}"
-                aria-pressed="{{ $openNow ? 'true' : 'false' }}"
-                class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition {{ $openNow ? 'border-primary/50 bg-primary/10 text-ink' : 'border-placeholder bg-white text-muted hover:border-border-muted hover:text-ink' }}"
-            >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
-                </svg>
-                {{ __('rates.open_now') }}
-            </a>
-            <div x-data="{
-                    state: 'idle',
-                    findNearby() {
-                        if (!navigator.geolocation) { this.state = 'error'; return; }
-                        this.state = 'locating';
-                        navigator.geolocation.getCurrentPosition(
-                            (position) => {
-                                const url = new URL(window.location.href);
-                                url.searchParams.set('lat', position.coords.latitude);
-                                url.searchParams.set('lng', position.coords.longitude);
-                                url.searchParams.set('sort', 'distance');
-                                url.searchParams.set('direction', 'asc');
-                                window.dispatchEvent(new CustomEvent('rates:navigate', { detail: url.toString() }));
-                            },
-                            () => { this.state = 'error'; },
-                        );
-                    },
-                }">
-                    @if ($hasLocation)
-                        <a
-                            href="{{ $link(['lat' => null, 'lng' => null, 'sort' => null, 'dir' => null]) }}"
-                            class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-primary/50 bg-primary/10 px-3.5 py-2 text-sm font-semibold text-ink"
-                        >
-                            📍 {{ __('rates.nearby_active') }}
-                            <span aria-hidden="true" class="text-muted">&times;</span>
-                        </a>
-                    @else
-                        <button
-                            type="button"
-                            @click="findNearby()"
-                            :disabled="state === 'locating'"
-                            class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-placeholder bg-white px-3.5 py-2 text-sm font-semibold text-muted transition hover:border-border-muted hover:text-ink disabled:opacity-60"
-                        >
-                            <span x-show="state !== 'locating'">📍 {{ __('rates.find_nearby') }}</span>
-                            <span x-show="state === 'locating'" x-cloak>{{ __('rates.locating') }}</span>
-                        </button>
-                        <p x-show="state === 'error'" x-cloak class="mt-1 text-xs text-red-600">{{ __('rates.location_error') }}</p>
-                    @endif
-            </div>
-        </div>
-            <div class="sticky bottom-0 -mx-5 mt-1 w-[calc(100%+2.5rem)] border-t border-placeholder bg-white px-5 pt-4 sm:hidden">
-                <button type="button" @click="open = false" class="w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold break-words text-white transition hover:bg-primary-dark">
-                    {{ trans_choice('rates.apply_filters', $rowCount, ['count' => $rowCount]) }}
-                </button>
-            </div>
-        </div>
         </div>
 
         @if ($centralBankRate)
@@ -509,44 +331,182 @@
                     'value' => $bestBuy,
                     'note' => $holderOf(fn ($row) => $isBestRate((float) $row->buy_rate, $bestBuy)),
                     'hint' => __('rates.buy_hint'),
-                    'tone' => 'text-primary',
+                    'variant' => 'buy',
+                    'badge' => __('rates.summary_best_value'),
                 ],
                 [
                     'label' => __('rates.summary_best_sell'),
                     'value' => $bestSell,
                     'note' => $holderOf(fn ($row) => $isBestRate((float) $row->sell_rate, $bestSell)),
                     'hint' => __('rates.sell_hint'),
-                    'tone' => 'text-accent-red',
+                    'variant' => 'sell',
+                    'badge' => null,
                 ],
                 [
                     'label' => __('rates.summary_average'),
                     'value' => $marketAverage,
                     'note' => trans_choice('rates.summary_across', $organizationCount, ['count' => $organizationCount]),
                     'hint' => __('rates.summary_average_hint'),
-                    'tone' => 'text-ink',
+                    'variant' => 'neutral',
+                    'badge' => null,
                 ],
             ];
         @endphp
 
-        @if ($rowCount > 0)
-                <div class="mt-8 grid grid-cols-3 gap-2 sm:gap-4 md:grid-cols-3">
-                    @foreach ($summaryCards as $card)
-                        <div class="flex min-w-0 flex-col rounded-xl border border-placeholder bg-white p-3 text-center sm:p-4 sm:text-start">
-                            <span class="flex items-center justify-center gap-1.5 sm:justify-start">
-                                <span class="min-w-0 text-[10px] font-semibold tracking-wider break-words text-muted uppercase sm:text-xs">{{ $card['label'] }}</span>
-                                <span class="hidden sm:inline-flex">
-                                    <x-info-popover :label="$card['label']">{{ $card['hint'] }}</x-info-popover>
-                                </span>
-                            </span>
-                            <p class="mt-1 flex items-end justify-center gap-1 whitespace-nowrap sm:justify-start sm:gap-2">
-                                <span class="text-lg font-semibold tracking-tight tabular-nums sm:text-3xl lg:text-4xl {{ $card['tone'] }}">
-                                    {{ number_format((float) $card['value'], 2) }}
-                                </span>
-                                <span class="hidden pb-1.5 text-sm text-muted sm:inline">{{ __('exchange_quotes.request.amd') }}</span>
-                            </p>
+        {{-- FILTER BAR (from the approved redesign): search + labelled selects
+             + open-now / near-me, on one card directly above the table. Same
+             URL wiring as the old menu - every control navigates to a $link
+             that sets its own param and carries the rest. --}}
+        <section class="mt-6 rounded-2xl border border-placeholder bg-white p-3 shadow-sm">
+            <div class="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-stretch">
+                @if ($viewMode !== 'map')
+                    <form method="GET" action="{{ route('rates.index') }}" class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-placeholder px-4 xl:min-w-[15rem]">
+                        @foreach (['currency', 'type', 'org_type', 'organization', 'city', 'lat', 'lng', 'intent', 'amount', 'sort', 'dir', 'open'] as $carried)
+                            @php $value = $carried === 'currency' ? $selectedCurrency?->code : ($baseParams[$carried] ?? null); @endphp
+                            @if (! empty($value))<input type="hidden" name="{{ $carried }}" value="{{ $value }}">@endif
+                        @endforeach
+                        <label for="q" class="sr-only">{{ __('rates.search_label') }}</label>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-muted" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+                        </svg>
+                        <input
+                            type="search" name="q" id="q" value="{{ $search }}"
+                            placeholder="{{ __('rates.search_placeholder') }}" autocomplete="off"
+                            @input.debounce.350ms="if ($el.value.trim().length >= 3 || $el.value.trim() === '') $el.form.requestSubmit()"
+                            @search="$el.form.requestSubmit()"
+                            class="h-14 w-full min-w-0 bg-transparent text-sm text-ink outline-none"
+                        >
+                        <button type="submit" class="sr-only">{{ __('rates.search_label') }}</button>
+                    </form>
+                @endif
 
-                            <p class="mt-1 hidden truncate text-sm text-muted sm:block" title="{{ $card['note'] }}">{{ $card['note'] }}</p>
-                        </div>
+                @if ($orgTypes->count() > 1)
+                    <x-rates.filter-select
+                        :label="__('rates.market_label')"
+                        :options="[
+                            ['label' => __('rates.market_all'), 'href' => $link(['org_type' => null, 'organization' => null]), 'selected' => $selectedOrgType === null],
+                            ...$orgTypes->map(fn ($orgType) => [
+                                'label' => __('rates.markets.' . $orgType),
+                                'href' => $link(['org_type' => $orgType, 'organization' => null]),
+                                'selected' => $selectedOrgType === $orgType,
+                            ])->all(),
+                        ]"
+                    />
+                @endif
+
+                @if (collect($availableTypes)->isNotEmpty())
+                    <x-rates.filter-select
+                        :label="__('rates.type_label')"
+                        :options="collect($availableTypes)->map(fn ($typeValue) => [
+                            'label' => __('organizations.rate_types.' . $typeValue),
+                            'href' => $link(['type' => $typeValue]),
+                            'selected' => $selectedType->value === $typeValue,
+                        ])->all()"
+                    />
+                @endif
+
+                @if ($selectedOrgType !== null && $organizations->isNotEmpty())
+                    <x-rates.filter-select
+                        :label="__('rates.filter_org.' . $selectedOrgType)"
+                        :options="[
+                            ['label' => __('rates.filter_org_all.' . $selectedOrgType), 'href' => $link(['organization' => null]), 'selected' => $selectedOrganization === null],
+                            ...$organizations->map(fn ($organization) => [
+                                'label' => $organization->name,
+                                'href' => $link(['organization' => $organization->slug]),
+                                'selected' => $selectedOrganization?->id === $organization->id,
+                            ])->all(),
+                        ]"
+                    />
+                @endif
+
+                @if ($cities->isNotEmpty())
+                    <x-rates.filter-select
+                        :label="__('rates.filter_city')"
+                        :options="[
+                            ['label' => __('rates.filter_city_all'), 'href' => $link(['city' => null]), 'selected' => $selectedCity === null],
+                            ...$cities->map(fn ($city) => [
+                                'label' => $city,
+                                'href' => $link(['city' => $city]),
+                                'selected' => $selectedCity === $city,
+                            ])->all(),
+                        ]"
+                    />
+                @endif
+
+                <div class="flex flex-wrap items-center gap-2 xl:ms-auto">
+                    <a
+                        href="{{ $link(['open' => $openNow ? null : 1]) }}"
+                        aria-pressed="{{ $openNow ? 'true' : 'false' }}"
+                        class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-semibold transition {{ $openNow ? 'border-primary/50 bg-primary/10 text-ink' : 'border-placeholder bg-white text-muted hover:border-border-muted hover:text-ink' }}"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+                        </svg>
+                        {{ __('rates.open_now') }}
+                    </a>
+
+                    <div x-data="{
+                            state: 'idle',
+                            findNearby() {
+                                if (!navigator.geolocation) { this.state = 'error'; return; }
+                                this.state = 'locating';
+                                navigator.geolocation.getCurrentPosition(
+                                    (position) => {
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set('lat', position.coords.latitude);
+                                        url.searchParams.set('lng', position.coords.longitude);
+                                        url.searchParams.set('sort', 'distance');
+                                        url.searchParams.set('direction', 'asc');
+                                        window.dispatchEvent(new CustomEvent('rates:navigate', { detail: url.toString() }));
+                                    },
+                                    () => { this.state = 'error'; },
+                                );
+                            },
+                        }">
+                        @if ($hasLocation)
+                            <a
+                                href="{{ $link(['lat' => null, 'lng' => null, 'sort' => null, 'dir' => null]) }}"
+                                class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-primary/50 bg-primary/10 px-4 py-2 text-sm font-semibold text-ink"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true">
+                                    <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0" /><circle cx="12" cy="10" r="3" />
+                                </svg>
+                                {{ __('rates.nearby_active') }}
+                                <span aria-hidden="true" class="text-muted">&times;</span>
+                            </a>
+                        @else
+                            <button
+                                type="button" @click="findNearby()" :disabled="state === 'locating'"
+                                class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-placeholder bg-white px-4 py-2 text-sm font-semibold text-muted transition hover:border-border-muted hover:text-ink disabled:opacity-60"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-accent-red" aria-hidden="true">
+                                    <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0" /><circle cx="12" cy="10" r="3" />
+                                </svg>
+                                <span x-show="state !== 'locating'">{{ __('rates.find_nearby') }}</span>
+                                <span x-show="state === 'locating'" x-cloak>{{ __('rates.locating') }}</span>
+                            </button>
+                            <p x-show="state === 'error'" x-cloak class="mt-1 text-xs text-red-600">{{ __('rates.location_error') }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            @if ($search !== '')
+                <a href="{{ $link(['q' => null]) }}" class="mt-2 inline-block px-1 text-xs text-muted underline hover:text-ink">{{ __('rates.search_clear') }}</a>
+            @endif
+        </section>
+
+        @if ($rowCount > 0)
+                <div class="mt-8 grid gap-4 md:grid-cols-3">
+                    @foreach ($summaryCards as $card)
+                        <x-rates.summary-card
+                            :label="$card['label']"
+                            :value="$card['value']"
+                            :note="$card['note']"
+                            :hint="$card['hint']"
+                            :variant="$card['variant']"
+                            :badge="$card['badge']"
+                        />
                     @endforeach
                 </div>
                 <p class="mt-3">
@@ -903,11 +863,11 @@
 
                 <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
                     @if ($search !== '')
-                        <a href="{{ $link(['q' => null]) }}" class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
+                        <a href="{{ $link(['q' => null]) }}" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]">
                             {{ __('rates.search_clear') }}
                         </a>
                     @elseif ($suggestedType)
-                        <a href="{{ $link(['type' => $suggestedType]) }}" class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark">
+                        <a href="{{ $link(['type' => $suggestedType]) }}" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]">
                             {{ __('rates.try_other_type', ['type' => __('organizations.rate_types.' . $suggestedType)]) }}
                         </a>
                     @endif

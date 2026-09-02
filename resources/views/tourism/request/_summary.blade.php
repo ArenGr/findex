@@ -1,7 +1,9 @@
 @php
     // Every row derives from the same Alpine state the form submits - see
     // resources/js/travel-request-form.js. Nothing here holds its own copy,
-    // so the summary cannot drift from what is about to be sent.
+    // so the summary cannot drift from what is about to be sent. In the
+    // stepped flow this panel is read-only: consent and the submit button
+    // live on the final "Review & send" step, not here.
     $rows = [
         ['label' => __('tourism.request.summary_destination'), 'value' => 'destinationSummary'],
         ['label' => __('tourism.request.summary_dates'), 'value' => 'datesSummary'],
@@ -13,12 +15,26 @@
     ];
 @endphp
 
-<div id="travel-request-summary" class="scroll-mt-24 rounded-xl border border-travel-primary/20 bg-surface-alt p-5 sm:p-6 md:sticky md:top-24">
-    <h2 class="mb-4 border-b border-border-subtle pb-4 text-headline-md text-on-surface">
-        {{ __('tourism.request.summary_heading_request') }}
-    </h2>
+<div
+    id="travel-request-summary"
+    class="scroll-mt-24 rounded-[15px] border border-border-subtle bg-white p-5 shadow-[0_3px_14px_rgba(24,29,18,0.035)] md:sticky md:top-5"
+>
+    <div class="mb-4 flex items-start justify-between gap-2 border-b border-border-subtle pb-4">
+        <div class="min-w-0">
+            <h2 class="text-headline-sm font-semibold text-on-surface">{{ __('tourism.request.summary_heading_request') }}</h2>
+            <p class="mt-1 text-[13px] leading-5 text-ink-muted">{{ __('tourism.request.summary_live') }}</p>
+        </div>
+        <button type="button" x-show="step > 1" x-cloak @click="goToStep(1)" class="shrink-0 text-[13px] font-medium text-travel-primary hover:underline focus-visible:ring-2 focus-visible:ring-travel-primary/40 focus-visible:outline-none">
+            {{ __('tourism.request.summary_edit') }}
+        </button>
+    </div>
 
-    <dl class="mb-6 flex flex-col gap-3">
+    <div x-show="hasItinerary" x-cloak class="mb-5 rounded-lg border border-travel-primary/15 bg-travel-primary/5 p-4">
+        <p class="text-body-md font-semibold text-on-surface" x-text="itineraryRoute"></p>
+        <p class="mt-1 text-body-sm text-ink-muted" x-text="itineraryMeta"></p>
+    </div>
+
+    <dl class="flex flex-col gap-3">
         @foreach ($rows as $row)
             <div class="flex justify-between gap-3 text-body-sm">
                 <dt class="shrink-0 text-ink-muted">{{ $row['label'] }}</dt>
@@ -38,39 +54,4 @@
             </dd>
         </div>
     </dl>
-
-    <button
-        type="submit"
-        class="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-travel-primary px-6 py-4 text-label-caps font-bold text-white transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-travel-primary/40 focus-visible:outline-none"
-    >
-        {{ __('tourism.request.submit_offers') }}
-        <x-travel-icon name="arrow_forward" class="h-[18px] w-[18px]" />
-    </button>
-
-    <div class="mb-6 flex flex-col items-center gap-1">
-        <p class="text-label-caps text-ink-muted">{{ __('tourism.request.free_no_commitment') }}</p>
-        <p class="flex items-center gap-1 text-center text-label-caps text-ink-muted">
-            <x-travel-icon name="lock" class="h-3.5 w-3.5 shrink-0" />
-            {{ __('tourism.request.shared_with_agencies') }}
-        </p>
-    </div>
-
-    {{-- Consent isn't in the design, which assumes it handled elsewhere -
-         but the trip details are about to be sent to third-party agencies,
-         so it is asked for here, next to the action that does it. --}}
-    <label class="mb-4 flex items-start gap-2 text-body-sm text-on-surface">
-        <input type="checkbox" name="consent" value="1" required class="mt-1 h-4 w-4 shrink-0 rounded border-border-subtle text-travel-primary focus:ring-travel-primary">
-        <span>{{ __('tourism.request.consent') }}</span>
-    </label>
-    @error('consent')
-        <p class="mb-4 text-body-sm text-error">{{ $message }}</p>
-    @enderror
-
-    <div class="rounded-lg border border-travel-primary/10 bg-travel-primary/5 p-4">
-        <h3 class="mb-2 flex items-center gap-2 text-label-caps font-bold text-on-surface">
-            <x-travel-icon name="info" class="h-4 w-4 text-travel-primary" />
-            {{ __('tourism.request.next_heading') }}
-        </h3>
-        <p class="text-body-sm leading-relaxed text-ink-muted">{{ __('tourism.request.next_body') }}</p>
-    </div>
 </div>

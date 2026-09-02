@@ -11,14 +11,14 @@
     ];
 @endphp
 
-{{-- The one card on a tinted surface, per the design - it is the question
-     agencies most need answered, so it is set apart from the plain white
-     cards around it. --}}
-<section class="rounded-xl border border-border-subtle bg-travel-primary/5 p-5 sm:p-8">
+{{-- A plain white card like the rest; the question is set apart by its
+     content and the live cap counter rather than a tinted surface. --}}
+<section class="{{ $card }}">
     <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-3">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-travel-primary/10">
-                <x-travel-icon name="star" class="h-5 w-5 text-travel-primary" />
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-primary/10 transition-colors" :class="prioritiesComplete && '!bg-travel-primary'">
+                <x-travel-icon name="check" class="h-[18px] w-[18px] text-white" x-show="prioritiesComplete" x-cloak />
+                <x-travel-icon name="star" class="h-[18px] w-[18px] text-travel-primary" x-show="!prioritiesComplete" />
             </span>
             <h2 class="text-headline-md" id="priorities-label">{{ __('tourism.request.priorities_label') }}</h2>
         </div>
@@ -26,7 +26,7 @@
         {{-- Live so the cap is visible as it is approached, rather than only
              announcing itself by refusing a fourth click. --}}
         <span
-            class="text-body-sm font-medium text-travel-primary"
+            class="rounded-full bg-travel-primary/10 px-2.5 py-1 text-label-caps font-medium text-travel-primary"
             aria-live="polite"
             x-text="@js(__('tourism.request.priorities_counter', ['count' => ':c', 'max' => ':m']))
                 .replace(':c', priorities.length)

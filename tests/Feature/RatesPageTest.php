@@ -333,8 +333,8 @@ class RatesPageTest extends TestCase
         // Derived from the page rather than hard-coded: every link that
         // changes bank or city has to carry the coordinates, so adding another
         // one cannot quietly satisfy this by leaving them out.
-        preg_match_all('/href="([^"]*city=[^"]*)"/', $html, $cityLinks);
-        preg_match_all('/href="([^"]*organization=[^"]*)"/', $html, $bankLinks);
+        preg_match_all('/(?:href|value)="([^"]*city=[^"]*)"/', $html, $cityLinks);
+        preg_match_all('/(?:href|value)="([^"]*organization=[^"]*)"/', $html, $bankLinks);
 
         $this->assertNotEmpty($cityLinks[1], 'precondition: the panel offers city links');
         $this->assertNotEmpty($bankLinks[1], 'precondition: the panel offers bank links');
@@ -781,13 +781,13 @@ class RatesPageTest extends TestCase
         $this->assertSame(0, $this->get('/en/rates?currency=USD&open=1')->viewData('ranked')['count']);
     }
 
-    /** It narrows the table, so it has to show up in the badge. */
-    public function test_open_now_counts_as_an_active_filter(): void
+    /** The always-visible bar signals an active filter on the control itself. */
+    public function test_the_open_now_toggle_reflects_whether_it_is_active(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Filters (');
-        $this->get('/en/rates?currency=USD&open=1')->assertOk()->assertSee('Filters (1)');
+        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('aria-pressed="false"', false);
+        $this->get('/en/rates?currency=USD&open=1')->assertOk()->assertSee('aria-pressed="true"', false);
     }
 
     /** Scraped numbers, so the page says what that means for trusting them. */
@@ -801,16 +801,15 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * On a phone the filter panel is a bottom sheet, and it confirms with the
-     * result rather than a bare "Done" - the table is behind the sheet, so the
-     * count is the only way to see what the choices did before closing it.
+     * The filters sit on one always-visible bar now (no bottom sheet), so the
+     * guarantee that matters is simply that choosing one narrows the table.
      */
-    public function test_the_filter_sheet_confirms_with_the_number_of_results(): void
+    public function test_filtering_narrows_the_table(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Show 3 rates');
-        $this->get('/en/rates?currency=USD&org_type=exchange')->assertOk()->assertSee('Show 1 rate');
+        $this->assertSame(3, $this->get('/en/rates?currency=USD')->viewData('ranked')['count']);
+        $this->assertSame(1, $this->get('/en/rates?currency=USD&org_type=exchange')->viewData('ranked')['count']);
     }
 
     /**
@@ -1192,25 +1191,22 @@ class RatesPageTest extends TestCase
     }
 
     /**
-     * A page called "All Exchange Rates" that shows no rates until you scroll
-     * is answering the wrong question first. Currency is the only control with
-     * no sensible default, so it is the only one on sight; the rest sit behind
-     * a button that counts what has moved off its default, which is the only
-     * sign on the page that the table has been narrowed.
+     * The filters are all on the always-visible bar now, so a narrowed table
+     * is signalled on the controls themselves: the matching option carries the
+     * `selected` attribute and its URL still names the active filter.
      */
-    public function test_the_filter_button_counts_what_is_narrowing_the_table(): void
+    public function test_the_filter_bar_reflects_a_non_default_selection(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')
+        $html = $this->get('/en/rates?currency=USD&org_type=exchange')
             ->assertOk()
-            ->assertSee('Filters')
-            // No count when nothing has moved off its default.
-            ->assertDontSee('Filters (');
+            ->getContent();
 
-        $this->get('/en/rates?currency=USD&org_type=exchange&organization=corner-exchange')
-            ->assertOk()
-            ->assertSee('Filters (2)');
+        $this->assertMatchesRegularExpression(
+            '/<option value="[^"]*org_type=exchange[^"]*" selected/',
+            $html,
+        );
     }
 
     /**

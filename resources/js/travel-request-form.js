@@ -16,6 +16,7 @@ export default function travelRequestForm(config) {
         labels: config.labels,
 
         // Trip
+        departure: config.departure,
         destinations: config.destinations,
         openToSuggestions: config.openToSuggestions,
         maxDestinations: config.maxDestinations,
@@ -50,11 +51,80 @@ export default function travelRequestForm(config) {
 
         mobileSummaryOpen: false,
 
+        // Multi-step wizard. The form stays a single POST - these only govern
+        // which fields are on screen. initialStep lets a failed submission
+        // reopen the step whose field the server rejected.
+        step: config.initialStep || 1,
+        totalSteps: 3,
+        consented: config.consented,
+
         init() {
             // A children count restored from old() can arrive without a
             // matching set of ages (or with too many); the form must always
             // render exactly one age field per child.
             this.syncChildAges();
+        },
+
+        /* ---------------------------------------------------------------
+         * Wizard navigation
+         * ------------------------------------------------------------- */
+
+        goToStep(n) {
+            this.step = Math.min(this.totalSteps, Math.max(1, n));
+            this.scrollToTop();
+        },
+
+        /** Advances only if the current step's own required fields are valid,
+         *  so a step is never left half-answered. The form itself is novalidate
+         *  and the server is the real gate; this is a courtesy check. */
+        next() {
+            if (!this.validateStep(this.step)) {
+                return;
+            }
+
+            this.goToStep(this.step + 1);
+        },
+
+        back() {
+            this.goToStep(this.step - 1);
+        },
+
+        validateStep(n) {
+            const panel = document.querySelector(`[data-step="${n}"]`);
+
+            if (!panel) {
+                return true;
+            }
+
+            for (const control of panel.querySelectorAll('input, select, textarea')) {
+                if (control.disabled || control.type === 'hidden') {
+                    continue;
+                }
+
+                if (!control.checkValidity()) {
+                    control.reportValidity();
+
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+        scrollToTop() {
+            const anchor = document.getElementById('travel-form-top');
+
+            if (anchor) {
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        },
+
+        /** Whether a step is far enough along to show a tick in the stepper. */
+        stepDone(n) {
+            if (n === 1) return this.tripComplete;
+            if (n === 2) return this.preferencesComplete && this.budgetComplete;
+
+            return false;
         },
 
         /* ---------------------------------------------------------------
@@ -257,6 +327,79 @@ export default function travelRequestForm(config) {
             }
 
             return this.budgetBand ? this.labels.budget[this.budgetBand] : this.labels.notSet;
+        },
+
+        /* ---------------------------------------------------------------
+         * Section completion - drives the tick that appears in a section's
+         * icon once it holds enough to be useful to an agency.
+         * ------------------------------------------------------------- */
+
+        get tripComplete() {
+            return Boolean(
+                (this.departure || '').trim() &&
+                    (this.destinations.length || this.openToSuggestions) &&
+                    this.checkIn &&
+                    this.checkOut,
+            );
+        },
+
+        get preferencesComplete() {
+            return Boolean(this.flightPreference && this.hotelPreference && this.mealPreference);
+        },
+
+        get prioritiesComplete() {
+            return this.priorities.length > 0;
+        },
+
+        get budgetComplete() {
+            return Boolean(this.budgetBand) || this.usingCustomBudget;
+        },
+
+        /* ---------------------------------------------------------------
+         * Itinerary - the headline version shown once a trip takes shape
+         * ------------------------------------------------------------- */
+
+        /** True once anything worth summarising has been entered. */
+        get hasItinerary() {
+            return Boolean(
+                (this.departure || '').trim() ||
+                    this.destinations.length ||
+                    this.openToSuggestions ||
+                    (this.checkIn && this.checkOut),
+            );
+        },
+
+        /** "Yerevan → Dubai" (or whichever half exists). */
+        get itineraryRoute() {
+            const to = this.destinations.length
+                ? this.destinations.map((code) => this.countryName(code)).join(', ')
+                : this.openToSuggestions
+                  ? this.labels.openToSuggestions
+                  : '';
+            const from = (this.departure || '').trim();
+
+            if (from && to) {
+                return `${from} → ${to}`;
+            }
+
+            return from || to || '';
+        },
+
+        /** "Sep 14 – Sep 21 · 7 nights · 2 adults" - the meta beneath the route. */
+        get itineraryMeta() {
+            const parts = [];
+
+            if (this.checkIn && this.checkOut) {
+                parts.push(this.datesSummary);
+
+                if (this.nights) {
+                    parts.push(`${this.nights} ${this.labels.nights}`);
+                }
+            }
+
+            parts.push(this.travellersSummary);
+
+            return parts.join(' · ');
         },
 
         /** The one-line version for the mobile bar - destination, dates, party size. */

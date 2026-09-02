@@ -181,12 +181,17 @@ class MortgageScraper
                     [
                         'interest_rate_min' => $rateMin,
                         'interest_rate_max' => $rateMax,
+                        // Optional: only parsers that reach the disclosure
+                        // page set these; the ranker prefers APR when present.
+                        'apr_min' => isset($row['apr_min']) ? (float) $row['apr_min'] : null,
+                        'apr_max' => isset($row['apr_max']) ? (float) $row['apr_max'] : null,
                         'term_min_months' => $row['term_min_months'] ?? null,
                         'term_max_months' => $row['term_max_months'] ?? null,
                         'min_down_payment_percent' => $row['min_down_payment_percent'] ?? null,
                         'min_amount' => $row['min_amount'] ?? null,
                         'max_amount' => $row['max_amount'] ?? null,
                         'source_url' => $sourceUrl,
+                        'source_tier' => $row['source_tier'] ?? 'official_page',
                         'scraped_at' => now(),
                     ]
                 );

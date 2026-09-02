@@ -99,7 +99,7 @@ class TravelRequestBriefTest extends TestCase
     {
         $response = $this->get(route('tourism.request', ['locale' => 'en']))->assertOk();
 
-        foreach (['font-manrope', 'bg-surface-alt', 'border-border-subtle', 'text-ink-muted', 'text-headline-md'] as $class) {
+        foreach (['font-manrope', 'text-travel-primary', 'border-border-subtle', 'text-ink-muted', 'text-headline-md'] as $class) {
             $this->assertStringContainsString($class, $response->getContent());
         }
 

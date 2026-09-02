@@ -92,7 +92,7 @@ return [
     'more_filters' => 'Фильтры',
     'all_stale_notice' => 'Эти курсы старше одного дня.',
     'try_other_type' => 'Показать курсы :type',
-    'all_heading' => 'Все Курсы Обмена Валют',
+    'all_heading' => 'Курсы Обмена Валют',
     'all_subheading' => 'Все курсы, которые мы отслеживаем, обновляются по мере публикации банками новых данных. Фильтруйте и сортируйте, чтобы найти лучший вариант.',
     'filter_org' => [
         'bank' => 'Банк',
@@ -116,6 +116,7 @@ return [
     'distance_km' => ':km км',
     'spread_column' => 'Спред',
     'summary_best_buy' => 'Лучший курс покупки',
+    'summary_best_value' => 'Лучшее значение',
     'summary_best_sell' => 'Лучший курс продажи',
     'summary_average' => 'Среднее по рынку',
     'above_average' => 'Вы получаете на :amount :currency больше, чем в среднем по рынку.',

@@ -92,7 +92,7 @@ return [
     'more_filters' => 'Filters',
     'all_stale_notice' => 'These rates are more than a day old.',
     'try_other_type' => 'Show :type rates instead',
-    'all_heading' => 'All Exchange Rates',
+    'all_heading' => 'Exchange Rates',
     'all_subheading' => 'Every rate we track, updated as banks publish new ones. Filter and sort to find the best deal.',
     'filter_org' => [
         'bank' => 'Bank',
@@ -116,6 +116,7 @@ return [
     'distance_km' => ':km km',
     'spread_column' => 'Spread',
     'summary_best_buy' => 'Best buy rate',
+    'summary_best_value' => 'Best value',
     'summary_best_sell' => 'Best sell rate',
     'summary_average' => 'Market average',
     'above_average' => 'You get :amount :currency more than the market average.',

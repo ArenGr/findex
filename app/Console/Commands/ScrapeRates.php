@@ -40,10 +40,22 @@ class ScrapeRates extends Command
                 return self::FAILURE;
             }
         } else {
-            $organizations = Organization::active()->get();
+            // Only organizations that actually have an active source of this
+            // type. Without this the command tried every active org - so once
+            // non-bank types existed (insurers, which carry no currency_rates
+            // source), each one failed with "Source 'currency_rates' not
+            // found" and inflated the failure count. Scoping by the source
+            // itself is more robust than a hardcoded type == 'bank': it is
+            // correct for branches/mortgages too, and stays correct if an
+            // exchange office ever starts publishing rates.
+            $organizations = Organization::active()
+                ->whereHas('sources', fn ($query) => $query
+                    ->where('source_type', $sourceType)
+                    ->where('is_active', true))
+                ->get();
 
             if ($organizations->isEmpty()) {
-                $this->error('No active organizations found.');
+                $this->error("No active organizations have an active '{$sourceType}' source.");
 
                 return self::FAILURE;
             }
