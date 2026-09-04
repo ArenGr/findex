@@ -5,7 +5,7 @@
 @section('content')
     <div class="flex items-center justify-between">
         <h1 class="font-heading text-xl font-semibold text-ink">{{ __('org.reports.title') }}</h1>
-        <a href="{{ route('org.dashboard.reports.create') }}" class="bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-dark">
+        <a href="{{ route('org.dashboard.reports.create') }}" class="btn btn-primary">
             {{ __('org.reports.request') }}
         </a>
     </div>

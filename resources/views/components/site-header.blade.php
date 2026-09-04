@@ -92,7 +92,7 @@
 @endphp
 
 <header x-data="{ mobileOpen: false }" class="border-b border-placeholder">
-    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 lg:px-10">
+    <div class="site-container flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-5">
         <a href="{{ route('home') }}" class="shrink-0 font-logo text-2xl text-primary">
             Findex
         </a>
@@ -238,7 +238,8 @@
 
             @auth
                 <div x-data="{ open: false }" class="relative hidden sm:block" @click.outside="open = false">
-                    <button type="button" @click="open = !open" class="flex items-center gap-1 text-sm text-ink hover:text-primary" :aria-expanded="open">
+                    <button type="button" @click="open = !open" class="flex items-center gap-2 text-sm text-ink hover:text-primary" :aria-expanded="open">
+                        <x-user-avatar :user="auth()->user()" />
                         {{ auth()->user()->name }}
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8" class="h-2 w-3 fill-none stroke-current" :class="{ 'rotate-180': open }">
                             <path d="M1 1.5 6 6.5 11 1.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -265,7 +266,7 @@
 
                 <a
                     href="{{ route('register') }}"
-                    class="hidden border border-ink px-6 py-3 text-sm text-ink transition hover:bg-ink hover:text-white sm:block"
+                    class="btn btn-secondary hidden sm:block"
                 >
                     {{ __('common.register') }}
                 </a>
@@ -394,18 +395,21 @@
 
             <div class="mt-2 flex flex-wrap items-center gap-4 border-t border-placeholder pt-4">
                 @auth
-                    <span class="text-ink">{{ auth()->user()->name }}</span>
+                    <span class="inline-flex items-center gap-2 text-ink">
+                        <x-user-avatar :user="auth()->user()" />
+                        {{ auth()->user()->name }}
+                    </span>
                     <a href="{{ route('tourism.mine') }}" class="text-ink hover:text-primary">{{ __('tourism.mine.nav_label') }}</a>
                     <a href="{{ route('alerts.index') }}" class="text-ink hover:text-primary">{{ __('alerts.heading') }}</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="border border-ink px-5 py-2.5 text-ink hover:bg-ink hover:text-white">
+                        <button type="submit" class="btn btn-secondary">
                             {{ __('common.logout') }}
                         </button>
                     </form>
                 @else
                     <a href="{{ route('login') }}" class="text-ink hover:text-primary">{{ __('common.login') }}</a>
-                    <a href="{{ route('register') }}" class="border border-ink px-5 py-2.5 text-ink hover:bg-ink hover:text-white">{{ __('common.register') }}</a>
+                    <a href="{{ route('register') }}" class="btn btn-secondary">{{ __('common.register') }}</a>
                 @endauth
             </div>
         </nav>

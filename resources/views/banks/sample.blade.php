@@ -82,7 +82,7 @@
         <div class="mt-8 rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center sm:p-8">
             <h2 class="font-heading text-lg font-semibold text-ink">{{ __('bank_products.cta_heading') }}</h2>
             <p class="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted">{{ __('bank_products.cta_body') }}</p>
-            <a href="{{ route('contact') }}" class="mt-5 inline-block bg-primary px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-primary-dark">
+            <a href="{{ route('contact') }}" class="btn btn-primary mt-5 inline-block">
                 {{ __('bank_products.cta_button') }}
             </a>
         </div>

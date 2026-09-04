@@ -25,7 +25,11 @@
                             : 'border-border-subtle bg-white text-on-surface hover:border-outline'"
                         class="flex items-center gap-2 rounded-full border px-4 py-2.5 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-travel-primary/40 focus-visible:outline-none"
                     >
-                        <x-travel-icon name="check" class="h-[16px] w-[16px] shrink-0" x-show="budgetBand === @js($value)" x-cloak />
+                        {{-- Js::from spelled out rather than @js: Blade does not
+                             compile directives inside a component's attribute
+                             (lines 21-23 above are on a plain <button>, where it
+                             does), so this reached Alpine verbatim and threw. --}}
+                        <x-travel-icon name="check" class="h-[16px] w-[16px] shrink-0" x-show="budgetBand === {{ Illuminate\Support\Js::from($value) }}" x-cloak />
                         {{ $optionLabel }}
                     </button>
                 @endforeach

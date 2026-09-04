@@ -9,7 +9,7 @@
         <p class="mt-3 max-w-2xl text-base leading-relaxed break-words text-muted">{{ __('api.tagline') }}</p>
 
         <div class="mt-6 flex flex-wrap gap-3">
-            <a href="{{ route('api.keys.index') }}" class="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark">
+            <a href="{{ route('api.keys.index') }}" class="btn btn-primary break-words">
                 {{ __('api.get_key') }}
             </a>
         </div>

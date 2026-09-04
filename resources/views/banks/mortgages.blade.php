@@ -3,15 +3,20 @@
 @section('title', __('offers.categories.mortgages.title') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <a href="{{ route('banks.index') }}" class="text-sm font-medium text-primary hover:underline">
-            &larr; {{ __('offers.back_to_all') }}
-        </a>
+    <x-page-hero
+        :title="__('offers.categories.mortgages.title')"
+        :subtitle="__('offers.categories.mortgages.body')"
+    >
+        <x-slot:eyebrow>
+            <a href="{{ route('banks.index') }}" class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition hover:bg-primary/15">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                {{ __('offers.back_to_all') }}
+            </a>
+        </x-slot:eyebrow>
+        <x-slot:illustration><x-hero-art.banking /></x-slot:illustration>
+    </x-page-hero>
 
-        <h1 class="mt-4 font-heading text-2xl font-bold text-ink lg:text-3xl">
-            {{ __('offers.categories.mortgages.title') }}
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('offers.categories.mortgages.body') }}</p>
+    <section class="site-container pt-10 pb-16">
 
         {{-- Tier 1 - market context. A headline benchmark and a
              product-by-product overview, so a single bank's rate can be read

@@ -93,7 +93,7 @@
                     @elseif ($offer->is_selectable && $quoteRequest->is_open)
                         <form method="POST" action="{{ $quoteRequest->signedUrlFor('tourism.offers.select', ['suggestion' => $offer->id]) }}" class="mt-5">
                             @csrf
-                            <button type="submit" class="w-full bg-primary px-5 py-3 text-sm font-medium text-white transition hover:bg-primary-dark">
+                            <button type="submit" class="btn btn-primary w-full">
                                 {{ __('tourism.offer.choose') }}
                             </button>
                         </form>

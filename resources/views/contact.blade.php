@@ -5,13 +5,13 @@
 
 @section('content')
     {{--
-        Outer section matches the home page's max-w-7xl. Unlike the other
+        Outer section matches the home page's column. Unlike the other
         static pages (faq/careers/team/company-news), the intro paragraph
         is the only part kept in a narrower inner wrapper - the channel
         grid below is genuine multi-column content that benefits from the
         extra width instead of just padding it out with margin.
     --}}
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <div class="mx-auto max-w-3xl">
             <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('contact.heading') }}</h1>
             <p class="mt-4 text-base leading-relaxed text-muted">{{ __('contact.intro') }}</p>
@@ -32,7 +32,7 @@
         <div class="mt-8 rounded-2xl bg-primary/5 p-6">
             <h2 class="font-heading text-base font-semibold text-ink">{{ __('contact.business_heading') }}</h2>
             <p class="mt-2 text-sm leading-relaxed text-body-text">{{ __('contact.business_body') }}</p>
-            <a href="{{ route('org.register') }}" class="mt-4 inline-block bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark">
+            <a href="{{ route('org.register') }}" class="btn btn-primary mt-4 inline-block">
                 {{ __('contact.business_link') }}
             </a>
         </div>

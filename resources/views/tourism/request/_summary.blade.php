@@ -15,6 +15,8 @@
     ];
 @endphp
 
+{{-- What you have told us so far. Sticky on desktop, so it is still there
+     when the fields it is summarising have scrolled past. --}}
 <div
     id="travel-request-summary"
     class="scroll-mt-24 rounded-[15px] border border-border-subtle bg-white p-5 shadow-[0_3px_14px_rgba(24,29,18,0.035)] md:sticky md:top-5"

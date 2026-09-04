@@ -16,9 +16,11 @@
 @endphp
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('offers.heading') }}</h1>
-        <p class="mt-4 max-w-2xl text-base leading-relaxed text-muted">{{ __('offers.intro') }}</p>
+    <x-page-hero :title="__('offers.heading')" :subtitle="__('offers.intro')">
+        <x-slot:illustration><x-hero-art.banking /></x-slot:illustration>
+    </x-page-hero>
+
+    <section class="site-container pt-10 pb-16">
 
         <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {{-- Browsing by individual bank (ratings, reviews, contact info)

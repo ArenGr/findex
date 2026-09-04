@@ -60,13 +60,17 @@
                     <x-travel-icon
                         name="check"
                         class="hidden h-[18px] w-[18px] peer-checked:group-[]:inline"
-                        ::class="priorityChosen(@js($value)) ? 'inline' : 'hidden'"
+                        {{-- Js::from spelled out rather than @js: Blade does not
+                             compile directives inside a component's attribute, so
+                             @js reached Alpine verbatim and the expression was a
+                             syntax error. --}}
+                        ::class="priorityChosen({{ Illuminate\Support\Js::from($value) }}) ? 'inline' : 'hidden'"
                     />
                     @isset ($priorityIcons[$value])
                         <x-travel-icon
                             :name="$priorityIcons[$value]"
                             class="h-[18px] w-[18px]"
-                            ::class="priorityChosen(@js($value)) ? 'hidden' : 'inline'"
+                            ::class="priorityChosen({{ Illuminate\Support\Js::from($value) }}) ? 'hidden' : 'inline'"
                         />
                     @endisset
                     {{ $optionLabel }}

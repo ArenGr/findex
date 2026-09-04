@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "check:layout-shift": "node tools/check-layout-shift.mjs",
+    "fonts:fallbacks": "node tools/generate-font-fallbacks.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

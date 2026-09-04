@@ -29,10 +29,10 @@
                         id="body-{{ $review->id }}"
                         rows="3"
                         placeholder="{{ __('org.reviews.reply_placeholder') }}"
-                        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                        class="field mt-1.5"
                     >{{ old('body', $review->reply->body ?? '') }}</textarea>
 
-                    <button type="submit" class="mt-3 bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-dark">
+                    <button type="submit" class="btn btn-primary mt-3">
                         {{ $review->reply ? __('org.reviews.update_reply_button') : __('org.reviews.reply_button') }}
                     </button>
                 </form>

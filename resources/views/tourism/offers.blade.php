@@ -164,7 +164,7 @@
                             </div>
 
                             <div class="flex flex-col gap-2">
-                                <a href="{{ $detailUrl }}" class="bg-primary px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-primary-dark">
+                                <a href="{{ $detailUrl }}" class="btn btn-primary text-center">
                                     {{ __('tourism.offers.view_details') }}
                                 </a>
 
@@ -198,7 +198,7 @@
                 <div class="rounded-2xl border border-dashed border-placeholder p-10 text-center">
                     @if ($pending->isEmpty())
                         <p class="text-sm text-muted">{{ __('tourism.offers.empty_no_agencies') }}</p>
-                        <a href="{{ route('tourism.request') }}" class="mt-4 inline-block bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark">
+                        <a href="{{ route('tourism.request') }}" class="btn btn-primary mt-4 inline-block">
                             {{ __('tourism.mine.new_request') }}
                         </a>
                     @else
@@ -245,7 +245,7 @@
                 <button type="button" @click="selected = []" class="text-xs font-medium text-subtle hover:text-ink">
                     {{ __('tourism.results.compare_bar_clear') }}
                 </button>
-                <a :href="compareUrl" class="bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark">
+                <a :href="compareUrl" class="btn btn-primary">
                     {{ __('tourism.results.compare_bar_button') }}
                 </a>
             </div>

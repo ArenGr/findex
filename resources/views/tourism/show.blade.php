@@ -188,7 +188,7 @@
                     @if ($quoteRequest->offers_count > 0)
                         <a
                             href="{{ $offersUrl }}"
-                            class="mt-6 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark"
+                            class="btn btn-primary mt-6"
                         >
                             {{ __('tourism.status_page.view_offers', ['count' => $quoteRequest->offers_count]) }}
                             <span aria-hidden="true">&rarr;</span>

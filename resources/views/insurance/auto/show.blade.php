@@ -110,7 +110,7 @@
                     'opacity-70' => $quote->is_declined,
                 ])>
                     @if ($isBest)
-                        <span class="absolute right-0 top-0 rounded-bl-lg bg-primary px-4 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+                        <span class="btn btn-primary absolute right-0 top-0 rounded-bl-lg uppercase tracking-wider">
                             {{ __('auto_insurance.results.best_price_badge') }}
                         </span>
                     @endif
@@ -212,7 +212,7 @@
                     </span>
                     <h2 class="font-heading text-lg font-semibold text-ink">{{ __('auto_insurance.results.empty_heading') }}</h2>
                     <p class="text-sm text-muted">{{ __('auto_insurance.results.empty_body') }}</p>
-                    <a href="{{ route('insurance.auto.request') }}" class="mt-2 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-white transition hover:bg-primary-dark">
+                    <a href="{{ route('insurance.auto.request') }}" class="btn btn-primary mt-2">
                         {{ __('auto_insurance.results.empty_retry') }}
                     </a>
                 </div>

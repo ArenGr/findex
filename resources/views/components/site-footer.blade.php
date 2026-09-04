@@ -44,7 +44,7 @@
 @endphp
 
 <footer class="border-t border-placeholder">
-    <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <div class="site-container py-16">
         <div class="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-12 lg:grid-cols-4">
             <div class="col-span-2 sm:col-span-1">
                 <a href="{{ route('home') }}" class="font-logo text-2xl text-primary">Findex</a>
@@ -52,7 +52,7 @@
                 <p class="mt-6 text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('footer.download_app') }}</p>
                 <a
                     href="#"
-                    class="mt-3 inline-flex items-center gap-2 rounded-md border border-ink px-4 py-2 text-sm text-ink hover:bg-ink hover:text-white"
+                    class="btn btn-secondary mt-3"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 fill-current">
                         <path d="M16.365 1.43c0 1.14-.462 2.06-1.386 2.85-.924.79-1.877 1.24-2.86 1.16-.087-1.09.29-2.03 1.13-2.82.83-.79 1.87-1.19 3.116-1.19zM20.5 17.06c-.5 1.14-.94 1.98-1.63 2.98-.96 1.39-1.9 2.11-2.83 2.13-.72.02-1.19-.19-2.02-.5-.83-.31-1.47-.5-2.53-.5-1.1 0-1.75.19-2.55.5-.83.32-1.28.53-2 .52-.9-.02-1.83-.75-2.79-2.15-1.5-2.19-2.4-4.85-2.42-7.35-.02-1.99.62-3.63 1.9-4.9 1.02-1.02 2.28-1.55 3.68-1.57 1.02-.02 1.98.5 2.83.5.85 0 1.98-.63 3.34-.55.57.02 2.18.23 3.22 1.72-.08.06-1.92 1.13-1.9 3.36.02 2.68 2.35 3.57 2.38 3.58-.02.06-.36 1.24-1.21 2.43z"/>

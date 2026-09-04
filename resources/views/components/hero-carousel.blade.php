@@ -39,23 +39,56 @@
             'href' => route('tourism.request'),
         ],
     ];
+
+    /*
+     * Real pixel dimensions, read from the files rather than written down.
+     *
+     * They were hardcoded as 874x428 - the size of slide-3.jpg, which this
+     * carousel does not even use. The four it does use are 775x431, so every
+     * slide reserved a box 23px too short at phone widths and snapped taller
+     * the moment the image decoded, taking the rest of the page with it.
+     * Reading them means replacing an image cannot reintroduce that.
+     *
+     * getimagesize() only reads the header, and these are four small local
+     * files - cheap next to what the rest of the homepage already does.
+     */
+    foreach ($slides as $i => $slide) {
+        [$width, $height] = getimagesize(public_path('images/hero/'.$slide['photo']));
+        $slides[$i]['width'] = $width;
+        $slides[$i]['height'] = $height;
+    }
 @endphp
 
 <section
     x-data="{ active: 0, total: {{ count($slides) }} }"
     x-init="setInterval(() => active = (active + 1) % total, 6000)"
-    class="mx-auto max-w-7xl px-6 py-16 lg:px-10"
+    class="site-container py-16"
 >
     <div class="lg:flex lg:items-start lg:gap-10">
     <div class="min-w-0 flex-1">
     <div class="relative grid">
         @foreach ($slides as $i => $slide)
             @php($n = $i + 1)
+            {{--
+                Every slide is laid out from the first paint, at opacity 0 for
+                all but the active one. It used to be x-cloak'd instead, which
+                meant the browser sized this grid cell to slide 1 alone until
+                Alpine booted and then re-sized it to the tallest slide - a
+                ~190px jump that shoved the entire page down. The state below
+                is the state Alpine would compute anyway, so nothing moves
+                when it takes over.
+
+                :class uses the object form, not a ternary. A ternary only
+                removes the classes Alpine itself added, so the server-rendered
+                opacity-100 on slide 1 would survive forever and the slide
+                would never fade out. The object form removes whatever it is
+                told is false, wherever it came from.
+            --}}
             <div
+                @if ($i > 0) inert @endif
                 :inert="active !== {{ $i }}"
-                :class="active === {{ $i }} ? 'opacity-100' : 'opacity-0'"
-                @if ($i > 0) x-cloak @endif
-                class="col-start-1 row-start-1 grid grid-cols-1 items-center gap-12 transition-opacity duration-700 ease-in-out lg:grid-cols-2"
+                :class="{ 'opacity-100': active === {{ $i }}, 'opacity-0': active !== {{ $i }} }"
+                class="col-start-1 row-start-1 grid grid-cols-1 items-center gap-12 opacity-{{ $i === 0 ? '100' : '0' }} transition-opacity duration-700 ease-in-out lg:grid-cols-2"
             >
                 {{-- Text column --}}
                 <div>
@@ -87,7 +120,7 @@
                         <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md {{ $slide['button'] }}">
                             {{ __("hero.slides.$n.cta") }}
                         </a>
-                        <a href="{{ route('organizations.compare') }}" class="border border-ink px-6 py-3 text-sm font-medium text-ink transition duration-300 hover:-translate-y-0.5 hover:bg-ink hover:text-white hover:shadow-md">
+                        <a href="{{ route('organizations.compare') }}" class="btn btn-secondary">
                             {{ __('common.compare_banks') }}
                         </a>
                     </div>
@@ -95,14 +128,18 @@
 
                 {{-- Photo column --}}
                 <div class="relative">
-                    <div class="absolute inset-x-6 -bottom-6 -right-6 top-6 rounded-3xl {{ $slide['blob'] }}"></div>
+                    {{-- The overhang has to stay inside the column's padding or
+                         it gives the whole document a horizontal scrollbar: the
+                         container pads 16px on a phone, so a 24px pull escapes
+                         the viewport by 8px. --}}
+                    <div class="absolute inset-x-6 top-6 -right-3 -bottom-6 rounded-3xl sm:-right-6 {{ $slide['blob'] }}"></div>
 
                     <div class="overflow-hidden rounded-3xl shadow-xl">
                         <img
                             src="{{ asset('images/hero/' . $slide['photo']) }}"
                             alt="{{ __("hero.slides.$n.alt") }}"
-                            width="874"
-                            height="428"
+                            width="{{ $slide['width'] }}"
+                            height="{{ $slide['height'] }}"
                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
                             class="h-auto w-full object-cover"
                         >
@@ -114,11 +151,14 @@
         {{-- Dots --}}
         <div class="mt-8 flex items-center gap-2">
             @foreach ($slides as $i => $slide)
+                {{-- Same story as the slides: the width lived only in the
+                     Alpine binding, so every dot painted at zero width and
+                     then popped out to 2/6px once Alpine ran. --}}
                 <button
                     type="button"
                     @click="active = {{ $i }}"
-                    :class="active === {{ $i }} ? '{{ $slide['dot'] }} w-6' : 'bg-border-muted w-2'"
-                    class="h-2 rounded-full transition-all"
+                    :class="{ '{{ $slide['dot'] }} w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
+                    class="h-2 rounded-full transition-all {{ $i === 0 ? $slide['dot'].' w-6' : 'bg-border-muted w-2' }}"
                     aria-label="{{ __('hero.go_to_slide', ['n' => $i + 1]) }}"
                 ></button>
             @endforeach

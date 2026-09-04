@@ -83,7 +83,7 @@
         </div>
 
         <div class="mt-6 flex flex-wrap gap-4">
-            <a href="{{ route('rates.index', ['currency' => $code]) }}" class="inline-flex min-h-11 items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark">
+            <a href="{{ route('rates.index', ['currency' => $code]) }}" class="btn btn-primary break-words">
                 {{ __('rates.landing.compare_all', ['code' => $code]) }}
             </a>
             <a href="{{ route('rates.history', ['currency' => $code]) }}" class="inline-flex min-h-11 items-center text-sm font-medium break-words text-primary hover:underline">

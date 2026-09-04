@@ -3,11 +3,11 @@
 @section('title', __('organizations.directory_heading') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <x-page-hero :title="__('organizations.directory_heading')" :subtitle="__('organizations.directory_subtitle')" />
+
+    <section class="site-container pt-10 pb-16">
         <div class="lg:flex lg:items-start lg:gap-10">
             <div class="min-w-0 flex-1">
-                <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('organizations.directory_heading') }}</h1>
-                <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('organizations.directory_subtitle') }}</p>
 
                 <form method="GET" action="{{ route('organizations.index') }}" class="mt-8 flex gap-2">
                     @if ($activeType)
@@ -20,7 +20,7 @@
                         placeholder="{{ __('organizations.search_placeholder') }}"
                         class="block w-full max-w-sm rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
                     >
-                    <button type="submit" class="shrink-0 bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md">
+                    <button type="submit" class="btn btn-primary shrink-0">
                         {{ __('organizations.search_button') }}
                     </button>
                 </form>

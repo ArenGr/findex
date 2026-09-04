@@ -61,7 +61,7 @@
 
         <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
             <div class="overflow-hidden rounded-2xl border border-placeholder bg-white">
-                <div class="flex flex-col items-center bg-primary px-6 py-8 text-center text-white">
+                <div class="btn btn-primary flex-col text-center">
                     <span class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white text-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8" aria-hidden="true">
                             <path d="m5 13 4 4L19 7" />
@@ -100,7 +100,7 @@
                                     <a
                                         href="https://www.google.com/maps/dir/?api=1&destination={{ $branch->latitude }},{{ $branch->longitude }}"
                                         target="_blank" rel="noopener noreferrer"
-                                        class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
+                                        class="btn btn-primary break-words"
                                     >
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
                                             <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" />
@@ -220,7 +220,7 @@
                             ],
                             'context' => ['rate' => $publicBest ? number_format($publicBest, 2) : null, 'code' => $currency],
                         ]) }} }))"
-                        class="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
+                        class="btn btn-primary break-words"
                     >
                         {{ __('exchange_quotes.offers.try_again') }}
                     </button>
@@ -446,7 +446,7 @@
                         <button type="button" @click="close()" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-border-muted px-5 py-2.5 text-sm font-semibold break-words text-ink transition hover:bg-placeholder/40">
                             {{ __('exchange_quotes.modal.cancel') }}
                         </button>
-                        <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark">
+                        <button type="submit" class="btn btn-primary break-words">
                             {{ __('exchange_quotes.offers.confirm_submit') }}
                         </button>
                     </form>

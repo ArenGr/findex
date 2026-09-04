@@ -16,7 +16,7 @@
         <x-form-input name="buy_rate" type="number" step="0.0001" min="0" :label="__('org.rates.buy')" :value="$rate->buy_rate" required />
         <x-form-input name="sell_rate" type="number" step="0.0001" min="0" :label="__('org.rates.sell')" :value="$rate->sell_rate" required />
 
-        <button type="submit" class="bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+        <button type="submit" class="btn btn-primary">
             {{ __('org.rates.save') }}
         </button>
     </form>

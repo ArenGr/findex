@@ -8,9 +8,8 @@
 ])
 
 @php
-    // Tints derived from Findex brand tokens, not the prototype's raw hexes:
-    // primary green for the best buy, accent-red for the best sell, plain for
-    // the market average.
+    // Tints derived from Findex brand tokens, not raw hexes: primary green for
+    // the best buy, accent-red for the best sell, plain for the market average.
     $tone = ['buy' => 'text-primary', 'sell' => 'text-accent-red', 'neutral' => 'text-ink'][$variant] ?? 'text-ink';
     $tint = [
         'buy' => 'border-primary/20 bg-primary/5',

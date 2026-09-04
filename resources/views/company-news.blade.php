@@ -5,9 +5,9 @@
 
 @section('content')
     {{-- See faq.blade.php for why the outer section matches the home
-    page's max-w-7xl while the actual prose stays in a narrower inner
+    page's own column while the actual prose stays in a narrower inner
     wrapper. --}}
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <div class="mx-auto max-w-3xl">
             <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('company_news.heading') }}</h1>
             <p class="mt-4 text-base leading-relaxed text-muted">{{ __('company_news.intro') }}</p>

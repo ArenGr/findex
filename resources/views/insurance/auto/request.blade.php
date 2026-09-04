@@ -13,46 +13,58 @@
     // stated once rather than per field below.
     $inputClass = 'h-12 w-full rounded-lg border border-border-muted bg-white pl-11 pr-4 text-sm text-ink outline-none transition placeholder:text-subtle/70 hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/15';
     $labelClass = 'mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted';
+
+    // The site's card: rounded-2xl, a light border, shadow-sm - the same one
+    // the home page uses everywhere.
+    $cardClass = 'rounded-2xl border border-placeholder bg-white shadow-sm';
+
+    $iconDisc = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary';
 @endphp
 
 @section('content')
-    {{-- HERO band — same pattern as the rates page: full-width, soft radial
-         green background, separated from the content below by a border line,
-         with a large illustration on the right. --}}
-    <section class="border-b border-placeholder bg-[radial-gradient(circle_at_78%_40%,rgba(96,126,52,0.10),transparent_30%)]">
-        <div class="mx-auto grid max-w-[1180px] items-center gap-8 px-5 py-12 lg:grid-cols-[1fr_460px] lg:px-6">
-            <div class="min-w-0">
-                <span class="mb-4 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                    {{ __('auto_insurance.request.badge') }}
-                </span>
-                <h1 class="font-heading text-4xl font-bold break-words text-ink md:text-5xl">
-                    {{ __('auto_insurance.request.heading') }}
-                </h1>
-                <p class="mt-4 max-w-[650px] text-lg leading-8 break-words text-muted">
-                    {{ __('auto_insurance.request.subheading') }}
-                </p>
-            </div>
+    {{-- Hero geometry lives in x-page-hero, shared by every main page. tuck
+         leaves room for the steps card to sit in the hero's bottom edge. --}}
+    <x-page-hero
+        :title="__('auto_insurance.request.heading')"
+        :subtitle="__('auto_insurance.request.subheading')"
+    >
+        <x-slot:eyebrow>
+            <x-hero-badge>
+                <x-slot:icon>
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </x-slot:icon>
+                {{ __('auto_insurance.request.badge') }}
+            </x-hero-badge>
+        </x-slot:eyebrow>
 
-            {{-- Hero illustration (public/images/insurance/hero-car-ins.png). --}}
-            <div class="hidden items-center justify-end lg:flex">
-                <img src="{{ asset('images/insurance/hero-car-ins.png') }}" alt="" class="h-[210px] w-full max-w-[460px] object-contain object-right">
-            </div>
-        </div>
-    </section>
 
-    <div class="mx-auto max-w-[1180px] px-5 pt-8 lg:px-6">
+        {{-- Green shield and car: this page's identity, now that the tint is
+             shared. See public/images/insurance/hero-car-ins.png. --}}
+        {{-- Three short steps, inside the hero: the page says what it is and
+             where you are in one block. --}}
+        <x-slot:steps>
+            <x-hero-steps :steps="$steps->all()" :current="1" />
+        </x-slot:steps>
 
-        {{-- ── How it works (compact strip, shared with travel) ── --}}
-        <x-request-steps :steps="collect($steps)->map(fn ($step, $i) => [
-            'title' => $step['title'],
-            'body' => $step['body'],
-            'icon' => [
-                '<svg class=\'h-[18px] w-[18px]\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M5 17h14M6 17l-.8-4.2A3 3 0 0 1 8.1 9h7.8a3 3 0 0 1 2.9 3.8L18 17\'/><path d=\'M7 9l1-3a2 2 0 0 1 2-1.5h4A2 2 0 0 1 16 6l1 3\'/><circle cx=\'7.5\' cy=\'17.5\' r=\'1.5\'/><circle cx=\'16.5\' cy=\'17.5\' r=\'1.5\'/></svg>',
-                '<svg class=\'h-[18px] w-[18px]\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><rect x=\'4\' y=\'3\' width=\'16\' height=\'18\' rx=\'2\'/><path d=\'M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1\'/></svg>',
-                '<svg class=\'h-[18px] w-[18px]\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M13 2 3 14h7l-1 8 10-12h-7l1-8z\'/></svg>',
-            ][$i],
-        ])->all()" />
+        <x-slot:illustration>
+                {{-- WebP, not the PNG source beside it: the PNG is 1536x1024 and
+                     1.7 MB for a decorative illustration that never paints larger
+                     than 315x210, and it was saturating the connection at exactly
+                     the moment the heading fonts were trying to arrive - which is
+                     what made the headings on this page visibly re-render. Same
+                     png-source/webp-served split as public/images/services.
+                     ?v=mtime because these are plain public/ files, not run
+                     through Vite's hashed asset pipeline. --}}
+                <img
+                    src="{{ asset('images/insurance/hero-car-ins.webp') }}?v={{ filemtime(public_path('images/insurance/hero-car-ins.webp')) }}"
+                    alt=""
+                    width="630"
+                    height="420"
+                >
+        </x-slot:illustration>
+    </x-page-hero>
 
+    <div class="site-container">
         {{-- ── Form + sidebar ───────────────────────────────────────────── --}}
         <section class="grid items-start gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_300px]">
 
@@ -60,7 +72,7 @@
             <form
                 method="POST"
                 action="{{ route('insurance.auto.request.store') }}"
-                class="rounded-[20px] border border-placeholder bg-white p-5 shadow-[0_8px_30px_rgba(24,29,18,0.06)] lg:p-7"
+                class="{{ $cardClass }} p-5 lg:p-7"
                 novalidate
                 x-data="{ loading: false }"
                 @submit="loading = true"
@@ -84,7 +96,7 @@
 
                 {{-- ── Vehicle & Policy Details ── --}}
                 <div class="mb-6 flex items-center gap-3">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <span class="{{ $iconDisc }}">
                         <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6 17l-.8-4.2A3 3 0 0 1 8.1 9h7.8a3 3 0 0 1 2.9 3.8L18 17"/><path d="M7 9l1-3a2 2 0 0 1 2-1.5h4A2 2 0 0 1 16 6l1 3"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
                     </span>
                     <h2 class="text-[18px] font-semibold text-ink">{{ __('auto_insurance.request.section_vehicle') }}</h2>
@@ -125,13 +137,22 @@
                 {{-- Contract term — selectable cards, 12 months default --}}
                 <div class="mt-6">
                     <label class="{{ $labelClass }}">{{ __('auto_insurance.request.contract_term') }}</label>
+                    {{-- The chosen term carries a filled tick as well as the green
+                         fill, so the selection does not rest on colour alone.
+
+                         The tick is driven from the outer span with a nested
+                         selector, not with peer-checked on the tick itself:
+                         peer-* compiles to `.peer:checked ~ &`, which only matches
+                         a *sibling* of the input. The tick is a descendant, so the
+                         original `peer-checked:flex` on it never matched and no
+                         term has ever shown a tick. --}}
                     <div class="grid grid-cols-3 gap-3">
                         @foreach ($contractTerms as $term)
                             <label class="cursor-pointer">
                                 <input type="radio" name="contract_term_months" value="{{ $term }}" class="peer sr-only" @checked((int) old('contract_term_months', 12) === $term) required>
-                                <span class="relative flex h-12 items-center justify-center rounded-lg border border-border-muted text-sm text-muted transition hover:border-primary peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:font-semibold peer-checked:text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary/30">
+                                <span class="relative flex h-12 items-center justify-center rounded-lg border border-border-muted text-sm text-muted transition hover:border-primary peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:font-semibold peer-checked:text-primary peer-checked:[&>.term-tick]:flex peer-focus-visible:ring-2 peer-focus-visible:ring-primary/30">
                                     {{ __('auto_insurance.request.contract_terms.' . $term) }}
-                                    <span class="absolute right-3 hidden h-5 w-5 items-center justify-center rounded-full bg-primary text-white peer-checked:flex">
+                                    <span class="term-tick absolute right-3 hidden h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
                                         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                                     </span>
                                 </span>
@@ -145,7 +166,7 @@
 
                 {{-- ── Contact & Payout Details ── --}}
                 <div class="mb-1 flex items-center gap-3">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <span class="{{ $iconDisc }}">
                         <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/><rect x="3" y="4" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="2"/></svg>
                     </span>
                     <h2 class="text-[18px] font-semibold text-ink">{{ __('auto_insurance.request.market_heading') }}</h2>
@@ -230,7 +251,7 @@
 
                     <button
                         type="submit" :disabled="loading"
-                        class="flex h-12 min-w-[175px] shrink-0 items-center justify-center gap-2.5 rounded-lg bg-primary px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark active:scale-[0.98] focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-70"
+                        class="btn btn-primary min-w-[175px] shrink-0 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         <svg x-show="loading" x-cloak class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -245,7 +266,7 @@
             {{-- Context sidebar --}}
             <aside class="space-y-4">
                 {{-- Secure & private (highlighted light-green) --}}
-                <div class="rounded-[18px] border border-primary/20 bg-primary/5 p-5 shadow-[0_4px_18px_rgba(24,29,18,0.05)]">
+                <div class="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
                     <div class="flex items-start gap-3">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <svg class="h-[19px] w-[19px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
@@ -258,7 +279,7 @@
                 </div>
 
                 {{-- What happens next? --}}
-                <div class="rounded-[18px] border border-placeholder bg-white p-5 shadow-[0_4px_18px_rgba(24,29,18,0.05)]">
+                <div class="{{ $cardClass }} p-5">
                     <h3 class="font-heading text-[15px] font-semibold text-ink">{{ __('auto_insurance.request.aside_next_title') }}</h3>
                     <div class="mt-5 space-y-4">
                         @foreach (['aside_next_1', 'aside_next_2', 'aside_next_3'] as $item)
@@ -273,7 +294,7 @@
                 </div>
 
                 {{-- Why use Findex? --}}
-                <div class="rounded-[18px] border border-placeholder bg-white p-5 shadow-[0_4px_18px_rgba(24,29,18,0.05)]">
+                <div class="{{ $cardClass }} p-5">
                     <h3 class="font-heading text-[15px] font-semibold text-ink">{{ __('auto_insurance.request.why_title') }}</h3>
                     <div class="mt-5 space-y-5">
                         @foreach ([

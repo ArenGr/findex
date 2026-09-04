@@ -9,7 +9,7 @@
     @endphp
 
     {{--
-        Outer article matches the home page's max-w-7xl. The actual body
+        Outer article matches the home page's column. The actual body
         copy (title, excerpt, byline, paragraphs) stays in a narrower
         inner wrapper - see faq.blade.php for the same reasoning, doubly
         true for a wall of paragraph text at the new, larger text-base
@@ -17,7 +17,7 @@
         bottom is genuine multi-column content, so it uses the full outer
         width instead.
     --}}
-    <article class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <article class="site-container py-16">
         <div class="mx-auto max-w-3xl">
             <a href="{{ route('home') }}" class="group inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-none stroke-current transition-transform duration-300 group-hover:-translate-x-1">

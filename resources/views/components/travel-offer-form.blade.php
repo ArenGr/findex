@@ -296,7 +296,7 @@
         <textarea name="reply_text" id="reply_text" rows="2" placeholder="{{ __('tourism.respond.notes_placeholder') }}" class="{{ $inputClasses }}">{{ old('reply_text', $response->reply_text) }}</textarea>
     </div>
 
-    <button type="submit" class="w-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark sm:w-auto">
+    <button type="submit" class="btn btn-primary w-full sm:w-auto">
         {{ $isRevision ? __('tourism.respond.update_button') : __('tourism.respond.submit_button') }}
     </button>
 </form>

@@ -92,60 +92,95 @@
 
     $defaultCurrency = $availableCurrencies->first(fn ($currency) => ($offersByCurrency[$currency] ?? collect())->isNotEmpty())
         ?? $availableCurrencies->first();
+
+    $defaultDownPaymentPercent = 20;
+    $defaultTermMonths = 60;
+
+    /*
+     * The same ranking Alpine does (resources/js/mortgage-table.js), for the
+     * values the inputs start on.
+     *
+     * It is duplicated deliberately. The table used to live entirely in a
+     * <template x-for>, so the page painted without it and then grew by
+     * ~975px the moment Alpine booted; rendering the first state here is what
+     * removes that jump. Alpine then only moves, hides and relabels the rows
+     * below - it never creates them. Change one of these and you must change
+     * the other, or first paint stops matching first render.
+     */
+    $monthlyPayment = function (float $ratePercent, float $principal, int $months): float {
+        $rate = $ratePercent / 100 / 12;
+
+        if ($months <= 0) {
+            return 0.0;
+        }
+
+        if ($rate === 0.0) {
+            return $principal / $months;
+        }
+
+        return $principal * $rate * (1 + $rate) ** $months / ((1 + $rate) ** $months - 1);
+    };
+
+    $initialView = $offersByCurrency->mapWithKeys(function ($rows, $currency) use (
+        $defaultPropertyPrice, $defaultDownPaymentPercent, $defaultTermMonths, $monthlyPayment
+    ) {
+        $rows = $rows->all();
+        $loanAmount = max(0, ($defaultPropertyPrice[$currency] ?? 0) * (1 - $defaultDownPaymentPercent / 100));
+
+        $bestPerBank = [];
+
+        foreach ($rows as $index => $row) {
+            $eligible = $loanAmount >= $row['min_amount']
+                && $loanAmount <= $row['max_amount']
+                && $defaultDownPaymentPercent >= $row['min_down_payment_percent']
+                // Null terms compare exactly as they do in JS: a missing
+                // ceiling fails `termMonths <= null` and drops the offer.
+                && $defaultTermMonths >= (int) $row['term_min_months']
+                && $defaultTermMonths <= (int) $row['term_max_months'];
+
+            if (! $eligible) {
+                continue;
+            }
+
+            if (! isset($bestPerBank[$row['id']]) || $row['eff_rate'] < $rows[$bestPerBank[$row['id']]]['eff_rate']) {
+                $bestPerBank[$row['id']] = $index;
+            }
+        }
+
+        // JS walks an object with integer-like keys in ascending numeric
+        // order, which is what settles rows the sort below leaves tied.
+        ksort($bestPerBank, SORT_NUMERIC);
+
+        $payments = [];
+        foreach ($bestPerBank as $index) {
+            $payments[$index] = $monthlyPayment($rows[$index]['eff_rate'], $loanAmount, $defaultTermMonths);
+        }
+
+        $ranked = array_values($bestPerBank);
+        usort($ranked, fn ($a, $b) => ($rows[$a]['eff_rate'] <=> $rows[$b]['eff_rate'])
+            ?: ($payments[$a] <=> $payments[$b]));
+
+        $positions = [];
+        foreach ($ranked as $position => $rowIndex) {
+            $positions[$rowIndex] = $position;
+        }
+
+        return [$currency => ['positions' => $positions, 'payments' => $payments]];
+    });
 @endphp
 
 @if ($availableCurrencies->isNotEmpty())
+    {{-- The component object lives in resources/js/mortgage-table.js: it is
+         far too large to read inside an attribute, and its maths has to be
+         readable next to the PHP mirror above. --}}
     <div
-        x-data="{
-            currencyTab: @js($defaultCurrency),
-            propertyPrice: @js($defaultPropertyPrice),
-            downPaymentPercent: 20,
-            termMonths: 60,
-            offersByCurrency: @js($offersByCurrency),
-            badgeLabels: @js([
-                'floating' => __('offers.mortgage_ranking.badge_floating'),
-                'promo' => __('offers.mortgage_ranking.badge_promo'),
-                'stale' => __('offers.mortgage_ranking.badge_stale'),
-            ]),
-            basisLabels: @js([
-                'apr' => __('offers.mortgage_ranking.basis_apr'),
-                'nominal' => __('offers.mortgage_ranking.basis_nominal'),
-            ]),
-
-            get loanAmount() {
-                return Math.max(0, (this.propertyPrice[this.currencyTab] || 0) * (1 - this.downPaymentPercent / 100));
-            },
-
-            monthlyPayment(ratePercent, principal, months) {
-                const r = ratePercent / 100 / 12;
-                if (months <= 0) return 0;
-                if (r === 0) return principal / months;
-                return principal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
-            },
-
-            get ranked() {
-                const rows = this.offersByCurrency[this.currencyTab] || [];
-                const bestPerBank = {};
-
-                rows.forEach((row) => {
-                    const eligible = this.loanAmount >= row.min_amount
-                        && this.loanAmount <= row.max_amount
-                        && this.downPaymentPercent >= row.min_down_payment_percent
-                        && this.termMonths >= row.term_min_months
-                        && this.termMonths <= row.term_max_months;
-
-                    if (!eligible) return;
-
-                    if (!bestPerBank[row.id] || row.eff_rate < bestPerBank[row.id].eff_rate) {
-                        bestPerBank[row.id] = row;
-                    }
-                });
-
-                return Object.values(bestPerBank)
-                    .map((row) => ({ ...row, payment: this.monthlyPayment(row.eff_rate, this.loanAmount, this.termMonths) }))
-                    .sort((a, b) => a.eff_rate - b.eff_rate || a.payment - b.payment);
-            },
-        }"
+        x-data="mortgageTable(@js([
+            'currency' => $defaultCurrency,
+            'propertyPrice' => $defaultPropertyPrice,
+            'downPaymentPercent' => $defaultDownPaymentPercent,
+            'termMonths' => $defaultTermMonths,
+            'offersByCurrency' => $offersByCurrency,
+        ]))"
     >
         <p class="px-6 pt-4 text-xs font-medium tracking-wide text-subtle uppercase">
             {{ __('offers.mortgage_table.category_secondary_market') }}
@@ -173,6 +208,7 @@
                     type="number"
                     min="0"
                     x-model.number="propertyPrice[currencyTab]"
+                    value="{{ $defaultPropertyPrice[$defaultCurrency] ?? 0 }}"
                     class="mt-1 w-full rounded border border-placeholder px-3 py-2 text-sm"
                 >
             </label>
@@ -183,6 +219,7 @@
                     min="0"
                     max="100"
                     x-model.number="downPaymentPercent"
+                    value="{{ $defaultDownPaymentPercent }}"
                     class="mt-1 w-full rounded border border-placeholder px-3 py-2 text-sm"
                 >
             </label>
@@ -192,94 +229,60 @@
                     type="number"
                     min="1"
                     x-model.number="termMonths"
+                    value="{{ $defaultTermMonths }}"
                     class="mt-1 w-full rounded border border-placeholder px-3 py-2 text-sm"
                 >
             </label>
         </div>
         <p class="px-6 py-3 text-sm text-muted">
             {{ __('offers.mortgage_table.loan_amount') }}:
-            <span class="font-semibold text-ink" x-text="loanAmount.toLocaleString()"></span>
-            <span x-text="currencyTab"></span>
+            {{-- Rendered as well as bound: an empty span here is a visibly
+                 half-written sentence until Alpine boots. --}}
+            <span class="font-semibold text-ink" x-text="format(loanAmount)">{{ number_format(max(0, ($defaultPropertyPrice[$defaultCurrency] ?? 0) * (1 - $defaultDownPaymentPercent / 100)), 0, '.', ',') }}</span>
+            <span x-text="currencyTab">{{ $defaultCurrency }}</span>
         </p>
 
         @foreach ($availableCurrencies as $currency)
+            @php
+                $rows = ($offersByCurrency[$currency] ?? collect())->all();
+                $positions = $initialView[$currency]['positions'] ?? [];
+                $payments = $initialView[$currency]['payments'] ?? [];
+            @endphp
+
             <div x-show="currencyTab === @js($currency)" @if ($currency !== $defaultCurrency) x-cloak @endif>
-                <template x-if="ranked.length === 0">
-                    <p class="px-6 py-16 text-center text-sm text-muted">{{ __('offers.mortgage_table.no_eligible') }}</p>
-                </template>
+                <p
+                    x-show="view.count === 0"
+                    @if (count($positions) > 0) x-cloak @endif
+                    class="px-6 py-16 text-center text-sm text-muted"
+                >{{ __('offers.mortgage_table.no_eligible') }}</p>
 
-                <template x-if="ranked.length > 0">
-                    <div class="border-t border-placeholder">
-                        {{-- Column header --}}
-                        <div class="flex items-center gap-4 border-b border-placeholder bg-placeholder/20 px-6 py-2 text-xs font-semibold text-subtle uppercase">
-                            <span class="w-8 shrink-0"></span>
-                            <span class="w-10 shrink-0"></span>
-                            <span class="min-w-0 flex-1"></span>
-                            <span class="hidden w-24 shrink-0 text-right sm:block">{{ __('offers.mortgage_table.rate') }}</span>
-                            <span class="hidden w-24 shrink-0 text-right md:block">{{ __('offers.mortgage_table.down_payment') }}</span>
-                            <span class="w-32 shrink-0 text-right">{{ __('offers.mortgage_table.monthly_payment') }}</span>
-                            <span class="hidden w-24 shrink-0 text-right sm:block"></span>
-                        </div>
-
-                        <template x-for="(row, index) in ranked" :key="row.id">
-                            <div class="flex items-center gap-4 border-b border-placeholder px-6 py-5 last:border-b-0">
-                                <span
-                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-                                    :class="index === 0 ? 'bg-accent-yellow text-ink' : 'bg-placeholder/60 text-muted'"
-                                    x-text="index + 1"
-                                ></span>
-
-                                <img x-show="row.logo" :src="row.logo" :alt="row.name" class="h-10 w-10 shrink-0 rounded-full object-contain">
-                                <div
-                                    x-show="!row.logo"
-                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-                                    x-text="row.initial"
-                                ></div>
-
-                                <div class="min-w-0 flex-1">
-                                    <a :href="row.url" class="block truncate text-sm font-medium text-ink hover:text-primary" x-text="row.name"></a>
-                                    <div x-show="row.reviews_count > 0" class="mt-0.5 flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3 w-3 fill-accent-yellow">
-                                            <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
-                                        </svg>
-                                        <span class="text-xs text-subtle" x-text="row.rating.toFixed(1) + ' (' + row.reviews_count + ')'"></span>
-                                    </div>
-                                    <div class="mt-1 flex flex-wrap gap-1">
-                                        <template x-for="b in row.badges.filter((x) => x !== 'rate_only')" :key="b">
-                                            <span class="rounded-full bg-placeholder/50 px-2 py-0.5 text-[11px] text-ink" x-text="badgeLabels[b]"></span>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <div class="hidden w-24 shrink-0 text-right sm:block">
-                                    <p class="text-sm font-semibold text-ink"><span x-text="row.eff_rate"></span>%</p>
-                                    <p class="text-[11px] text-subtle" x-text="basisLabels[row.basis]"></p>
-                                </div>
-
-                                <div class="hidden w-24 shrink-0 text-right md:block">
-                                    <p class="text-sm text-ink" x-text="row.min_down_payment_percent + '%+'"></p>
-                                </div>
-
-                                <div class="w-32 shrink-0 text-right">
-                                    <p class="font-heading text-lg font-bold text-primary" x-text="Math.round(row.payment).toLocaleString()"></p>
-                                    <p class="text-xs text-subtle">/ {{ __('offers.per_month') }}</p>
-                                </div>
-
-                                <div class="hidden w-24 shrink-0 text-right sm:block">
-                                    <a
-                                        x-show="row.source_url"
-                                        :href="row.source_url"
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="text-xs font-medium text-primary hover:underline"
-                                    >
-                                        {{ __('offers.mortgage_table.view_details') }}
-                                    </a>
-                                </div>
-                            </div>
-                        </template>
+                <div x-show="view.count > 0" @if (count($positions) === 0) x-cloak @endif class="border-t border-placeholder">
+                    {{-- Column header --}}
+                    <div class="flex items-center gap-4 border-b border-placeholder bg-placeholder/20 px-6 py-2 text-xs font-semibold text-subtle uppercase">
+                        <span class="w-8 shrink-0"></span>
+                        <span class="w-10 shrink-0"></span>
+                        <span class="min-w-0 flex-1"></span>
+                        <span class="hidden w-24 shrink-0 text-right sm:block">{{ __('offers.mortgage_table.rate') }}</span>
+                        <span class="hidden w-24 shrink-0 text-right md:block">{{ __('offers.mortgage_table.down_payment') }}</span>
+                        <span class="w-32 shrink-0 text-right">{{ __('offers.mortgage_table.monthly_payment') }}</span>
+                        <span class="hidden w-24 shrink-0 text-right sm:block"></span>
                     </div>
-                </template>
+
+                    {{-- flex-col so a row can be placed with CSS `order`; -mb-px
+                         hides the last row's bottom border under the panel
+                         border, which last:border-b-0 can no longer do now that
+                         DOM order is not paint order. --}}
+                    <div class="-mb-px flex flex-col">
+                        @foreach ($rows as $i => $row)
+                            <x-mortgage-offer-row
+                                :row="$row"
+                                :index="$i"
+                                :position="$positions[$i] ?? null"
+                                :payment="$payments[$i] ?? null"
+                            />
+                        @endforeach
+                    </div>
+                </div>
             </div>
         @endforeach
     </div>

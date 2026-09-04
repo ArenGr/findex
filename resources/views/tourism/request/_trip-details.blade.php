@@ -1,6 +1,6 @@
 <section class="{{ $card }}">
     <div class="mb-5 flex items-center gap-3">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-primary/10 transition-colors" :class="tripComplete && '!bg-travel-primary'">
+        <span class="{{ $sectionIcon }} transition-colors" :class="tripComplete && '!bg-travel-primary'">
             <x-travel-icon name="check" class="h-[18px] w-[18px] text-white" x-show="tripComplete" x-cloak />
             <x-travel-icon name="flight_takeoff" class="h-[18px] w-[18px] text-travel-primary" x-show="!tripComplete" />
         </span>
@@ -59,7 +59,10 @@
                  codes - free text would be rejected. --}}
             <div x-show="!destinationsFull" class="relative">
                 <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted">
-                    <x-travel-icon name="location" class="h-[17px] w-[17px]" />
+                    {{-- location_on, not "location": the component has no icon by
+                         that name, so the destination field rendered without its
+                         pin for as long as it said "location". --}}
+                    <x-travel-icon name="location_on" class="h-[17px] w-[17px]" />
                 </span>
                 <input
                     type="text"
@@ -70,7 +73,7 @@
                     @focus="destinationPickerOpen = true"
                     @keydown.escape="destinationPickerOpen = false"
                     :placeholder="destinations.length ? @js(__('tourism.request.destination_add_another')) : @js(__('tourism.request.destination_placeholder'))"
-                    class="{{ $field }} pl-10"
+                    class="{{ $fieldIcon }}"
                 >
 
                 <div
@@ -142,28 +145,36 @@
         {{-- Dates: a segmented control switching between exact days and a
              flexibility window. The window's options only appear once
              flexible is chosen, so the default state stays compact. --}}
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
             <span class="{{ $label }}" id="dates-label">{{ __('tourism.request.dates_label') }}</span>
 
             <div class="mb-3 flex w-fit rounded-lg border border-border-subtle bg-surface-container-low p-1" role="group" aria-labelledby="dates-label">
-                <button
-                    type="button"
-                    @click="setDateMode(false)"
-                    :aria-pressed="!datesAreFlexible"
-                    :class="!datesAreFlexible ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface'"
-                    class="rounded-md px-4 py-2 text-body-sm font-medium transition-colors"
-                >
-                    {{ __('tourism.request.dates_exact') }}
-                </button>
-                <button
-                    type="button"
-                    @click="setDateMode(true)"
-                    :aria-pressed="datesAreFlexible"
-                    :class="datesAreFlexible ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface'"
-                    class="rounded-md px-4 py-2 text-body-sm font-medium transition-colors"
-                >
-                    {{ __('tourism.request.dates_flexible') }}
-                </button>
+                @php $flexibleInitially = (bool) old('date_flexibility'); @endphp
+                @foreach ([
+                    ['flexible' => false, 'label' => __('tourism.request.dates_exact')],
+                    ['flexible' => true,  'label' => __('tourism.request.dates_flexible')],
+                ] as $mode)
+                    @php
+                        $on = $mode['flexible'] ? 'datesAreFlexible' : '!datesAreFlexible';
+                        $onNow = $mode['flexible'] === $flexibleInitially;
+                    @endphp
+                    {{-- The raised pill is rendered here as well as bound, and
+                         bound with the object form so Alpine can clear it: left
+                         to the binding alone, neither option looks selected
+                         until Alpine boots. --}}
+                    <button
+                        type="button"
+                        @click="setDateMode({{ $mode['flexible'] ? 'true' : 'false' }})"
+                        :aria-pressed="{{ $on }}"
+                        :class="{
+                            'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]': {{ $on }},
+                            'text-ink-muted hover:text-on-surface': !({{ $on }}),
+                        }"
+                        class="rounded-md px-4 py-2 text-body-sm font-medium transition-colors {{ $onNow ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface' }}"
+                    >
+                        {{ $mode['label'] }}
+                    </button>
+                @endforeach
             </div>
 
             {{-- Two separate, labelled fields - a joined box read as one
@@ -182,7 +193,7 @@
                             id="check_in"
                             x-model="checkIn"
                             required
-                            class="{{ $field }} pl-10 @error('check_in') border-error @enderror"
+                            class="{{ $fieldIcon }} @error('check_in') border-error @enderror"
                         >
                     </div>
                 </div>
@@ -199,7 +210,7 @@
                             x-model="checkOut"
                             required
                             :min="checkIn || null"
-                            class="{{ $field }} pl-10 @error('check_out') border-error @enderror"
+                            class="{{ $fieldIcon }} @error('check_out') border-error @enderror"
                         >
                     </div>
                 </div>
@@ -235,7 +246,7 @@
         </div>
 
         {{-- Travellers --}}
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
             <span class="{{ $label }}" id="travelers-label">{{ __('tourism.request.travelers_label') }}</span>
 
             <div class="flex flex-col gap-3 rounded-lg border border-border-subtle bg-white p-4" role="group" aria-labelledby="travelers-label">

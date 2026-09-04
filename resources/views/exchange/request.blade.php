@@ -104,7 +104,7 @@
                             id="currency_code"
                             x-model="currency"
                             required
-                            class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                            class="field mt-1.5"
                         >
                             @foreach ($currencies as $currencyOption)
                                 <option value="{{ $currencyOption->code }}" @selected(old('currency_code', $selectedCurrency->code) === $currencyOption->code)>
@@ -215,7 +215,7 @@
                         <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
                     @enderror
 
-                    <button type="submit" class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-medium text-white shadow-sm transition hover:bg-primary-dark active:scale-[0.98] sm:w-auto">
+                    <button type="submit" class="btn btn-primary mt-6 w-full sm:w-auto">
                         {{ __('exchange_quotes.request.submit') }}
                     </button>
                 </div>

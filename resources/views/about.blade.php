@@ -28,7 +28,7 @@
 
     {{-- Hero --}}
     <section class="overflow-hidden border-b border-placeholder bg-primary/5">
-        <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:px-10">
+        <div class="site-container grid grid-cols-1 items-center gap-12 py-20 lg:grid-cols-2">
             <div>
                 <span class="inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
                     {{ __('about.hero.title') }}
@@ -40,7 +40,9 @@
 
             {{-- Decorative composition of the four things Findex compares --}}
             <div class="relative mx-auto w-full max-w-sm">
-                <div class="absolute -inset-6 -z-10 rounded-[2rem] bg-slide-purple/20"></div>
+                {{-- -inset-3 below sm: the column pads 16px on a phone, so a 24px
+                 bleed on every side escapes the viewport and scrolls the page. --}}
+                <div class="absolute -inset-3 -z-10 rounded-[2rem] bg-slide-purple/20 sm:-inset-6"></div>
                 <div class="grid grid-cols-2 gap-4">
                     @foreach ($pillars as $i => $pillar)
                         <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60 {{ $i % 2 === 1 ? 'mt-6' : '' }}">
@@ -59,14 +61,14 @@
     </section>
 
     {{-- Mission --}}
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <h2 class="font-heading text-xl font-semibold text-ink">{{ __('about.mission.title') }}</h2>
         <p class="mt-4 max-w-3xl text-sm leading-relaxed text-body-text">{{ __('about.mission.body') }}</p>
     </section>
 
     {{-- Values --}}
     <section class="border-t border-placeholder bg-white">
-        <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+        <div class="site-container py-16">
             <h2 class="font-heading text-xl font-semibold text-ink">{{ __('about.values.title') }}</h2>
 
             <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -85,7 +87,7 @@
 
     {{-- Stats --}}
     <section class="border-t border-placeholder">
-        <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+        <div class="site-container py-16">
             <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
                 @foreach ($stats as $stat)
                     <div>
@@ -99,7 +101,7 @@
 
     {{-- How it works --}}
     <section class="border-t border-placeholder bg-white">
-        <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+        <div class="site-container py-16">
             <h2 class="font-heading text-xl font-semibold text-ink">{{ __('about.how_it_works.title') }}</h2>
 
             <div class="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3">
@@ -118,13 +120,13 @@
 
     {{-- CTA --}}
     <section class="border-t border-placeholder bg-primary/5">
-        <div class="mx-auto max-w-7xl px-6 py-16 text-center lg:px-10">
+        <div class="site-container py-16 text-center">
             <h2 class="font-heading text-xl font-semibold text-ink">{{ __('about.cta.title') }}</h2>
             @auth
                 <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle_authenticated') }}</p>
                 <a
                     href="{{ route('alerts.index') }}"
-                    class="mt-6 inline-block bg-primary px-6 py-3 text-sm text-white hover:bg-primary-dark"
+                    class="btn btn-primary mt-6 inline-block"
                 >
                     {{ __('about.cta.button_authenticated') }}
                 </a>
@@ -132,7 +134,7 @@
                 <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle') }}</p>
                 <a
                     href="{{ route('register') }}"
-                    class="mt-6 inline-block bg-primary px-6 py-3 text-sm text-white hover:bg-primary-dark"
+                    class="btn btn-primary mt-6 inline-block"
                 >
                     {{ __('about.cta.button') }}
                 </a>

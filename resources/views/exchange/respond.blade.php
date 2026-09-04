@@ -147,11 +147,11 @@
                             id="reply_text"
                             rows="2"
                             placeholder="{{ __('exchange_quotes.respond.reply_placeholder') }}"
-                            class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                            class="field mt-1.5"
                         >{{ old('reply_text') }}</textarea>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark sm:w-auto">
+                    <button type="submit" class="btn btn-primary w-full sm:w-auto">
                         {{ __('exchange_quotes.respond.submit_button') }}
                     </button>
                 </form>

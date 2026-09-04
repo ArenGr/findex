@@ -25,7 +25,7 @@
                 href="https://t.me/{{ $botUsername }}?start={{ $organization->telegram_connect_token }}"
                 target="_blank"
                 rel="noopener"
-                class="mt-4 inline-block bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
+                class="btn btn-primary mt-4 inline-block"
             >
                 {{ __('tourism.dashboard.telegram_connect_button') }}
             </a>
@@ -55,7 +55,7 @@
                 @endforeach
             </div>
 
-            <button type="submit" class="mt-5 bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+            <button type="submit" class="btn btn-primary mt-5">
                 {{ __('tourism.dashboard.destinations_save') }}
             </button>
         </form>
@@ -82,7 +82,7 @@
                 :value="$organization->min_lead_party_size"
             />
 
-            <button type="submit" class="col-span-2 mt-1 bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark sm:w-auto sm:justify-self-start">
+            <button type="submit" class="btn btn-primary col-span-2 mt-1 sm:w-auto sm:justify-self-start">
                 {{ __('tourism.dashboard.lead_preferences_save') }}
             </button>
         </form>

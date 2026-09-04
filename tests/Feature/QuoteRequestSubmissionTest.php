@@ -55,6 +55,58 @@ class QuoteRequestSubmissionTest extends TestCase
         ], $overrides);
     }
 
+    /**
+     * Every value an HTML form sends is a string, including the numbers.
+     *
+     * The rest of these tests post real PHP ints, which is not what a browser
+     * does - and that gap hid a bug that rejected every single browser
+     * submission: the age-per-child check compared count() (an int) against
+     * the submitted count with !==, so int(0) !== string("0") was always true
+     * and the form came back saying "an age for each of the 0 children" even
+     * when no children had been added.
+     */
+    public function test_a_browser_style_submission_with_string_numbers_is_accepted(): void
+    {
+        Mail::fake();
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->andReturn(['ok' => true, 'result' => ['message_id' => 999]]);
+        });
+        $this->tourismPartner();
+
+        $response = $this->post(route('tourism.request.store', ['locale' => 'en']), $this->validPayload([
+            'adults' => '2',
+            'children' => '0',
+            'child_ages' => [],
+        ]));
+
+        $response->assertSessionHasNoErrors();
+
+        $quoteRequest = QuoteRequest::sole();
+        $this->assertSame(2, $quoteRequest->adults);
+        $this->assertSame(0, $quoteRequest->children);
+    }
+
+    /** Ages arrive as strings too, and still have to line up with the count. */
+    public function test_a_browser_style_submission_with_children_is_accepted(): void
+    {
+        Mail::fake();
+        $this->mock(TelegramClient::class, function ($mock) {
+            $mock->shouldReceive('sendMessage')->andReturn(['ok' => true, 'result' => ['message_id' => 999]]);
+        });
+        $this->tourismPartner();
+
+        $response = $this->post(route('tourism.request.store', ['locale' => 'en']), $this->validPayload([
+            'children' => '2',
+            'child_ages' => ['4', '11'],
+        ]));
+
+        $response->assertSessionHasNoErrors();
+
+        $quoteRequest = QuoteRequest::sole();
+        $this->assertSame(2, $quoteRequest->children);
+        $this->assertSame([4, 11], $quoteRequest->child_ages);
+    }
+
     public function test_guest_can_submit_a_quote_request_and_is_emailed_a_signed_results_link(): void
     {
         Mail::fake();

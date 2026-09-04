@@ -7,7 +7,7 @@
     <select
         name="destination_country"
         id="destination_country"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >
         <option value="">{{ __('org.quote_templates.any_destination') }}</option>
         @foreach ($destinations as $code)
@@ -24,7 +24,7 @@
         <select
             name="price_currency"
             id="price_currency"
-            class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+            class="field mt-1.5"
         >
             <option value="">—</option>
             @foreach (\App\Models\QuoteResponse::CURRENCIES as $currency)
@@ -42,7 +42,7 @@
         name="flight_details"
         id="flight_details"
         rows="2"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >{{ old('flight_details', $template->flight_details ?? '') }}</textarea>
 </div>
 
@@ -52,7 +52,7 @@
         name="inclusions"
         id="inclusions"
         rows="2"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >{{ old('inclusions', $template->inclusions ?? '') }}</textarea>
 </div>
 
@@ -62,6 +62,6 @@
         name="reply_text"
         id="reply_text"
         rows="2"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >{{ old('reply_text', $template->reply_text ?? '') }}</textarea>
 </div>

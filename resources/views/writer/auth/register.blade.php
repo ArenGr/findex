@@ -16,7 +16,7 @@
             <x-form-input name="expertise" :label="__('writer.profile.expertise')" />
             <x-form-input name="topics" :label="__('writer.profile.topics')" />
 
-            <button type="submit" class="w-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+            <button type="submit" class="btn btn-primary w-full">
                 {{ __('writer.register_title') }}
             </button>
         </form>

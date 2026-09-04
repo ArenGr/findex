@@ -14,10 +14,12 @@
 @endphp
 
 <section class="border-t border-placeholder bg-primary/5">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:px-10">
+    <div class="site-container grid grid-cols-1 items-center gap-12 py-16 lg:grid-cols-2">
         {{-- Decorative composition of the four things Findex compares --}}
         <div class="relative mx-auto w-full max-w-sm">
-            <div class="absolute -inset-6 -z-10 rounded-[2rem] bg-slide-purple/20"></div>
+            {{-- -inset-3 below sm: the column pads 16px on a phone, so a 24px
+             bleed on every side escapes the viewport and scrolls the page. --}}
+            <div class="absolute -inset-3 -z-10 rounded-[2rem] bg-slide-purple/20 sm:-inset-6"></div>
             <div class="grid grid-cols-2 gap-4">
                 @foreach ($pillars as $i => $pillar)
                     <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60 {{ $i % 2 === 1 ? 'mt-6' : '' }}">
@@ -53,7 +55,7 @@
 
             <a
                 href="{{ route('about') }}"
-                class="group mt-8 inline-flex items-center gap-2 bg-primary px-8 py-3 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md"
+                class="btn btn-primary group mt-8"
             >
                 {{ __('common.learn_more') }}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current transition-transform duration-300 group-hover:translate-x-1">

@@ -30,25 +30,38 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @fonts
+    {{-- Both weights, not just 400. FreeSans is font-display: optional, which
+         decides at first paint whether to use the face at all and never
+         revisits it - so a weight that is not preloaded is simply not used,
+         and every bold figure and label on the page renders in the fallback
+         instead. Regular text was preloaded and looked right; bold was not and
+         did not.
 
-    {{-- FreeSans is the body face, so it paints the instant anything renders -
-         worth starting before the CSS is parsed. Only the subsets this locale
-         actually needs: Latin always (digits, punctuation and brand names
-         appear in every language), plus the script the page is written in.
-         @fonts handles preloading for the Bunny families; FreeSans is declared
-         by hand, so its preloads are too. See tools/subset-freesans.py. --}}
-    @foreach (['latin', match (app()->getLocale()) { 'hy' => 'armenian', 'ru' => 'cyrillic', default => null }] as $subset)
-        @if ($subset)
-            <link rel="preload" as="font" type="font/woff2" crossorigin
-                  href="{{ asset("fonts/subset/freesans-400-{$subset}.woff2") }}">
-        @endif
+         Weight 700 has no Armenian subset (see tools/subset-freesans.py), so
+         the file is checked before it is advertised - preloading a 404 costs a
+         request and warns in the console. --}}
+    {{-- Montserrat, the heading face. Hashed by the build, so the filenames
+         come from the font manifest - see App\Support\FontPreloads. Without
+         this the browser only finds it when it reaches the first heading,
+         which is far too late to make the first frame: every h1 and h2 painted
+         in the fallback and then visibly re-rendered a moment later. --}}
+    @foreach (App\Support\FontPreloads::urls('montserrat', app()->getLocale()) as $href)
+        <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ $href }}">
     @endforeach
+
+    @foreach ([400, 700] as $weight)
+        @foreach (['latin', match (app()->getLocale()) { 'hy' => 'armenian', 'ru' => 'cyrillic', default => null }] as $subset)
+            @if ($subset && file_exists(public_path("fonts/subset/freesans-{$weight}-{$subset}.woff2")))
+                <link rel="preload" as="font" type="font/woff2" crossorigin
+                      href="{{ asset("fonts/subset/freesans-{$weight}-{$subset}.woff2") }}">
+            @endif
+        @endforeach
+    @endforeach
+    {{-- Pages that use a face the rest of the site does not - the travel
+         request flow and its Manrope - push their own preloads here rather
+         than taxing every other page with them. --}}
+    @stack('head')
 </head>
-{{-- min-h-dvh, not min-h-screen (100vh) - iOS Safari's address bar
-expands/collapses as you scroll, and 100vh is measured against the
-LARGEST possible viewport (bar collapsed), so a short page can end up
-taller than what's actually visible, leaving a gap under the footer
-until you scroll. dvh tracks the real, current viewport instead. --}}
 <body class="flex min-h-dvh flex-col bg-white font-sans text-body-text antialiased">
     <x-site-header />
 

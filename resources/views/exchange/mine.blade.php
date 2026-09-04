@@ -3,14 +3,14 @@
 @section('title', __('exchange_quotes.mine.heading') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('exchange_quotes.mine.heading') }}</h1>
                 <p class="mt-2 text-sm text-muted">{{ __('exchange_quotes.mine.subtitle') }}</p>
             </div>
 
-            <a href="{{ route('exchange.request') }}" class="shrink-0 bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark">
+            <a href="{{ route('exchange.request') }}" class="btn btn-primary shrink-0">
                 {{ __('exchange_quotes.mine.new_request') }}
             </a>
         </div>

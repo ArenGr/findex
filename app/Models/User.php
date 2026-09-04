@@ -41,6 +41,31 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         ];
     }
 
+    /**
+     * The two letters that stand in for a face.
+     *
+     * First letter of the first word plus first letter of the last, so
+     * "Aren Grigoryan" reads AG and a one-word name reads as a single letter.
+     * mb_* throughout: names on this site are as often Armenian as Latin, and
+     * substr() would slice a multi-byte character in half.
+     *
+     * Falls back to the email's first letter, then to a dash, so the avatar is
+     * never an empty circle - a user created by an OAuth callback can arrive
+     * with no name at all.
+     */
+    public function initials(): string
+    {
+        $words = preg_split('/\s+/u', trim($this->name ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $letters = match (count($words)) {
+            0 => mb_substr(trim($this->email ?? ''), 0, 1),
+            1 => mb_substr($words[0], 0, 1),
+            default => mb_substr($words[0], 0, 1).mb_substr(end($words), 0, 1),
+        };
+
+        return mb_strtoupper($letters) ?: '-';
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);

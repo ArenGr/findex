@@ -3,7 +3,7 @@
 @section('title', __('alerts.heading') . ' — Findex')
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('alerts.heading') }}</h1>
         <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('alerts.subtitle') }}</p>
 
@@ -98,7 +98,7 @@
             --}}
             <label class="block">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.currency') }}</span>
-                <select name="currency_id" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
+                <select name="currency_id" class="field mt-1.5">
                     @foreach ($currencies as $currency)
                         <option value="{{ $currency->id }}" @selected(old('currency_id', request()->query('currency_id')) == $currency->id)>{{ $currency->code }}</option>
                     @endforeach
@@ -110,7 +110,7 @@
 
             <label class="block">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.organization') }}</span>
-                <select name="organization_id" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
+                <select name="organization_id" class="field mt-1.5">
                     <option value="">{{ __('alerts.any_organization') }}</option>
                     @foreach ($organizations as $organization)
                         <option value="{{ $organization->id }}" @selected(old('organization_id', request()->query('organization_id')) == $organization->id)>{{ $organization->name }}</option>
@@ -123,7 +123,7 @@
 
             <label class="block">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.rate_type') }}</span>
-                <select name="rate_type" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
+                <select name="rate_type" class="field mt-1.5">
                     @foreach ($rateTypes as $rateType)
                         <option value="{{ $rateType->value }}" @selected(old('rate_type', request()->query('rate_type', 'cash')) === $rateType->value)>
                             {{ __('organizations.rate_types.' . $rateType->value) }}
@@ -137,7 +137,7 @@
 
             <label class="block">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.rate_field') }}</span>
-                <select name="rate_field" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
+                <select name="rate_field" class="field mt-1.5">
                     <option value="sell_rate" @selected(old('rate_field', request()->query('rate_field', 'sell_rate')) === 'sell_rate')>{{ __('organizations.sell') }}</option>
                     <option value="buy_rate" @selected(old('rate_field', request()->query('rate_field')) === 'buy_rate')>{{ __('organizations.buy') }}</option>
                 </select>
@@ -148,7 +148,7 @@
 
             <label class="block">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.direction') }}</span>
-                <select name="direction" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
+                <select name="direction" class="field mt-1.5">
                     <option value="below" @selected(old('direction', 'below') === 'below')>{{ __('alerts.below') }}</option>
                     <option value="above" @selected(old('direction') === 'above')>{{ __('alerts.above') }}</option>
                 </select>
@@ -161,7 +161,7 @@
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.threshold') }}</span>
                 <input
                     type="number" step="0.0001" min="0" name="threshold" value="{{ old('threshold') }}"
-                    class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+                    class="field mt-1.5"
                 >
                 @error('threshold')
                     <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
@@ -170,7 +170,7 @@
 
             <label class="block sm:col-span-2">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.channel') }}</span>
-                <select name="channel" x-model="channel" class="mt-1.5 block w-full rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none">
+                <select name="channel" x-model="channel" class="field mt-1.5">
                     <option value="email">{{ __('alerts.form.channel_email') }}</option>
                     <option value="telegram">{{ __('alerts.form.channel_telegram') }}</option>
                     <option value="viber">{{ __('alerts.form.channel_viber') }}</option>
@@ -222,7 +222,7 @@
                                 href="https://t.me/{{ $botUsername }}?start={{ auth()->user()->telegram_connect_token }}"
                                 target="_blank"
                                 rel="noopener"
-                                class="mt-3 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md"
+                                class="btn btn-primary mt-3"
                             >
                                 <img src="{{ asset('images/telegram-logo.svg') }}" alt="" class="h-4 w-4">
                                 {{ __('alerts.telegram_connect.connect_button') }}
@@ -259,7 +259,7 @@
                     <div class="rounded-lg border border-placeholder bg-placeholder/10 px-4 py-4">
                         <p class="text-sm text-ink">{{ __('alerts.viber_connect.not_connected') }}</p>
 
-                        <button type="submit" form="connect-viber-form" class="mt-3 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md">
+                        <button type="submit" form="connect-viber-form" class="btn btn-primary mt-3">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0">
                                 <path d="M10 2a7 7 0 0 0-6 10.6L3 18l5.5-1a7 7 0 1 0 1.5-15Zm3.6 10.1c-.2.5-1 1-1.5 1.1-.4.1-.9.1-1.4-.1-.3-.1-.8-.3-1.3-.6-2.3-1-3.8-3.4-3.9-3.5-.1-.2-.9-1.2-.9-2.3s.6-1.6.8-1.9c.2-.2.5-.3.6-.3h.5c.2 0 .4 0 .5.4l.7 1.7c.1.2.1.3 0 .5l-.3.4-.4.4c-.1.1-.2.3-.1.5.2.3.7 1.2 1.5 1.9.9.9 1.7 1.1 2 1.3.2.1.4.1.5-.1l.6-.7c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.2.4.3.1.1.1.6-.1 1.1Z" />
                             </svg>
@@ -273,7 +273,7 @@
             <div class="sm:col-span-2">
                 <button
                     type="submit"
-                    class="bg-primary px-6 py-3 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md"
+                    class="btn btn-primary"
                 >
                     {{ __('alerts.form.submit') }}
                 </button>

@@ -18,6 +18,19 @@ use Illuminate\Support\Facades\Cache;
  */
 class HomeRatesTableData
 {
+    /**
+     * How many currencies the homepage widget carries.
+     *
+     * It is a teaser, not the rates page: it shows five banks for one
+     * currency at a time and links to /rates for the rest. Carrying all
+     * eleven active currencies meant the homepage shipped every currency
+     * crossed with every rate type - 53 hidden panels, 165 rows - to display
+     * five, which is most of why the document ran to ~460 KB and kept growing
+     * under the reader while it streamed in. The ones that do not fit are one
+     * click away behind the widget's own "view all" link.
+     */
+    private const CURRENCY_LIMIT = 3;
+
     public function build(): array
     {
         return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
@@ -45,7 +58,17 @@ class HomeRatesTableData
         // first (lowest sell_rate = best for a visitor buying foreign currency with
         // AMD). Rate types with no data for a currency are dropped entirely so the
         // sub-tabs only ever show options that actually have something to display.
-        $ratesByCurrency = $currencies->mapWithKeys(function ($currency) use ($ratingsByOrgId) {
+        //
+        // Walked in sort order and stopped at CURRENCY_LIMIT currencies that
+        // actually have rates, rather than mapping them all and slicing after:
+        // a currency the widget will not show should not be queried either.
+        $ratesByCurrency = [];
+
+        foreach ($currencies as $currency) {
+            if (count($ratesByCurrency) >= self::CURRENCY_LIMIT) {
+                break;
+            }
+
             $byType = collect(RateType::cases())->mapWithKeys(function ($rateType) use ($currency, $ratingsByOrgId) {
                 $rows = CurrencyRate::query()
                     ->where('currency_id', $currency->id)
@@ -74,10 +97,14 @@ class HomeRatesTableData
                 return [$rateType->value => $rows];
             })->filter(fn ($rows) => count($rows) > 0);
 
-            return [$currency->code => $byType->all()];
-        })->all();
+            if ($byType->isEmpty()) {
+                continue;
+            }
 
-        $currencyCodes = $currencies->pluck('code')->all();
+            $ratesByCurrency[$currency->code] = $byType->all();
+        }
+
+        $currencyCodes = array_keys($ratesByCurrency);
 
         $defaultCurrency = collect($currencyCodes)->first(fn ($code) => ! empty($ratesByCurrency[$code]))
             ?? ($currencyCodes[0] ?? null);
@@ -90,9 +117,11 @@ class HomeRatesTableData
         // anymore - see rates-table.blade.php's single header CTA) so
         // switching currency tabs still points the visitor at the right
         // currency without needing a row-specific deep link.
-        $alertUrlByCurrency = $currencies->mapWithKeys(
-            fn ($currency) => [$currency->code => route('alerts.index', ['currency_id' => $currency->id]).'#create-alert']
-        )->all();
+        $alertUrlByCurrency = $currencies
+            ->filter(fn ($currency) => array_key_exists($currency->code, $ratesByCurrency))
+            ->mapWithKeys(
+                fn ($currency) => [$currency->code => route('alerts.index', ['currency_id' => $currency->id]).'#create-alert']
+            )->all();
 
         return [
             'currencies' => $currencyCodes,

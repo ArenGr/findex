@@ -74,6 +74,17 @@
 
     $labelClass = 'block text-xs font-semibold tracking-wider text-muted uppercase';
 
+    // The home page's card: rounded-2xl, a light border, shadow-sm. Every
+    // surface on this page uses it, so the rates page looks like the rest of
+    // the site rather than like its own product.
+    $cardClass = 'rounded-2xl border border-placeholder bg-white shadow-sm';
+
+    // Utility filters (open now / near me) and the currency chips share one
+    // shape, so the row reads as one set of controls.
+    $pillBase = 'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border px-4 text-sm font-medium transition';
+    $pillOff = 'border-placeholder bg-white text-muted hover:border-primary hover:bg-primary/10 hover:text-primary';
+    $pillOn = 'border-primary bg-primary text-white hover:bg-primary-dark';
+
     $alertPrefill = [
         'form' => [
             'currency_id' => (string) ($selectedCurrency?->id ?? ''),
@@ -99,17 +110,11 @@
 @endphp
 
 @section('content')
-    {{-- HERO (from the approved redesign): heading, subheading, the two CTAs
-         and a decorative currency-circle composition. Reuses the existing
-         better-rate / rate-alert anchors and their handlers verbatim, in the
-         app's own header/footer and Findex brand colours. --}}
-    <section class="border-b border-placeholder bg-[radial-gradient(circle_at_75%_35%,rgba(96,126,52,0.10),transparent_28%)]">
-        <div class="mx-auto grid max-w-[1180px] items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:px-10">
-            <div class="min-w-0">
-                <h1 class="font-heading text-4xl font-bold break-words text-ink md:text-5xl">{{ __('rates.all_heading') }}</h1>
-                <p class="mt-4 max-w-xl text-lg leading-8 break-words text-muted">{{ __('rates.all_subheading') }}</p>
-
-                <div class="mt-7 flex flex-wrap items-center gap-3">
+    {{-- Hero geometry lives in x-page-hero, shared by every main page. This
+         page chooses its tint and supplies its own illustration; the CTAs and
+         their handlers are unchanged. --}}
+    <x-page-hero :title="__('rates.all_heading')" :subtitle="__('rates.all_subheading')">
+                <div class="flex flex-wrap items-center gap-3">
                 @if ($quoteMinimum !== null)
                     @php $qualifies = $amount >= $quoteMinimum; @endphp
                     <a
@@ -139,7 +144,7 @@
                                 'total' => $best && $handoverAmount ? $amd($handoverAmount * (float) $best->{$rateField}) : null,
                             ],
                         ]) }} }))"
-                        class="inline-flex min-w-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark"
+                        class="btn btn-primary min-w-0"
                     >
                         <svg
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
@@ -168,7 +173,7 @@
                 <a
                     href="{{ $alertHref }}"
                     onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
-                    class="inline-flex min-w-0 items-center gap-2 rounded-lg border border-placeholder bg-white px-4 py-2 text-sm font-medium text-ink transition hover:bg-placeholder/25"
+                    class="btn btn-secondary min-w-0"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
                         <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
@@ -180,43 +185,46 @@
                     {{ __('rates.alert_hint') }}
                 </x-info-popover>
                 </div>
-            </div>
 
-            {{-- Decorative currency composition, desktop only, Findex greens. --}}
-            <div class="relative hidden h-[220px] lg:block" aria-hidden="true">
-                <div class="absolute right-8 bottom-2 h-20 w-96 rounded-[50%] bg-primary/5"></div>
-                <div class="absolute right-20 bottom-12 h-20 w-72 rounded-[50%] bg-primary/5 shadow-sm"></div>
-                <div class="absolute top-12 right-[330px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/70 text-3xl font-semibold text-white shadow-lg">$</div>
-                <div class="absolute top-5 right-[230px] flex h-16 w-16 items-center justify-center rounded-full bg-primary text-3xl font-semibold text-white shadow-lg">€</div>
-                <div class="absolute top-0 right-[125px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/60 text-3xl font-semibold text-white shadow-lg">₽</div>
-                <div class="absolute top-14 right-10 flex h-16 w-16 items-center justify-center rounded-full bg-primary-dark text-3xl font-semibold text-white shadow-lg">֏</div>
+        {{-- Currency composition in Findex greens. Now that every hero shares
+             one tint, the illustration is where this page's identity lives. --}}
+        <x-slot:illustration>
+            <div class="relative" aria-hidden="true">
+                <div class="absolute right-4 bottom-2 h-20 w-80 rounded-[50%] bg-primary/5"></div>
+                <div class="absolute right-14 bottom-12 h-20 w-60 rounded-[50%] bg-primary/5 shadow-sm"></div>
+                <div class="absolute top-12 right-[250px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/70 text-3xl font-semibold text-white shadow-lg">$</div>
+                <div class="absolute top-5 right-[170px] flex h-16 w-16 items-center justify-center rounded-full bg-primary text-3xl font-semibold text-white shadow-lg">€</div>
+                <div class="absolute top-0 right-[90px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/60 text-3xl font-semibold text-white shadow-lg">₽</div>
+                <div class="absolute top-14 right-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary-dark text-3xl font-semibold text-white shadow-lg">֏</div>
             </div>
-        </div>
-    </section>
+        </x-slot:illustration>
+    </x-page-hero>
 
-    <section id="rates-panel" class="mx-auto max-w-[1180px] px-6 py-10 lg:px-10">
+    <section id="rates-panel" class="site-container pt-9 pb-12">
         @php
             $everyday = config('rates.everyday');
             $everyday = is_array($everyday) && $everyday !== []
                 ? $everyday
                 : $currencies->pluck('code')->all();
+            // The chosen currency is what the whole page is about, so it wears
+            // the brand green rather than a wash of it.
             $currencyChip = fn ($currency) => $selectedCurrency?->id === $currency->id
-                ? 'border-primary/50 bg-primary/20 text-ink'
-                : 'border-placeholder bg-white text-muted hover:text-ink';
+                ? 'border-primary bg-primary text-white'
+                : 'border-placeholder bg-white text-muted hover:border-primary hover:bg-primary/10 hover:text-primary';
             [$commonCurrencies, $otherCurrencies] = $currencies->partition(
                 fn ($currency) => in_array($currency->code, $everyday, true)
             );
             $othersOpen = $otherCurrencies->contains(fn ($currency) => $selectedCurrency?->id === $currency->id);
         @endphp
 
-        <div class="mt-8" x-data="{ showAll: @js($othersOpen) }">
+        <div x-data="{ showAll: @js($othersOpen) }">
             <span class="{{ $labelClass }}">{{ __('rates.currency_label') }}</span>
             {{-- On a phone the row scrolls sideways rather than wrapping. --}}
             <div class="mt-2 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
                 @foreach ($commonCurrencies as $currency)
                     <a
                         href="{{ $link(['currency' => $currency->code]) }}"
-                        class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $currencyChip($currency) }}"
+                        class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border px-4 text-sm font-semibold tracking-wide uppercase transition {{ $currencyChip($currency) }}"
                     >
                         <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
                         {{ $currency->code }}
@@ -229,7 +237,7 @@
                             href="{{ $link(['currency' => $currency->code]) }}"
                             x-show="showAll"
                             x-cloak
-                            class="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold tracking-wide uppercase transition {{ $currencyChip($currency) }}"
+                            class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border px-4 text-sm font-semibold tracking-wide uppercase transition {{ $currencyChip($currency) }}"
                         >
                             <span aria-hidden="true" class="text-base">{{ \App\Models\Currency::flag($currency->code) }}</span>
                             {{ $currency->code }}
@@ -240,10 +248,13 @@
                         type="button"
                         @click="showAll = !showAll"
                         :aria-expanded="showAll ? 'true' : 'false'"
-                        class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-border-muted bg-white px-4 py-2 text-sm font-medium text-muted transition hover:border-primary/50 hover:text-ink"
+                        class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-placeholder bg-white px-4 text-sm font-medium text-muted transition hover:border-primary hover:bg-primary/10 hover:text-primary"
                     >
                         <span x-show="!showAll">+{{ $otherCurrencies->count() }}</span>
-                        <span x-text="showAll ? @js(__('rates.currency_fewer')) : @js(__('rates.currency_more'))"></span>
+                        {{-- The collapsed label is rendered here as well as bound:
+                             an empty span paints a visibly narrower button until
+                             Alpine fills it in. --}}
+                        <span x-text="showAll ? @js(__('rates.currency_fewer')) : @js(__('rates.currency_more'))">{{ __('rates.currency_more') }}</span>
                     </button>
                 @endif
             </div>
@@ -357,7 +368,7 @@
              + open-now / near-me, on one card directly above the table. Same
              URL wiring as the old menu - every control navigates to a $link
              that sets its own param and carries the rest. --}}
-        <section class="mt-6 rounded-2xl border border-placeholder bg-white p-3 shadow-sm">
+        <section class="{{ $cardClass }} mt-6 p-3">
             <div class="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-stretch">
                 @if ($viewMode !== 'map')
                     <form method="GET" action="{{ route('rates.index') }}" class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-placeholder px-4 xl:min-w-[15rem]">
@@ -381,7 +392,8 @@
                 @endif
 
                 @if ($orgTypes->count() > 1)
-                    <x-rates.filter-select
+                    <x-rates.filter-menu
+                        :active="$selectedOrgType !== null"
                         :label="__('rates.market_label')"
                         :options="[
                             ['label' => __('rates.market_all'), 'href' => $link(['org_type' => null, 'organization' => null]), 'selected' => $selectedOrgType === null],
@@ -395,7 +407,7 @@
                 @endif
 
                 @if (collect($availableTypes)->isNotEmpty())
-                    <x-rates.filter-select
+                    <x-rates.filter-menu
                         :label="__('rates.type_label')"
                         :options="collect($availableTypes)->map(fn ($typeValue) => [
                             'label' => __('organizations.rate_types.' . $typeValue),
@@ -406,7 +418,9 @@
                 @endif
 
                 @if ($selectedOrgType !== null && $organizations->isNotEmpty())
-                    <x-rates.filter-select
+                    <x-rates.filter-menu
+                        searchable
+                        :active="$selectedOrganization !== null"
                         :label="__('rates.filter_org.' . $selectedOrgType)"
                         :options="[
                             ['label' => __('rates.filter_org_all.' . $selectedOrgType), 'href' => $link(['organization' => null]), 'selected' => $selectedOrganization === null],
@@ -420,7 +434,8 @@
                 @endif
 
                 @if ($cities->isNotEmpty())
-                    <x-rates.filter-select
+                    <x-rates.filter-menu
+                        :active="$selectedCity !== null"
                         :label="__('rates.filter_city')"
                         :options="[
                             ['label' => __('rates.filter_city_all'), 'href' => $link(['city' => null]), 'selected' => $selectedCity === null],
@@ -437,7 +452,7 @@
                     <a
                         href="{{ $link(['open' => $openNow ? null : 1]) }}"
                         aria-pressed="{{ $openNow ? 'true' : 'false' }}"
-                        class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-semibold transition {{ $openNow ? 'border-primary/50 bg-primary/10 text-ink' : 'border-placeholder bg-white text-muted hover:border-border-muted hover:text-ink' }}"
+                        class="{{ $pillBase }} {{ $openNow ? $pillOn : $pillOff }}"
                     >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
                             <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
@@ -466,7 +481,7 @@
                         @if ($hasLocation)
                             <a
                                 href="{{ $link(['lat' => null, 'lng' => null, 'sort' => null, 'dir' => null]) }}"
-                                class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-primary/50 bg-primary/10 px-4 py-2 text-sm font-semibold text-ink"
+                                class="{{ $pillBase }} {{ $pillOn }}"
                             >
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true">
                                     <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0" /><circle cx="12" cy="10" r="3" />
@@ -477,7 +492,7 @@
                         @else
                             <button
                                 type="button" @click="findNearby()" :disabled="state === 'locating'"
-                                class="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-placeholder bg-white px-4 py-2 text-sm font-semibold text-muted transition hover:border-border-muted hover:text-ink disabled:opacity-60"
+                                class="{{ $pillBase }} {{ $pillOff }} disabled:opacity-60"
                             >
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-accent-red" aria-hidden="true">
                                     <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0" /><circle cx="12" cy="10" r="3" />
@@ -637,7 +652,7 @@
                         'border border-placeholder bg-white' => ! $winsMobile,
                     ])>
                         @if ($winsMobile)
-                            <span class="absolute top-0 right-0 rounded-bl-lg bg-primary px-2 py-1 text-[10px] font-bold tracking-wider text-white uppercase">
+                            <span class="btn btn-primary absolute top-0 right-0 rounded-bl-lg text-[10px] font-bold tracking-wider uppercase">
                                 {{ __('rates.best_badge') }}
                             </span>
                         @endif
@@ -863,11 +878,11 @@
 
                 <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
                     @if ($search !== '')
-                        <a href="{{ $link(['q' => null]) }}" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]">
+                        <a href="{{ $link(['q' => null]) }}" class="btn btn-primary">
                             {{ __('rates.search_clear') }}
                         </a>
                     @elseif ($suggestedType)
-                        <a href="{{ $link(['type' => $suggestedType]) }}" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]">
+                        <a href="{{ $link(['type' => $suggestedType]) }}" class="btn btn-primary">
                             {{ __('rates.try_other_type', ['type' => __('organizations.rate_types.' . $suggestedType)]) }}
                         </a>
                     @endif

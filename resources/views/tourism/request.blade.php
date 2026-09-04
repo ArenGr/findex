@@ -2,13 +2,26 @@
 
 @section('title', __('tourism.request.heading') . ' — Findex')
 
+{{-- This page sets font-manrope on its wrapper, so Manrope is its body face at
+     every weight. Preloaded here rather than in the layout: no other page uses
+     it, and it is ~56 KB. Without it the whole page paints in the fallback and
+     then re-renders once Manrope lands. --}}
+@push('head')
+    @foreach (App\Support\FontPreloads::urls('manrope', app()->getLocale()) as $href)
+        <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ $href }}">
+    @endforeach
+@endpush
+
 @php
     use App\Models\QuoteRequest;
 
+    // `$fieldIcon` is the same field with room for a leading glyph.
     $field = 'w-full rounded-lg border border-border-subtle bg-white px-4 py-3 text-body-sm text-on-surface transition-colors focus:border-travel-primary focus:ring-1 focus:ring-travel-primary focus:outline-none';
+    $fieldIcon = $field.' pl-10';
     $label = 'block text-body-sm text-ink-muted';
     $card = 'rounded-[15px] border border-border-subtle bg-white p-5 shadow-[0_3px_14px_rgba(24,29,18,0.035)]';
     $stepper = 'flex h-9 w-9 items-center justify-center rounded-full border border-border-subtle text-on-surface transition-colors hover:border-travel-primary disabled:opacity-40 disabled:hover:border-border-subtle';
+    $sectionIcon = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-primary/10';
 
     // Which wizard step a failed submission should reopen: the earliest step
     // holding a rejected field. It is all one form and one POST - these
@@ -27,8 +40,11 @@
         }
     }
 
-    $navPrimary = 'flex h-12 items-center justify-center gap-2 rounded-lg bg-travel-primary px-6 text-body-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#546d2d] focus-visible:ring-2 focus-visible:ring-travel-primary/40 focus-visible:outline-none';
-    $navGhost = 'flex h-12 items-center justify-center gap-2 rounded-lg border border-border-subtle px-5 text-body-sm font-medium text-on-surface transition-colors hover:border-outline focus-visible:ring-2 focus-visible:ring-travel-primary/40 focus-visible:outline-none';
+    // The shared button, not a travel-only copy of it: bg-travel-primary is
+    // the same #607E34 as the brand green, so this was the same button under
+    // another name, drifting on its own.
+    $navPrimary = 'btn btn-primary';
+    $navGhost = 'btn btn-secondary';
 @endphp
 
 @section('content')
@@ -55,6 +71,7 @@
             'mealPreference' => old('meal_preference', QuoteRequest::MEAL_ANY),
             'priorities' => array_values((array) old('priorities', [])),
             'maxPriorities' => $maxPriorities,
+            'insurance' => (bool) old('insurance'),
             'budgetBand' => old('budget_band', ''),
             'budgetMin' => old('budget_min_amd', ''),
             'budgetMax' => old('budget_max_amd', ''),
@@ -71,16 +88,22 @@
             ],
         ]))"
     >
-        <section x-show="step === 1" class="border-b border-placeholder bg-[radial-gradient(circle_at_78%_40%,rgba(96,126,52,0.10),transparent_30%)]">
-            <div class="mx-auto grid max-w-[1220px] items-center gap-6 px-4 py-12 md:px-6 lg:grid-cols-[1fr_480px]">
-                <div class="min-w-0">
-                    <span class="mb-3 inline-flex items-center rounded-full bg-travel-primary/10 px-3 py-1 text-label-caps text-travel-primary">
-                        {{ __('tourism.request.eyebrow') }}
-                    </span>
-                    <h1 class="text-headline-lg-mobile text-on-surface md:text-headline-lg">{{ __('tourism.request.heading') }}</h1>
-                    <p class="mt-2 max-w-[570px] text-body-lg text-ink-muted">{{ __('tourism.request.subheading') }}</p>
+        {{-- Hero geometry lives in x-page-hero, shared by every main page. tuck
+             leaves room for the stepper card to sit in the hero's bottom edge. --}}
+        <x-page-hero
+            x-show="step === 1"
+            :x-cloak="$initialStep !== 1"
+            :title="__('tourism.request.heading')"
+            :subtitle="__('tourism.request.subheading')"
+        >
+            <x-slot:eyebrow>
+                <x-hero-badge>
+                    <x-slot:icon><x-travel-icon name="flight_takeoff" class="h-4 w-4" /></x-slot:icon>
+                    {{ __('tourism.request.eyebrow') }}
+                </x-hero-badge>
+            </x-slot:eyebrow>
 
-                    <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+                    <ul class="flex flex-wrap gap-x-6 gap-y-2">
                         <li class="inline-flex items-center gap-1.5 text-body-sm text-ink-muted">
                             <svg class="h-4 w-4 shrink-0 text-travel-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
                             {{ __('tourism.request.benefit_trusted') }}
@@ -94,62 +117,44 @@
                             {{ __('tourism.request.benefit_time') }}
                         </li>
                     </ul>
+
+            {{-- Warm-yellow-and-green travel scene: this page's identity, now
+                 that the tint is shared. --}}
+            {{-- Where you are in the flow, inside the hero. Alpine-bound rather
+             than the shared x-hero-steps: this one is clickable and its state
+             changes without a page load. Same classes, so the two request
+             pages read as the same indicator. --}}
+        <x-slot:steps>
+            @include('tourism.request._stepper')
+        </x-slot:steps>
+
+        <x-slot:illustration>
+                    {{-- See the insurance request hero: 1.7 MB PNG replaced by a
+                         WebP at twice the size it is ever painted. --}}
+                    <img
+                        src="{{ asset('images/travel/hero-travel.webp') }}?v={{ filemtime(public_path('images/travel/hero-travel.webp')) }}"
+                        alt=""
+                        width="960"
+                        height="320"
+                    >
+            </x-slot:illustration>
+        </x-page-hero>
+
+        <section x-show="step > 1" @if ($initialStep <= 1) x-cloak @endif class="border-b border-placeholder bg-primary/5">
+            <div class="site-container py-6">
+                <div class="flex items-center justify-between gap-4">
+                    <h1 class="text-headline-md text-on-surface">{{ __('tourism.request.heading') }}</h1>
+                    <span class="shrink-0 text-body-sm text-ink-muted" x-text="@js(__('tourism.request.wizard_step_of', ['current' => ':c', 'total' => ':t'])).replace(':c', step).replace(':t', totalSteps)"></span>
                 </div>
 
-                <div class="hidden items-center justify-end lg:flex">
-                    <img src="{{ asset('images/travel/hero-travel.png') }}" alt="" class="h-[210px] w-full max-w-[480px] object-contain object-right">
+                <div class="mt-5 border-t border-primary/15 pt-5">
+                    @include('tourism.request._stepper')
                 </div>
             </div>
         </section>
 
-        <section x-show="step > 1" x-cloak class="border-b border-placeholder">
-            <div class="mx-auto flex max-w-[1220px] items-center justify-between gap-4 px-4 py-4 md:px-6">
-                <h1 class="text-headline-md text-on-surface">{{ __('tourism.request.heading') }}</h1>
-                <span class="shrink-0 text-body-sm text-ink-muted" x-text="@js(__('tourism.request.wizard_step_of', ['current' => ':c', 'total' => ':t'])).replace(':c', step).replace(':t', totalSteps)"></span>
-            </div>
-        </section>
-
-        <section class="mx-auto max-w-[1220px] px-4 pt-8 pb-16 md:px-6 md:pb-20">
+        <section class="site-container pb-16 lg:pb-20">
             <div id="travel-form-top" class="scroll-mt-4"></div>
-
-            <nav class="mb-8" aria-label="{{ __('tourism.request.heading') }}">
-                <ol class="flex items-center">
-                    @foreach ([1, 2, 3] as $n)
-                        @php $done = "(step > {$n} || stepDone({$n}))"; @endphp
-                        <li class="flex items-center gap-3 {{ $n < 3 ? 'flex-1' : '' }}">
-                            <button
-                                type="button"
-                                @click="({{ $done }}) && goToStep({{ $n }})"
-                                :class="{{ $done }} ? 'cursor-pointer' : (step === {{ $n }} ? '' : 'cursor-default')"
-                                class="flex items-center gap-3 text-left focus-visible:outline-none"
-                            >
-                                <span
-                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[13px] font-semibold transition-colors"
-                                    :class="{{ $done }}
-                                        ? 'border-travel-primary bg-travel-primary text-white'
-                                        : (step === {{ $n }} ? 'border-travel-primary text-travel-primary' : 'border-border-subtle text-ink-muted')"
-                                >
-                                    <template x-if="{{ $done }}"><x-travel-icon name="check" class="h-[18px] w-[18px]" /></template>
-                                    <template x-if="!({{ $done }})"><span>{{ $n }}</span></template>
-                                </span>
-                                <span class="hidden min-w-0 sm:block">
-                                    <span class="block text-[13px] font-semibold leading-4" :class="step === {{ $n }} ? 'text-on-surface' : 'text-ink-muted'">{{ __('tourism.request.fstep_' . $n . '_title') }}</span>
-                                    <span class="block text-[11px] leading-4 text-ink-muted">{{ __('tourism.request.fstep_' . $n . '_body') }}</span>
-                                </span>
-                            </button>
-                            @if ($n < 3)
-                                <span class="mx-2 h-px flex-1 transition-colors" :class="step > {{ $n }} ? 'bg-travel-primary' : 'bg-border-subtle'"></span>
-                            @endif
-                        </li>
-                    @endforeach
-                </ol>
-
-                <p class="mt-4 text-[13px] font-medium text-ink-muted sm:hidden" x-text="@js(__('tourism.request.wizard_step_of', ['current' => ':c', 'total' => ':t'])).replace(':c', step).replace(':t', totalSteps)"></p>
-                <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-border-subtle sm:hidden">
-                    <div class="h-full rounded-full bg-travel-primary transition-all" :style="`width: ${(step / totalSteps) * 100}%`"></div>
-                </div>
-            </nav>
-
             @if (session('status') === 'destination-alert-created')
                 <div class="mb-6 rounded-lg border border-travel-primary/30 bg-travel-primary/5 px-4 py-3 text-body-sm text-travel-primary">
                     {{ __('tourism.request.notify_me_confirmed') }}
@@ -173,7 +178,11 @@
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
                     <div class="flex flex-col gap-6">
                         {{-- STEP 1 --}}
-                        <div data-step="1" x-show="step === 1" x-cloak class="flex flex-col gap-6">
+                        {{-- x-cloak only on the steps this render is not
+                             starting on. Cloaking all three left the form
+                             blank until Alpine booted, so the page painted
+                             empty and then filled in. --}}
+                        <div data-step="1" x-show="step === 1" @if ($initialStep !== 1) x-cloak @endif class="flex flex-col gap-6">
                             <div>
                                 <h2 class="text-headline-md text-on-surface">{{ __('tourism.request.step1_heading') }}</h2>
                                 <p class="mt-1 text-body-md text-ink-muted">{{ __('tourism.request.step1_sub') }}</p>
@@ -191,7 +200,7 @@
                         </div>
 
                         {{-- STEP 2 --}}
-                        <div data-step="2" x-show="step === 2" x-cloak class="flex flex-col gap-6">
+                        <div data-step="2" x-show="step === 2" @if ($initialStep !== 2) x-cloak @endif class="flex flex-col gap-6">
                             <div>
                                 <h2 class="text-headline-md text-on-surface">{{ __('tourism.request.step2_heading') }}</h2>
                                 <p class="mt-1 text-body-md text-ink-muted">{{ __('tourism.request.step2_sub') }}</p>
@@ -214,7 +223,7 @@
                         </div>
 
                         {{-- STEP 3 --}}
-                        <div data-step="3" x-show="step === 3" x-cloak class="flex flex-col gap-6">
+                        <div data-step="3" x-show="step === 3" @if ($initialStep !== 3) x-cloak @endif class="flex flex-col gap-6">
                             <div>
                                 <h2 class="text-headline-md text-on-surface">{{ __('tourism.request.step3_heading') }}</h2>
                                 <p class="mt-1 text-body-md text-ink-muted">{{ __('tourism.request.step3_sub') }}</p>

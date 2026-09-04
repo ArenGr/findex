@@ -29,7 +29,7 @@
         ];
     @endphp
 
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <h1 class="font-heading text-3xl font-bold text-ink">{{ __('style_guide.title') }}</h1>
         <p class="mt-2 max-w-2xl text-sm text-muted">{{ __('style_guide.subtitle') }}</p>
 
@@ -91,8 +91,8 @@
         {{-- Buttons --}}
         <h2 class="mt-16 font-heading text-xl font-semibold text-ink">{{ __('style_guide.buttons') }}</h2>
         <div class="mt-6 flex flex-wrap items-center gap-4">
-            <button type="button" class="bg-primary px-6 py-3 text-sm text-white hover:bg-primary-dark">{{ __('common.learn_more') }}</button>
-            <button type="button" class="border border-ink px-6 py-3 text-sm text-ink hover:bg-ink hover:text-white">{{ __('common.compare_banks') }}</button>
+            <button type="button" class="btn btn-primary">{{ __('common.learn_more') }}</button>
+            <button type="button" class="btn btn-secondary">{{ __('common.compare_banks') }}</button>
         </div>
     </section>
 @endsection

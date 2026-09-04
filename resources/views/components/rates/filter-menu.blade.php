@@ -59,19 +59,19 @@
     class="group relative min-w-0"
 >
     <summary
-        class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl border px-3.5 py-2 text-start transition select-none marker:content-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none [&::-webkit-details-marker]:hidden {{ $active ? 'border-primary/50 bg-primary/10' : 'border-placeholder bg-white hover:border-border-muted' }}"
+        class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl border px-3.5 py-2 text-start transition select-none marker:content-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none [&::-webkit-details-marker]:hidden {{ $active ? 'border-primary bg-primary' : 'border-placeholder bg-white hover:border-primary hover:bg-primary/10' }}"
         @if ($hint) title="{{ $hint }}" @endif
     >
         <span class="min-w-0">
-            <span class="block text-[11px] font-semibold tracking-wider text-subtle uppercase">{{ $label }}</span>
-            <span class="mt-0.5 block truncate text-sm font-semibold {{ $active ? 'text-ink' : 'text-muted' }}">
+            <span class="block text-[11px] font-semibold tracking-wider uppercase {{ $active ? 'text-white/75' : 'text-subtle' }}">{{ $label }}</span>
+            <span class="mt-0.5 block truncate text-sm font-semibold {{ $active ? 'text-white' : 'text-muted' }}">
                 {{ $current['label'] ?? '' }}
             </span>
         </span>
 
         {{-- Rotates when the panel is open, so the control shows its own state
         rather than relying on the panel below it being noticed. --}}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-auto h-4 w-4 shrink-0 text-muted transition-transform group-open:-rotate-180" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-auto h-4 w-4 shrink-0 transition-transform group-open:-rotate-180 {{ $active ? 'text-white/80' : 'text-muted' }}" aria-hidden="true">
             <path d="m6 9 6 6 6-6" />
         </svg>
     </summary>
@@ -116,18 +116,22 @@
         @endif
 
         @foreach ($options as $option)
+            {{-- data-filter-option is a test hook. Without it an assertion about
+                 "the chosen filter is marked current" also matches the list/map
+                 toggle, whose href carries the very same filters. --}}
             <a
                 href="{{ $option['href'] }}"
                 @if ($searchable) x-show="matches(@js($option['label']))" @endif
+                data-filter-option
                 @if ($option['selected']) aria-current="true" @endif
-                class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm break-words transition {{ $option['selected'] ? 'bg-primary/10 font-semibold text-ink' : 'text-muted hover:bg-placeholder/40 hover:text-ink' }}"
+                class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm break-words transition {{ $option['selected'] ? 'bg-primary font-semibold text-white' : 'text-muted hover:bg-primary/10 hover:text-primary' }}"
             >
                 <span class="min-w-0 flex-1">{{ $option['label'] }}</span>
 
                 {{-- A tick on the chosen row. The tint alone reads as a hover
                 state on a list you are already hovering over. --}}
                 @if ($option['selected'])
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 text-white" aria-hidden="true">
                         <path d="m5 13 4 4L19 7" />
                     </svg>
                 @endif

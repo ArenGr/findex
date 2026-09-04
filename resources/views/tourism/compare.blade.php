@@ -82,7 +82,7 @@
         @if ($selected->count() < 2)
             <div class="mt-8 rounded-2xl border border-dashed border-placeholder p-10 text-center">
                 <p class="text-sm text-muted">{{ __('tourism.compare.empty') }}</p>
-                <a href="{{ $offersUrl }}" class="mt-4 inline-block bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark">
+                <a href="{{ $offersUrl }}" class="btn btn-primary mt-4 inline-block">
                     {{ __('tourism.compare.back_to_offers') }}
                 </a>
             </div>
@@ -95,7 +95,7 @@
             <div class="mt-8 lg:hidden">
                 <p class="mb-3 text-xs text-subtle">{{ __('tourism.compare.mobile_hint') }}</p>
 
-                <div class="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-4">
+                <div class="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
                     @foreach ($selected as $row)
                         <div class="w-[85vw] max-w-sm shrink-0 snap-center rounded-2xl border border-placeholder bg-white p-5 shadow-sm">
                             <div class="flex items-center gap-3">
@@ -128,7 +128,7 @@
 
                             <a
                                 href="{{ $quoteRequest->signedUrlFor('tourism.offers.show', ['suggestion' => $row['offer']->id]) }}"
-                                class="mt-4 block bg-primary px-4 py-2 text-center text-sm font-medium text-white hover:bg-primary-dark"
+                                class="btn btn-primary mt-4 block text-center"
                             >
                                 {{ __('tourism.offers.view_details') }}
                             </a>
@@ -197,7 +197,7 @@
                                 <td class="border-t border-placeholder px-4 py-4">
                                     <a
                                         href="{{ $quoteRequest->signedUrlFor('tourism.offers.show', ['suggestion' => $row['offer']->id]) }}"
-                                        class="inline-block bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
+                                        class="btn btn-primary inline-block"
                                     >
                                         {{ __('tourism.offers.view_details') }}
                                     </a>

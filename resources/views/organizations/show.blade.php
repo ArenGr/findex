@@ -24,7 +24,7 @@
         ]);
     @endphp
 
-    <div class="mx-auto max-w-7xl px-6 py-10 lg:px-10">
+    <div class="site-container py-10">
 
         @if (session('status') === 'review-submitted')
             <div class="mb-8 border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
@@ -104,7 +104,7 @@
         five rate tables, and the rates are usually what someone came for. --}}
         @if (count($sections) > 1)
             <nav
-                class="sticky top-0 z-30 -mx-6 mb-10 mt-8 border-b border-placeholder bg-white/95 px-6 backdrop-blur lg:-mx-10 lg:px-10"
+                class="sticky top-0 z-30 -mx-4 mb-10 mt-8 border-b border-placeholder bg-white/95 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10"
                 aria-label="{{ $organization->name }}"
             >
                 <div class="flex gap-8 overflow-x-auto">
@@ -302,7 +302,7 @@
                                     'form' => ['currency_code' => $firstCode, 'rate_field' => 'buy_rate'],
                                     'context' => ['code' => $firstCode, 'organization' => $organization->name],
                                 ]) }} }))"
-                                class="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark"
+                                class="btn btn-primary break-words"
                             >
                                 {{ __('rates.cta_button') }}
                             </a>
@@ -611,10 +611,14 @@
 
                 @if ($organization->branches->count() > $branchPreview)
                     <div class="mt-6 text-center">
+                        {{-- No x-cloak: the branch-count condition above only
+                             renders this button when there are more branches
+                             than the preview, which is exactly what x-show
+                             re-checks - hiding it until Alpine booted just made
+                             the section grow by 50px on load. --}}
                         <button
                             type="button"
                             x-show="expanded || total > preview"
-                            x-cloak
                             @click="expanded = ! expanded"
                             class="inline-flex min-h-11 items-center rounded-xl border border-placeholder px-8 py-3 text-sm font-semibold text-primary transition hover:bg-primary/5"
                         >
@@ -680,7 +684,7 @@
                     <select
                         name="branch_id"
                         id="branch_id"
-                        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                        class="field mt-1.5"
                     >
                         <option value="">{{ __('organizations.no_branch') }}</option>
                         @foreach ($organization->branches as $branch)
@@ -702,7 +706,7 @@
                     <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
                 @enderror
 
-                <button type="submit" class="mt-5 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-medium text-white transition hover:bg-primary-dark active:scale-[0.98]">
+                <button type="submit" class="btn btn-primary mt-5">
                     {{ $myReview ? __('organizations.update_review') : __('organizations.submit_review') }}
                 </button>
 

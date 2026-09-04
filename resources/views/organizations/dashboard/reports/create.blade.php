@@ -14,7 +14,7 @@
                 <select
                     name="branch_id"
                     id="branch_id"
-                    class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                    class="field mt-1.5"
                 >
                     <option value="">{{ __('org.reports.all_branches') }}</option>
                     @foreach ($branches as $branch)
@@ -27,7 +27,7 @@
         <x-form-input name="period_from" type="date" :label="__('org.reports.period_from')" />
         <x-form-input name="period_to" type="date" :label="__('org.reports.period_to')" />
 
-        <button type="submit" class="bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+        <button type="submit" class="btn btn-primary">
             {{ __('org.reports.request_button') }}
         </button>
     </form>

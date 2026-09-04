@@ -1,6 +1,8 @@
 import Alpine from 'alpinejs';
 import morph from '@alpinejs/morph';
 import travelRequestForm from './travel-request-form.js';
+import homeRatesPanel from './home-rates-panel.js';
+import mortgageTable from './mortgage-table.js';
 
 window.Alpine = Alpine;
 
@@ -9,6 +11,14 @@ window.Alpine = Alpine;
 // attribute, and a single double quote in one would close the attribute and
 // silently drop every property after it.
 Alpine.data('travelRequestForm', travelRequestForm);
+
+// One panel of the homepage rates table. Same reasoning as above, plus the
+// homepage renders 53 of them - inlining the object would put ~80KB of
+// identical JavaScript in the HTML.
+Alpine.data('homeRatesPanel', homeRatesPanel);
+
+// The /banks/mortgages calculator.
+Alpine.data('mortgageTable', mortgageTable);
 
 // Used by /rates to patch the filtered results in place. Morphing rather than
 // replacing innerHTML keeps the existing nodes, so nothing unchanged repaints

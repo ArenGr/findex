@@ -40,6 +40,11 @@ export default function travelRequestForm(config) {
         priorities: config.priorities,
         maxPriorities: config.maxPriorities,
 
+        // The insurance checkbox is x-model'd in _preferences.blade.php. It was
+        // never declared here, so Alpine threw "insurance is not defined" on
+        // every render of step 2 and the checkbox did not bind at all.
+        insurance: config.insurance,
+
         // Budget
         budgetBand: config.budgetBand,
         budgetMin: config.budgetMin,

@@ -16,13 +16,21 @@
  * Served straight from public/fonts/subset rather than through Vite, so the
  * paths are stable and the files are cached by name. Rename them if the
  * source font is ever replaced with different metrics.
+ *
+ * font-display: optional, not swap. swap paints the fallback and then
+ * re-renders every line once FreeSans lands - the visible "text changed size"
+ * flash. optional gives it a ~100ms window: the Latin subset and the current
+ * locale's script are preloaded (see layouts/app.blade.php), so it normally
+ * wins; when it does not, the browser keeps the fallback for that page view
+ * and never swaps. fonts-fallbacks.css makes that fallback metrically
+ * identical, so the layout is the same either way.
  */
 
 @font-face {
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-400-latin.woff2") format("woff2");
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
@@ -34,7 +42,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-400-latin-ext.woff2") format("woff2");
     unicode-range:
         U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF,
@@ -45,7 +53,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-400-cyrillic.woff2") format("woff2");
     unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
@@ -54,7 +62,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-400-cyrillic-ext.woff2") format("woff2");
     unicode-range:
         U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
@@ -64,7 +72,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-400-armenian.woff2") format("woff2");
     unicode-range: U+0530-058F, U+FB13-FB17;
 }
@@ -73,7 +81,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 700;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-700-latin.woff2") format("woff2");
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
@@ -85,7 +93,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 700;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-700-latin-ext.woff2") format("woff2");
     unicode-range:
         U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF,
@@ -96,7 +104,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 700;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-700-cyrillic.woff2") format("woff2");
     unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
@@ -105,7 +113,7 @@
     font-family: "FreeSans";
     font-style: normal;
     font-weight: 700;
-    font-display: swap;
+    font-display: optional;
     src: url("/fonts/subset/freesans-700-cyrillic-ext.woff2") format("woff2");
     unicode-range:
         U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;

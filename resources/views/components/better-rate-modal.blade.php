@@ -287,7 +287,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold break-words text-white shadow-sm transition hover:bg-primary-dark"
+                        class="btn btn-primary font-bold break-words"
                     >
                         {{ __('exchange_quotes.modal.submit') }}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">

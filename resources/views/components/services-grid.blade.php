@@ -13,7 +13,7 @@
 @endphp
 
 <section class="border-t border-placeholder bg-white">
-    <div class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <div class="site-container py-16">
         <div class="mx-auto max-w-2xl text-center">
             <span class="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
                 {{ __('home.services.eyebrow') }}
@@ -41,7 +41,7 @@
             <div
                 x-ref="track"
                 @scroll.debounce.100ms="active = Math.round($el.scrollLeft / $el.clientWidth)"
-                class="-mx-6 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
+                class="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
             >
                 @foreach ($services as $service)
                     <a href="{{ $service['href'] }}" class="group relative flex w-full shrink-0 snap-center flex-col items-center justify-center gap-5 rounded-2xl border {{ $service['border'] }} bg-white px-6 py-10 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-auto sm:shrink">
@@ -49,14 +49,25 @@
                             {{-- ?v=mtime busts the browser's image cache whenever this file is
                             replaced on disk - these are plain public/ files, not run through
                             Vite's content-hashed asset pipeline, so the URL never changes on its
-                            own when the image does. --}}
+                            own when the image does.
+
+                            Deliberately NOT loading="lazy". This is the first section under the
+                            hero, so on most screens these four are at or just past the fold - and
+                            a lazy image is invisible to the preload scanner, so the browser only
+                            discovers it after parsing, styling and laying the page out. That is
+                            why these four blinked in one after the other on every refresh while
+                            everything around them was already painted. Without the attribute they
+                            are fetched during HTML parsing, alongside the hero, and are decoded
+                            before the first frame. They are ~12 KB each.
+
+                            fetchpriority="low" is the other half of that: eager, so the scanner
+                            sees them, but never ahead of the hero photo they sit below. --}}
                             <img
                                 src="{{ asset($service['image']) }}?v={{ filemtime(public_path($service['image'])) }}"
                                 alt=""
                                 width="320"
                                 height="214"
-                                loading="lazy"
-                                decoding="async"
+                                fetchpriority="low"
                                 class="h-25 w-40 object-contain transition duration-300 group-hover:scale-105"
                             >
                         </span>
@@ -78,11 +89,16 @@
             {{-- Swipe position dots - mobile only, the sm:grid above needs no page indicator. --}}
             <div class="mt-4 flex items-center justify-center gap-2 sm:hidden">
                 @foreach ($services as $i => $service)
+                    {{-- The width lives in the class attribute as well as the
+                         binding, or every dot paints at zero width and pops out
+                         to 2/6px when Alpine boots. Object form, not a ternary:
+                         a ternary only clears what Alpine itself added, so the
+                         width rendered here would never come off. --}}
                     <button
                         type="button"
                         @click="active = {{ $i }}; scrollToActive()"
-                        :class="active === {{ $i }} ? 'bg-primary w-6' : 'bg-border-muted w-2'"
-                        class="h-2 rounded-full transition-all"
+                        :class="{ 'bg-primary w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
+                        class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-primary w-6' : 'bg-border-muted w-2' }}"
                         aria-label="{{ __('hero.go_to_slide', ['n' => $i + 1]) }}"
                     ></button>
                 @endforeach

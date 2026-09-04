@@ -40,7 +40,7 @@
         <x-form-input name="password" type="password" :label="__('org.team.password')" required />
         <x-form-input name="password_confirmation" type="password" :label="__('org.team.password_confirmation')" required />
 
-        <button type="submit" class="bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+        <button type="submit" class="btn btn-primary">
             {{ __('org.team.add_button') }}
         </button>
     </form>

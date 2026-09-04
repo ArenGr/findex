@@ -8,7 +8,7 @@
 @endphp
 
 @if ($articles->isNotEmpty())
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <h2 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('news.heading') }}</h2>
         <p class="mt-2 max-w-2xl text-sm text-muted">
             {{ __('news.subtitle') }}
@@ -34,7 +34,7 @@
             <div
                 x-ref="track"
                 @scroll.debounce.100ms="active = Math.round($el.scrollLeft / $el.clientWidth)"
-                class="-mx-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
+                class="-mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
             >
                 @foreach ($articles as $article)
                     <a

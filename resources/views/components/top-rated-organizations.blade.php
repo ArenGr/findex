@@ -15,7 +15,7 @@
 @endphp
 
 @if ($topRated->isNotEmpty())
-    <section class="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <section class="site-container py-16">
         <h2 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('organizations.top_rated_heading') }}</h2>
         <p class="mt-2 max-w-2xl text-sm text-muted">
             {{ __('organizations.top_rated_subtitle') }}
@@ -67,7 +67,7 @@
         </div>
 
         <div class="mt-10 text-center">
-            <a href="{{ route('organizations.index') }}" class="inline-block bg-primary px-8 py-3 text-sm font-medium text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-md">
+            <a href="{{ route('organizations.index') }}" class="btn btn-primary inline-block">
                 {{ __('organizations.view_all') }}
             </a>
         </div>

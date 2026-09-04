@@ -1192,8 +1192,13 @@ class RatesPageTest extends TestCase
 
     /**
      * The filters are all on the always-visible bar now, so a narrowed table
-     * is signalled on the controls themselves: the matching option carries the
-     * `selected` attribute and its URL still names the active filter.
+     * is signalled on the controls themselves: the matching option is marked
+     * current and its URL still names the active filter.
+     *
+     * Asserted against a link rather than an <option>: these filters are a
+     * menu of URLs, not a form control, and they moved back off the native
+     * <select> whose option list the browser draws itself and refuses to
+     * style.
      */
     public function test_the_filter_bar_reflects_a_non_default_selection(): void
     {
@@ -1203,8 +1208,11 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
+        // Scoped to a filter option: the list/map toggle also carries the
+        // active filters in its href and is also marked current, so a pattern
+        // without the hook passes whether the filter works or not.
         $this->assertMatchesRegularExpression(
-            '/<option value="[^"]*org_type=exchange[^"]*" selected/',
+            '/<a[^>]*href="[^"]*org_type=exchange[^"]*"[^>]*data-filter-option[^>]*aria-current="true"/',
             $html,
         );
     }

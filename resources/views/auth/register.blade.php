@@ -14,7 +14,7 @@
             <x-form-input name="password" type="password" :label="__('auth.password')" required />
             <x-form-input name="password_confirmation" type="password" :label="__('auth.confirm_password')" required />
 
-            <button type="submit" class="w-full bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+            <button type="submit" class="btn btn-primary w-full">
                 {{ __('auth.register_button') }}
             </button>
         </form>

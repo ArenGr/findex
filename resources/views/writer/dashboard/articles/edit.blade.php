@@ -18,7 +18,7 @@
 
         <x-article-form :article="$article" :languages="$languages" />
 
-        <button type="submit" class="bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+        <button type="submit" class="btn btn-primary">
             {{ __('writer.articles.save') }}
         </button>
     </form>

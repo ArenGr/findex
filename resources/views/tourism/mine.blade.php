@@ -10,7 +10,7 @@
                 <p class="mt-2 text-sm text-muted">{{ __('tourism.mine.subtitle') }}</p>
             </div>
 
-            <a href="{{ route('tourism.request') }}" class="shrink-0 bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark">
+            <a href="{{ route('tourism.request') }}" class="btn btn-primary shrink-0">
                 {{ __('tourism.mine.new_request') }}
             </a>
         </div>
@@ -53,7 +53,7 @@
                                     ]) !!}
                                 </p>
 
-                                <a href="{{ route('tourism.offers', $quoteRequest) }}" class="w-full bg-primary px-4 py-2 text-center text-sm font-medium text-white hover:bg-primary-dark">
+                                <a href="{{ route('tourism.offers', $quoteRequest) }}" class="btn btn-primary w-full text-center">
                                     {{ __('tourism.status_page.view_offers', ['count' => $quoteRequest->offers_count]) }}
                                 </a>
                             @else
@@ -79,7 +79,7 @@
                     </p>
 
                     @if ($tab !== 'past')
-                        <a href="{{ route('tourism.request') }}" class="mt-4 inline-block bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark">
+                        <a href="{{ route('tourism.request') }}" class="btn btn-primary mt-4 inline-block">
                             {{ __('tourism.mine.new_request') }}
                         </a>
                     @endif

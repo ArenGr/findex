@@ -7,7 +7,7 @@
     <select
         name="language"
         id="language"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >
         @foreach ($languages as $code => $meta)
             <option value="{{ $code }}" @selected(old('language', $article->language ?? null) === $code)>{{ $meta['native'] }}</option>
@@ -25,7 +25,7 @@
         id="excerpt"
         rows="3"
         maxlength="500"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >{{ old('excerpt', $article->excerpt ?? '') }}</textarea>
     @error('excerpt')
         <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
@@ -55,7 +55,7 @@
         name="body"
         id="body"
         rows="16"
-        class="mt-1.5 block w-full rounded-md border border-border-muted px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+        class="field mt-1.5"
     >{{ old('body', $article->body ?? '') }}</textarea>
     @error('body')
         <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>

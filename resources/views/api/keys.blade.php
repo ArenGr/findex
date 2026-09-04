@@ -36,7 +36,7 @@
                 @enderror
             </div>
 
-            <button type="submit" class="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold break-words text-white transition hover:bg-primary-dark">
+            <button type="submit" class="btn btn-primary break-words">
                 {{ __('api.create_key') }}
             </button>
         </form>

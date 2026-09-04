@@ -7,7 +7,7 @@
         <h1 class="font-heading text-2xl font-bold text-ink">{{ __('tourism.destination_alerts.unsubscribed_heading') }}</h1>
         <p class="mt-2 text-sm text-muted">{{ __('tourism.destination_alerts.unsubscribed_body') }}</p>
 
-        <a href="{{ route('tourism.request', ['locale' => app()->getLocale()]) }}" class="mt-8 inline-block bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary-dark">
+        <a href="{{ route('tourism.request', ['locale' => app()->getLocale()]) }}" class="btn btn-primary mt-8 inline-block">
             {{ __('tourism.destination_alerts.back_to_form') }}
         </a>
     </section>
