@@ -1,11 +1,5 @@
-{{--
-    The mobile counterpart to the sticky sidebar. Deliberately not the
-    desktop panel squeezed onto a phone: the trip condenses to one line, with
-    the step action beside it. On steps one and two the action advances the
-    wizard; on the final step it submits. Hidden from desktop (md:hidden),
-    where the sidebar and the on-step buttons already cover this.
---}}
-<div class="sticky bottom-0 -mx-4 mt-6 border-t border-border-subtle bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+
+<div class="sticky bottom-0 mt-6 border-t border-border-subtle bg-white/95 px-4 py-3 backdrop-blur md:hidden">
     <div class="flex items-center gap-3">
         <div class="min-w-0 flex-1">
             <p class="truncate text-body-sm font-semibold text-on-surface" x-text="compactSummary"></p>

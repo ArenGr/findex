@@ -15,6 +15,7 @@ use App\Services\Notifications\PartnerNotifierInterface;
 use App\Services\TourismPriceData;
 use App\Services\TravelOfferComparison;
 use App\Support\SafeRedirectUrl;
+use App\Support\TravelPartners;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,8 +29,11 @@ use Symfony\Component\Intl\Countries;
 class QuoteRequestController extends Controller
 {
     private const TYPICAL_PRICE_MIN_SUGGESTIONS = 3;
+
     private const TYPICAL_PRICE_MIN_ORGS = 2;
+
     private const BUDGET_CURRENCIES = ['USD', 'EUR', 'RUR'];
+
     public const MAX_COMPARED_OFFERS = 4;
 
     public function create(TourismPriceData $priceData): View
@@ -49,6 +53,9 @@ class QuoteRequestController extends Controller
             'maxDestinations' => QuoteRequest::MAX_DESTINATIONS,
             'maxChildren' => QuoteRequest::MAX_CHILDREN,
             'maxChildAge' => QuoteRequest::MAX_CHILD_AGE,
+            // Presentation only - the "trusted by" strip. Cached, so it
+            // does not add a query to this page's asserted budget.
+            'partners' => TravelPartners::all(),
         ]);
     }
 
@@ -379,6 +386,7 @@ class QuoteRequestController extends Controller
         $quoteRequest = $this->accessibleRequest($request, $quoteRequest);
         $offer = $quoteRequest->offers->firstWhere('id', (int) $suggestion);
         abort_if($offer === null || ! $offer->attachment_path, 404);
+
         return self::downloadAttachment($offer);
     }
 

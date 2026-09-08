@@ -63,11 +63,85 @@ export default function travelRequestForm(config) {
         totalSteps: 3,
         consented: config.consented,
 
+        /* ---------------------------------------------------------------
+         * Slider
+         *
+         * The three steps are one carousel inside the wizard card, not three
+         * stacked panels: only the active screen occupies space, and moving
+         * between them slides horizontally rather than opening a section
+         * further down the page.
+         * ------------------------------------------------------------- */
+
+        /** Measured height of the active screen; drives the viewport. */
+        slideHeight: 0,
+
+        /**
+         * False until the first measurement lands.
+         *
+         * Until then the active screen stays in normal flow so the card has
+         * its natural height on the server-rendered paint. Taking every screen
+         * out of flow before knowing how tall the active one is would collapse
+         * the card to nothing and then snap it open once Alpine booted.
+         */
+        sliderReady: false,
+
         init() {
             // A children count restored from old() can arrive without a
             // matching set of ages (or with too many); the form must always
             // render exactly one age field per child.
             this.syncChildAges();
+
+            this.$nextTick(() => this.startSlider());
+        },
+
+        startSlider() {
+            const measure = () => {
+                const active = this.$refs[`slide${this.step}`];
+
+                if (active) {
+                    this.slideHeight = active.offsetHeight;
+                }
+            };
+
+            measure();
+            // Flipped after the first measurement, so the switch out of flow
+            // happens at exactly the height the card already had.
+            this.sliderReady = true;
+
+            // Screens change height on their own too - adding a child age
+            // field, opening the custom budget - so the viewport follows them
+            // rather than only re-measuring on navigation.
+            if (typeof ResizeObserver !== 'undefined') {
+                const observer = new ResizeObserver(() => measure());
+
+                for (let n = 1; n <= this.totalSteps; n += 1) {
+                    const el = this.$refs[`slide${n}`];
+
+                    if (el) {
+                        observer.observe(el);
+                    }
+                }
+            }
+
+            this.$watch('step', () => this.$nextTick(measure));
+        },
+
+        /**
+         * Where a screen sits relative to the one on show: behind it, on show,
+         * or ahead of it. Object form, so Alpine removes whichever classes the
+         * server printed that no longer apply.
+         */
+        slideClass(n) {
+            const active = this.step === n;
+
+            return {
+                // Out of flow once measured; before that only the inactive
+                // ones are, so the active screen still sets the height.
+                'absolute inset-x-0 top-0': this.sliderReady || ! active,
+                'opacity-0 pointer-events-none': ! active,
+                '-translate-x-10': n < this.step,
+                'translate-x-10': n > this.step,
+            };
         },
 
         /* ---------------------------------------------------------------
@@ -75,8 +149,18 @@ export default function travelRequestForm(config) {
          * ------------------------------------------------------------- */
 
         goToStep(n) {
-            this.step = Math.min(this.totalSteps, Math.max(1, n));
+            const target = Math.min(this.totalSteps, Math.max(1, n));
+
+            if (target === this.step) {
+                return;
+            }
+
+            this.step = target;
             this.scrollToTop();
+
+            // Focus follows the slide, so a keyboard or screen-reader user is
+            // moved to the screen that just replaced the one they were on.
+            this.$nextTick(() => this.$refs[`heading${target}`]?.focus({ preventScroll: true }));
         },
 
         /** Advances only if the current step's own required fields are valid,
@@ -371,6 +455,24 @@ export default function travelRequestForm(config) {
                     this.destinations.length ||
                     this.openToSuggestions ||
                     (this.checkIn && this.checkOut),
+            );
+        },
+
+        /**
+         * True once the visitor has told us anything at all.
+         *
+         * Wider than hasItinerary, which only covers where and when: someone
+         * who skipped ahead and picked a budget has given us something, and
+         * the summary showing "Nothing here yet" underneath it would be wrong.
+         * Mirrored server-side in _summary.blade.php so the right branch is
+         * the one that paints first.
+         */
+        get hasAnyDetail() {
+            return Boolean(
+                this.hasItinerary ||
+                    this.budgetBand ||
+                    this.usingCustomBudget ||
+                    this.priorities.length,
             );
         },
 

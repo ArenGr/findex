@@ -13,17 +13,13 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-{{-- min-h-dvh, not min-h-screen - see layouts/app.blade.php's comment on
-the same class for why (iOS Safari's expanding/collapsing address bar). --}}
 <body class="min-h-dvh bg-white font-sans text-body-text antialiased">
     @php $writer = auth('writer')->user()->writer; @endphp
-
     <header class="border-b border-placeholder">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-5 lg:px-10">
             <a href="{{ route('writer.dashboard.index') }}" class="shrink-0 font-logo text-2xl text-primary">
-                Findex
+                Findexd
             </a>
-
             <div class="flex items-center gap-4 text-sm text-ink">
                 <span class="text-muted">{{ $writer->name }}</span>
                 <form method="POST" action="{{ route('writer.logout') }}">

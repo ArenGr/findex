@@ -91,15 +91,34 @@
     ]);
 @endphp
 
-<header x-data="{ mobileOpen: false }" class="border-b border-placeholder">
-    <div class="site-container flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-5">
-        <a href="{{ route('home') }}" class="shrink-0 font-logo text-2xl text-primary">
-            Findex
-        </a>
+{{-- `floating` is the travel page's capsule treatment: the same header, lifted
+     off the page as a rounded card. Opt-in rather than the default, because
+     this component is shared by every page and the rest of the site is built
+     around a flat, full-width bar. --}}
+@props(['floating' => false])
 
-        {{-- "Home" is deliberately omitted here - the logo already links
-             there, and every label saved keeps this row from wrapping in
-             Armenian/Russian. --}}
+<header
+    x-data="{ mobileOpen: false }"
+    @class([
+        'border-b border-placeholder' => ! $floating,
+        'relative z-30 pt-4' => $floating,
+    ])
+>
+    <div @class([
+        'flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
+        'site-container py-5' => ! $floating,
+        // The capsule follows the travel layout's wider container.
+        'travel-container' => $floating,
+        // The capsule carries its own padding, so the container only positions it.
+        'rounded-[18px] bg-white px-6 py-3 shadow-[0_6px_28px_rgba(13,24,42,0.07)] lg:px-8' => $floating,
+    ])>
+        <a href="{{ route('home') }}" class="flex items-center">
+            <img
+                src="{{ asset('images/logo/logo.png') }}"
+                alt="Findex"
+                class="h-8 w-auto"
+            >
+        </a>
         <nav class="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink lg:flex">
             @foreach ($navItems as $navItem)
                 @if (empty($navItem['columns']))

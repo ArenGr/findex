@@ -30,21 +30,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @fonts
-    {{-- Both weights, not just 400. FreeSans is font-display: optional, which
-         decides at first paint whether to use the face at all and never
-         revisits it - so a weight that is not preloaded is simply not used,
-         and every bold figure and label on the page renders in the fallback
-         instead. Regular text was preloaded and looked right; bold was not and
-         did not.
-
-         Weight 700 has no Armenian subset (see tools/subset-freesans.py), so
-         the file is checked before it is advertised - preloading a 404 costs a
-         request and warns in the console. --}}
-    {{-- Montserrat, the heading face. Hashed by the build, so the filenames
-         come from the font manifest - see App\Support\FontPreloads. Without
-         this the browser only finds it when it reaches the first heading,
-         which is far too late to make the first frame: every h1 and h2 painted
-         in the fallback and then visibly re-rendered a moment later. --}}
     @foreach (App\Support\FontPreloads::urls('montserrat', app()->getLocale()) as $href)
         <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ $href }}">
     @endforeach
@@ -63,7 +48,9 @@
     @stack('head')
 </head>
 <body class="flex min-h-dvh flex-col bg-white font-sans text-body-text antialiased">
-    <x-site-header />
+    {{-- A page opts into the floating capsule with
+         @section('header-style', 'floating'). Everything else keeps the flat bar. --}}
+    <x-site-header :floating="$__env->yieldContent('header-style') === 'floating'" />
 
     @if (session('status') === 'email-verified')
         <div class="border-b border-primary/30 bg-primary/5 px-6 py-3 text-center text-sm text-primary">

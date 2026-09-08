@@ -1,5 +1,5 @@
 <section class="{{ $card }}">
-    <div class="mb-5 flex items-center gap-3">
+    <div class="mb-4 flex items-center gap-3">
         <span class="{{ $sectionIcon }} transition-colors" :class="tripComplete && '!bg-travel-primary'">
             <x-travel-icon name="check" class="h-[18px] w-[18px] text-white" x-show="tripComplete" x-cloak />
             <x-travel-icon name="flight_takeoff" class="h-[18px] w-[18px] text-travel-primary" x-show="!tripComplete" />
@@ -7,7 +7,7 @@
         <h2 class="text-headline-md">{{ __('tourism.request.section_trip') }}</h2>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
         {{-- Departing from --}}
         <div class="flex flex-col gap-1">
             <label for="departure_location" class="{{ $label }}">{{ __('tourism.request.departure_location') }}</label>
@@ -27,14 +27,8 @@
             @enderror
         </div>
 
-        {{-- Destinations. Several are allowed (see QuoteRequest::MAX_DESTINATIONS);
-             naming none is also valid, as long as "open to suggestions" is
-             ticked - the two are cross-checked server-side. --}}
         <div class="flex flex-col gap-1.5" @click.outside="destinationPickerOpen = false">
             <label for="destination-search" class="{{ $label }}">{{ __('tourism.request.destination') }}</label>
-
-            {{-- Selected destinations, shown as removable chips above the input.
-                 They carry the real submitted values (country codes). --}}
             <div x-show="destinations.length" x-cloak class="flex flex-wrap gap-2">
                 <template x-for="code in destinations" :key="code">
                     <span class="inline-flex items-center gap-1 rounded-full bg-travel-primary/10 px-3 py-1 text-body-sm text-travel-primary">
@@ -52,16 +46,8 @@
                     </span>
                 </template>
             </div>
-
-            {{-- A real, always-visible input. Typing filters the country list;
-                 picking one adds it as a chip. It stays a country picker under
-                 the hood because the server validates against real country
-                 codes - free text would be rejected. --}}
             <div x-show="!destinationsFull" class="relative">
                 <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted">
-                    {{-- location_on, not "location": the component has no icon by
-                         that name, so the destination field rendered without its
-                         pin for as long as it said "location". --}}
                     <x-travel-icon name="location_on" class="h-[17px] w-[17px]" />
                 </span>
                 <input
@@ -105,8 +91,6 @@
             <p x-show="destinationsFull" x-cloak class="text-body-sm text-ink-muted">
                 {{ __('tourism.request.destination_limit', ['max' => $maxDestinations]) }}
             </p>
-
-            {{-- Add another (focuses the input), only once at least one is chosen. --}}
             <button
                 type="button"
                 x-show="destinations.length && !destinationsFull"
@@ -131,9 +115,6 @@
             @error('destination_countries')
                 <p class="mt-1 text-body-sm text-error">{{ $message }}</p>
             @enderror
-
-            {{-- The typical-price teaser only has data for the curated
-                 destinations, so it shows for the first one that has any. --}}
             <template x-for="code in destinations" :key="'price-' + code">
                 <p x-show="@js($typicalPrices)[code]" x-cloak class="text-body-sm text-ink-muted">
                     <span x-text="countryName(code)"></span>:
@@ -141,14 +122,10 @@
                 </p>
             </template>
         </div>
-
-        {{-- Dates: a segmented control switching between exact days and a
-             flexibility window. The window's options only appear once
-             flexible is chosen, so the default state stays compact. --}}
         <div class="flex flex-col gap-1.5">
             <span class="{{ $label }}" id="dates-label">{{ __('tourism.request.dates_label') }}</span>
 
-            <div class="mb-3 flex w-fit rounded-lg border border-border-subtle bg-surface-container-low p-1" role="group" aria-labelledby="dates-label">
+            <div class="mb-2.5 flex w-fit rounded-lg border border-border-subtle bg-surface-container-low p-1" role="group" aria-labelledby="dates-label">
                 @php $flexibleInitially = (bool) old('date_flexibility'); @endphp
                 @foreach ([
                     ['flexible' => false, 'label' => __('tourism.request.dates_exact')],
@@ -158,10 +135,6 @@
                         $on = $mode['flexible'] ? 'datesAreFlexible' : '!datesAreFlexible';
                         $onNow = $mode['flexible'] === $flexibleInitially;
                     @endphp
-                    {{-- The raised pill is rendered here as well as bound, and
-                         bound with the object form so Alpine can clear it: left
-                         to the binding alone, neither option looks selected
-                         until Alpine boots. --}}
                     <button
                         type="button"
                         @click="setDateMode({{ $mode['flexible'] ? 'true' : 'false' }})"
@@ -170,17 +143,13 @@
                             'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]': {{ $on }},
                             'text-ink-muted hover:text-on-surface': !({{ $on }}),
                         }"
-                        class="rounded-md px-4 py-2 text-body-sm font-medium transition-colors {{ $onNow ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface' }}"
+                        class="rounded-md px-4 py-1.5 text-body-sm font-medium transition-colors {{ $onNow ? 'bg-white text-on-surface shadow-[0_1px_3px_rgba(24,29,18,0.12)]' : 'text-ink-muted hover:text-on-surface' }}"
                     >
                         {{ $mode['label'] }}
                     </button>
                 @endforeach
             </div>
-
-            {{-- Two separate, labelled fields - a joined box read as one
-                 control to a screen reader and gave the two dates no identity
-                 of their own. --}}
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <div class="flex flex-col gap-1">
                     <label for="check_in" class="{{ $label }}">{{ __('tourism.request.check_in') }}</label>
                     <div class="relative">
@@ -249,7 +218,7 @@
         <div class="flex flex-col gap-1.5">
             <span class="{{ $label }}" id="travelers-label">{{ __('tourism.request.travelers_label') }}</span>
 
-            <div class="flex flex-col gap-3 rounded-lg border border-border-subtle bg-white p-4" role="group" aria-labelledby="travelers-label">
+            <div class="flex flex-col gap-2.5 rounded-lg border border-border-subtle bg-white p-3.5" role="group" aria-labelledby="travelers-label">
                 @foreach ([
                     ['key' => 'adults', 'label' => __('tourism.request.adults'), 'step' => 'stepAdults', 'min' => 1],
                     ['key' => 'children', 'label' => __('tourism.request.children'), 'step' => 'stepChildren', 'min' => 0],
@@ -283,10 +252,6 @@
 
                 <input type="hidden" name="adults" :value="adults">
                 <input type="hidden" name="children" :value="children">
-
-                {{-- One age field per child. An agency prices a 2-year-old and
-                     a 15-year-old very differently, so this is asked rather
-                     than assumed. --}}
                 <div x-show="children > 0" x-cloak class="border-t border-border-subtle pt-3">
                     <template x-for="(age, index) in childAges" :key="index">
                         <div class="mb-2 last:mb-0">
@@ -313,7 +278,6 @@
                     </template>
                 </div>
             </div>
-
             @error('adults')
                 <p class="text-body-sm text-error">{{ $message }}</p>
             @enderror
@@ -324,8 +288,6 @@
                 <p class="text-body-sm text-error">{{ $messages[0] }}</p>
             @endforeach
         </div>
-
-        {{-- A specific hotel, if the traveller already has one in mind. --}}
         <div class="flex flex-col gap-1 md:col-span-2">
             <label for="hotel_name" class="{{ $label }}">{{ __('tourism.request.hotel_name') }}</label>
             <input
@@ -340,5 +302,11 @@
                 <p class="text-body-sm text-error">{{ $message }}</p>
             @enderror
         </div>
+    </div>
+    <div class="mt-5 flex justify-end">
+        <button type="button" @click="next()" class="{{ $navPrimary }}">
+            {{ __('tourism.request.wizard_continue_prefs') }}
+            <x-travel-icon name="arrow_forward" class="h-[18px] w-[18px]" />
+        </button>
     </div>
 </section>

@@ -158,6 +158,12 @@ button {
      */
     --font-manrope: "Manrope", "Manrope fallback", var(--font-sans);
 
+    /* The travel page's editorial script lines. Only ever painted on two
+       absolutely positioned decorations, so a late swap cannot move
+       anything. Latin and Cyrillic only - see _hero.blade.php for how
+       Armenian is handled. */
+    --font-script: "Caveat", "Caveat fallback", ui-serif, cursive;
+
     --color-surface-alt: #f9faf1;
     --color-surface-container: #eeeee6;
     --color-surface-container-low: #f4f4eb;
@@ -174,6 +180,32 @@ button {
        rather than the darker shade it used before. Only used inside the
        travel flow. */
     --color-travel-primary: #607E34;
+
+    /*
+     * The travel design pack's palette, verbatim from its own
+     * meta/color-tokens.json, plus three colours its SVG artwork uses that the
+     * token file does not declare (the icon-circle fill, the script ink and
+     * the swash green).
+     *
+     * Deliberately namespaced to travel rather than replacing the site tokens.
+     * The pack's text colours are a cool navy and a cool grey where Findex
+     * uses a warm near-black and a neutral grey; adopting them globally would
+     * restyle Exchange Rates, Banking, Insurance and About along with this
+     * page. The brand green needs no reconciliation - the pack's #607E34 is
+     * byte-identical to --color-primary.
+     */
+    --color-travel-green: #607E34;
+    --color-travel-green-dark: #4F6C2B;
+    --color-travel-sage: #E8F2E4;
+    --color-travel-cream: #F7FAF3;
+    --color-travel-ink: #0D182A;
+    --color-travel-muted: #687280;
+    --color-travel-border: #E5E7EB;
+    --color-travel-blue: #1E64B7;
+    --color-travel-yellow: #F2C94C;
+    --color-travel-icon-bg: #EEF5EA;
+    --color-travel-script: #0A2B69;
+    --color-travel-swash: #7FB23D;
 
 
 
@@ -250,6 +282,54 @@ button {
  * is not a cosmetic problem: over-pulling by 8px gives the whole document a
  * horizontal scrollbar.
  */
+/*
+ * The travel page's container.
+ *
+ * Wider than site-container on purpose: the approved travel design is an
+ * editorial layout that runs to roughly 88% of a large desktop, where the rest
+ * of the site holds a 1280px column. Separate utility rather than a change to
+ * site-container, which every other page depends on.
+ */
+@utility travel-container {
+    margin-inline: auto;
+    width: calc(100% - 2rem);
+    max-width: 1440px;
+
+    @media (width >= 40rem) {
+        width: calc(100% - 3rem);
+    }
+
+    /*
+     * Proportional, not a fixed gutter.
+     *
+     * Measured off the approved design: its header capsule occupies 88% of the
+     * page and its wizard 87%, at whatever width it is viewed. A `calc(100% -
+     * 80px)` gutter capped at 1440px held that at ~1600px wide but collapsed to
+     * 78% on a 1850px display, which is what made the page look stranded in the
+     * middle of a wide screen. A percentage holds the ratio everywhere; the cap
+     * only stops it running away on very large monitors.
+     */
+    @media (width >= 64rem) {
+        width: 88%;
+        max-width: 1720px;
+    }
+}
+
+/* The wizard sits just inside the hero's width, per the design. */
+@utility travel-wizard-container {
+    margin-inline: auto;
+    width: calc(100% - 2rem);
+    max-width: 1700px;
+
+    @media (width >= 40rem) {
+        width: calc(100% - 3rem);
+    }
+
+    @media (width >= 64rem) {
+        width: 87%;
+    }
+}
+
 @utility site-container {
     margin-inline: auto;
     max-width: 1360px;
