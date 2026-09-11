@@ -13,20 +13,17 @@
 
 {{-- A plain white card like the rest; the question is set apart by its
      content and the live cap counter rather than a tinted surface. --}}
-<section class="{{ $card }}">
-    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+<section class="{{ $card }} space-y-5">
+    <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-3">
-            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-primary/10 transition-colors" :class="prioritiesComplete && '!bg-travel-primary'">
-                <x-travel-icon name="check" class="h-[18px] w-[18px] text-white" x-show="prioritiesComplete" x-cloak />
-                <x-travel-icon name="star" class="h-[18px] w-[18px] text-travel-primary" x-show="!prioritiesComplete" />
-            </span>
-            <h2 class="text-headline-md" id="priorities-label">{{ __('tourism.request.priorities_label') }}</h2>
+            <x-travel-section-icon name="star" done="prioritiesComplete" />
+            <h2 class="{{ $cardHeading }}" id="priorities-label">{{ __('tourism.request.priorities_label') }}</h2>
         </div>
 
         {{-- Live so the cap is visible as it is approached, rather than only
              announcing itself by refusing a fourth click. --}}
         <span
-            class="rounded-full bg-travel-primary/10 px-2.5 py-1 text-label-caps font-medium text-travel-primary"
+            class="rounded-full border border-travel-200 bg-travel-50 px-2.5 py-1 text-xs font-semibold text-travel-700"
             aria-live="polite"
             x-text="@js(__('tourism.request.priorities_counter', ['count' => ':c', 'max' => ':m']))
                 .replace(':c', priorities.length)
@@ -34,11 +31,11 @@
         ></span>
     </div>
 
-    <p class="mb-6 text-body-sm text-ink-muted">
+    <p class="text-xs text-gray-500">
         {{ __('tourism.request.priorities_hint_agencies', ['max' => $maxPriorities]) }}
     </p>
 
-    <div class="flex flex-wrap gap-2" role="group" aria-labelledby="priorities-label">
+    <div class="flex flex-wrap gap-2.5 pt-1" role="group" aria-labelledby="priorities-label">
         @foreach ($priorityOptions as $value => $optionLabel)
             <label
                 for="priority-{{ $value }}"
@@ -56,10 +53,10 @@
                 >
                 {{-- The check icon marks selection as well as the colour, so
                      the state does not rest on colour alone. --}}
-                <span class="flex items-center gap-2 rounded-full border border-border-subtle bg-white px-4 py-2 text-body-sm text-on-surface transition-colors peer-checked:border-travel-primary peer-checked:bg-travel-primary/10 peer-checked:font-medium peer-checked:text-travel-primary peer-focus-visible:ring-2 peer-focus-visible:ring-travel-primary/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-outline">
+                <span class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-700 transition-all peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-500">
                     <x-travel-icon
                         name="check"
-                        class="hidden h-[18px] w-[18px] peer-checked:group-[]:inline"
+                        class="hidden h-4 w-4 text-travel-600"
                         {{-- Js::from spelled out rather than @js: Blade does not
                              compile directives inside a component's attribute, so
                              @js reached Alpine verbatim and the expression was a
@@ -69,7 +66,7 @@
                     @isset ($priorityIcons[$value])
                         <x-travel-icon
                             :name="$priorityIcons[$value]"
-                            class="h-[18px] w-[18px]"
+                            class="h-4 w-4 text-gray-500"
                             ::class="priorityChosen({{ Illuminate\Support\Js::from($value) }}) ? 'hidden' : 'inline'"
                         />
                     @endisset
@@ -80,9 +77,9 @@
     </div>
 
     @error('priorities')
-        <p class="mt-3 text-body-sm text-error">{{ $message }}</p>
+        <p class="text-xs text-error">{{ $message }}</p>
     @enderror
     @foreach ($errors->get('priorities.*') as $messages)
-        <p class="mt-3 text-body-sm text-error">{{ $messages[0] }}</p>
+        <p class="text-xs text-error">{{ $messages[0] }}</p>
     @endforeach
 </section>

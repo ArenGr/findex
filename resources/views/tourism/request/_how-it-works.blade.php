@@ -1,30 +1,39 @@
-<section class="bg-white pt-10 pb-12 lg:pt-11 lg:pb-14">
-    <div class="travel-container">
-        <h2 class="font-heading text-[1.9rem] leading-tight font-bold tracking-[-0.02em] text-travel-ink sm:text-[2.4rem]">
-            {{ __('tourism.request.works_heading') }}
-        </h2>
-        <p class="mt-2 text-[17px] leading-7 text-travel-muted">{{ __('tourism.request.works_sub') }}</p>
-        <ol class="mt-10 grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            @foreach ([1, 2, 3, 4] as $n)
-                <li class="relative flex flex-col px-1">
-                    <span class="relative mb-5 inline-flex">
-                        <img
-                            src="{{ asset('images/travel/svg/step-' . $n . '.svg') }}"
-                            alt=""
-                            aria-hidden="true"
-                            width="200"
-                            height="200"
-                            class="h-[72px] w-[72px]"
-                        >
-                        <span class="absolute -bottom-1 -left-1 flex h-6 w-6 items-center justify-center rounded-full bg-travel-green text-[12px] font-semibold text-white">{{ $n }}</span>
+@php
+    // Illustrations, not glyphs - see x-travel-step-art. The set that sits
+    // inside the form's fields is drawn for 24px, and the same outline blown
+    // up into a 64px tile read as a field icon that had been enlarged rather
+    // than as artwork.
+    $steps = [
+        1 => 'brief',
+        2 => 'replies',
+        3 => 'compare',
+        4 => 'depart',
+    ];
+@endphp
+
+<section class="travel-container py-16">
+    <div class="space-y-12">
+        <div class="space-y-1">
+            <h2 class="text-3xl font-extrabold tracking-tight text-travel-ink sm:text-4xl">
+                {{ __('tourism.request.works_heading') }}
+            </h2>
+            <p class="text-sm text-gray-500 sm:text-base">{{ __('tourism.request.works_sub') }}</p>
+        </div>
+
+        <ol class="relative grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach ($steps as $n => $icon)
+                <li class="relative flex flex-col items-center space-y-3">
+                    <span class="relative">
+                        <span class="flex h-16 w-16 items-center justify-center rounded-2xl border border-travel-200/80 bg-travel-50 shadow-sm">
+                            <x-travel-step-art :name="$icon" class="h-10 w-10" />
+                        </span>
+                        {{-- Clear of the tile's corner rather than sitting on
+                             it: each illustration fills its frame, so a badge
+                             tucked inside lands on the artwork. --}}
+                        <span class="absolute -right-2 -bottom-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-travel-600 text-xs font-bold text-white shadow">{{ $n }}</span>
                     </span>
-                    <h3 class="text-[15px] leading-5 font-bold text-travel-ink">{{ __('tourism.request.step_' . $n . '_title') }}</h3>
-                    <p class="mt-2 max-w-[16rem] text-[13px] leading-5 text-travel-muted">{{ __('tourism.request.step_' . $n . '_body') }}</p>
-                    @if ($n < 4)
-                        <svg class="absolute top-8 -right-3 hidden h-4 w-4 text-travel-muted/50 lg:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
-                        </svg>
-                    @endif
+                    <h3 class="pt-2 text-base font-bold text-gray-900">{{ __('tourism.request.step_' . $n . '_title') }}</h3>
+                    <p class="text-xs leading-relaxed text-gray-500">{{ __('tourism.request.step_' . $n . '_body') }}</p>
                 </li>
             @endforeach
         </ol>

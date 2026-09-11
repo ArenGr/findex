@@ -2,12 +2,6 @@
 
 return [
     'nav_label' => 'Travel Quotes',
-
-    // Shared option labels. Deliberately at the top level rather than under
-    // 'request' - the same values are read back on the status page, the
-    // agency's inbox, the offer cards and the comparison table, and a label
-    // that only reads correctly on the form it was written for is how the
-    // same choice ends up worded three different ways.
     'flights' => [
         'included' => 'Flight + hotel',
         'not_needed' => 'Hotel only',
@@ -196,6 +190,38 @@ return [
         'month' => 'Flexible this month',
     ],
 
+    /*
+     * The popular-trip presets. Each one is a whole answer to the first two
+     * steps - see App\Support\TravelPresets - so the title says where and the
+     * summary says what was assumed on the traveller's behalf.
+     */
+    'presets' => [
+        'eyebrow' => 'One-click requests',
+        'heading' => 'Popular trips',
+        'sub' => 'Pick one and send it as it is - or use it as a starting point and change anything.',
+        'choose' => 'Use this trip',
+        'nights' => ':count nights',
+        'travellers' => ':count adults',
+        'from' => 'from :amount',
+        'applied' => 'Trip filled in. Check it over and send it.',
+        'georgia_break' => [
+            'title' => 'Tbilisi city break',
+            'summary' => 'Drive or fly, 4-star with breakfast, central.',
+        ],
+        'dubai_city' => [
+            'title' => 'Dubai in five days',
+            'summary' => 'Flights included, 4-star with breakfast, direct if possible.',
+        ],
+        'egypt_all_in' => [
+            'title' => 'Egypt, all inclusive',
+            'summary' => 'Flights included, 5-star, all inclusive, good for families.',
+        ],
+        'cyprus_sea' => [
+            'title' => 'A week by the sea in Cyprus',
+            'summary' => 'Flights included, 4-star, half board, near the beach.',
+        ],
+    ],
+
     'request' => [
         'eyebrow' => 'TRAVEL',
         'destination_add' => '+ Add another destination',
@@ -205,7 +231,6 @@ return [
         'destination_limit' => 'You can add up to :max destinations.',
         'dates_exact' => 'Exact dates',
         'dates_flexible' => 'Flexible dates',
-        'adults' => 'Adults',
         'children' => 'Children',
         'child_age' => 'Child :number age',
         'child_age_years' => ':count years old',
@@ -237,7 +262,6 @@ return [
         'dates_label' => 'Dates',
         'budget_band_label' => "What's your approximate budget?",
         'notes_optional' => 'Anything else we should know? Optional',
-        'notes_helper' => 'Anything else agencies should know?',
         'summary_package' => 'Package details',
         'summary_package_none' => 'No preference set',
         'adults_short' => '{1} 1 adult|[2,*] :count adults',
@@ -254,9 +278,11 @@ return [
         'check_in' => 'Check-in',
         'check_out' => 'Check-out',
         'adults' => 'Adults',
-        'children' => 'Children',
         'departure_location' => 'From',
         'departure_location_placeholder' => 'City or airport',
+        // Where a popular trip departs from unless the traveller has
+        // already said otherwise - see TravelPresets.
+        'departure_default' => 'Yerevan',
         'flexible_dates' => 'My dates are flexible',
         'flexible_days_option' => '±:days days',
         'flights_label' => 'Flights',

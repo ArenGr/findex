@@ -17,6 +17,9 @@
     $field = $multiple ? $name . '[]' : $name;
     $current = old($name, $selected);
     $chosen = $multiple ? (array) ($current ?? []) : $current;
+
+    // The page's one pill, not a copy of it - see request.blade.php.
+    $pill = 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs transition-colors';
 @endphp
 
 {{-- fieldset/legend rather than a div and a <p>: these are genuine groups
@@ -24,10 +27,10 @@
      with no idea which question it answers. --}}
 <fieldset {{ $attributes->only('class') }}>
     @if ($label)
-        <legend class="mb-2 block text-body-sm text-ink-muted">{{ $label }}</legend>
+        <legend class="mb-2.5 block text-xs font-semibold text-gray-600">{{ $label }}</legend>
     @endif
 
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2.5">
         @foreach ($options as $value => $optionLabel)
             @php
                 $isChosen = $multiple
@@ -50,14 +53,14 @@
                     {{ $attributes->except('class') }}
                     class="peer sr-only"
                 >
-                <span class="flex items-center gap-2 rounded-full border border-border-subtle bg-transparent px-4 py-2.5 text-body-sm text-on-surface transition-colors peer-checked:border-travel-primary peer-checked:bg-travel-primary/10 peer-checked:font-medium peer-checked:text-travel-primary peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-primary/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-outline">
+                <span class="{{ $pill }} border-gray-200 bg-white font-medium text-gray-700 peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-200 group-hover:bg-gray-50/70">
                     {{-- Shown only when the pill is selected (via the peer input),
                          so the choice reads as chosen without relying on colour. --}}
-                    <span data-check class="hidden shrink-0">
-                        <x-travel-icon name="check" class="h-[16px] w-[16px]" />
+                    <span data-check class="hidden shrink-0 text-travel-600">
+                        <x-travel-icon name="check" class="h-3.5 w-3.5" />
                     </span>
                     @isset ($icons[$value])
-                        <x-travel-icon :name="$icons[$value]" class="h-[18px] w-[18px]" />
+                        <x-travel-icon :name="$icons[$value]" class="h-4 w-4 text-gray-500" />
                     @endisset
                     {{ $optionLabel }}
                 </span>
@@ -66,6 +69,6 @@
     </div>
 
     @error($name)
-        <p class="mt-2 text-body-sm text-error">{{ $message }}</p>
+        <p class="mt-2 text-xs text-error">{{ $message }}</p>
     @enderror
 </fieldset>

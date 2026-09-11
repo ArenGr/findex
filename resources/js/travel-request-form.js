@@ -63,89 +63,60 @@ export default function travelRequestForm(config) {
         totalSteps: 3,
         consented: config.consented,
 
-        /* ---------------------------------------------------------------
-         * Slider
-         *
-         * The three steps are one carousel inside the wizard card, not three
-         * stacked panels: only the active screen occupies space, and moving
-         * between them slides horizontally rather than opening a section
-         * further down the page.
-         * ------------------------------------------------------------- */
-
-        /** Measured height of the active screen; drives the viewport. */
-        slideHeight: 0,
-
-        /**
-         * False until the first measurement lands.
-         *
-         * Until then the active screen stays in normal flow so the card has
-         * its natural height on the server-rendered paint. Taking every screen
-         * out of flow before knowing how tall the active one is would collapse
-         * the card to nothing and then snap it open once Alpine booted.
-         */
-        sliderReady: false,
-
         init() {
             // A children count restored from old() can arrive without a
             // matching set of ages (or with too many); the form must always
             // render exactly one age field per child.
             this.syncChildAges();
-
-            this.$nextTick(() => this.startSlider());
         },
 
-        startSlider() {
-            const measure = () => {
-                const active = this.$refs[`slide${this.step}`];
+        /* ---------------------------------------------------------------
+         * Popular trips
+         * ------------------------------------------------------------- */
 
-                if (active) {
-                    this.slideHeight = active.offsetHeight;
-                }
-            };
-
-            measure();
-            // Flipped after the first measurement, so the switch out of flow
-            // happens at exactly the height the card already had.
-            this.sliderReady = true;
-
-            // Screens change height on their own too - adding a child age
-            // field, opening the custom budget - so the viewport follows them
-            // rather than only re-measuring on navigation.
-            if (typeof ResizeObserver !== 'undefined') {
-                const observer = new ResizeObserver(() => measure());
-
-                for (let n = 1; n <= this.totalSteps; n += 1) {
-                    const el = this.$refs[`slide${n}`];
-
-                    if (el) {
-                        observer.observe(el);
-                    }
-                }
-            }
-
-            this.$watch('step', () => this.$nextTick(measure));
-        },
+        /** The preset last applied, so the chosen card can show as chosen. */
+        preset: '',
 
         /**
-         * Where a screen sits relative to the one on show: behind it, on show,
-         * or ahead of it. Object form, so Alpine removes whichever classes the
-         * server printed that no longer apply.
+         * Fills the whole request from one of the popular trips and moves to
+         * the last step.
+         *
+         * Every field it touches is a field the traveller could have set by
+         * hand, and none of them lock: the point of landing on step 3 rather
+         * than submitting outright is that the request is there to be read and
+         * changed before it goes. Contact details and consent are still
+         * theirs to give - a preset cannot answer those for them.
          */
-        slideClass(n) {
-            const active = this.step === n;
+        applyPreset(preset) {
+            this.preset = preset.key;
 
-            return {
-                // Out of flow once measured; before that only the inactive
-                // ones are, so the active screen still sets the height.
-                'absolute inset-x-0 top-0': this.sliderReady || ! active,
-                'opacity-0 pointer-events-none': ! active,
-                '-translate-x-10': n < this.step,
-                'translate-x-10': n > this.step,
-            };
+            this.departure = this.departure || preset.departure;
+            this.destinations = [preset.country];
+            this.openToSuggestions = false;
+
+            this.checkIn = preset.check_in;
+            this.checkOut = preset.check_out;
+            this.setDateMode(false);
+
+            this.adults = preset.adults;
+            this.children = 0;
+            this.syncChildAges();
+
+            this.flightPreference = preset.flight;
+            this.hotelPreference = preset.hotel;
+            this.mealPreference = preset.meals;
+            this.priorities = preset.priorities.slice(0, this.maxPriorities);
+
+            this.goToStep(this.totalSteps);
         },
 
         /* ---------------------------------------------------------------
          * Wizard navigation
+         *
+         * One step is on screen and the other two are display:none - see the
+         * class binding in request.blade.php. There is no measured height and
+         * no stack of screens at opacity 0: the steps replace each other
+         * rather than the card growing to take in the next one's fields.
          * ------------------------------------------------------------- */
 
         goToStep(n) {

@@ -22,14 +22,15 @@ const SRC_DIR = 'resources/images/travel';
 const OUT_DIR = 'public/images/travel';
 
 const TARGETS = [
-    // The hero photograph.
+    // The hero photograph: the portrait crop, at every width.
     //
-    // Cut from hero-source.png, whose left third is a cream blob the artwork
-    // bakes in - that blob was the "giant pale circle" over the copy, and no
-    // CSS was drawing it. The crop starts past it and the page masks the left
-    // edge itself, so the shape is ours to control rather than the asset's.
-    { stem: 'hero-photo', widths: [900, 1420], minWidth: 1400 },
-    // Portrait crop for the stacked mobile layout.
+    // Its landscape sibling, hero-photo, is no longer built. The hero is a
+    // framed card now rather than a full-bleed band, and that crop carries two
+    // things baked into the pixels that only made sense in the band - a dashed
+    // flight path in the sky and a cream blob in the corner - so it printed a
+    // second flight path beside the page's own and there was no crop that
+    // dropped it without also dropping the domes. hero-photo-source.png is
+    // still in resources/images/travel/ if it is ever wanted back.
     { stem: 'hero-mobile', widths: [640, 900, 1080], minWidth: 1000 },
     // Empty-state illustration inside "Your trip"; painted at ~230px.
     { stem: 'trip-empty', widths: [320, 640, 960], minWidth: 900 },

@@ -70,6 +70,13 @@ export default defineConfig({
                     preload: true,
                     fallbacks: FALLBACKS,
                 }),
+                bunny("Plus Jakarta Sans", {
+                    weights: [400, 500, 600, 700, 800],
+                    subsets: SUBSETS,
+                    preload: false,
+                    display: "swap",
+                    fallbacks: FALLBACKS,
+                }),
                 bunny("Manrope", {
                     weights: [400, 500, 600, 700],
                     subsets: SUBSETS,

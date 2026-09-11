@@ -16,6 +16,7 @@ use App\Services\TourismPriceData;
 use App\Services\TravelOfferComparison;
 use App\Support\SafeRedirectUrl;
 use App\Support\TravelPartners;
+use App\Support\TravelPresets;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,10 +39,16 @@ class QuoteRequestController extends Controller
 
     public function create(TourismPriceData $priceData): View
     {
+        $typicalPrices = $this->typicalPrices($priceData);
+
         return view('tourism.request', [
             'destinations' => QuoteRequest::DESTINATIONS,
             'countries' => $this->worldCountries(),
-            'typicalPrices' => $this->typicalPrices($priceData),
+            'typicalPrices' => $typicalPrices,
+            // The popular trips offered above the form. They read the same
+            // typical prices the destination picker does, so a preset never
+            // quotes a figure the rest of the page would not.
+            'presets' => TravelPresets::all($typicalPrices),
             'flightOptions' => self::labelled(QuoteRequest::FLIGHT_PREFERENCES, 'tourism.flights.'),
             'hotelOptions' => self::labelled(QuoteRequest::HOTEL_PREFERENCES, 'tourism.hotel_class.'),
             'mealOptions' => self::labelled(QuoteRequest::MEAL_PREFERENCES, 'tourism.meals.'),

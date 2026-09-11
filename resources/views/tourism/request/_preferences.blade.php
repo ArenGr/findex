@@ -9,16 +9,13 @@
     ];
 @endphp
 
-<section class="{{ $card }}">
-    <div class="mb-5 flex items-center gap-3">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-primary/10 transition-colors" :class="preferencesComplete && '!bg-travel-primary'">
-            <x-travel-icon name="check" class="h-[18px] w-[18px] text-white" x-show="preferencesComplete" x-cloak />
-            <x-travel-icon name="tune" class="h-[18px] w-[18px] text-travel-primary" x-show="!preferencesComplete" />
-        </span>
-        <h2 class="text-headline-md">{{ __('tourism.request.section_preferences') }}</h2>
+<section class="{{ $card }} space-y-6">
+    <div class="flex items-center gap-3">
+        <x-travel-section-icon name="tune" done="preferencesComplete" />
+        <h2 class="{{ $cardHeading }}">{{ __('tourism.request.section_preferences') }}</h2>
     </div>
 
-    <div class="flex flex-col gap-7">
+    <div class="space-y-6">
         @foreach ($groups as $group)
             <x-travel-chips
                 :name="$group['name']"
@@ -30,11 +27,11 @@
 
         <label class="group inline-flex cursor-pointer">
             <input type="checkbox" name="insurance" value="1" x-model="insurance" class="peer sr-only">
-            <span class="flex items-center gap-2 rounded-full border border-border-subtle px-4 py-2.5 text-body-sm text-on-surface transition-colors peer-checked:border-travel-primary peer-checked:bg-travel-primary/10 peer-checked:font-medium peer-checked:text-travel-primary peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-primary/40 hover:border-outline">
-                <span data-check class="hidden shrink-0">
-                    <x-travel-icon name="check" class="h-[16px] w-[16px]" />
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 group-hover:border-travel-200 group-hover:bg-gray-50/70">
+                <span data-check class="hidden shrink-0 text-travel-600">
+                    <x-travel-icon name="check" class="h-3.5 w-3.5" />
                 </span>
-                <x-travel-icon name="shield" class="h-[18px] w-[18px]" />
+                <x-travel-icon name="shield" class="h-4 w-4 text-gray-500" />
                 {{ __('tourism.request.insurance') }}
             </span>
         </label>

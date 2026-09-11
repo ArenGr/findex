@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', __('writer.nav.overview')) — Findex</title>
 
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    {{-- Built from resources/images/brand by `npm run brand:assets`. No SVG:
+         the mark is a raster original, and the SVG that used to be served here
+         - and preferred by every browser that supports it - was a green "F"
+         tile from the brand before this one. --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" href="{{ asset('favicon-32x32.png') }}" type="image/png" sizes="32x32">
+    <link rel="icon" href="{{ asset('favicon-16x16.png') }}" type="image/png" sizes="16x16">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
     @fonts
@@ -17,8 +22,8 @@
     @php $writer = auth('writer')->user()->writer; @endphp
     <header class="border-b border-placeholder">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-5 lg:px-10">
-            <a href="{{ route('writer.dashboard.index') }}" class="shrink-0 font-logo text-2xl text-primary">
-                Findexd
+            <a href="{{ route('writer.dashboard.index') }}" class="shrink-0">
+                <x-brand-logo class="h-7 w-auto" />
             </a>
             <div class="flex items-center gap-4 text-sm text-ink">
                 <span class="text-muted">{{ $writer->name }}</span>

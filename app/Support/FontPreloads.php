@@ -31,14 +31,15 @@ class FontPreloads
      * the browser reaches the heading, which is too late for the first frame,
      * so those headings painted in the fallback and then re-rendered.
      *
-     * Manrope needs all four: the travel request page sets font-manrope on its
-     * wrapper, so it is that page's body face at every weight. It is not in
-     * the layout's preloads - only that page pushes it, because nowhere else
-     * uses it and it is 56 KB.
+     * Plus Jakarta Sans needs all five: the travel request page sets
+     * font-jakarta on its wrapper, so it is that page's body face at every
+     * weight, including the 800 its headlines are set in. It is not in the
+     * layout's preloads - only that page pushes it, because nowhere else uses
+     * it.
      */
     private const VARIANTS = [
         'montserrat' => ['600:normal', '700:normal'],
-        'manrope' => ['400:normal', '500:normal', '600:normal', '700:normal'],
+        'plus-jakarta-sans' => ['400:normal', '500:normal', '600:normal', '700:normal', '800:normal'],
     ];
 
     /**

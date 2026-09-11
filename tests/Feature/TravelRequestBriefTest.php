@@ -89,17 +89,17 @@ class TravelRequestBriefTest extends TestCase
     }
 
     /**
-     * The request page is built in the travel design system (Manrope, its
-     * own palette and type scale - see the travel block in app.css) rather
-     * than the sitewide one. These are the classes the whole layout hangs
-     * off, so losing them means the page silently reverts to looking like
-     * the rest of the site.
+     * The request page is built in the travel design system (Plus Jakarta
+     * Sans and the olive ramp - see the travel block in app.css) rather than
+     * the sitewide one. These are the classes the whole layout hangs off, so
+     * losing them means the page silently reverts to looking like the rest of
+     * the site.
      */
     public function test_the_request_page_renders_in_the_travel_design_system(): void
     {
         $response = $this->get(route('tourism.request', ['locale' => 'en']))->assertOk();
 
-        foreach (['font-manrope', 'text-travel-primary', 'border-border-subtle', 'text-ink-muted', 'text-headline-md'] as $class) {
+        foreach (['font-jakarta', 'bg-travel-600', 'border-travel-200', 'text-travel-700', 'text-travel-ink'] as $class) {
             $this->assertStringContainsString($class, $response->getContent());
         }
 

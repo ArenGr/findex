@@ -47,7 +47,9 @@
     <div class="site-container py-16">
         <div class="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-12 lg:grid-cols-4">
             <div class="col-span-2 sm:col-span-1">
-                <a href="{{ route('home') }}" class="font-logo text-2xl text-primary">Findex</a>
+                <a href="{{ route('home') }}" class="flex h-8 w-[121px] shrink-0 items-center">
+                    <x-brand-logo />
+                </a>
 
                 <p class="mt-6 text-xs font-semibold tracking-wider text-subtle uppercase">{{ __('footer.download_app') }}</p>
                 <a

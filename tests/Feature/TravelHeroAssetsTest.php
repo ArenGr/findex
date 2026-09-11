@@ -49,15 +49,26 @@ class TravelHeroAssetsTest extends TestCase
 
     public function test_the_hero_reports_its_srcset_and_intrinsic_size(): void
     {
-        $hero = TravelHero::asset('hero-photo');
+        $hero = TravelHero::asset('hero-mobile');
 
         $this->assertNotNull($hero, 'run `npm run travel:assets` to build the derivatives');
-        $this->assertStringContainsString('hero-photo-900.webp 900w', $hero['srcset']['webp']);
-        $this->assertStringContainsString('hero-photo-1420.webp 1420w', $hero['srcset']['webp']);
-        $this->assertStringContainsString('hero-photo-1420.avif 1420w', $hero['srcset']['avif']);
-        $this->assertStringContainsString('hero-photo-1420.webp', $hero['src']);
-        $this->assertSame(1420, $hero['width']);
-        $this->assertSame(700, $hero['height']);
+        $this->assertStringContainsString('hero-mobile-640.webp 640w', $hero['srcset']['webp']);
+        $this->assertStringContainsString('hero-mobile-1080.webp 1080w', $hero['srcset']['webp']);
+        $this->assertStringContainsString('hero-mobile-1080.avif 1080w', $hero['srcset']['avif']);
+        $this->assertStringContainsString('hero-mobile-1080.webp', $hero['src']);
+        $this->assertSame(1080, $hero['width']);
+        $this->assertSame(1440, $hero['height']);
+    }
+
+    public function test_the_landscape_crop_is_no_longer_shipped_or_referenced(): void
+    {
+        // It bakes a flight path and a cream blob into the sky, both left over
+        // from the full-bleed band the framed hero replaced.
+        $this->assertNull(TravelHero::asset('hero-photo'));
+
+        $response = $this->get(route('tourism.request', ['locale' => 'en']));
+        $response->assertOk();
+        $response->assertDontSee('images/travel/hero-photo', false);
     }
 
     public function test_the_retired_blob_asset_is_no_longer_referenced(): void
@@ -76,10 +87,10 @@ class TravelHeroAssetsTest extends TestCase
 
     public function test_the_hero_renders_without_its_photograph(): void
     {
-        $this->uninstall('hero-photo');
+        $this->uninstall('hero-mobile');
         $response = $this->get(route('tourism.request', ['locale' => 'en']));
         $response->assertOk();
-        $response->assertDontSee('images/travel/hero-photo-1420', false);
+        $response->assertDontSee('images/travel/hero-mobile-1080', false);
         $response->assertSee(__('tourism.request.hero_line1'));
         $response->assertSee(__('tourism.request.benefit_trusted'));
     }
@@ -96,7 +107,7 @@ class TravelHeroAssetsTest extends TestCase
     {
         $response = $this->get(route('tourism.request', ['locale' => 'en']));
         $response->assertOk();
-        $response->assertSee('images/travel/hero-photo-1420.avif', false);
+        $response->assertSee('images/travel/hero-mobile-1080.avif', false);
         $response->assertSee('type="image/avif"', false);
     }
 }

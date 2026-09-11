@@ -10,44 +10,49 @@
 @props(['partners'])
 
 @if ($partners->count() >= \App\Support\TravelPartners::MIN_TO_SHOW)
-    <section class="bg-white pb-14 lg:pb-16">
-        <div class="travel-container">
-            <div class="rounded-[20px] border border-travel-border/70 bg-travel-cream px-6 py-5 lg:px-8">
-                <p class="flex items-center gap-2.5 text-[13px] font-semibold text-travel-ink">
-                    <svg class="h-4 w-4 shrink-0 text-travel-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M19 14c1.5-1.5 3-3.4 3-5.5A4.5 4.5 0 0 0 12 5.5 4.5 4.5 0 0 0 2 8.5C2 13 12 21 12 21s3.5-2.8 7-7z" />
-                    </svg>
-                    {{ __('tourism.request.partners_heading') }}
-                </p>
+    {{-- On the page's own white, not in a tinted panel. The tint made a block
+         of the strip and set it against everything around it, when all it has
+         to do is name the agencies a request goes to. --}}
+    <section class="travel-container pb-16">
+        <div class="space-y-5 border-t border-gray-100 pt-10">
+            <p class="flex items-center gap-2 text-xs font-bold tracking-wider text-travel-700 uppercase">
+                <x-travel-icon name="shield_check" class="h-4 w-4" />
+                {{ __('tourism.request.partners_heading') }}
+            </p>
 
-                <ul class="mt-4 flex flex-wrap items-center gap-x-9 gap-y-4">
-                    @foreach ($partners as $partner)
-                        <li class="flex items-center gap-2.5">
-                            @if ($partner->logo)
-                                {{-- Sized rather than intrinsic: partner logos
-                                     arrive at whatever dimensions they were
-                                     uploaded at, and an unsized one would
-                                     reflow the row as it decodes. --}}
-                                <img
-                                    src="{{ $partner->logo }}"
-                                    alt="{{ $partner->name }}"
-                                    width="28"
-                                    height="28"
-                                    loading="lazy"
-                                    decoding="async"
-                                    referrerpolicy="no-referrer"
-                                    class="h-7 w-7 shrink-0 rounded object-contain"
-                                >
-                            @else
-                                {{-- No logo on file: an initial disc, never a
-                                     stand-in mark that could read as theirs. --}}
-                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-travel-sage text-[12px] font-bold text-travel-green" aria-hidden="true">{{ $partner->initial }}</span>
-                            @endif
-                            <span class="text-[14px] font-semibold text-travel-ink">{{ $partner->name }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
+            {{-- Badges that size to their own name and wrap, not a fixed grid.
+                 Seven columns cut every agency to about 170px, which truncated
+                 the one name each badge exists to show. --}}
+            <ul class="flex flex-wrap items-center gap-3">
+                @foreach ($partners as $partner)
+                    <li class="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5">
+                        @if ($partner->logo)
+                            {{-- Sized rather than intrinsic: partner logos
+                                 arrive at whatever dimensions they were
+                                 uploaded at, and an unsized one would
+                                 reflow the row as it decodes. --}}
+                            <img
+                                src="{{ $partner->logo }}"
+                                alt="{{ $partner->name }}"
+                                width="28"
+                                height="28"
+                                loading="lazy"
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                                class="h-7 w-7 shrink-0 rounded-lg object-contain"
+                            >
+                        @else
+                            {{-- No logo on file: the flow's own travel glyph on
+                                 a tinted tile, never a stand-in mark that could
+                                 read as the agency's own. --}}
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-travel-50 text-travel-600" aria-hidden="true">
+                                <x-travel-icon name="luggage" class="h-4 w-4" />
+                            </span>
+                        @endif
+                        <span class="text-xs font-semibold whitespace-nowrap text-gray-800">{{ $partner->name }}</span>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </section>
 @endif

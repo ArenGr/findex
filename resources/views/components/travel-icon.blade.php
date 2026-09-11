@@ -1,40 +1,139 @@
-@props(['name', 'filled' => false])
+@props(['name'])
 
 @php
     /**
-     * The Material Symbols the travel designs call for, drawn as inline SVG
-     * rather than pulled in as a webfont: the whole icon font is a few
-     * hundred KB to render the dozen or so glyphs used here, and every
-     * other icon in this app is already an inline SVG.
+     * The travel flow's icon set, drawn as inline SVG rather than pulled in as
+     * a webfont: the whole icon font is a few hundred KB to render the dozen
+     * or so glyphs used here, and every other icon in this app is already an
+     * inline SVG.
      *
-     * 24x24 outline paths, stroked with currentColor so they inherit text
-     * colour and size from whatever they sit in.
+     * One set, one style: 24x24, outline only, stroked with currentColor at
+     * 1.7 so every glyph inherits colour and size from whatever it sits in,
+     * and every glyph carries the same optical weight next to the others. The
+     * large icons on this page - the "how it works" tiles, the hero's benefit
+     * row - are these same paths at a bigger size on a tinted ground, so the
+     * 16px summary row and the 32px step tile are literally the same drawing.
+     *
+     * Glyphs are drawn inside a 3-21 safe area on the 24 grid, so they are
+     * optically the same size - the previous set mixed a full-bleed plane
+     * silhouette with a half-size suitcase and read as icons from three
+     * different families.
      */
     $paths = match ($name) {
-        'flight_takeoff' => ['M2.5 19h19', 'M3.4 12.6l2.3.6 2.6-2.6-5.6-3.1 1.6-1.6 7.4 1.6 3.3-3.3a2 2 0 1 1 2.8 2.8l-3.3 3.3 1.6 7.4-1.6 1.6-3.1-5.6-2.6 2.6.6 2.3-1.2 1.2-2-3.6-3.6-2 1.2-1.2Z'],
-        'tune' => ['M4 7h10', 'M18 7h2', 'M4 17h4', 'M12 17h8', 'M16 5v4', 'M10 15v4'],
-        'star' => ['M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z'],
-        'wallet' => ['M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1', 'M3 7.5V17a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-2.5', 'M20 10.5h-4a2 2 0 0 0 0 4h4v-4Z'],
-        'location_on' => ['M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z', 'M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z'],
-        'search' => ['M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z', 'M20 20l-4-4'],
-        'group' => ['M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z', 'M2.5 19.5a6.5 6.5 0 0 1 13 0', 'M16.5 11.2A3 3 0 0 0 17 5.2', 'M18 19.5a5.6 5.6 0 0 0-2-4.3'],
-        'expand_more' => ['M6 9.5l6 6 6-6'],
-        'calendar_month' => ['M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v12A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5v-12Z', 'M4 10h16', 'M8.5 3v4', 'M15.5 3v4'],
-        'hotel' => ['M3 19v-8', 'M3 13h18v6', 'M21 19v-4a3 3 0 0 0-3-3H9v7', 'M6.5 10.5a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z'],
-        'payments' => ['M3 8.5A1.5 1.5 0 0 1 4.5 7h11A1.5 1.5 0 0 1 17 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5v-6Z', 'M10 14a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z', 'M20 9.5v8A1.5 1.5 0 0 1 18.5 19H7'],
-        'info' => ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'M12 11v5', 'M12 8h.01'],
+        // Navigation and state
         'arrow_forward' => ['M4 12h15', 'M13 6l6 6-6 6'],
         'arrow_back' => ['M20 12H5', 'M11 18l-6-6 6-6'],
-        'sell' => ['M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-6.5 6.5a2 2 0 0 1-2.8 0l-8-8a2 2 0 0 1-.6-1.4Z', 'M7.5 8.5h.01'],
-        'flight' => ['M21 15.5l-8.5-2.3v-5a1.7 1.7 0 1 0-3.4 0v5L3 15.5v2l6.1-1.4v3.3l-2 1.3v1.1l3.7-.9 3.7.9v-1.1l-2-1.3v-3.3L21 17.5v-2Z'],
-        'map' => ['M9 4.5L3.5 6.8v12.7L9 17.2m0-12.7l6 2.3m-6-2.3v12.7m6-10.4l5.5-2.3v12.7L15 19.5m0-12.7v12.7m0 0l-6-2.3'],
-        'restaurant' => ['M6 3v7a2.5 2.5 0 0 0 5 0V3', 'M8.5 10v11', 'M17 3c-1.5 1.5-2 3.5-2 5.5S15.5 12 17 12.5V21'],
-        'family' => ['M7 8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z', 'M17 8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z', 'M3.5 20v-5a3.5 3.5 0 0 1 7 0v5', 'M13.5 20v-5a3.5 3.5 0 0 1 7 0v5'],
-        'cancel_free' => ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'M9 12l2 2 4-4'],
-        'check' => ['M5 12.5l4.5 4.5L19 7.5'],
-        'close' => ['M6 6l12 12', 'M18 6L6 18'],
-        'lock' => ['M6 10.5h12a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 18 20.5H6A1.5 1.5 0 0 1 4.5 19v-7A1.5 1.5 0 0 1 6 10.5Z', 'M8.5 10.5V7.5a3.5 3.5 0 1 1 7 0v3'],
-        'shield' => ['M12 3l7 3v5.5c0 4.3-2.9 8-7 9.5-4.1-1.5-7-5.2-7-9.5V6l7-3Z'],
+        'check' => ['M5.5 12.5l4 4 9-9'],
+        'close' => ['M7 7l10 10', 'M17 7L7 17'],
+        'plus' => ['M12 5.5v13', 'M5.5 12h13'],
+        'minus' => ['M5.5 12h13'],
+
+        // Trip
+        'flight_takeoff' => [
+            'M3 21h18',
+            'M6.9 16.2 4.8 15.9 3 12.4l1-.5a1.8 1.8 0 0 1 1.6 0l.2.1a1.8 1.8 0 0 0 1.6 0l.3-.2-2.6-5.3.8-.4a1.8 1.8 0 0 1 1.9.2l3.6 2.6a1.8 1.8 0 0 0 1.9.2l3.7-1.8a2.2 2.2 0 0 1 1.6-.2l.6.2a1.25 1.25 0 0 1 .7 1.8l-.3.7c-.2.4-.6.7-1 1L8 16a1.8 1.8 0 0 1-1.1.2Z',
+        ],
+        'flight' => [
+            'M16.6 19.4 15 12l3.2-3.2c1.3-1.3 1.8-3.1 1.3-4-.9-.5-2.7 0-4 1.3L12.3 9.4 4.9 7.7c-.5-.1-.9.1-1 .5l-.3.5c-.2.4-.1.9.3 1.2l4.4 2.9-1.8 2.7H4l-.9.9 2.7 1.8L7.6 21l.9-.9v-2.7l2.7-1.8 3.1 4.8c.3.4.8.5 1.2.3l.4-.2c.4-.2.6-.6.5-1.1Z',
+        ],
+        'calendar_month' => [
+            'M6.5 5h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z',
+            'M4.5 10h15',
+            'M8.5 3.2v3.6',
+            'M15.5 3.2v3.6',
+        ],
+        'location_on' => [
+            'M12 21c4.4-4.3 6.6-7.7 6.6-10.4a6.6 6.6 0 1 0-13.2 0C5.4 13.3 7.6 16.7 12 21Z',
+            'M12 13.2a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2Z',
+        ],
+        'group' => [
+            'M9 11.4a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z',
+            'M2.5 20.2v-1.4a4 4 0 0 1 4-4h5a4 4 0 0 1 4 4v1.4',
+            'M15.7 4.6a3.6 3.6 0 0 1 0 6.6',
+            'M21.5 20.2v-1.4a4 4 0 0 0-3-3.85',
+        ],
+        'family' => [
+            'M8 10.4a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+            'M3 20v-1.4a5 5 0 0 1 10 0V20',
+            'M17 11.8a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z',
+            'M13.6 20v-2.4a3.4 3.4 0 0 1 6.8 0V20',
+        ],
+
+        // Preferences
+        'tune' => [
+            'M3 6.5h7', 'M14 6.5h7', 'M12 4.3v4.4',
+            'M3 17.5h5', 'M12 17.5h9', 'M10 15.3v4.4',
+            'M3 12h11', 'M18 12h3', 'M16 9.8v4.4',
+        ],
+        'hotel' => [
+            'M3 19.5v-7.4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7.4',
+            'M5 10.1V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3.1',
+            'M12 5v5.1',
+            'M3 16.6h18',
+        ],
+        'restaurant' => [
+            'M4.5 3v5.5a2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5V3',
+            'M7 11v10',
+            'M18.6 21V3.4c-2.1 1.7-3.2 4.1-3.2 6.6 0 1.5 1 2.5 3.2 2.7',
+        ],
+        'wallet' => [
+            'M7 6.5h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2h11',
+            'M17.4 13.8a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z',
+        ],
+        'sell' => [
+            'M11.6 3H5a2 2 0 0 0-2 2v6.6a2 2 0 0 0 .6 1.4l7.4 7.4a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8L12.4 3.6a2 2 0 0 0-.8-.6Z',
+            'M7.9 8.4a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z',
+        ],
+        'map' => [
+            'M9 4.5 3.5 6.8v12.7L9 17.2',
+            'M9 4.5v12.7',
+            'M9 4.5l6 2.3',
+            'M15 6.8l5.5-2.3v12.7L15 19.5',
+            'M15 6.8v12.7',
+            'M15 19.5l-6-2.3',
+        ],
+        'star' => ['M12 3.6l2.55 5.17 5.7.83-4.13 4.02.98 5.68L12 16.62l-5.1 2.68.98-5.68L3.75 9.6l5.7-.83L12 3.6Z'],
+
+        // Trust and process
+        'shield' => ['M12 20.9c-4.2-1.5-7-4.9-7-9.2V6.2l7-2.8 7 2.8v5.5c0 4.3-2.8 7.7-7 9.2Z'],
+        'shield_check' => [
+            'M12 20.9c-4.2-1.5-7-4.9-7-9.2V6.2l7-2.8 7 2.8v5.5c0 4.3-2.8 7.7-7 9.2Z',
+            'M9 11.8l2.2 2.2 4-4.4',
+        ],
+        'clock' => ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'M12 7.4V12l3.1 1.9'],
+        'lock' => [
+            'M5 10.4h14a2 2 0 0 1 2 2v6.6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6.6a2 2 0 0 1 2-2Z',
+            'M7.6 10.4V7a4.4 4.4 0 0 1 8.8 0v3.4',
+        ],
+        'document' => [
+            'M14.2 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.8L14.2 3Z',
+            'M13.9 3.3V8h4.8',
+            'M8.6 13h6.8',
+            'M8.6 16.6h4.4',
+        ],
+        'mail' => [
+            'M4.5 5h15a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z',
+            'M21.2 7.3 13 12.6a2 2 0 0 1-2 0L2.8 7.3',
+        ],
+        'compare' => [
+            'M12 3.4v17.2',
+            'M7.5 20.6h9',
+            'M3 7.4h2.2c2 0 4.9-.9 6.8-1.9 1.9 1 4.8 1.9 6.8 1.9H21',
+            'M17.8 7.9 21 15.5c-.9.6-1.9.9-3.2.9s-2.3-.3-3.2-.9l3.2-7.6Z',
+            'M6.2 7.9 9.4 15.5c-.9.6-1.9.9-3.2.9S3.9 16.1 3 15.5l3.2-7.6Z',
+        ],
+        'luggage' => [
+            'M4.5 7.5h15A1.5 1.5 0 0 1 21 9v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18V9a1.5 1.5 0 0 1 1.5-1.5Z',
+            'M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9',
+            'M8.5 7.5v12',
+            'M15.5 7.5v12',
+        ],
+        'lightbulb' => [
+            'M9.2 18.3h5.6',
+            'M10.3 21.2h3.4',
+            'M15.3 14.4a5.6 5.6 0 1 0-6.6 0c.6.5 1 1.2 1.1 1.9h4.4c.1-.7.5-1.4 1.1-1.9Z',
+        ],
+
         default => [],
     };
 @endphp
@@ -51,6 +150,6 @@
     {{ $attributes->merge(['class' => 'h-5 w-5 shrink-0']) }}
 >
     @foreach ($paths as $path)
-        <path d="{{ $path }}" @if ($filled) fill="currentColor" stroke="none" @endif />
+        <path d="{{ $path }}" />
     @endforeach
 </svg>

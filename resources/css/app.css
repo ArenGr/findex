@@ -156,7 +156,10 @@ button {
      * Scoped by use, not by page: anything rendering a travel quote reads
      * from here, everything else keeps reading the palette above.
      */
-    --font-manrope: "Manrope", "Manrope fallback", var(--font-sans);
+    /* The travel design's face. Latin and Cyrillic only - Armenian has no
+       coverage here and falls through to FreeSans, exactly as it did under
+       Manrope before it. */
+    --font-jakarta: "Plus Jakarta Sans", "Plus Jakarta Sans fallback", var(--font-sans);
 
     /* The travel page's editorial script lines. Only ever painted on two
        absolutely positioned decorations, so a late swap cannot move
@@ -175,37 +178,33 @@ button {
     --color-on-primary-container: #fbffeb;
     --color-error: #ba1a1a;
 
-    /* The travel flow's accent. Aligned to the brand green (#607E34) so the
-       redesigned travel-request page matches the approved design exactly,
-       rather than the darker shade it used before. Only used inside the
-       travel flow. */
-    --color-travel-primary: #607E34;
+    /*
+     * The travel design's ink.
+     *
+     * Namespaced to travel rather than replacing the site token: the design's
+     * text colour is a cool navy where Findex uses a warm near-black, and
+     * adopting it globally would restyle Exchange Rates, Banking, Insurance
+     * and About along with this page. Everything else on the page reads from
+     * Tailwind's own grays, as the design does.
+     */
+    --color-travel-ink: #0D1C2D;
 
     /*
-     * The travel design pack's palette, verbatim from its own
-     * meta/color-tokens.json, plus three colours its SVG artwork uses that the
-     * token file does not declare (the icon-circle fill, the script ink and
-     * the swash green).
+     * The travel design's olive ramp, verbatim from its Tailwind config.
      *
-     * Deliberately namespaced to travel rather than replacing the site tokens.
-     * The pack's text colours are a cool navy and a cool grey where Findex
-     * uses a warm near-black and a neutral grey; adopting them globally would
-     * restyle Exchange Rates, Banking, Insurance and About along with this
-     * page. The brand green needs no reconciliation - the pack's #607E34 is
-     * byte-identical to --color-primary.
+     * 600 is the brand green the rest of the site already calls --color-primary;
+     * the rest of the ramp is what the design tints surfaces, borders and text
+     * with, and there was no way to say any of it before - the page reached for
+     * travel-primary/10 and travel-sage and got two greens that did not belong
+     * to the same scale.
      */
-    --color-travel-green: #607E34;
-    --color-travel-green-dark: #4F6C2B;
-    --color-travel-sage: #E8F2E4;
-    --color-travel-cream: #F7FAF3;
-    --color-travel-ink: #0D182A;
-    --color-travel-muted: #687280;
-    --color-travel-border: #E5E7EB;
-    --color-travel-blue: #1E64B7;
-    --color-travel-yellow: #F2C94C;
-    --color-travel-icon-bg: #EEF5EA;
-    --color-travel-script: #0A2B69;
-    --color-travel-swash: #7FB23D;
+    --color-travel-50: #F4F7EE;
+    --color-travel-100: #E6EDD8;
+    --color-travel-200: #D0DDB6;
+    --color-travel-500: #759942;
+    --color-travel-600: #607E34;
+    --color-travel-700: #4D652A;
+    --color-travel-800: #3D5022;
 
 
 
@@ -292,42 +291,71 @@ button {
  */
 @utility travel-container {
     margin-inline: auto;
-    width: calc(100% - 2rem);
-    max-width: 1440px;
+    max-width: 80rem;
+    padding-inline: 1rem;
 
     @media (width >= 40rem) {
-        width: calc(100% - 3rem);
+        padding-inline: 1.5rem;
     }
 
-    /*
-     * Proportional, not a fixed gutter.
-     *
-     * Measured off the approved design: its header capsule occupies 88% of the
-     * page and its wizard 87%, at whatever width it is viewed. A `calc(100% -
-     * 80px)` gutter capped at 1440px held that at ~1600px wide but collapsed to
-     * 78% on a 1850px display, which is what made the page look stranded in the
-     * middle of a wide screen. A percentage holds the ratio everywhere; the cap
-     * only stops it running away on very large monitors.
-     */
     @media (width >= 64rem) {
-        width: 88%;
-        max-width: 1720px;
+        padding-inline: 2rem;
     }
 }
 
-/* The wizard sits just inside the hero's width, per the design. */
-@utility travel-wizard-container {
-    margin-inline: auto;
-    width: calc(100% - 2rem);
-    max-width: 1700px;
-
-    @media (width >= 40rem) {
-        width: calc(100% - 3rem);
+/*
+ * A wizard step arriving.
+ *
+ * The steps are swapped by display, so the one leaving is gone in the same
+ * frame the next one appears - there is no crossfade of two forms over each
+ * other, and nothing animates the card's height. This is only the arrival: a
+ * CSS animation rather than a transition, because it has to play on the way
+ * out of `display: none`, which a transition cannot do.
+ */
+@keyframes travel-step-in {
+    from {
+        opacity: 0;
+        translate: 0 8px;
     }
-
-    @media (width >= 64rem) {
-        width: 87%;
+    to {
+        opacity: 1;
+        translate: none;
     }
+}
+
+.travel-step {
+    animation: travel-step-in 240ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .travel-step {
+        animation: none;
+    }
+}
+
+/*
+ * The travel flow's date fields.
+ *
+ * A <input type="date"> paints its own picker button on the right in Chrome
+ * and Safari, and the field already carries the set's calendar glyph on the
+ * left - so every date on this page showed two calendars. The native button
+ * is the one that opens the picker, so it is stretched over the whole field
+ * and made invisible rather than hidden: one calendar is drawn, and clicking
+ * anywhere in the field still opens the picker instead of only the 12px the
+ * button used to occupy.
+ *
+ * The field's wrapper is `relative`, which is what the absolute positioning
+ * resolves against.
+ */
+.travel-date::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
 }
 
 @utility site-container {

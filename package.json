@@ -7,6 +7,7 @@
         "dev": "vite",
         "check:layout-shift": "node tools/check-layout-shift.mjs",
         "fonts:fallbacks": "node tools/generate-font-fallbacks.mjs",
+        "brand:assets": "node tools/build-brand-assets.mjs",
         "travel:assets": "node tools/build-travel-assets.mjs"
     },
     "devDependencies": {
