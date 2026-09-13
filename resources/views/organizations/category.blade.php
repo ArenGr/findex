@@ -21,7 +21,7 @@
             <div class="mt-8 text-center">
                 <a
                     href="{{ $ctaRoute }}"
-                    class="btn btn-primary inline-block"
+                    class="btn btn-primary inline-flex"
                 >
                     {{ $ctaLabel }}
                 </a>

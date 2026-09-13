@@ -6,8 +6,14 @@
 @section('content')
     <x-hero-carousel />
     <x-services-grid />
-    <x-rates-table />
+    @feature('rates')
+        <x-rates-table />
+    @endfeature
     <x-trust-section />
-    <x-top-rated-organizations />
-    <x-news-section />
+    @feature('organizations')
+        <x-top-rated-organizations />
+    @endfeature
+    @feature('articles')
+        <x-news-section />
+    @endfeature
 @endsection

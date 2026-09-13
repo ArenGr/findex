@@ -176,11 +176,7 @@ class Organization extends Model
     }
 
     /**
-     * @param  string|array<int, string>|null  $countryCode  One destination, several, or null for
-     *                                                       "anywhere" - a traveller open to suggestions names no country, so every
-     *                                                       agency serving any active destination is a candidate. Several destinations
-     *                                                       match an agency serving *any* of them, not all: an agency that covers one
-     *                                                       leg of the trip still has something worth quoting.
+     * @param  string|array<int, string>|null  $countryCode
      */
     #[Scope]
     protected function tourismPartnersForDestination(Builder $query, string|array|null $countryCode, ?int $partySize = null, ?float $budgetAmd = null): Builder

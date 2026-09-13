@@ -22,7 +22,9 @@
         <x-oauth-divider />
 
         <div class="mt-6 space-y-3">
-            <x-google-auth-button />
+            @feature('google_auth')
+                <x-google-auth-button />
+            @endfeature
         </div>
 
         <p class="mt-6 text-center text-sm text-muted">

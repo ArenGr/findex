@@ -200,7 +200,7 @@
                                         <span class="text-[11px] text-subtle">{{ __('auto_insurance.results.no_reviews') }}</span>
                                     @endif
 
-                                    <a href="{{ route('organizations.show', ['locale' => app()->getLocale(), 'organization' => $quote->organization->slug]) }}" class="text-[12px] font-medium text-primary hover:underline">
+                                    <a @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', ['locale' => app()->getLocale(), 'organization' => $quote->organization->slug]) }}" @endif class="text-[12px] font-medium text-primary hover:underline">
                                         {{ __('auto_insurance.results.about_insurer') }}
                                     </a>
                                 </div>

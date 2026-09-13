@@ -1,5 +1,7 @@
 @props(['placement'])
 
+@feature('ads')
+
 @php
     $ad = \App\Models\Ad::query()
         ->forPlacement($placement)
@@ -20,3 +22,4 @@
         </div>
     </div>
 @endif
+@endfeature

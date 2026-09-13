@@ -34,7 +34,7 @@
         <p class="mt-1 font-heading text-lg font-bold leading-snug text-ink">{{ $ad->headline }}</p>
         <p class="mt-2 text-sm text-muted">{{ $ad->body }}</p>
 
-        <span class="btn btn-primary mt-4 inline-block">
+        <span class="btn btn-primary mt-4 inline-flex">
             {{ $ad->cta_label }}
         </span>
     </a>

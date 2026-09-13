@@ -49,7 +49,9 @@
                 return [
                     'id' => $offer->organization->id,
                     'name' => $offer->organization->name,
-                    'url' => route('organizations.show', $offer->organization),
+                    'url' => \App\Support\Features::enabled('organizations')
+                        ? route('organizations.show', $offer->organization)
+                        : null,
                     'logo' => $offer->organization->logo,
                     'initial' => mb_strtoupper(mb_substr($offer->organization->name, 0, 1)),
                     'rate_min' => (float) $offer->interest_rate_min,

@@ -118,18 +118,20 @@
         <div class="site-container py-16 text-center">
             <h2 class="font-heading text-xl font-semibold text-ink">{{ __('about.cta.title') }}</h2>
             @auth
+                @feature('rate_alerts')
                 <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle_authenticated') }}</p>
                 <a
                     href="{{ route('alerts.index') }}"
-                    class="btn btn-primary mt-6 inline-block"
+                    class="btn btn-primary mt-6 inline-flex"
                 >
                     {{ __('about.cta.button_authenticated') }}
                 </a>
+                @endfeature
             @else
                 <p class="mx-auto mt-2 max-w-xl text-sm text-muted">{{ __('about.cta.subtitle') }}</p>
                 <a
                     href="{{ route('register') }}"
-                    class="btn btn-primary mt-6 inline-block"
+                    class="btn btn-primary mt-6 inline-flex"
                 >
                     {{ __('about.cta.button') }}
                 </a>

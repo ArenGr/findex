@@ -32,7 +32,7 @@
                     href="https://t.me/{{ $botUsername }}?start={{ $organization->telegram_connect_token }}"
                     target="_blank"
                     rel="noopener"
-                    class="btn btn-primary mt-4 inline-block"
+                    class="btn btn-primary mt-4 inline-flex"
                 >
                     {{ __('org.rates.telegram_connect_button') }}
                 </a>

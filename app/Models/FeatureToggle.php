@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Support\Features;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
-// An admin-controlled on/off switch for one bank product page.
+// The stored on/off state of one feature. App\Support\Features says which exist.
 class FeatureToggle extends Model
 {
-    private const CACHE_KEY = 'feature-toggles.enabled';
+    private const CACHE_KEY = 'feature-toggles.states';
 
     protected $fillable = [
         'key',
@@ -31,18 +32,60 @@ class FeatureToggle extends Model
     }
 
     /**
+     * What the table says, before parents are applied.
+     *
+     * @return array<string, bool>
+     */
+    public static function storedStates(): array
+    {
+        return Cache::rememberForever(
+            self::CACHE_KEY,
+            fn () => static::query()->pluck('is_enabled', 'key')->map(fn ($on) => (bool) $on)->all()
+        );
+    }
+
+    /**
+     * Every switched-on key, parents applied.
+     *
      * @return array<int, string>
      */
     public static function enabledKeys(): array
     {
-        return Cache::rememberForever(
-            self::CACHE_KEY,
-            fn () => static::query()->where('is_enabled', true)->orderBy('key')->pluck('key')->all()
-        );
+        return array_keys(array_filter(Features::states()));
     }
 
     public static function enabled(string $key): bool
     {
-        return in_array($key, static::enabledKeys(), true);
+        return Features::enabled($key);
+    }
+
+    /** Puts every known flag back to the default declared in the registry. */
+    public static function resetToDefaults(): int
+    {
+        $changed = 0;
+
+        foreach (Features::all() as $key => $meta) {
+            $changed += static::query()
+                ->where('key', $key)
+                ->where('is_enabled', '!=', $meta['default'])
+                ->update(['is_enabled' => $meta['default']]);
+        }
+
+        static::forgetCache();
+
+        return $changed;
+    }
+
+    /** Adds a row for every registry key that has none, at its default. */
+    public static function sync(): int
+    {
+        $existing = static::query()->pluck('key')->all();
+        $missing = array_diff(Features::keys(), $existing);
+
+        foreach ($missing as $key) {
+            static::create(['key' => $key, 'is_enabled' => Features::all()[$key]['default']]);
+        }
+
+        return count($missing);
     }
 }

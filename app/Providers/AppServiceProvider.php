@@ -12,10 +12,12 @@ use App\Services\Notifications\TelegramPartnerNotifier;
 use App\Services\Report\LlmReportAnalyzer;
 use App\Services\Report\ReportAnalyzerInterface;
 use App\Services\Telegram\TelegramClient;
+use App\Support\Features;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -58,6 +60,9 @@ class AppServiceProvider extends ServiceProvider
         if ($trustedProxies = env('TRUSTED_PROXIES')) {
             TrustProxies::at($trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
         }
+
+        // @feature('travel') ... @endfeature - see App\Support\Features.
+        Blade::if('feature', fn (string $key) => Features::enabled($key));
 
         // Shared by both the customer and organization login forms (see routes/web.php).
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(config('rate-limits.login_per_minute'))

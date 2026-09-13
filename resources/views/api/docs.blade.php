@@ -77,6 +77,7 @@
                 'converter' => __('api.widget_converter'),
                 'chart' => __('api.widget_chart'),
             ] as $widget => $label)
+                @continue(\App\Support\Features::disabled('widgets'))
                 <div class="min-w-0 rounded-xl border border-placeholder bg-white p-4">
                     <p class="text-xs font-semibold tracking-wider text-muted uppercase">{{ $label }}</p>
 

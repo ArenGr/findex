@@ -1,14 +1,20 @@
 @php
+    $feature = fn(string $key) => \App\Support\Features::enabled($key);
+
+    $rateLinks = array_values(
+        array_filter([
+            !$feature('rates') ? null : ['label' => __('footer.columns.rates.links.rates'), 'href' => route('rates.index')],
+            !$feature('rates_history') ? null : ['label' => __('footer.columns.rates.links.history'), 'href' => route('rates.history')],
+            !$feature('compare') ? null : ['label' => __('footer.columns.rates.links.compare'), 'href' => route('organizations.compare')],
+            !$feature('public_api') ? null : ['label' => __('footer.columns.rates.links.api'), 'href' => route('api.docs')],
+        ]),
+    );
+
     $columns = [
         // The rate product's own pages.
         [
             'title' => __('footer.columns.rates.title'),
-            'links' => [
-                ['label' => __('footer.columns.rates.links.rates'), 'href' => route('rates.index')],
-                ['label' => __('footer.columns.rates.links.history'), 'href' => route('rates.history')],
-                ['label' => __('footer.columns.rates.links.compare'), 'href' => route('organizations.compare')],
-                ['label' => __('footer.columns.rates.links.api'), 'href' => route('api.docs')],
-            ],
+            'links' => $rateLinks,
         ],
         [
             'title' => __('footer.columns.company.title'),
@@ -36,6 +42,10 @@
             ],
         ],
     ];
+
+    // A column whose every link is switched off would render as a heading
+    // over nothing.
+    $columns = array_values(array_filter($columns, fn(array $column) => $column['links'] !== []));
 
     $socials = ['X', 'YouTube', 'Instagram', 'TikTok'];
 @endphp

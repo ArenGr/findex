@@ -32,7 +32,7 @@
             <tr>
                 <td style="padding-bottom:12px;">
                     <a
-                        href="{{ route('organizations.show', ['locale' => $quoteRequest->locale, 'organization' => $organization]) }}"
+                        @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', ['locale' => $quoteRequest->locale, 'organization' => $organization]) }}" @endif
                         style="display:inline-block; background-color:#607E34; color:#ffffff; text-decoration:none; padding:13px 28px; font-size:14px; font-weight:bold; border-radius:10px;"
                     >
                         {{ __('tourism.email.review_prompt_button', ['organization' => $organization->name]) }}

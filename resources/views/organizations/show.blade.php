@@ -11,11 +11,13 @@
 
 @section('content')
     @php
+        $on = fn(string $key) => \App\Support\Features::enabled($key);
+
         $sections = array_filter([
             'overview' => true,
-            'exchange-rates' => $organization->hasRatesPage() && $rates['groups'] !== [],
+            'exchange-rates' => $on('rates') && $organization->hasRatesPage() && $rates['groups'] !== [],
             'branches' => $organization->branches->isNotEmpty(),
-            'reviews' => true,
+            'reviews' => $on('reviews'),
         ]);
     @endphp
 
@@ -263,6 +265,7 @@
 
                         <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
                             {{-- Opens the same modal /rates uses; the href is the full page, so it still works with JS off. --}}
+                            @feature('exchange')
                             <a
                                 href="{{ route('exchange.request') }}"
                                 onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
@@ -273,6 +276,7 @@
                             >
                                 {{ __('rates.cta_button') }}
                             </a>
+                            @endfeature
                             <span class="inline-flex items-center justify-center gap-1.5 text-xs break-words text-muted sm:justify-end">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true">
                                     <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -336,7 +340,7 @@
                                     <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
                                         <td class="px-4 py-4 sm:px-6">
                                             <a
-                                                href="{{ route('rates.index', ['currency' => $row['code'], 'type' => $type]) }}"
+                                                href="{{ $on('rates') ? route('rates.index', ['currency' => $row['code'], 'type' => $type]) : '#' }}"
                                                 class="flex min-h-11 items-center gap-2 sm:pointer-events-none"
                                                 aria-label="{{ __('organizations.rates_see_all', ['code' => $row['code']]) }}"
                                             >
@@ -372,7 +376,7 @@
                                         </td>
                                         <td class="hidden px-4 py-4 text-right sm:table-cell">
                                             <a
-                                                href="{{ route('rates.index', ['currency' => $row['code'], 'type' => $type]) }}"
+                                                href="{{ $on('rates') ? route('rates.index', ['currency' => $row['code'], 'type' => $type]) : '#' }}"
                                                 class="inline-flex min-h-11 items-center text-xs font-medium break-words text-primary hover:underline"
                                             >
                                                 {{ __('organizations.rates_see_all', ['code' => $row['code']]) }}
@@ -396,9 +400,11 @@
                     <h2 class="font-heading text-lg font-semibold break-words text-ink">
                         {{ __('rates.history.title', ['code' => $historyCurrency->code]) }}
                     </h2>
+                    @feature('rates_history')
                     <a href="{{ route('rates.history', ['currency' => $historyCurrency->code]) }}" class="-my-2 inline-flex min-h-11 items-center py-2 text-sm font-medium break-words text-primary hover:underline">
                         {{ __('rates.history.link') }} &rarr;
                     </a>
+                    @endfeature
                 </div>
 
                 <x-rates.history-chart
@@ -560,7 +566,7 @@
             </section>
         @endif
 
-        {{-- Reviews --}}
+        @feature('reviews')
         <section id="reviews" class="mb-16 scroll-mt-20">
         {{-- Reviews --}}
         <h2 class="font-heading text-xl font-semibold text-ink">{{ __('organizations.reviews_heading') }}</h2>
@@ -693,6 +699,7 @@
             @endforelse
         </div>
         </section>
+        @endfeature
 
         {{-- Where to go when this organization is not the answer. --}}
         @if ($similar->isNotEmpty())

@@ -1,11 +1,17 @@
 @php
-    $services = [
-        ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.webp', 'href' => route('rates.index'), 'border' => 'border-currency-line', 'tint' => 'bg-currency-tint'],
-        ['key' => 'credit_card', 'image' => 'images/services/credit-card.webp', 'href' => route('banks.index'), 'border' => 'border-cards-line', 'tint' => 'bg-cards-tint'],
-        ['key' => 'insurance', 'image' => 'images/services/insurance.webp', 'href' => route('insurance.auto.request'), 'border' => 'border-insurance-line', 'tint' => 'bg-insurance-tint'],
-        ['key' => 'travel', 'image' => 'images/services/travel.webp', 'href' => route('tourism.request'), 'border' => 'border-travel-line', 'tint' => 'bg-travel-tint'],
-    ];
+    $feature = fn(string $key) => \App\Support\Features::enabled($key);
+
+    $services = array_values(
+        array_filter([
+            !$feature('rates') ? null : ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.webp', 'href' => route('rates.index'), 'border' => 'border-currency-line', 'tint' => 'bg-currency-tint'],
+            !$feature('bank_products') ? null : ['key' => 'credit_card', 'image' => 'images/services/credit-card.webp', 'href' => route('banks.index'), 'border' => 'border-cards-line', 'tint' => 'bg-cards-tint'],
+            !$feature('insurance') ? null : ['key' => 'insurance', 'image' => 'images/services/insurance.webp', 'href' => route('insurance.auto.request'), 'border' => 'border-insurance-line', 'tint' => 'bg-insurance-tint'],
+            !$feature('travel') ? null : ['key' => 'travel', 'image' => 'images/services/travel.webp', 'href' => route('tourism.request'), 'border' => 'border-travel-line', 'tint' => 'bg-travel-tint'],
+        ]),
+    );
 @endphp
+
+@if ($services !== [])
 
 <section class="border-t border-placeholder bg-white">
     <div class="site-container py-16">
@@ -74,3 +80,4 @@
         </div>
     </div>
 </section>
+@endif

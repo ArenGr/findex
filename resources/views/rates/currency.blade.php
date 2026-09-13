@@ -64,7 +64,7 @@
                     @foreach ($topRates as $rate)
                         <tr class="border-b border-placeholder last:border-b-0">
                             <td class="px-4 py-4 sm:px-6">
-                                <a href="{{ route('organizations.show', $rate->organization) }}" class="flex min-h-11 items-center font-medium break-words text-ink hover:text-primary">
+                                <a @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', $rate->organization) }}" @endif class="flex min-h-11 items-center font-medium break-words text-ink hover:text-primary">
                                     {{ $rate->organization->name }}
                                 </a>
                             </td>

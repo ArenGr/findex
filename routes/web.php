@@ -1,38 +1,42 @@
 <?php
 
 use App\Http\Controllers\LocaleRedirectController;
+use App\Support\Features;
 use Illuminate\Support\Facades\Route;
+
+// Gates a whole route file on a feature - see App\Support\Features.
+$feature = fn (string $key, string $file) => Route::middleware('feature:'.$key)->group(__DIR__.'/web/'.$file);
 
 Route::get('/', LocaleRedirectController::class)->name('root');
 
 Route::prefix('{locale}')
     ->middleware('setlocale')
-    ->group(function () {
+    ->group(function () use ($feature) {
         // Public website
         require __DIR__.'/web/public/pages.php';
         require __DIR__.'/web/public/organizations.php';
-        require __DIR__.'/web/public/articles.php';
-        require __DIR__.'/web/public/tourism.php';
-        require __DIR__.'/web/public/exchange.php';
-        require __DIR__.'/web/public/insurance.php';
+        $feature(Features::ARTICLES, 'public/articles.php');
+        $feature(Features::TRAVEL, 'public/tourism.php');
+        $feature(Features::EXCHANGE, 'public/exchange.php');
+        $feature(Features::INSURANCE, 'public/insurance.php');
 
         // Authentication
         require __DIR__.'/web/auth/auth.php';
 
         // Registration
-        require __DIR__.'/web/registration/customer.php';
-        require __DIR__.'/web/registration/organization.php';
-        require __DIR__.'/web/registration/writer.php';
+        $feature(Features::CUSTOMER_REGISTRATION, 'registration/customer.php');
+        $feature(Features::ORGANIZATION_REGISTRATION, 'registration/organization.php');
+        $feature(Features::WRITER_REGISTRATION, 'registration/writer.php');
 
         // Authenticated accounts
-        require __DIR__.'/web/customers/rate-alerts.php';
-        require __DIR__.'/web/customers/api-keys.php';
+        $feature(Features::RATE_ALERTS, 'customers/rate-alerts.php');
+        $feature(Features::PUBLIC_API, 'customers/api-keys.php');
         require __DIR__.'/web/organizations/dashboard.php';
-        require __DIR__.'/web/writers/dashboard.php';
+        $feature(Features::ARTICLES, 'writers/dashboard.php');
     });
 
-require __DIR__.'/web/public/widgets.php';
+$feature(Features::WIDGETS, 'public/widgets.php');
 
-require __DIR__.'/web/auth/social.php';
+$feature(Features::GOOGLE_AUTH, 'auth/social.php');
 
-require __DIR__.'/web/integrations/telegram.php';
+$feature(Features::TELEGRAM, 'integrations/telegram.php');

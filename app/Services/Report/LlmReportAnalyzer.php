@@ -2,6 +2,7 @@
 
 namespace App\Services\Report;
 
+use App\Support\Features;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -16,7 +17,7 @@ class LlmReportAnalyzer implements ReportAnalyzerInterface
     {
         $endpoint = config('services.llm.url');
 
-        if (! $endpoint || ! config('services.llm.key')) {
+        if (Features::disabled(Features::LLM_REPORTS) || ! $endpoint || ! config('services.llm.key')) {
             return ['summary' => '', 'themes' => []];
         }
 

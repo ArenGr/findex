@@ -2,11 +2,13 @@
 
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AuthenticateApiKey;
+use App\Http\Middleware\EnsureFeatureEnabled;
 use App\Http\Middleware\EnsureOrganizationType;
 use App\Http\Middleware\EnsureUserIsNotBanned;
 use App\Http\Middleware\EnsureUserRole;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\ThrottleApiRequests;
+use App\Support\Features;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,21 +26,27 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('scrape:rates')->daily()->withoutOverlapping();
-        $schedule->command('scrape:mortgages')->daily()->withoutOverlapping();
+        $schedule->command('scrape:rates')->daily()->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::SCRAPE_RATES));
+        $schedule->command('scrape:mortgages')->daily()->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::SCRAPE_MORTGAGES));
         // Runs after the daily rate scrape so it checks against fresh rates.
-        $schedule->command('alerts:check')->dailyAt('00:30')->withoutOverlapping();
+        $schedule->command('alerts:check')->dailyAt('00:30')->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::RATE_ALERTS));
 
         // Hourly rather than daily - REMIND_AFTER_HOURS (24h) is a rolling
         // window per response, not a fixed time of day, so this needs to
         // run often enough that a response isn't sitting reminder-eligible
         // for up to a full extra day before the next check.
-        $schedule->command('tourism:remind-partners')->hourly()->withoutOverlapping();
+        $schedule->command('tourism:remind-partners')->hourly()->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::TRAVEL));
 
         // Same reasoning as tourism:remind-partners above.
-        $schedule->command('exchange:remind-partners')->hourly()->withoutOverlapping();
+        $schedule->command('exchange:remind-partners')->hourly()->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::EXCHANGE));
 
-        $schedule->command('tourism:prompt-reviews')->dailyAt('09:00')->withoutOverlapping();
+        $schedule->command('tourism:prompt-reviews')->dailyAt('09:00')->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::TRAVEL) && Features::enabled(Features::REVIEWS));
 
         // Report generation (GenerateReportJob) is queued rather than run
         // inline, so a failed LLM call can retry with backoff instead of
@@ -57,7 +65,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Clears children's ages off long-expired travel requests - see
         // PurgeExpiredTravelRequestDetails for why this is a field wipe
         // rather than a Prunable model. Daily is ample for a 30-day grace.
-        $schedule->command('tourism:purge-expired-details')->dailyAt('03:15')->withoutOverlapping();
+        $schedule->command('tourism:purge-expired-details')->dailyAt('03:15')->withoutOverlapping()
+            ->when(fn () => Features::enabled(Features::TRAVEL));
 
         // Prunes currency_rate_history/mortgage_offer_history rows older
         // than config('history.retention_months') - see those models'
@@ -95,6 +104,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'feature' => EnsureFeatureEnabled::class,
             'setlocale' => SetLocale::class,
             'banned' => EnsureUserIsNotBanned::class,
             'org.type' => EnsureOrganizationType::class,

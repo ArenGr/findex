@@ -3,26 +3,30 @@
 @section('title', __('auth.choose_account_type') . ' — Findex')
 
 @php
-    $options = [
-        [
-            'href' => route('register.customer'),
-            'title' => __('auth.register_as_customer'),
-            'body' => __('auth.register_as_customer_body'),
-            'color' => 'slide-green',
-        ],
-        [
-            'href' => route('org.register'),
-            'title' => __('auth.register_as_organization'),
-            'body' => __('auth.register_as_organization_body'),
-            'color' => 'slide-blue',
-        ],
-        [
-            'href' => route('writer.register'),
-            'title' => __('auth.register_as_writer'),
-            'body' => __('auth.register_as_writer_body'),
-            'color' => 'accent-yellow',
-        ],
-    ];
+    $on = fn(string $key) => \App\Support\Features::enabled($key);
+
+    $options = array_values(
+        array_filter([
+            !$on('customer_registration') ? null : [
+                'href' => route('register.customer'),
+                'title' => __('auth.register_as_customer'),
+                'body' => __('auth.register_as_customer_body'),
+                'color' => 'slide-green',
+            ],
+            !$on('organization_registration') ? null : [
+                'href' => route('org.register'),
+                'title' => __('auth.register_as_organization'),
+                'body' => __('auth.register_as_organization_body'),
+                'color' => 'slide-blue',
+            ],
+            !$on('writer_registration') ? null : [
+                'href' => route('writer.register'),
+                'title' => __('auth.register_as_writer'),
+                'body' => __('auth.register_as_writer_body'),
+                'color' => 'accent-yellow',
+            ],
+        ]),
+    );
 @endphp
 
 @section('content')

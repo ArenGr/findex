@@ -11,7 +11,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
-// Switches each bank product page on or off site-wide.
+// Switches any part of the site on or off - see App\Support\Features.
 class FeatureToggleResource extends Resource
 {
     protected static ?string $model = FeatureToggle::class;

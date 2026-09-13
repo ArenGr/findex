@@ -39,16 +39,18 @@
             fn(array $column) => $column !== [],
         ),
     );
+    $feature = fn(string $key) => \App\Support\Features::enabled($key);
+
     $navItems = array_values(
         array_filter([
-            [
+            !$feature('rates') ? null : [
                 'label' => __('nav.rates'),
                 'icon' => 'rates',
                 'href' => route('rates.index'),
                 'active' => $isActive(['rates.']),
             ],
 
-            $bankingColumns === []
+            $bankingColumns === [] || !$feature('bank_products')
                 ? null
                 : [
                     'label' => __('nav.banking.label'),
@@ -57,13 +59,13 @@
                     'columns' => $bankingColumns,
                 ],
 
-            [
+            !$feature('insurance') ? null : [
                 'label' => __('nav.insurance.label'),
                 'icon' => 'insurance',
                 'href' => route('insurance.auto.request'),
                 'active' => $isActive(['insurance.']),
             ],
-            [
+            !$feature('travel') ? null : [
                 'label' => __('nav.travel.label'),
                 'icon' => 'travel',
                 'href' => route('tourism.request'),
@@ -77,7 +79,7 @@
             ],
         ]),
     );
-    $connectLinks = collect([
+    $connectLinks = collect(!($feature('telegram') && $feature('rate_alerts')) ? [] : [
         [
             'label' => 'Telegram',
             'url' => route('alerts.index', ['channel' => 'telegram']),
@@ -234,14 +236,18 @@
 
                     <div x-show="open" x-transition x-cloak
                         class="absolute right-0 top-full z-20 mt-3 w-48 rounded-md border border-placeholder bg-white py-2 shadow-lg">
-                        <a href="{{ route('tourism.mine') }}"
-                            class="block px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary">
-                            {{ __('tourism.mine.nav_label') }}
-                        </a>
-                        <a href="{{ route('alerts.index') }}"
-                            class="block px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary">
-                            {{ __('alerts.heading') }}
-                        </a>
+                        @feature('travel')
+                            <a href="{{ route('tourism.mine') }}"
+                                class="block px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary">
+                                {{ __('tourism.mine.nav_label') }}
+                            </a>
+                        @endfeature
+                        @feature('rate_alerts')
+                            <a href="{{ route('alerts.index') }}"
+                                class="block px-4 py-2 text-sm text-body-text hover:bg-primary/5 hover:text-primary">
+                                {{ __('alerts.heading') }}
+                            </a>
+                        @endfeature
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit"
@@ -255,7 +261,7 @@
                 <a href="{{ route('login') }}"
                     class="hidden text-sm text-ink hover:text-primary sm:block">{{ __('common.login') }}</a>
 
-                <a href="{{ route('register') }}" class="btn btn-secondary hidden sm:block">
+                <a href="{{ route('register') }}" class="btn btn-secondary hidden sm:flex">
                     {{ __('common.register') }}
                 </a>
             @endauth
@@ -372,10 +378,14 @@
                             <x-user-avatar :user="auth()->user()" />
                             {{ auth()->user()->name }}
                         </span>
-                        <a href="{{ route('tourism.mine') }}"
-                            class="text-ink hover:text-primary">{{ __('tourism.mine.nav_label') }}</a>
-                        <a href="{{ route('alerts.index') }}"
-                            class="text-ink hover:text-primary">{{ __('alerts.heading') }}</a>
+                        @feature('travel')
+                            <a href="{{ route('tourism.mine') }}"
+                                class="text-ink hover:text-primary">{{ __('tourism.mine.nav_label') }}</a>
+                        @endfeature
+                        @feature('rate_alerts')
+                            <a href="{{ route('alerts.index') }}"
+                                class="text-ink hover:text-primary">{{ __('alerts.heading') }}</a>
+                        @endfeature
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="btn btn-secondary">

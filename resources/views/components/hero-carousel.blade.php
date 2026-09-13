@@ -1,38 +1,44 @@
 @php
-    $slides = [
+    $feature = fn(string $key) => \App\Support\Features::enabled($key);
+
+    $slides = array_values(array_filter([
         [
             'badge' => 'bg-slide-green-pastel text-ink',
             'button' => 'bg-slide-green text-white hover:bg-primary-dark',
             'dot' => 'bg-slide-green',
             'blob' => 'bg-slide-green/20',
+            'n' => 1,
             'photo' => 'slide-1.jpg',
-            'href' => route('banks.show', 'mortgages'),
+            'href' => $feature('mortgages') ? route('banks.show', 'mortgages') : null,
         ],
         [
             'badge' => 'bg-slide-blue text-ink',
             'button' => 'bg-slide-blue text-ink hover:opacity-90',
             'dot' => 'bg-slide-blue',
             'blob' => 'bg-slide-blue/40',
+            'n' => 2,
             'photo' => 'slide-2.jpg',
-            'href' => route('rates.index'),
+            'href' => $feature('rates') ? route('rates.index') : null,
         ],
         [
             'badge' => 'bg-slide-pink text-ink',
             'button' => 'bg-slide-pink text-ink hover:opacity-90',
             'dot' => 'bg-slide-pink',
             'blob' => 'bg-slide-pink/40',
+            'n' => 3,
             'photo' => 'slide-4.jpg',
-            'href' => route('insurance.auto.request'),
+            'href' => $feature('insurance') ? route('insurance.auto.request') : null,
         ],
         [
             'badge' => 'bg-slide-purple text-ink',
             'button' => 'bg-slide-purple text-ink hover:opacity-90',
             'dot' => 'bg-slide-purple',
             'blob' => 'bg-slide-purple/40',
+            'n' => 4,
             'photo' => 'slide-5.jpg',
-            'href' => route('tourism.request'),
+            'href' => $feature('travel') ? route('tourism.request') : null,
         ],
-    ];
+    ], fn(array $slide) => $slide['href'] !== null));
 
     // Real pixel dimensions, read from the files rather than written down.
     foreach ($slides as $i => $slide) {
@@ -42,6 +48,7 @@
     }
 @endphp
 
+@if ($slides !== [])
 <section
     x-data="{ active: 0, total: {{ count($slides) }} }"
     x-init="setInterval(() => active = (active + 1) % total, 6000)"
@@ -51,7 +58,7 @@
     <div class="min-w-0 flex-1">
     <div class="relative grid">
         @foreach ($slides as $i => $slide)
-            @php($n = $i + 1)
+            @php($n = $slide['n'])
             {{-- Every slide is laid out from the first paint, at opacity 0 for all but the active one. --}}
             <div
                 @if ($i > 0) inert @endif
@@ -78,9 +85,11 @@
                         <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md {{ $slide['button'] }}">
                             {{ __("hero.slides.$n.cta") }}
                         </a>
-                        <a href="{{ route('organizations.compare') }}" class="btn btn-secondary">
-                            {{ __('common.compare_banks') }}
-                        </a>
+                        @feature('compare')
+                            <a href="{{ route('organizations.compare') }}" class="btn btn-secondary">
+                                {{ __('common.compare_banks') }}
+                            </a>
+                        @endfeature
                     </div>
                 </div>
 
@@ -120,3 +129,4 @@
     <x-ad-slot placement="home_hero" />
     </div>
 </section>
+@endif

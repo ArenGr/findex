@@ -10,6 +10,7 @@ use App\Models\CurrencyRateHistory;
 use App\Models\Organization;
 use App\Services\Cache\OrgRatingsCache;
 use App\Services\Cache\RateCache;
+use App\Support\Features;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -134,7 +135,11 @@ class RateController extends Controller
         $openOrganizationIds = $openNow ? $this->organizationsOpenNow() : null;
 
         // List or map.
-        $viewMode = $request->query('view') === 'map' ? 'map' : 'list';
+        // ?view=map with the map switched off falls back to the list rather
+        // than rendering an empty canvas.
+        $viewMode = $request->query('view') === 'map' && Features::enabled(Features::RATES_MAP)
+            ? 'map'
+            : 'list';
 
         $page = (int) $request->query('page', 1);
 

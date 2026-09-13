@@ -4,11 +4,12 @@ use App\Http\Controllers\DestinationAlertController;
 use App\Http\Controllers\PartnerResponseController;
 use App\Http\Controllers\QuoteRequestController;
 use App\Http\Controllers\VoiceFillController;
+use App\Support\Features;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/tourism', [QuoteRequestController::class, 'create'])->name('tourism.request');
 
-Route::middleware(['banned', 'throttle:voice_fill'])->group(function () {
+Route::middleware(['banned', 'feature:'.Features::TRAVEL_VOICE_FILL, 'throttle:voice_fill'])->group(function () {
     Route::post('/tourism/voice-fill', [VoiceFillController::class, 'store'])->name('tourism.voice-fill');
 });
 

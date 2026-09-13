@@ -49,6 +49,7 @@
         @endif
     @endif
 
+    @feature('reports')
     <h2 class="mt-10 font-heading text-lg font-semibold text-ink">{{ __('org.overview.recent_reports') }}</h2>
 
     <div class="mt-4 divide-y divide-placeholder border-t border-placeholder">
@@ -64,4 +65,5 @@
             <p class="py-4 text-sm text-muted">{{ __('org.overview.no_recent_reports') }}</p>
         @endforelse
     </div>
+    @endfeature
 @endsection

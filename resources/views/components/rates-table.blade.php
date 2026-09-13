@@ -26,6 +26,7 @@
                 </p>
             </div>
 
+            @feature('rate_alerts')
             <a
                 :href="alertUrlByCurrency[tab]"
                 class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-ink hover:text-primary"
@@ -35,6 +36,7 @@
                 </svg>
                 {{ __('rates.alert_cta') }}
             </a>
+            @endfeature
         </div>
 
         <svg width="0" height="0" aria-hidden="true" class="absolute"><symbol id="findex-star" viewBox="0 0 20 20"><path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" /></symbol></svg>

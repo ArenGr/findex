@@ -130,7 +130,7 @@
                         <p class="mt-4 text-sm leading-relaxed text-muted">{{ $organization->description }}</p>
                     @endif
 
-                    <a href="{{ route('organizations.show', $organization) }}" class="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+                    <a @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', $organization) }}" @endif class="mt-4 inline-block text-sm font-medium text-primary hover:underline">
                         {{ __('tourism.offer.view_profile') }} &rarr;
                     </a>
                 </div>

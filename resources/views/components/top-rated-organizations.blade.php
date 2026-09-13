@@ -54,7 +54,7 @@
         </div>
 
         <div class="mt-10 text-center">
-            <a href="{{ route('organizations.index') }}" class="btn btn-primary inline-block">
+            <a href="{{ route('organizations.index') }}" class="btn btn-primary inline-flex">
                 {{ __('organizations.view_all') }}
             </a>
         </div>

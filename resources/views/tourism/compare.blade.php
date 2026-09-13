@@ -76,7 +76,7 @@
         @if ($selected->count() < 2)
             <div class="mt-8 rounded-2xl border border-dashed border-placeholder p-10 text-center">
                 <p class="text-sm text-muted">{{ __('tourism.compare.empty') }}</p>
-                <a href="{{ $offersUrl }}" class="btn btn-primary mt-4 inline-block">
+                <a href="{{ $offersUrl }}" class="btn btn-primary mt-4 inline-flex">
                     {{ __('tourism.compare.back_to_offers') }}
                 </a>
             </div>
@@ -118,7 +118,7 @@
 
                             <a
                                 href="{{ $quoteRequest->signedUrlFor('tourism.offers.show', ['suggestion' => $row['offer']->id]) }}"
-                                class="btn btn-primary mt-4 block text-center"
+                                class="btn btn-primary mt-4 flex text-center"
                             >
                                 {{ __('tourism.offers.view_details') }}
                             </a>
@@ -187,7 +187,7 @@
                                 <td class="border-t border-placeholder px-4 py-4">
                                     <a
                                         href="{{ $quoteRequest->signedUrlFor('tourism.offers.show', ['suggestion' => $row['offer']->id]) }}"
-                                        class="btn btn-primary inline-block"
+                                        class="btn btn-primary inline-flex"
                                     >
                                         {{ __('tourism.offers.view_details') }}
                                     </a>

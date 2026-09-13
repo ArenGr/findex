@@ -77,6 +77,8 @@
     </main>
 
     <x-site-footer />
-    <x-compare-bar />
+    @feature('compare')
+        <x-compare-bar />
+    @endfeature
 </body>
 </html>

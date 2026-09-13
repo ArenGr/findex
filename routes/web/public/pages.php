@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EmailPreviewController;
 use App\Http\Controllers\OfferController;
+use App\Support\Features;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,10 +16,13 @@ if (! app()->isProduction()) {
     Route::get('/email-preview', [EmailPreviewController::class, 'index'])->name('email-preview.index');
     Route::get('/email-preview/{template}', [EmailPreviewController::class, 'show'])->name('email-preview.show');
 }
-Route::get('/banks', [OfferController::class, 'index'])->name('banks.index');
-Route::get('/banks/{category}', [OfferController::class, 'show'])
-    ->name('banks.show')
-    ->where('category', implode('|', array_map('preg_quote', OfferController::CATEGORIES)));
+Route::middleware('feature:'.Features::BANK_PRODUCTS)->group(function () {
+    Route::get('/banks', [OfferController::class, 'index'])->name('banks.index');
+    // The category is a feature key in its own right, checked in the controller.
+    Route::get('/banks/{category}', [OfferController::class, 'show'])
+        ->name('banks.show')
+        ->where('category', implode('|', array_map('preg_quote', OfferController::CATEGORIES)));
+});
 Route::get('/about', function () {
     return view('about');
 })->name('about');

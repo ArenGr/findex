@@ -6,6 +6,7 @@ use App\Http\Controllers\Organization\DashboardController as OrganizationDashboa
 use App\Http\Controllers\Organization\ReportRequestController;
 use App\Http\Controllers\Organization\ReviewReplyController;
 use App\Http\Controllers\Organization\TeamController;
+use App\Support\Features;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('org')->name('org.')->middleware(['auth:organization', 'banned'])->group(function () {
@@ -14,8 +15,10 @@ Route::prefix('org')->name('org.')->middleware(['auth:organization', 'banned'])-
 
         require __DIR__.'/settings.php';
 
-        Route::get('/reviews', [ReviewReplyController::class, 'index'])->name('reviews.index');
-        Route::post('/reviews/{review}/reply', [ReviewReplyController::class, 'store'])->name('reviews.reply');
+        Route::middleware('feature:'.Features::REVIEWS)->group(function () {
+            Route::get('/reviews', [ReviewReplyController::class, 'index'])->name('reviews.index');
+            Route::post('/reviews/{review}/reply', [ReviewReplyController::class, 'store'])->name('reviews.reply');
+        });
 
         Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
         Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
@@ -24,17 +27,19 @@ Route::prefix('org')->name('org.')->middleware(['auth:organization', 'banned'])-
         Route::put('/branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
         Route::delete('/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
 
-        Route::get('/reports', [ReportRequestController::class, 'index'])->name('reports.index');
-        Route::get('/reports/create', [ReportRequestController::class, 'create'])->name('reports.create');
-        Route::post('/reports', [ReportRequestController::class, 'store'])->name('reports.store');
-        Route::get('/reports/{reportRequest}', [ReportRequestController::class, 'show'])->name('reports.show');
+        Route::middleware('feature:'.Features::REPORTS)->group(function () {
+            Route::get('/reports', [ReportRequestController::class, 'index'])->name('reports.index');
+            Route::get('/reports/create', [ReportRequestController::class, 'create'])->name('reports.create');
+            Route::post('/reports', [ReportRequestController::class, 'store'])->name('reports.store');
+            Route::get('/reports/{reportRequest}', [ReportRequestController::class, 'show'])->name('reports.show');
+        });
 
         Route::get('/team', [TeamController::class, 'index'])->name('team.index');
         Route::post('/team', [TeamController::class, 'store'])->name('team.store');
         Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
 
-        require __DIR__.'/rates.php';
-        require __DIR__.'/tourism.php';
-        require __DIR__.'/insurance.php';
+        Route::middleware('feature:'.Features::RATES)->group(__DIR__.'/rates.php');
+        Route::middleware('feature:'.Features::TRAVEL)->group(__DIR__.'/tourism.php');
+        Route::middleware('feature:'.Features::INSURANCE)->group(__DIR__.'/insurance.php');
     });
 });

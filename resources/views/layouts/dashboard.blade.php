@@ -36,20 +36,22 @@
 
     <div class="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 md:flex-row md:gap-10 lg:px-10">
         <nav class="flex gap-1 overflow-x-auto text-sm md:w-48 md:shrink-0 md:flex-col md:space-y-1 md:overflow-visible">
+            {{-- A tab whose feature is off has no route to point at. --}}
+            @php $on = fn(string $key) => \App\Support\Features::enabled($key); @endphp
             @foreach ([
                 'org.dashboard.index' => __('org.nav.overview'),
                 'org.dashboard.profile.edit' => __('org.nav.profile'),
-                'org.dashboard.reviews.index' => __('org.nav.reviews'),
+                ...($on('reviews') ? ['org.dashboard.reviews.index' => __('org.nav.reviews')] : []),
                 'org.dashboard.branches.index' => __('org.nav.branches'),
-                ...($organization->hasRatesPage() ? ['org.dashboard.rates.index' => __('org.nav.rates')] : []),
-                'org.dashboard.reports.index' => __('org.nav.reports'),
+                ...($organization->hasRatesPage() && $on('rates') ? ['org.dashboard.rates.index' => __('org.nav.rates')] : []),
+                ...($on('reports') ? ['org.dashboard.reports.index' => __('org.nav.reports')] : []),
                 'org.dashboard.team.index' => __('org.nav.team'),
-                ...($organization->hasTourismPage() ? [
+                ...($organization->hasTourismPage() && $on('travel') ? [
                     'org.dashboard.travel-requests.index' => __('tourism.inbox.heading'),
                     'org.dashboard.tourism.index' => __('tourism.nav_label'),
                     'org.dashboard.quote-templates.index' => __('org.nav.quote_templates'),
                 ] : []),
-                ...($organization->hasInsurancePage() ? ['org.dashboard.insurance.index' => __('org.nav.insurance')] : []),
+                ...($organization->hasInsurancePage() && $on('insurance') ? ['org.dashboard.insurance.index' => __('org.nav.insurance')] : []),
             ] as $routeName => $label)
                 <a
                     href="{{ route($routeName) }}"

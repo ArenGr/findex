@@ -2,6 +2,7 @@
 
 namespace App\Services\Telegram;
 
+use App\Support\Features;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
@@ -93,6 +94,11 @@ class TelegramClient
 
     private function call(string $method, array $payload, ?int $requestTimeout = null): array
     {
+        // One gate for every notifier and command that goes through here.
+        if (Features::disabled(Features::TELEGRAM)) {
+            return ['ok' => false, 'description' => 'Telegram is switched off'];
+        }
+
         $response = $this->httpClient->post($method, [
             'json' => $payload,
             'timeout' => $requestTimeout ?? 35,

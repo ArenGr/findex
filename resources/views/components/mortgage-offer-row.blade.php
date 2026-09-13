@@ -24,7 +24,7 @@
     @endif
 
     <div class="min-w-0 flex-1">
-        <a href="{{ $row['url'] }}" class="block truncate text-sm font-medium text-ink hover:text-primary">{{ $row['name'] }}</a>
+        <a @if ($row['url']) href="{{ $row['url'] }}" @endif class="block truncate text-sm font-medium text-ink hover:text-primary">{{ $row['name'] }}</a>
         @if ($row['reviews_count'] > 0)
             <div class="mt-0.5 flex items-center gap-1">
                 <svg viewBox="0 0 20 20" class="h-3 w-3 fill-accent-yellow"><path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" /></svg>

@@ -1,5 +1,7 @@
 @props(['organization'])
 
+@feature('compare')
+
 <button
     type="button"
     x-data
@@ -15,3 +17,4 @@
     {{-- x-cloak, or both labels paint until Alpine boots and the button visibly shrinks. --}}
     <span x-show="$store.compare.has(@js($organization->slug))" x-cloak>✓ {{ __('organizations.compare_added') }}</span>
 </button>
+@endfeature

@@ -26,7 +26,7 @@
         <div class="mt-8 rounded-2xl bg-primary/5 p-6">
             <h2 class="font-heading text-base font-semibold text-ink">{{ __('contact.business_heading') }}</h2>
             <p class="mt-2 text-sm leading-relaxed text-body-text">{{ __('contact.business_body') }}</p>
-            <a href="{{ route('org.register') }}" class="btn btn-primary mt-4 inline-block">
+            <a href="{{ route('org.register') }}" class="btn btn-primary mt-4 inline-flex">
                 {{ __('contact.business_link') }}
             </a>
         </div>

@@ -79,7 +79,7 @@
                     </p>
 
                     @if ($tab !== 'past')
-                        <a href="{{ route('tourism.request') }}" class="btn btn-primary mt-4 inline-block">
+                        <a href="{{ route('tourism.request') }}" class="btn btn-primary mt-4 inline-flex">
                             {{ __('tourism.mine.new_request') }}
                         </a>
                     @endif

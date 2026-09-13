@@ -98,7 +98,7 @@
                                     </a>
                                 @endif
                                 <a
-                                    href="{{ route('organizations.show', $accepted->organization) }}"
+                                    @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', $accepted->organization) }}" @endif
                                     class="inline-flex min-h-11 items-center rounded-xl border border-border-muted px-4 py-2 text-sm font-semibold break-words text-ink transition hover:bg-placeholder/25"
                                 >
                                     {{ __('exchange_quotes.offers.view_office') }}
@@ -308,7 +308,7 @@
                                 @endif
 
                                 <h3 class="font-heading text-lg font-semibold break-words text-ink">
-                                    <a href="{{ route('organizations.show', $response->organization) }}" class="hover:text-primary">{{ $response->organization->name }}</a>
+                                    <a @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', $response->organization) }}" @endif class="hover:text-primary">{{ $response->organization->name }}</a>
                                 </h3>
 
                                 @if ($response->has_replied && $value)

@@ -1,3 +1,4 @@
+@feature('travel_voice_fill')
 {{-- The voice concierge, hidden behind services.openai.voice_fill. --}}
 @if (config('services.openai.voice_fill'))
     <div class="rounded-xl border border-travel-200 bg-travel-50/70 p-6">
@@ -85,3 +86,4 @@
         </div>
     </div>
 @endif
+@endfeature

@@ -95,7 +95,17 @@
         ],
     ];
 
-    $alertHref = route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])).'#create-alert';
+    $on = fn(string $key) => \App\Support\Features::enabled($key);
+    $alertsOn = $on('rate_alerts');
+    $exchangeOn = $on('exchange');
+    $historyOn = $on('rates_history');
+    $mapOn = $on('rates_map');
+
+    // route() throws once the route is gone, so this is only built when the
+    // alerts feature is on.
+    $alertHref = $alertsOn
+        ? route('alerts.index', array_filter(['currency_id' => $selectedCurrency?->id])).'#create-alert'
+        : null;
 
     $activeFilterCount = collect([
         $selectedType !== \App\Enums\RateType::CASH ? $selectedType : null,
@@ -108,7 +118,7 @@
     {{-- Hero geometry lives in x-page-hero, shared by every main page. --}}
     <x-page-hero :title="__('rates.all_heading')" :subtitle="__('rates.all_subheading')">
                 <div class="flex flex-wrap items-center gap-3">
-                @if ($quoteMinimum !== null)
+                @if ($quoteMinimum !== null && $exchangeOn)
                     @php $qualifies = $amount >= $quoteMinimum; @endphp
                     <a
                         @php
@@ -163,6 +173,7 @@
                     </x-info-popover>
                 @endif
 
+                @if ($alertsOn)
                 <a
                     href="{{ $alertHref }}"
                     onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
@@ -177,6 +188,7 @@
                 <x-info-popover :label="__('rates.alert_cta')">
                     {{ __('rates.alert_hint') }}
                 </x-info-popover>
+                @endif
                 </div>
 
         {{-- Currency composition in Findex greens. --}}
@@ -310,7 +322,7 @@
                                 : ($branch['open'] ? __('rates.open') : __('rates.closed')),
                             'hours' => $branch['hours'],
                             'directions' => 'https://www.google.com/maps/dir/?api=1&destination='.$branch['lat'].','.$branch['lng'],
-                            'negotiate' => $row->organization_type === 'exchange' && $quoteMinimum !== null
+                            'negotiate' => $exchangeOn && $row->organization_type === 'exchange' && $quoteMinimum !== null
                                 ? route('exchange.request', array_filter([
                                     'currency' => $selectedCurrency?->code,
                                     'amount' => $amount,
@@ -507,11 +519,13 @@
                         />
                     @endforeach
                 </div>
-                <p class="mt-3">
-                    <a href="{{ route('rates.history', ['currency' => $selectedCurrency?->code]) }}" class="inline-flex min-h-11 items-center text-sm font-medium break-words text-primary hover:underline">
-                        {{ __('rates.history.link') }} &rarr;
-                    </a>
-                </p>
+                @if ($historyOn)
+                    <p class="mt-3">
+                        <a href="{{ route('rates.history', ['currency' => $selectedCurrency?->code]) }}" class="inline-flex min-h-11 items-center text-sm font-medium break-words text-primary hover:underline">
+                            {{ __('rates.history.link') }} &rarr;
+                        </a>
+                    </p>
+                @endif
             @if ($calculating && $best)
                 <div class="relative mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 overflow-hidden rounded-2xl border-2 border-primary/40 bg-primary/5 py-5 pr-4 pl-6 sm:pr-6 sm:pl-8">
                     <span class="absolute inset-y-0 left-0 w-2 bg-primary" aria-hidden="true"></span>
@@ -578,6 +592,9 @@
                     @endif
                 </p>
                 <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    {{-- Not rendered at all rather than hidden with a class:
+                         a list/map switch with one option is not a switch. --}}
+                    @if ($mapOn)
                     <div class="flex rounded-lg border border-placeholder bg-placeholder/25 p-1">
                         @foreach (['view_list' => null, 'view_map' => 'map'] as $key => $mode)
                             @php $isCurrent = $viewMode === ($mode ?? 'list'); @endphp
@@ -590,6 +607,7 @@
                             </a>
                         @endforeach
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -883,12 +901,16 @@
         </p>
 
     </section>
-    <x-rate-alert-modal
-        :currencies="$currencies"
-        :organizations="$alertOrganizations"
-        :rate-types="$alertRateTypes"
-    />
-    <x-better-rate-modal :currencies="$quoteCurrencies" :cities="$cities->all()" />
+    @if ($alertsOn)
+        <x-rate-alert-modal
+            :currencies="$currencies"
+            :organizations="$alertOrganizations"
+            :rate-types="$alertRateTypes"
+        />
+    @endif
+    @if ($exchangeOn)
+        <x-better-rate-modal :currencies="$quoteCurrencies" :cities="$cities->all()" />
+    @endif
     <script>
         (() => {
             const panel = document.getElementById('rates-panel');

@@ -87,7 +87,7 @@
                                 @endif
 
                                 <div class="min-w-0">
-                                    <a href="{{ route('organizations.show', $organization) }}" class="block truncate font-semibold text-ink hover:text-primary">
+                                    <a @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', $organization) }}" @endif class="block truncate font-semibold text-ink hover:text-primary">
                                         {{ $organization->name }}
                                     </a>
                                     @if ($organization->reviews_avg_rating)
@@ -192,7 +192,7 @@
                 <div class="rounded-2xl border border-dashed border-placeholder p-10 text-center">
                     @if ($pending->isEmpty())
                         <p class="text-sm text-muted">{{ __('tourism.offers.empty_no_agencies') }}</p>
-                        <a href="{{ route('tourism.request') }}" class="btn btn-primary mt-4 inline-block">
+                        <a href="{{ route('tourism.request') }}" class="btn btn-primary mt-4 inline-flex">
                             {{ __('tourism.mine.new_request') }}
                         </a>
                     @else
