@@ -2,23 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Plans
-    |--------------------------------------------------------------------------
-    |
-    | Commercial terms, kept in configuration rather than in code. Prices and
-    | limits are a business decision that will change without any application
-    | change, so nothing below is referenced by a literal anywhere in app/ -
-    | the limiter reads whatever is here, and an unknown plan falls back to the
-    | default rather than throwing.
-    |
-    | 'requests_per_minute' is the burst guard; 'requests_per_day' is the plan
-    | itself. Null means unmetered, which is what an enterprise agreement
-    | usually means in practice - the contract is the limit, not the code.
-    |
-    */
-
     'plans' => [
         'free' => [
             'label' => 'Free',
@@ -46,11 +29,7 @@ return [
         ],
     ],
 
-    /*
-    | What a caller gets with no key at all. The public API stays open - a rate
-    | board nobody can read is not much of a rate board - but anonymous callers
-    | share a much smaller allowance, keyed by IP.
-    */
+    // | What a caller gets with no key at all.
     'anonymous_plan' => 'free',
 
     'anonymous' => [

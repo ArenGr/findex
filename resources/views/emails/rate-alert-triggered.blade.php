@@ -3,9 +3,6 @@
     $directionLabel = __('alerts.' . $alert->direction);
     $value = $rate->{$alert->rate_field};
 
-    // route() can't rely on URL::defaults(['locale' => ...]) here: that's set
-    // by the SetLocale HTTP middleware, but this mail is built from a console
-    // command with no active request, so {locale} must be passed explicitly.
     $mailLocale = config('localization.default');
 @endphp
 <x-emails.layout>

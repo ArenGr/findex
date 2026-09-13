@@ -24,12 +24,6 @@ class TourismDestination extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    /**
-     * False while paused, unless paused_until has passed - lets a partner
-     * set an auto-resume date instead of having to remember to unpause
-     * manually (see SendQuoteRequestToPartnersJob's matching query, which
-     * uses the same condition to exclude paused destinations).
-     */
     public function isActive(): bool
     {
         if (! $this->is_paused) {

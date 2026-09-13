@@ -10,11 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the "My Trips" account page (QuoteRequestController::mine) - the
- * one place a logged-in user can see every quote request they've filed,
- * without which being signed in bought nothing over a guest submission.
- */
 class MyTripsPageTest extends TestCase
 {
     use RefreshDatabase;
@@ -96,8 +91,6 @@ class MyTripsPageTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('tourism.mine', ['locale' => 'en']));
 
-        // Counted by QuoteRequest::scopeWithProgressCounts(), which every
-        // request-facing screen now shares.
         $response->assertViewHas('quoteRequests', function ($quoteRequests) {
             $quoteRequest = $quoteRequests->first();
 

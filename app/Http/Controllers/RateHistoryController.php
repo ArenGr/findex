@@ -22,13 +22,9 @@ class RateHistoryController extends Controller
 
         $selectedCurrency = $currencies->firstWhere('code', $request->query('currency')) ?? $currencies->first();
 
-        // Cash only for now. It is the type nearly every organization quotes,
-        // and the one a history chart of "the market" actually describes.
+        // Cash only for now.
         $type = RateType::CASH;
 
-        // Only ranges the data can draw honestly - offering "1 year" over ten
-        // days of history would render a chart that is mostly a straight line
-        // and entirely a lie.
         $ranges = $history->offerableRanges();
         $days = in_array((int) $request->query('days'), $ranges, true)
             ? (int) $request->query('days')
@@ -45,8 +41,6 @@ class RateHistoryController extends Controller
             'days' => $days,
             'series' => $series,
             'availableDays' => $history->availableDays(),
-            // Every range we would like to offer but cannot yet, so the page can
-            // say so rather than leaving a reader wondering where they went.
             'pendingRanges' => array_values(array_diff(RateHistoryService::RANGES, $ranges)),
             'buyChange' => $history->changeAgainstAverage($series, 'best_buy'),
             'sellChange' => $history->changeAgainstAverage($series, 'best_sell'),

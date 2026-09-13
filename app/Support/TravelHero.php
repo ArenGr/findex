@@ -5,13 +5,19 @@ namespace App\Support;
 class TravelHero
 {
     private const WIDTHS = [
-        'hero-photo' => [900, 1420],
         'hero-mobile' => [640, 900, 1080],
         'trip-empty' => [320, 640, 960],
         'panorama' => [960, 1440, 1916],
+
+        // One photograph per popular trip - see App\Support\TravelPresets.
+        'preset-georgia_break' => [400, 640],
+        'preset-dubai_city' => [400, 640],
+        'preset-egypt_all_in' => [400, 640],
+        'preset-cyprus_sea' => [400, 640],
     ];
 
     private const FORMATS = ['avif', 'webp'];
+
     private static array $cache = [];
 
     public static function flush(): void
@@ -50,7 +56,7 @@ class TravelHero
             }
         }
 
-        if (!isset($srcset['webp'])) {
+        if (! isset($srcset['webp'])) {
             return self::$cache[$name] = null;
         }
 

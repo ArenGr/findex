@@ -26,11 +26,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
         return Currency::firstOrCreate(['code' => 'USD'], ['name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
     }
 
-    /**
-     * An active, Telegram-connected exchange office publishing a CASH rate
-     * for USD - the baseline "matches" case every test builds on or
-     * deviates from.
-     */
     private function exchangePartner(array $overrides = [], ?string $branchCity = null): Organization
     {
         $organization = Organization::create(array_merge([
@@ -78,11 +73,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
         ], $overrides);
     }
 
-    /**
-     * The page has always shown rates and left the visitor to work out that
-     * 386.20 against 385.00 is 6,000 dram on their amount. That subtraction is
-     * the whole point of the feature, so the page does it.
-     */
     public function test_each_offer_is_stated_in_money_not_only_as_a_rate(): void
     {
         $partner = $this->exchangePartner();
@@ -117,17 +107,11 @@ class ExchangeQuoteSubmissionTest extends TestCase
             'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
         ]))->assertOk();
 
-        // 5,000 x 386.20 = 1,931,000 dram, against 5,000 x the best public
-        // 385.00 = 1,925,000 - so asking was worth 6,000.
         $response->assertSee('1,931,000')
             ->assertSee('+6,000')
-            // Named against its baseline. "Findex got you X" credited us with
-            // a number the reader could not check.
+            // Named against its baseline.
             ->assertSee('Net gain vs public')
             ->assertSee('You receive')
-            // Measured against the open market, not against what this office
-            // happened to be posting when the request went out. Stated in the
-            // request summary beside the offers, so both are read together.
             ->assertSee('Current public best')
             ->assertSee('385.00');
     }
@@ -159,11 +143,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
         ]))->assertOk()->assertDontSee('Findex got you');
     }
 
-    /**
-     * Picking an offer tells the exchange office nothing about the visitor. It
-     * produces a code - FX-48372-A - which the office looks up against the
-     * request it already answered. That is the entire handshake.
-     */
+    // Picking an offer tells the exchange office nothing about the visitor.
     public function test_accepting_an_offer_yields_a_code_and_no_personal_data(): void
     {
         [$exchangeRequest, $response] = $this->requestWithOffer();
@@ -219,11 +199,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->assertNull($first->accepted_at);
     }
 
-    /**
-     * A closed request cannot be acted on - the office is no longer holding
-     * that rate, and letting someone walk to a counter on a dead code is the
-     * worst outcome this feature has.
-     */
     public function test_a_closed_request_cannot_have_an_offer_accepted(): void
     {
         [$exchangeRequest, $response] = $this->requestWithOffer();
@@ -272,11 +247,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
         return [$exchangeRequest, $response];
     }
 
-    /**
-     * "Get a better rate" is one question asked about rates already on screen,
-     * so it is a dialog over them rather than a page away. The link stays a
-     * real link, so it still works with JavaScript off.
-     */
     public function test_the_rates_page_offers_the_modal_and_still_links_to_the_page(): void
     {
         $this->exchangePartner([], 'Yerevan');
@@ -290,11 +260,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
             ->assertDontSee('Negotiate your rate');
     }
 
-    /**
-     * How long the visitor will wait, rather than a flat week. A rate held for
-     * seven days is not a rate anyone is holding, and an office answering a
-     * two-day-old request is quoting into a market that has moved.
-     */
+    // How long the visitor will wait, rather than a flat week.
     public function test_the_chosen_window_sets_when_the_request_closes(): void
     {
         $this->exchangePartner();
@@ -339,11 +305,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->assertSame(60, (int) now()->diffInMinutes(ExchangeQuoteRequest::latest('id')->firstOrFail()->expires_at));
     }
 
-    /**
-     * The other half of the handoff: what /rates sends, this form must read.
-     * A prefill that silently ignores half the query string is worse than no
-     * prefill, because the visitor cannot tell which fields carried over.
-     */
+    // The other half of the handoff: what /rates sends, this form must read.
     public function test_the_form_prefills_from_the_rates_page_context(): void
     {
         $this->exchangePartner([], 'Yerevan');
@@ -355,8 +317,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
 
         $this->assertStringContainsString('value="5000"', $html);
         $this->assertStringContainsString('value="Yerevan" selected', $html);
-        // Checked server-side as well as by Alpine, so the prefill survives
-        // with JavaScript off.
+        // Checked server-side as well as by Alpine, so the prefill survives with JavaScript off.
         $this->assertMatchesRegularExpression('/value="sell_rate"[^>]*checked/', $html);
     }
 
@@ -383,13 +344,10 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $exchangeQuoteRequest = ExchangeQuoteRequest::sole();
         $response->assertRedirect($exchangeQuoteRequest->signedResultsUrl());
         $this->assertNull($exchangeQuoteRequest->user_id);
-        // Not asked for and not stored: the office never sees it, so the
-        // form does not collect it.
+        // Not asked for and not stored: the office never sees it, so the form does not collect it.
         $this->assertNull($exchangeQuoteRequest->guest_name);
         $this->assertSame('1000.00', $exchangeQuoteRequest->amount);
         $this->assertSame(1, $exchangeQuoteRequest->responses()->count());
-        // The posted_rate snapshot must match the org's buy_rate (this
-        // request is rate_field=buy_rate) at submission time.
         $this->assertSame('384.5000', $exchangeQuoteRequest->responses->first()->posted_rate);
 
         Mail::assertQueued(ExchangeQuoteRequestSubmitted::class, function ($mail) use ($exchangeQuoteRequest) {
@@ -402,9 +360,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->mock(TelegramClient::class, function ($mock) {
             $mock->shouldReceive('sendMessage')->never();
         });
-        // A bank publishes the same currency but isn't an 'exchange' -
-        // Organization::exchangePartnersForCurrency is deliberately
-        // exchange-only (banks don't negotiate walk-in cash exchanges).
         $this->exchangePartner(['type' => 'bank', 'slug' => 'test-bank-'.uniqid()]);
 
         $response = $this->post(route('exchange.request.store', ['locale' => 'en']), $this->validPayload());
@@ -435,9 +390,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
 
     public function test_submission_fails_when_no_partner_offers_the_currency(): void
     {
-        // The currency exists (so store() gets past its firstOrFail lookup)
-        // but no organization publishes a rate for it - the actual "no
-        // partner" case, distinct from "unrecognized currency code".
         $this->usd();
 
         $response = $this->post(route('exchange.request.store', ['locale' => 'en']), $this->validPayload());
@@ -525,10 +477,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
 
     public function test_preferred_city_with_no_matching_offices_is_rejected_with_a_region_specific_error(): void
     {
-        // Gyumri is a valid, selectable region (an exchange office has a
-        // branch there) but that office doesn't publish a USD rate -
-        // distinct from "unrecognized region", which Rule::in would catch
-        // during validation before this is ever reached.
         $this->exchangePartner(['slug' => 'yerevan-office-'.uniqid()], 'Yerevan');
         $gyumriOffice = Organization::create([
             'name' => 'Gyumri Only Exchange',
@@ -565,11 +513,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->assertSame(0, ExchangeQuoteRequest::count());
     }
 
-    /**
-     * The offers page is read at four different moments in one errand, and
-     * shows exactly one of them. A layout that serves all four at once serves
-     * the moment you are actually in worst.
-     */
+    // The offers page is read at four different moments in one errand, and shows exactly one of them.
     public function test_the_offers_page_shows_one_state_at_a_time(): void
     {
         $partner = $this->exchangePartner();
@@ -588,8 +532,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
             'locale' => 'en', 'exchangeQuoteRequest' => $exchangeRequest->id,
         ]))->assertOk();
 
-        // Nothing has arrived: no comparison, because there is nothing to
-        // compare, and no offers heading over an empty list.
         $page()->assertSee('Waiting for offers')
             ->assertDontSee('Received offers')
             ->assertDontSee('Request expired');
@@ -626,13 +568,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
             ->assertSee($exchangeRequest->public_code);
     }
 
-    /**
-     * How long offices may answer and how long you may read your own request
-     * are different questions. Signing the link with expires_at answered them
-     * with one number, so the moment the window shut the link 403'd - and the
-     * page written for exactly that moment became unreachable. Harmless while
-     * windows were a week; the windows are now fifteen minutes.
-     */
+    // How long offices may answer and how long you may read your own request are different questions.
     public function test_the_results_link_outlives_the_offer_window(): void
     {
         $this->exchangePartner();
@@ -652,10 +588,6 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->get($url)->assertOk();
     }
 
-    /**
-     * Accepting stays bounded by the window even though reading does not - the
-     * longer-lived link must not become a way to accept a lapsed offer.
-     */
     public function test_an_offer_cannot_be_accepted_after_the_window_closes(): void
     {
         $partner = $this->exchangePartner();
@@ -698,10 +630,7 @@ class ExchangeQuoteSubmissionTest extends TestCase
         $this->assertNotNull(ExchangeQuoteRequest::find($exchangeRequest->id));
     }
 
-    /**
-     * The modal promises the office sees the amount and nothing else, three
-     * times over. This is the assertion that keeps that promise true.
-     */
+    // The modal promises the office sees the amount and nothing else, three times over.
     public function test_the_office_is_never_shown_who_asked(): void
     {
         $partner = $this->exchangePartner();

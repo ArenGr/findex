@@ -40,15 +40,10 @@
 
             {{-- Decorative composition of the four things Findex compares --}}
             <div class="relative mx-auto w-full max-w-sm">
-                {{-- -inset-3 below sm: the column pads 16px on a phone, so a 24px
-                 bleed on every side escapes the viewport and scrolls the page. --}}
                 <div class="absolute -inset-3 -z-10 rounded-[2rem] bg-slide-purple/20 sm:-inset-6"></div>
                 <div class="grid grid-cols-2 gap-4">
                     @foreach ($pillars as $i => $pillar)
                         <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60 {{ $i % 2 === 1 ? 'mt-6' : '' }}">
-                            {{-- Tailwind can't see dynamically-built class names, so the
-                                 per-pillar color is applied via the theme's CSS variable
-                                 directly rather than an interpolated bg-{color} class. --}}
                             <span class="flex h-10 w-10 items-center justify-center rounded-full bg-placeholder/20">
                                 <span class="h-4 w-4 rounded-full" style="background-color: var(--color-{{ $pillar['color'] }})"></span>
                             </span>

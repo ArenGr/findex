@@ -9,12 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the "typical price for this trip" teaser on the request form (see
- * QuoteRequestController::typicalPrices) - shown before a visitor commits
- * to filling out the form, built from historical responded suggestions
- * across every organization.
- */
 class TourismTypicalPriceTest extends TestCase
 {
     use RefreshDatabase;

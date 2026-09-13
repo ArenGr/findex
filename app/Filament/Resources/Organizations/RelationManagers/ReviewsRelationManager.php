@@ -18,12 +18,6 @@ class ReviewsRelationManager extends RelationManager
 {
     protected static string $relationship = 'reviews';
 
-    /**
-     * Read-only: reviews only ever come from real users, so there's no
-     * create/edit action wired up below - this schema exists only to
-     * render ViewAction's modal. Deletion here is moderation (spam/abusive
-     * content); everything else is managed by the standalone ReviewResource.
-     */
     public function form(Schema $schema): Schema
     {
         return $schema

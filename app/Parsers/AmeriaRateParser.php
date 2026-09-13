@@ -8,18 +8,6 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class AmeriaRateParser implements RateParser
 {
-    /**
-     * Ameriabank renders the rates as a plain HTML table with two header
-     * groups ("cash" and "non-cash"), each with buy/sell columns:
-     *
-     *   |        | cash      | non-cash  |
-     *   |        | buy | sell| buy | sell|
-     *   | USD    | ... | ... | ... | ... |
-     *
-     * The table's own id is DNN-module-generated (e.g. "dnn_ctr20025_...")
-     * and can change between deployments, so we locate it structurally by
-     * its header text instead of relying on that id.
-     */
     public function parse(string $html): array
     {
         $crawler = new Crawler($html);
@@ -52,9 +40,7 @@ class AmeriaRateParser implements RateParser
         return $rates;
     }
 
-    /**
-     * Find the rates table by its "cash" / "non-cash" header group.
-     */
+    // Find the rates table by its "cash" / "non-cash" header group.
     private function findRatesTable(Crawler $crawler): ?Crawler
     {
         $tables = $crawler->filter('table');
@@ -71,11 +57,7 @@ class AmeriaRateParser implements RateParser
         return null;
     }
 
-    /**
-     * Append a rate row, skipping blank cells (e.g. GEL has no non-cash rate).
-     * Blank cells render as a non-breaking space ("&nbsp;") rather than being
-     * truly empty, so it has to be stripped before the numeric check.
-     */
+    // Append a rate row, skipping blank cells (e.g.
     private function addRate(array &$rates, string $code, string $rateType, string $buyText, string $sellText): void
     {
         $buy = (float) trim(str_replace("\u{00A0}", '', $buyText));

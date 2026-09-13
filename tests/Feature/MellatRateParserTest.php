@@ -7,10 +7,6 @@ use Tests\TestCase;
 
 class MellatRateParserTest extends TestCase
 {
-    /**
-     * Trimmed from https://api.mellatbank.am/api/v1/rate/list, keeping the
-     * dram row the API includes - quoted against itself at 1/1.
-     */
     private function fixture(): string
     {
         return <<<'JSON'
@@ -42,11 +38,7 @@ class MellatRateParserTest extends TestCase
         );
     }
 
-    /**
-     * The dram is what every other row is priced in, not something the bank
-     * trades. Left in, it would show as "AMD 1.00 / 1.00" on the comparison
-     * page.
-     */
+    // The dram is what every other row is priced in, not something the bank trades.
     public function test_it_does_not_publish_the_dram_against_itself(): void
     {
         foreach ($this->parse() as $rate) {

@@ -4,15 +4,11 @@
         <h2 class="{{ $cardHeading }}">{{ __('tourism.request.section_budget_notes') }}</h2>
     </div>
 
-    {{-- The bands and the note side by side, so the card does not run to the
-         height of the two stacked. --}}
+    {{-- The bands and the note side by side, so the card does not run to the height of the two stacked. --}}
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         <div>
             <span class="{{ $label }} mb-2.5" id="budget-label">{{ __('tourism.request.budget_band_label') }}</span>
 
-            {{-- Bands are buttons rather than radios because picking one also
-                 clears any custom range - a plain radio would leave both
-                 answers set and the server having to guess which was meant. --}}
             <div class="mb-3 flex flex-wrap gap-2.5" role="group" aria-labelledby="budget-label">
                 @foreach ($budgetBandLabels as $value => $optionLabel)
                     <button
@@ -22,10 +18,6 @@
                         :class="budgetBand === @js($value) ? @js($pillOn) : @js($pillOff)"
                         class="{{ $pill }} {{ $pillOff }}"
                     >
-                        {{-- Js::from spelled out rather than @js: Blade does not
-                             compile directives inside a component's attribute
-                             (lines 21-23 above are on a plain <button>, where it
-                             does), so this reached Alpine verbatim and threw. --}}
                         <x-travel-icon name="check" class="h-3.5 w-3.5 shrink-0 text-travel-600" x-show="budgetBand === {{ Illuminate\Support\Js::from($value) }}" x-cloak />
                         {{ $optionLabel }}
                     </button>
@@ -43,8 +35,7 @@
                 {{ __('tourism.request.budget_custom_toggle') }}
             </button>
 
-            {{-- Hidden until asked for, so the default state stays as compact
-                 as the design. --}}
+            {{-- Hidden until asked for, so the default state stays as compact as the design. --}}
             <div x-show="customBudgetOpen" x-cloak class="mt-4">
                 <p class="{{ $label }} mb-2">{{ __('tourism.request.budget_custom_heading') }}</p>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -94,10 +85,6 @@
         </div>
 
         <div class="flex flex-col gap-1 lg:h-full">
-            {{-- One label, not two: this carried both notes_optional and
-                 notes_helper, which say the same thing in the same words
-                 ("Anything else we should know?" above "Anything else
-                 agencies should know?"). --}}
             <label for="notes" class="{{ $label }}">{{ __('tourism.request.notes_optional') }}</label>
             <textarea
                 name="notes"

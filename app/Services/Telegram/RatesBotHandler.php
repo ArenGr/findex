@@ -13,11 +13,6 @@ class RatesBotHandler
 {
     public function __construct(private readonly TelegramClient $telegram) {}
 
-    /**
-     * A private 1-on-1 assistant: tap a currency button (or just type its
-     * code), get the current best rate back in the same chat. No groups, no
-     * inline buttons/popups - just a persistent keyboard and plain replies.
-     */
     public function handleUpdate(array $update): void
     {
         if (! isset($update['message']['text'])) {
@@ -40,15 +35,6 @@ class RatesBotHandler
         $this->sendCurrencyMenu($chatId);
     }
 
-    /**
-     * Shared by handleUpdate()'s code lookup and sendCurrencyMenu()'s list -
-     * same 'rates' tag as the website's currency dropdowns (RateController),
-     * so a scrape or an admin edit invalidates both surfaces together.
-     * Returns stdClass rows, not Currency models: config/cache.php's
-     * 'serializable_classes' => false means Redis only unserializes plain
-     * arrays/scalars, not objects, so the cached value is a plain array
-     * and gets rehydrated into lightweight rows here instead.
-     */
     private function activeCurrencies(): Collection
     {
         return collect(Cache::tags([RateCache::TAG])->remember(
@@ -80,11 +66,6 @@ class RatesBotHandler
 
     private function replyWithBestRate(int|string $chatId, object $currency): void
     {
-        // Cash is the default view on the website's rates table too - the
-        // rate type most people mean when they ask "what's the rate today".
-        // Reduced to a plain array of just what this message needs (rather
-        // than the raw model+relation) since the cache can't store objects
-        // - see activeCurrencies()'s docblock.
         $best = Cache::tags([RateCache::TAG])->remember(
             "telegram.rates_bot.best_rate.{$currency->id}",
             now()->addMinutes(360),

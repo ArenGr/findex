@@ -7,15 +7,6 @@ use Tests\TestCase;
 
 class FastBankRateParserTest extends TestCase
 {
-    /**
-     * Trimmed from /api/exchange-rates?kind=rates&payType=, keeping the real
-     * shape: all three pay types in one response, identified by a numeric
-     * PayType, and a per-currency Unit.
-     *
-     * The USD figures are the genuine ones, and they are what pins the
-     * PayType mapping down: 363/366 is the spread the page shows under
-     * "Non-cash", 362.5/365.5 under "Cash".
-     */
     private function fixture(): string
     {
         return <<<'JSON'
@@ -36,11 +27,7 @@ class FastBankRateParserTest extends TestCase
         return (new FastBankRateParser)->parse($json ?? $this->fixture());
     }
 
-    /**
-     * The numbering is not the one you would guess: 0 is the non-cash rate
-     * and 1 is cash. Getting them the wrong way round swaps two spreads that
-     * both look perfectly plausible.
-     */
+    // The numbering is not the one you would guess: 0 is the non-cash rate and 1 is cash.
     public function test_it_maps_each_pay_type_code_to_the_right_rate_type(): void
     {
         $rates = $this->parse();
@@ -50,11 +37,7 @@ class FastBankRateParserTest extends TestCase
         $this->assertContains(['code' => 'USD', 'rate_type' => 'card', 'buy' => 362.5, 'sell' => 367.5], $rates);
     }
 
-    /**
-     * Rates are quoted per Unit. Ignoring it publishes a currency quoted per
-     * 100 at a hundred times its real value - a number nobody would read as
-     * an error, just as a spectacular rate.
-     */
+    // Rates are quoted per Unit.
     public function test_it_divides_a_rate_quoted_per_hundred_units(): void
     {
         $this->assertContains(

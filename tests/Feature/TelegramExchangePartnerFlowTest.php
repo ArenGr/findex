@@ -12,13 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers ExchangePartnerReplyHandler's "Not Interested" callback. The
- * /start <token> connect deep link is already covered by
- * TelegramPartnerFlowTest (PartnerReplyHandler::handleConnect is
- * type-agnostic and shared across both flows - see ExchangePartnerReplyHandler's
- * class doc comment for why this handler doesn't duplicate that logic).
- */
+// Covers ExchangePartnerReplyHandler's "Not Interested" callback.
 class TelegramExchangePartnerFlowTest extends TestCase
 {
     use RefreshDatabase;
@@ -97,9 +91,6 @@ class TelegramExchangePartnerFlowTest extends TestCase
 
     public function test_a_decline_from_another_organizations_chat_is_ignored(): void
     {
-        // See the tourism handler's equivalent test - callback_data is
-        // client-supplied, so the decline must come from the chat that
-        // actually received the message.
         $response = $this->pendingResponse();
 
         $this->mock(TelegramClient::class, function ($mock) {
@@ -119,9 +110,6 @@ class TelegramExchangePartnerFlowTest extends TestCase
 
     public function test_tourism_decline_prefix_is_left_unhandled_by_the_exchange_handler(): void
     {
-        // Confirms the two prefixes ("decline:" vs "exchange_decline:")
-        // don't collide - a tourism decline callback must NOT be picked up
-        // here.
         $handled = app(ExchangePartnerReplyHandler::class)->handleUpdate([
             'callback_query' => ['id' => 'cbq-3', 'data' => 'decline:123'],
         ]);

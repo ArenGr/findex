@@ -37,8 +37,6 @@ class RegisteredWriterController extends Controller
             'topics' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Writer (author profile) and User (login, role=writer) must both be
-        // created or neither is - see Writer::users() / User::writer().
         $user = DB::transaction(function () use ($validated) {
             $writer = Writer::create([
                 'name' => $validated['name'],
@@ -58,18 +56,10 @@ class RegisteredWriterController extends Controller
                 'writer_id' => $writer->id,
             ])->save();
 
-            // Surfaced via the admin panel's topbar notification bell (see
-            // AdminPanelProvider::databaseNotifications()) rather than
-            // relying on an admin to notice by browsing the list.
             AdminNotifier::pendingApproval(
                 title: 'New writer awaiting approval',
                 body: "{$writer->name} just registered and is inactive until approved.",
                 icon: 'heroicon-o-pencil-square',
-                // WriterResource deliberately routes admin pages by id
-                // ($recordRouteKeyName = 'id'), unlike the model's own
-                // slug-based getRouteKeyName() used for public routes -
-                // passing the model instance here would build the URL from
-                // the slug instead, which the resource can't resolve.
                 reviewUrl: WriterResource::getUrl('edit', ['record' => $writer->getKey()]),
             );
 

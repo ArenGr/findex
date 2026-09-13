@@ -4,13 +4,6 @@ namespace App\Support\Mortgage;
 
 use App\Models\MortgageOffer;
 
-/**
- * One offer evaluated against a scenario: the rate actually used to rank it,
- * where that rate came from, the resulting monthly payment and total cost,
- * whether the borrower is eligible, whether it has enough data to rank at
- * all, and the badges the UI should show ('floating', 'subsidy', 'promo',
- * 'stale', 'rate_only', ...).
- */
 final class RankedMortgage
 {
     /**

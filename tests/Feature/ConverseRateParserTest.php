@@ -8,20 +8,6 @@ use Tests\TestCase;
 
 class ConverseRateParserTest extends TestCase
 {
-    /**
-     * Trimmed from the live response of Converse's own API
-     * (sapi.conversebank.am/api/v2/currencyrates), with the real field names
-     * and the real oddities kept:
-     *
-     *  - the "Card" group mixes AMD-quoted rates in with cross rates that
-     *    are quoted in RUB and EUR, told apart only by `iso2`
-     *  - one row per cash group carries "currency": null
-     *  - a "Metal" group sits alongside the currency groups
-     *
-     * Figures are the genuine ones from 2026-08-20, so the cross-rate trap
-     * is arithmetically real: EUR is 421 against the dram and 92.7 against
-     * the ruble, and both rows look identical apart from `iso2`.
-     */
     private function fixture(): string
     {
         return <<<'JSON'
@@ -84,12 +70,7 @@ class ConverseRateParserTest extends TestCase
         );
     }
 
-    /**
-     * The one that matters. A row quoted in RUB carries the same shape as an
-     * AMD-quoted one, and this app has nowhere to record a quote currency -
-     * so taking it would publish EUR at 92.7 dram instead of 421, as a real
-     * quote on the comparison page rather than an obvious gap.
-     */
+    // The one that matters.
     public function test_it_ignores_rates_quoted_in_something_other_than_the_dram(): void
     {
         $rates = $this->parse();
@@ -116,8 +97,6 @@ class ConverseRateParserTest extends TestCase
             $this->assertNotSame('', $rate['code']);
         }
 
-        // 2 cash (JPY is untraded) + 2 non-cash (one row has no currency)
-        // + 1 card (the other three are cross rates).
         $this->assertCount(5, $this->parse());
     }
 

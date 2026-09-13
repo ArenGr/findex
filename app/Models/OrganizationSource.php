@@ -26,17 +26,13 @@ class OrganizationSource extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the organization that owns this source.
-     */
+    // Get the organization that owns this source.
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
-    /**
-     * Get the full URL for this source.
-     */
+    // Get the full URL for this source.
     public function getFullUrl(): string
     {
         $baseUrl = $this->organization->website;
@@ -47,10 +43,6 @@ class OrganizationSource extends Model
             return $path;
         }
 
-        // The organization's website is nullable (self-registered orgs may
-        // not have one yet) - a relative source URL is meaningless without
-        // it, so fail loudly here rather than letting rtrim(null, ...)
-        // error under strict typing deeper in the scrape.
         if (! $baseUrl) {
             throw new \RuntimeException(
                 "Source '{$this->source_type}' has a relative URL but organization #{$this->organization_id} has no website set."
@@ -61,9 +53,7 @@ class OrganizationSource extends Model
         return rtrim($baseUrl, '/').'/'.ltrim($path, '/');
     }
 
-    /**
-     * Mark this source as just scraped.
-     */
+    // Mark this source as just scraped.
     public function markAsScraped(): void
     {
         $this->update(['last_scraped_at' => now()]);

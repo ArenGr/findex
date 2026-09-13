@@ -10,72 +10,20 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
-/**
- * The HTTP side of asking an insurer for a premium, shared by every provider.
- *
- * It exists to make one mistake impossible rather than merely discouraged.
- * These calls carry the vehicle owner's ID number, and two ordinary-looking
- * things would leak it:
- *
- *   1. Laravel's Http facade. Sentry's Laravel integration records every
- *      facade request as a breadcrumb and a trace span (config/sentry.php:
- *      `breadcrumbs.http_client_requests` and `tracing.http_client_requests`,
- *      both default true), and what it records is the full URL. INGO takes
- *      the ID number as a *query parameter*, so any unrelated exception later
- *      in the same request would carry that ID off to a third party, with
- *      nothing at the call site to suggest it. Plain Guzzle is not
- *      instrumented, so that cannot happen here.
- *
- *   2. Guzzle's own exceptions. A BadResponseException embeds the request URI
- *      in its message, and a ConnectException's message ends in "... for
- *      https://host/path?idNumber=...". Rethrowing or logging either one is
- *      the same leak by another route. So http_errors is off, every throwable
- *      is caught here, and callers get a status code and a decoded body -
- *      never an exception object that knows the URL.
- *
- * Being a considerate caller. These are public price calculators and we make
- * modest volume, but a naive script still reads as a naive script. So this
- *   - presents a current, real browser User-Agent, varied across a small
- *     pool per request, with the Accept headers a browser actually sends;
- *   - retries a rate-limit (429) or a transient 5xx with backoff, honouring
- *     Retry-After when the server sends it.
- * That is where "considerate" ends. It is NOT ban-evasion machinery: if a
- * site actively blocks us, the answer is to back off and lean on the other
- * source for that insurer (see AutoInsuranceQuoteService), not to disguise
- * ourselves and keep hammering. The UA pool is to look like the browser we
- * effectively are, not to impersonate many people to get around a block.
- */
+// The HTTP side of asking an insurer for a premium, shared by every provider.
 class InsuranceHttpClient
 {
-    /**
-     * Armenia Insurance answered in 3.5s for us and reported
-     * `x-envoy-upstream-service-time: 9252` on a browser request - these
-     * endpoints do a live registry lookup and are genuinely slow. This runs
-     * inside the user's own page submit, so the ceiling is what someone will
-     * wait for, but it has to clear the slow case or the quote fails for a
-     * reason that looks like the insurer being down.
-     */
     private const TIMEOUT_SECONDS = 15;
 
     private const CONNECT_TIMEOUT_SECONDS = 5;
 
-    /**
-     * Kept low on purpose. A retry is for a transient hiccup (429, 5xx),
-     * not for grinding against a block - a 403 is not retried at all.
-     */
+    // Kept low on purpose.
     private const MAX_RETRIES = 2;
 
-    /**
-     * Status used when the request never produced a response at all - a
-     * timeout, a DNS failure, a refused connection. Distinct from any real
-     * HTTP status so a provider can tell "no answer" from "answered badly".
-     */
     public const STATUS_NO_RESPONSE = 0;
 
     /**
-     * A small pool of current, real desktop browser User-Agents. One is
-     * chosen per request so our traffic is not a single identical fingerprint
-     * repeated - the ordinary shape of real visitors, nothing more.
+     * A small pool of current, real desktop browser User-Agents.
      *
      * @var list<string>
      */
@@ -112,9 +60,7 @@ class InsuranceHttpClient
         try {
             $response = $this->client->request($method, $url, $options);
         } catch (Throwable) {
-            // The exception is dropped rather than inspected on purpose - see
-            // the class docblock. Its message knows the URL, and the URL may
-            // know the ID number.
+            // The exception is dropped rather than inspected on purpose - see the class docblock.
             return [self::STATUS_NO_RESPONSE, null];
         }
 
@@ -125,8 +71,7 @@ class InsuranceHttpClient
     }
 
     /**
-     * Headers a real browser sends, with a rotating User-Agent. Per-request
-     * so each call picks its own; callers can still override any of these.
+     * Headers a real browser sends, with a rotating User-Agent.
      *
      * @return array<string, string>
      */
@@ -158,23 +103,19 @@ class InsuranceHttpClient
             return false;
         }
 
-        // A network-level failure (timeout, refused, DNS) has no response -
-        // worth one more try.
+        // A network-level failure (timeout, refused, DNS) has no response - worth one more try.
         if ($exception !== null) {
             return true;
         }
 
         $status = $response?->getStatusCode();
 
-        // 429 (rate limited) and 5xx (their side wobbled) only. A 403/404 is
-        // a deliberate refusal or a wrong URL - retrying just annoys them.
+        // 429 (rate limited) and 5xx (their side wobbled) only.
         return $status === 429 || ($status !== null && $status >= 500);
     }
 
     private static function retryDelay(int $retries, ?ResponseInterface $response = null): int
     {
-        // Honour Retry-After when the server names a delay - overshooting a
-        // rate limit is how a soft throttle becomes a hard block.
         $retryAfter = $response?->getHeaderLine('Retry-After');
 
         if ($retryAfter !== null && is_numeric($retryAfter)) {

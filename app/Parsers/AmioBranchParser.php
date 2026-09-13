@@ -6,25 +6,6 @@ use App\Support\OpeningHours;
 
 class AmioBranchParser implements BranchParser
 {
-    /**
-     * AMIO's offices page is the same Next.js app as its rates page, so the
-     * data arrives as hydration props rather than markup:
-     *
-     *   props.pageProps.data.branches = [
-     *     {"address":"\"Agarak\" Agarak, 76 G Nzhdeh",
-     *      "gpsLatitude":"38.865066","gpsLongitude":"46.196376",
-     *      "phoneNumber":"+374 10 59 20 20",
-     *      "openingInfo":[{"weekdayEn":"Monday","opensAt":"09:15:00.000",
-     *                      "closesAt":"16:45:00.000","isClosed":false}, ...]}
-     *   ]
-     *
-     * Unlike Converse, this bank keeps its 112 ATMs in a separate
-     * `data.atms` list, so there is nothing to filter out - reading only
-     * `branches` is enough.
-     *
-     * Hours are published per weekday rather than as a sentence, so they go
-     * through OpeningHours::fromDays() instead of the text parser.
-     */
     public function parse(string $html): array
     {
         if (! preg_match('#<script id="__NEXT_DATA__"[^>]*>(.*?)</script>#s', $html, $match)) {
@@ -64,9 +45,6 @@ class AmioBranchParser implements BranchParser
         }
 
         return [
-            // The bank publishes no separate branch name - the address
-            // opens with the branch's own name in quotes ("Agarak" Agarak,
-            // 76 G Nzhdeh), which is the closest thing to one it gives.
             'name' => $this->name($address),
             'address' => $address,
             'city' => null,

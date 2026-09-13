@@ -1,25 +1,5 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Sample rows for bank product pages that have no real data yet
-|--------------------------------------------------------------------------
-|
-| These drive resources/views/banks/sample.blade.php - a page that shows a
-| partner bank exactly where their product would appear and which fields we
-| need from them, before any integration exists.
-|
-| Values are deliberately language-neutral (numbers, or a placeholder name
-| like "Bank A") so the same row renders in every locale. Anything that
-| would need translating - the column heading, its unit, the field
-| descriptions - lives in the lang directory instead, keyed by the
-| same category slug and matched to these columns by position.
-|
-| Never use a real bank's name here: these are invented figures, and
-| attaching them to an actual institution would misrepresent its terms.
-|
-*/
-
 return [
 
     'credit-cards' => [

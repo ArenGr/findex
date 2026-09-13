@@ -18,11 +18,7 @@
 
     <section class="site-container pt-10 pb-16">
 
-        {{-- Tier 1 - market context. A headline benchmark and a
-             product-by-product overview, so a single bank's rate can be read
-             as cheap or dear rather than in a vacuum (the NerdWallet pattern,
-             adapted: our benchmark averages the rates WE collect, and is
-             labelled as sample data, not a survey index). --}}
+        {{-- Tier 1 - market context. --}}
         @isset($mortgageBenchmark)
             <div class="mt-8 grid gap-4 lg:grid-cols-[minmax(0,320px)_1fr]">
                 <div class="rounded-2xl border border-placeholder bg-primary/5 p-5">
@@ -75,9 +71,6 @@
             <p class="mt-3 max-w-3xl text-xs text-muted">{{ __('offers.mortgage_market.source_note') }}</p>
         @endisset
 
-        {{-- Transparency: define APR right next to the numbers, not buried in
-             an FAQ - the difference between headline and APR is the whole
-             point of ranking on APR. --}}
         <div class="mt-6 rounded-2xl border border-placeholder bg-placeholder/10 p-5">
             <h2 class="font-heading text-sm font-semibold text-ink">{{ __('offers.mortgage_market.apr_heading') }}</h2>
             <p class="mt-1 max-w-3xl text-sm text-muted">{{ __('offers.mortgage_market.apr_body') }}</p>

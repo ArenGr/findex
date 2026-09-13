@@ -35,9 +35,7 @@ class AutoInsuranceRequest extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * The account name if filed while signed in, otherwise the guest's own name.
-     */
+    // The account name if filed while signed in, otherwise the guest's own name.
     public function getRequesterNameAttribute(): ?string
     {
         return $this->user->name ?? $this->guest_name;
@@ -48,20 +46,9 @@ class AutoInsuranceRequest extends Model
         return $this->user->email ?? $this->guest_email;
     }
 
-    /**
-     * How long a results link stays valid. Unlike a tourism/exchange quote
-     * request there's no natural expiry here (quotes are generated once,
-     * synchronously, and don't change afterward) - but the URL is a bearer
-     * credential for the plate number and every insurer's premium, and it
-     * lives on in mailbox history, so it still gets a bounded window rather
-     * than being valid forever.
-     */
+    // How long a results link stays valid.
     private const RESULTS_LINK_DAYS = 30;
 
-    /**
-     * A guest has no account to log back into, so this signed link is their
-     * only way back to the results page.
-     */
     public function signedResultsUrl(): string
     {
         return URL::signedRoute('insurance.auto.show', [

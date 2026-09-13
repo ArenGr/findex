@@ -1,6 +1,4 @@
 @php
-    // Rough starting points so the calculator shows a sensible result
-    // before the user changes anything.
     $defaultMonthlyIncome = 300000;
 @endphp
 

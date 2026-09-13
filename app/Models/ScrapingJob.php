@@ -25,25 +25,19 @@ class ScrapingJob extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the organization this job belongs to.
-     */
+    // Get the organization this job belongs to.
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
-    /**
-     * Get all logs for this job.
-     */
+    // Get all logs for this job.
     public function logs(): HasMany
     {
         return $this->hasMany(ScraperLog::class, 'scraping_job_id');
     }
 
-    /**
-     * Mark job as running.
-     */
+    // Mark job as running.
     public function markAsRunning(): void
     {
         $this->update([
@@ -52,9 +46,7 @@ class ScrapingJob extends Model
         ]);
     }
 
-    /**
-     * Mark job as successful.
-     */
+    // Mark job as successful.
     public function markAsSuccess(int $recordsFound = 0): void
     {
         $this->update([
@@ -65,9 +57,7 @@ class ScrapingJob extends Model
         ]);
     }
 
-    /**
-     * Mark job as failed.
-     */
+    // Mark job as failed.
     public function markAsFailed(string $errorMessage): void
     {
         $this->update([
@@ -77,9 +67,7 @@ class ScrapingJob extends Model
         ]);
     }
 
-    /**
-     * Add a log entry.
-     */
+    // Add a log entry.
     public function log(string $level, string $message, array $context = []): void
     {
         $this->logs()->create([

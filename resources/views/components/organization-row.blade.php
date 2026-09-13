@@ -1,13 +1,5 @@
 @props(['organization', 'showCompare' => false])
 
-{{--
-    Shared by the generic directory (organizations/index.blade.php) and the
-    dedicated /banks and /travel-agencies landing pages - one row style kept
-    in one place rather than copy-pasted three times. A list of rows (not a
-    grid of cards) since these pages can run to dozens of organizations -
-    a list stays scannable at that length, where a 3-column grid mostly
-    just adds vertical scrolling without showing more at a glance.
---}}
 <div class="flex flex-wrap items-center gap-4 px-5 py-4 transition duration-300 hover:bg-primary/5">
     <a href="{{ route('organizations.show', $organization) }}" class="flex min-w-0 flex-1 items-center gap-4">
         @if ($organization->logo)

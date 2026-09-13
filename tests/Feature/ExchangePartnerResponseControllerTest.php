@@ -12,11 +12,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the secure, no-login page an exchange office lands on from the
- * Telegram notification (see TelegramExchangeNotifier::notify). Same shape
- * as PartnerResponseControllerTest (travel).
- */
 class ExchangePartnerResponseControllerTest extends TestCase
 {
     use RefreshDatabase;
@@ -182,10 +177,6 @@ class ExchangePartnerResponseControllerTest extends TestCase
             $this->post(route('exchange.respond.store', ['locale' => 'en', 'token' => $response->response_token]), [
                 'offered_rate' => '385.00',
             ]);
-            // Only the first actually transitions status - subsequent posts
-            // hit the pending-status guard, not the rate limiter, until the
-            // limiter itself kicks in. Reset back to pending so every loop
-            // iteration actually exercises the throttle middleware.
             $response->update(['status' => ExchangeQuoteResponse::STATUS_PENDING]);
         }
 
@@ -194,11 +185,7 @@ class ExchangePartnerResponseControllerTest extends TestCase
         ])->assertStatus(429);
     }
 
-    /**
-     * The only way Findex ever learns whether a request became a real
-     * transaction. There is no affiliate link to follow and no payment passing
-     * through us - the shop tells us, or nobody does.
-     */
+    // The only way Findex ever learns whether a request became a real transaction.
     public function test_the_office_can_report_what_happened_at_the_counter(): void
     {
         $response = $this->acceptedResponse();
@@ -211,8 +198,7 @@ class ExchangePartnerResponseControllerTest extends TestCase
 
         $this->assertSame('completed', $response->outcome);
         $this->assertNotNull($response->outcome_at);
-        // Status is where the offer got to with us; outcome is what happened in
-        // the shop. Reporting one must not overwrite the other.
+        // Status is where the offer got to with us; outcome is what happened in the shop.
         $this->assertSame('accepted', $response->status);
     }
 

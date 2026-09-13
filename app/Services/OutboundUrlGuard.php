@@ -4,32 +4,10 @@ namespace App\Services;
 
 use RuntimeException;
 
-/**
- * Keeps the scrapers pointed at the public internet.
- *
- * The scraper fetches a URL from organization_sources and follows up to five
- * redirects. Both halves matter: the URL is operator-set and reasonably
- * trusted, but a redirect is chosen by whichever bank website we just asked -
- * so any site on the scrape list can send our server to
- * http://169.254.169.254/ (cloud credentials), a loopback admin port, or
- * anything else reachable from inside the network. The response body never
- * reaches a log, which makes it a blind request rather than a read - but a
- * blind request to Redis or a metadata endpoint is still a request.
- *
- * Known limit, stated rather than papered over: this resolves the host and
- * checks the addresses, so a name that answers publicly on one lookup and
- * privately on the next (DNS rebinding) is not fully closed off. Doing that
- * properly means pinning the resolved address for the connection itself, which
- * Guzzle cannot express - it needs cURL's CURLOPT_RESOLVE. That is worth doing
- * if this ever fetches a user-supplied URL; for an operator-set list plus
- * redirect checking, this is the proportionate guard.
- */
+// Keeps the scrapers pointed at the public internet.
 class OutboundUrlGuard
 {
-    /**
-     * Reserved ranges nothing on the public internet should resolve into.
-     * Sourced from the IANA special-purpose registries rather than invented.
-     */
+    // Reserved ranges nothing on the public internet should resolve into.
     private const BLOCKED_V4 = [
         '0.0.0.0/8',          // "this network"
         '10.0.0.0/8',         // private
@@ -57,8 +35,6 @@ class OutboundUrlGuard
             throw new RuntimeException("Refusing to fetch scheme [{$parts['scheme']}]: {$url}");
         }
 
-        // parse_url keeps the brackets on an IPv6 literal, which would send
-        // "[::1]" to the resolver and get blocked for the wrong reason.
         $host = trim($parts['host'], '[]');
 
         foreach ($this->addressesFor($host) as $address) {
@@ -86,8 +62,6 @@ class OutboundUrlGuard
         )));
 
         if ($addresses === []) {
-            // A host that will not resolve cannot be fetched anyway; failing
-            // here gives a clearer message than a timeout twenty seconds later.
             throw new RuntimeException("Refusing to fetch {$host} - it does not resolve.");
         }
 

@@ -7,8 +7,6 @@
     <title>Findex</title>
 </head>
 <body style="margin:0; padding:0; background-color:#f2f2ee; font-family: Arial, Helvetica, sans-serif; color:#262626;">
-    {{-- Hidden preview text shown next to the subject line in the inbox list,
-    before the email is opened - falls back to nothing if $preheader is unset. --}}
     @if ($preheader)
         <div style="display:none; max-height:0; max-width:0; overflow:hidden; opacity:0; mso-hide:all;">
             {{ $preheader }}

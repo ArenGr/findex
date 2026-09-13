@@ -12,17 +12,6 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-/**
- * Fired alongside NotifyDestinationAlertsJob when a tourism org starts
- * serving a destination (see TourismController::updateDestinations()).
- * NotifyDestinationAlertsJob only reaches people who explicitly asked to
- * be told - this instead reaches every customer who already has an *open*
- * request for that destination, so a newly joined agency isn't invisible
- * to a request that's still perfectly able to receive replies. Mirrors
- * SendQuoteRequestToPartnersJob's per-partner QuoteResponse creation, just
- * with the fan-out direction reversed (one new org, many existing
- * requests, instead of one new request, many existing orgs).
- */
 class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
 {
     use Queueable;
@@ -37,9 +26,6 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
             return;
         }
 
-        // Requests naming this destination anywhere in their list, plus the
-        // ones open to suggestions - a newly served destination is exactly
-        // the kind of thing "surprise me" was asking for.
         $openRequests = QuoteRequest::query()
             ->where(fn ($query) => $query
                 ->whereJsonContains('destination_countries', $this->countryCode)
@@ -50,11 +36,6 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
             ->get();
 
         foreach ($openRequests as $quoteRequest) {
-            // Re-checks the same lead-quality filter (min party size / min
-            // budget) SendQuoteRequestToPartnersJob already applied when
-            // this request first went out - a newly joined org shouldn't
-            // get leads it would have been filtered out of had it already
-            // been serving this destination.
             $qualifies = Organization::tourismPartnersForDestination(
                 $quoteRequest->destinations ?: null,
                 $quoteRequest->party_size,
@@ -81,8 +62,7 @@ class BackfillOpenRequestsToNewPartnerJob implements ShouldQueue
                     'organization_id' => $organization->id,
                 ]);
 
-                // Same email fallback as the initial fan-out - see
-                // SendQuoteRequestToPartnersJob.
+                // Same email fallback as the initial fan-out - see SendQuoteRequestToPartnersJob.
                 AgencyRequestMailer::notify($response);
             }
         }

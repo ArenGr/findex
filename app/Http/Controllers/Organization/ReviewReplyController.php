@@ -26,13 +26,6 @@ class ReviewReplyController extends Controller
         ]);
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own reviews is also
-     * what enforces that an org can only reply to its own reviews.
-     */
     public function store(Request $request, string $locale, string $review): RedirectResponse
     {
         $organization = Auth::guard('organization')->user()->organization;

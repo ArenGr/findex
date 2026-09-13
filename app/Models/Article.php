@@ -24,13 +24,6 @@ class Article extends Model
 
     public const STATUS_REJECTED = 'rejected';
 
-    /**
-     * reviewed_by/published_at are here for legitimate trusted server-side
-     * code (the admin approve/reject actions, factories, seeders) to set via
-     * mass assignment - the actual guard against a writer tampering with
-     * them is at the controller layer (Writer\ArticleController::validated()
-     * never extracts these from request input), same trust model as Ad.
-     */
     protected $fillable = [
         'writer_id',
         'title',
@@ -50,12 +43,6 @@ class Article extends Model
         'published_at' => 'datetime',
     ];
 
-    /**
-     * Public URLs use the slug, not the id (see routes/web/public/articles.php
-     * and route('articles.show', $article)) - the admin panel deliberately
-     * overrides back to id (ArticleResource::$recordRouteKeyName), same
-     * convention as Writer/WriterResource.
-     */
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -66,10 +53,7 @@ class Article extends Model
         return $this->belongsTo(Writer::class);
     }
 
-    /**
-     * The admin who approved or rejected this article - null until it's
-     * been through review.
-     */
+    // The admin who approved or rejected this article - null until it's been through review.
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
@@ -85,30 +69,16 @@ class Article extends Model
         return $this->status === ArticleStatus::REJECTED;
     }
 
-    /**
-     * Approved articles are live on the public site immediately - there's
-     * no separate publish/schedule step, so "approved" and "published" are
-     * the same state.
-     */
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', ArticleStatus::APPROVED);
     }
 
-    /**
-     * Public URL for the uploaded featured image, or null if none was set -
-     * mirrors Ad::getLogoUrlAttribute().
-     */
     public function getFeaturedImageUrlAttribute(): ?string
     {
         return $this->featured_image ? Storage::disk('public')->url($this->featured_image) : null;
     }
 
-    /**
-     * Short teaser for cards and <meta name="description"> - the writer's
-     * own excerpt if they wrote one, otherwise a trimmed plain-text lead-in
-     * to the body.
-     */
     public function summary(): string
     {
         return $this->excerpt ?: Str::limit(strip_tags($this->body), 160);

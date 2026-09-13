@@ -40,9 +40,6 @@ class RegisteredOrganizationController extends Controller
             'website' => ['nullable', 'url', 'max:255'],
         ]);
 
-        // Organization (business profile) and User (login, role=organization)
-        // must both be created or neither is - see Organization::users() /
-        // User::organization().
         $user = DB::transaction(function () use ($validated) {
             $organization = Organization::create([
                 'name' => $validated['name'],
@@ -63,18 +60,10 @@ class RegisteredOrganizationController extends Controller
                 'organization_id' => $organization->id,
             ])->save();
 
-            // Surfaced via the admin panel's topbar notification bell (see
-            // AdminPanelProvider::databaseNotifications()) rather than
-            // relying on an admin to notice by browsing the list.
             AdminNotifier::pendingApproval(
                 title: 'New organization awaiting approval',
                 body: "{$organization->name} just registered and is inactive until approved.",
                 icon: 'heroicon-o-building-office-2',
-                // OrganizationResource deliberately routes admin pages by id
-                // ($recordRouteKeyName = 'id'), unlike the model's own
-                // slug-based getRouteKeyName() used for public routes -
-                // passing the model instance here would build the URL from
-                // the slug instead, which the resource can't resolve.
                 reviewUrl: OrganizationResource::getUrl('edit', ['record' => $organization->getKey()]),
             );
 

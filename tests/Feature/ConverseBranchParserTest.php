@@ -7,12 +7,7 @@ use Tests\TestCase;
 
 class ConverseBranchParserTest extends TestCase
 {
-    /**
-     * Trimmed from https://sapi.conversebank.am/api/v2/branches. The real
-     * response holds 201 locations, of which only 37 are branches - the rest
-     * are ATMs and payment terminals standing in supermarkets and clinics,
-     * separated from the branches by `type` alone.
-     */
+    // Trimmed from https://sapi.conversebank.am/api/v2/branches.
     private function fixture(): string
     {
         return <<<'JSON'
@@ -41,11 +36,7 @@ class ConverseBranchParserTest extends TestCase
         return (new ConverseBranchParser)->parse($json ?? $this->fixture());
     }
 
-    /**
-     * The one that matters: 164 of the 201 rows are cash machines. Taking
-     * them as branches would roughly quintuple the bank's apparent footprint
-     * and send people to a florist's to change money.
-     */
+    // The one that matters: 164 of the 201 rows are cash machines.
     public function test_it_keeps_only_branches_and_not_the_atms_beside_them(): void
     {
         $addresses = array_column($this->parse(), 'address');
@@ -78,10 +69,6 @@ class ConverseBranchParserTest extends TestCase
         $this->assertSame(['00:00', '23:59'], $airport['opening_hours']['sun']);
     }
 
-    /**
-     * A zero coordinate is a missing value, not a location - stored as one
-     * it drops the branch into the Gulf of Guinea on the nearby-branch map.
-     */
     public function test_it_treats_a_zero_coordinate_as_no_coordinate(): void
     {
         $nowhere = array_values(array_filter($this->parse(), fn ($b) => $b['address'] === 'No coordinates'))[0];

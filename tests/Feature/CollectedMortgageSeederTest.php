@@ -9,11 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
 
-/**
- * The manually-collected snapshot seeder, and how its rows flow through the
- * ranker onto the mortgages page: cheapest APR first, an expired promo
- * shelved, and the data-quality badges shown.
- */
 class CollectedMortgageSeederTest extends TestCase
 {
     use EnablesBankProducts;
@@ -58,22 +53,15 @@ class CollectedMortgageSeederTest extends TestCase
         // Normalise the @js-embedded offer JSON (quotes as \u0022).
         $decoded = str_replace('\u0022', '"', html_entity_decode($html));
 
-        // Tier 1 - the market benchmark renders (assert on the decoded copy;
-        // the heading's apostrophe is HTML-escaped in the raw response).
         $this->assertStringContainsString(__('offers.mortgage_market.benchmark_label'), $decoded);
         $this->assertStringContainsString(__('offers.mortgage_market.heading'), $decoded);
 
         // Tier 2 - the offers table embeds the banks, ranked client-side.
-        // The cheapest (Armswiss, APR 9.37) is present with its effective rate.
         $this->assertStringContainsString('Armswissbank', $decoded);
         $this->assertStringContainsString('"eff_rate":9.37', $decoded);
 
-        // Ardshin's only figure is a promo that expired 2026-04-27, so it is
-        // left out of every tier - offers table, benchmark and overview alike.
         $this->assertStringNotContainsString('Ardshinbank', $decoded);
 
-        // Data-quality signals survive into the embedded rows: a floating
-        // product (VTB), a live promo (Ineco), and a rate-only offer (Evoca).
         $this->assertStringContainsString('"floating"', $decoded);
         $this->assertStringContainsString('"promo"', $decoded);
         $this->assertStringContainsString('"rate_only"', $decoded);

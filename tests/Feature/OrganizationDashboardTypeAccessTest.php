@@ -7,12 +7,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Rates and Tourism are only relevant to a subset of org types (see
- * Organization::RATES_TYPES / TOURISM_TYPES) - this covers both the nav
- * link visibility and the route-level 'org.type' middleware enforcement, so
- * a mismatched org type can't reach the page just by hitting its URL.
- */
 class OrganizationDashboardTypeAccessTest extends TestCase
 {
     use RefreshDatabase;

@@ -7,28 +7,6 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class UnibankBranchParser implements BranchParser
 {
-    /**
-     * Unibank groups its branches into one accordion per city, and each card
-     * is a set of labelled rows:
-     *
-     *   <div class="accordion">
-     *     <button class="accordion__button">YEREVAN</button>
-     *     <div class="branches__card">
-     *       <h3 class="branches__card-title">"HEAD OFFICE"</h3>
-     *       <div class="branches__row">
-     *         <p class="branches__row-label">Address</p>
-     *         <p class="branches__row-value">Yerevan, Charents 1-5, № 53, 12</p>
-     *       </div>
-     *       ... Phone, Email, Work days ...
-     *     </div>
-     *   </div>
-     *
-     * The rows are read by their label rather than by position: they are not
-     * in the same order on every card, and a branch with no email address
-     * would otherwise shift its opening hours into the phone's place.
-     *
-     * The page carries no coordinates.
-     */
     private const ADDRESS_LABEL = 'address';
 
     private const HOURS_LABELS = ['work days', 'working days', 'work hours'];
@@ -59,8 +37,7 @@ class UnibankBranchParser implements BranchParser
                 }
 
                 $branches[] = [
-                    // Names are published in quotes and in capitals:
-                    // "HEAD OFFICE".
+                    // Names are published in quotes and in capitals: "HEAD OFFICE".
                     'name' => $this->name($card) ?: $address,
                     'address' => $address,
                     'city' => $city,

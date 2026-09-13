@@ -40,9 +40,7 @@ class RateAlert extends Model
         return $this->belongsTo(Currency::class);
     }
 
-    /**
-     * Null means "any active organization" - see the migration's comment.
-     */
+    // Null means "any active organization" - see the migration's comment.
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
@@ -54,9 +52,7 @@ class RateAlert extends Model
         return $query->where('is_active', true);
     }
 
-    /**
-     * Whether the given rate value satisfies this alert's condition.
-     */
+    // Whether the given rate value satisfies this alert's condition.
     public function isMetBy(float $rateValue): bool
     {
         return $this->direction === 'below'

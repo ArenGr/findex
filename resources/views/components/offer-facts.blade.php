@@ -3,12 +3,7 @@
 @php
     use App\Models\QuoteSuggestion;
 
-    /**
-     * A yes/no the agency stated, or "not stated" when it didn't. The three
-     * are genuinely different answers and are shown as three different
-     * things - rendering a null as "no" would put words in the agency's
-     * mouth about what its price covers.
-     */
+    // A yes/no the agency stated, or "not stated" when it didn't.
     $flag = function (?bool $value): array {
         return match ($value) {
             true => ['label' => __('tourism.offer.included'), 'class' => 'text-primary'],
@@ -75,9 +70,6 @@
 </dl>
 
 @if ($offer->flight_details || $offer->inclusions)
-    {{-- The agency's own words, kept alongside the structured fields rather
-         than instead of them - this is where the detail a fixed column
-         can't hold goes ("outbound 06:15 via Doha, 40kg baggage"). --}}
     <div class="mt-4 space-y-2 border-t border-placeholder pt-3">
         @if ($offer->flight_details)
             <p class="text-sm text-ink"><span class="text-subtle">{{ __('tourism.results.flight_label') }}:</span> {{ $offer->flight_details }}</p>

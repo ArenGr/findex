@@ -4,8 +4,7 @@ use App\Http\Controllers\ApiDocsController;
 use App\Http\Controllers\ApiKeyController;
 use Illuminate\Support\Facades\Route;
 
-// Public: what the API is, what it costs, how to call it. Kept out of the main
-// navigation - someone here to check a rate should never meet it.
+// Public: what the API is, what it costs, how to call it.
 Route::get('/api', [ApiDocsController::class, 'index'])->name('api.docs');
 
 Route::middleware(['auth', 'banned'])->group(function () {

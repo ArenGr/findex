@@ -9,21 +9,16 @@
         'body' => __("auto_insurance.request.step_{$n}_body"),
     ]);
 
-    // Reusable input shells so every field matches (icon well + focus ring),
-    // stated once rather than per field below.
     $inputClass = 'h-12 w-full rounded-lg border border-border-muted bg-white pl-11 pr-4 text-sm text-ink outline-none transition placeholder:text-subtle/70 hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/15';
     $labelClass = 'mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted';
 
-    // The site's card: rounded-2xl, a light border, shadow-sm - the same one
-    // the home page uses everywhere.
     $cardClass = 'rounded-2xl border border-placeholder bg-white shadow-sm';
 
     $iconDisc = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary';
 @endphp
 
 @section('content')
-    {{-- Hero geometry lives in x-page-hero, shared by every main page. tuck
-         leaves room for the steps card to sit in the hero's bottom edge. --}}
+    {{-- Hero geometry lives in x-page-hero, shared by every main page. --}}
     <x-page-hero
         :title="__('auto_insurance.request.heading')"
         :subtitle="__('auto_insurance.request.subheading')"
@@ -37,24 +32,13 @@
             </x-hero-badge>
         </x-slot:eyebrow>
 
-
-        {{-- Green shield and car: this page's identity, now that the tint is
-             shared. See public/images/insurance/hero-car-ins.png. --}}
-        {{-- Three short steps, inside the hero: the page says what it is and
-             where you are in one block. --}}
+        {{-- Green shield and car: this page's identity, now that the tint is shared. --}}
+        {{-- Three short steps, inside the hero: the page says what it is and where you are in one block. --}}
         <x-slot:steps>
             <x-hero-steps :steps="$steps->all()" :current="1" />
         </x-slot:steps>
 
         <x-slot:illustration>
-                {{-- WebP, not the PNG source beside it: the PNG is 1536x1024 and
-                     1.7 MB for a decorative illustration that never paints larger
-                     than 315x210, and it was saturating the connection at exactly
-                     the moment the heading fonts were trying to arrive - which is
-                     what made the headings on this page visibly re-render. Same
-                     png-source/webp-served split as public/images/services.
-                     ?v=mtime because these are plain public/ files, not run
-                     through Vite's hashed asset pipeline. --}}
                 <img
                     src="{{ asset('images/insurance/hero-car-ins.webp') }}?v={{ filemtime(public_path('images/insurance/hero-car-ins.webp')) }}"
                     alt=""
@@ -137,15 +121,6 @@
                 {{-- Contract term — selectable cards, 12 months default --}}
                 <div class="mt-6">
                     <label class="{{ $labelClass }}">{{ __('auto_insurance.request.contract_term') }}</label>
-                    {{-- The chosen term carries a filled tick as well as the green
-                         fill, so the selection does not rest on colour alone.
-
-                         The tick is driven from the outer span with a nested
-                         selector, not with peer-checked on the tick itself:
-                         peer-* compiles to `.peer:checked ~ &`, which only matches
-                         a *sibling* of the input. The tick is a descendant, so the
-                         original `peer-checked:flex` on it never matched and no
-                         term has ever shown a tick. --}}
                     <div class="grid grid-cols-3 gap-3">
                         @foreach ($contractTerms as $term)
                             <label class="cursor-pointer">

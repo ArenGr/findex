@@ -1,17 +1,6 @@
 @props(['row', 'index', 'position', 'payment'])
 
-{{--
-    One bank's mortgage offer.
-
-    Rendered by Blade rather than by <template x-for> so the table is complete
-    on first paint - see the PHP block at the top of
-    mortgage-offers-table.blade.php.
-    Alpine owns everything that the calculator inputs can change: whether the
-    row is shown at all (only the cheapest offer per bank that the visitor
-    qualifies for survives), where it sits, its rank, and its monthly payment.
-    `position` is null when this offer does not make the cut for the default
-    inputs, which is also what x-cloak keys off.
---}}
+{{-- One bank's mortgage offer. --}}
 <div
     x-show="view.positions[{{ $index }}] !== undefined"
     @if ($position === null) x-cloak @endif
@@ -19,8 +8,6 @@
     style="order: {{ $position ?? 0 }}"
     class="flex items-center gap-4 border-b border-placeholder px-6 py-5"
 >
-    {{-- Object form, not a ternary: a ternary only clears the classes Alpine
-         itself added, so the colour rendered here would survive a re-rank. --}}
     <span
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold {{ $position === 0 ? 'bg-accent-yellow text-ink' : 'bg-placeholder/60 text-muted' }}"
         :class="{

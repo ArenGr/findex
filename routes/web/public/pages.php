@@ -16,10 +16,6 @@ if (! app()->isProduction()) {
     Route::get('/email-preview/{template}', [EmailPreviewController::class, 'show'])->name('email-preview.show');
 }
 Route::get('/banks', [OfferController::class, 'index'])->name('banks.index');
-// Regex-whitelisted to OfferController's known category slugs so an
-// unrelated sibling route (/banks/all, the bank directory - see
-// organizations.php) is never swallowed by this wildcard regardless of
-// which file happens to register first.
 Route::get('/banks/{category}', [OfferController::class, 'show'])
     ->name('banks.show')
     ->where('category', implode('|', array_map('preg_quote', OfferController::CATEGORIES)));

@@ -27,18 +27,13 @@ class MortgageOfferHistory extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Scanned by the scheduled `model:prune` command - see
-     * config/history.php.
-     */
+    // Scanned by the scheduled `model:prune` command - see config/history.php.
     public function prunable(): Builder
     {
         return static::where('scraped_at', '<=', now()->subMonths(config('history.retention_months')));
     }
 
-    /**
-     * Create a history record from a mortgage offer.
-     */
+    // Create a history record from a mortgage offer.
     public static function createFromOffer(MortgageOffer $offer): self
     {
         return self::create([

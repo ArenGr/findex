@@ -7,17 +7,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    // Run the migrations.
     public function up(): void
     {
         Schema::create('quote_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
-            // Guests can submit a request same as guest reviews (see the
-            // reviews table), but a contact email is required for them since
-            // there's no account to notify through as replies arrive.
             $table->string('guest_name')->nullable();
             $table->string('guest_email')->nullable();
             $table->string('destination_country', 2);
@@ -44,9 +39,7 @@ return new class extends Migration
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
+    // Reverse the migrations.
     public function down(): void
     {
         Schema::dropIfExists('quote_requests');

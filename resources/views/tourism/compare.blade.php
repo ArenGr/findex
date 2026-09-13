@@ -6,12 +6,6 @@
     use App\Models\QuoteRequest;
     use App\Models\QuoteSuggestion;
 
-    /**
-     * The rows of the comparison, defined once and rendered twice - as
-     * table rows on desktop and as a labelled list inside each card on
-     * mobile. Two hand-maintained copies of this list is how a column
-     * quietly goes missing from one of the two layouts.
-     */
     $flagLabel = fn (?bool $value) => match ($value) {
         true => __('tourism.offer.included'),
         false => __('tourism.offer.not_included'),
@@ -87,11 +81,7 @@
                 </a>
             </div>
         @else
-            {{-- Mobile: one full-width card per offer, swiped horizontally
-            with scroll snapping. Deliberately NOT the desktop table scaled
-            down - four columns squeezed into a phone leaves each one too
-            narrow to read a hotel name in, which is the one thing the
-            comparison exists to show. --}}
+            {{-- Mobile: one full-width card per offer, swiped horizontally with scroll snapping. --}}
             <div class="mt-8 lg:hidden">
                 <p class="mb-3 text-xs text-subtle">{{ __('tourism.compare.mobile_hint') }}</p>
 

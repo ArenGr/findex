@@ -15,14 +15,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * The whole MVP in one pass: a traveller files one structured request,
- * Findex sends it to the matching agencies, they answer with structured
- * offers, and the traveller compares them and picks one.
- *
- * Findex does not plan or book the trip - so this test also pins down where
- * its involvement ends.
- */
 class TravelQuoteEndToEndTest extends TestCase
 {
     use RefreshDatabase;
@@ -156,9 +148,6 @@ class TravelQuoteEndToEndTest extends TestCase
 
         $this->assertTrue($chosen->fresh()->is_selected);
 
-        // Nothing was booked and nothing was paid - choosing an offer
-        // records a choice and hands the traveller the agency's contact
-        // details, and that is the whole of it.
         $this->assertSame(QuoteRequestStatus::OFFERS_RECEIVED, $quoteRequest->fresh()->currentStatus());
     }
 

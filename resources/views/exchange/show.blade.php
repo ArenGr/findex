@@ -3,8 +3,6 @@
 @section('title', __('exchange_quotes.offers.heading') . ' — Findex')
 
 @php
-    // Guests reach this page by signature and have no session to authorize
-    // them, so anything they post to has to carry one too.
     $signed = fn (string $name, array $params) => request()->hasValidSignature()
         ? \Illuminate\Support\Facades\URL::signedRoute($name, $params)
         : route($name, $params);
@@ -21,9 +19,6 @@
     $currency = $exchangeQuoteRequest->currency->code;
     $amount = (float) $exchangeQuoteRequest->amount;
 
-    // Best offer first, then the rest by value, then the offices still to
-    // answer, then the ones that declined. Ranked rather than filtered: an
-    // office that has not replied is information too.
     $ranked = $exchangeQuoteRequest->responses->sortBy(function ($response) use ($offerValues) {
         if ($response->has_replied) {
             // Negative so the largest total sorts first within group 0.
@@ -38,9 +33,7 @@
     $accepted = $exchangeQuoteRequest->responses->firstWhere('is_accepted', true);
     $isOpen = $exchangeQuoteRequest->is_open;
 
-    // Four states, and only ever one of them. The page is read at four
-    // different moments in one errand, and a layout that tries to serve all of
-    // them at once serves the moment you are actually in worst.
+    // Four states, and only ever one of them.
     $state = match (true) {
         $accepted !== null => 'accepted',
         $replied->isNotEmpty() => 'offers',
@@ -52,11 +45,7 @@
 
 @section('content')
     @if ($state === 'accepted')
-        {{--
-            Everything else on this page was about choosing. Once chosen, the
-            only thing left to do is walk in and say the code, so the code is
-            what the page becomes.
-        --}}
+        {{-- Everything else on this page was about choosing. --}}
         @php $value = $offerValues[$accepted->id] ?? null; @endphp
 
         <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
@@ -118,9 +107,7 @@
                         </div>
                     </div>
 
-                    {{-- The one thing the counter needs. No QR: nothing behind
-                    the counter scans one, and a code you can read aloud works
-                    on a cracked screen and over the phone. --}}
+                    {{-- The one thing the counter needs. --}}
                     <div class="mt-8 flex flex-col items-center rounded-xl border border-placeholder bg-placeholder/20 px-6 py-8 text-center">
                         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ __('exchange_quotes.accept.your_code') }}</span>
                         <p class="mt-4 rounded-xl border border-dashed border-border-muted bg-white px-6 py-3 font-heading text-2xl font-bold tracking-widest break-all text-ink sm:text-3xl">
@@ -133,12 +120,6 @@
         </section>
 
     @elseif ($state === 'waiting')
-        {{--
-            Nothing has arrived yet, so there is nothing to compare and no
-            reason to draw a comparison table with nothing in it. What the page
-            owes them here is: it was sent, this is what it is worth beating,
-            and this is how long you are waiting.
-        --}}
         <section class="mx-auto flex max-w-xl flex-col gap-6 px-6 py-16 lg:px-10">
             <div class="rounded-2xl border border-placeholder bg-placeholder/20 px-6 py-12 text-center">
                 <h1 class="font-heading text-2xl font-bold break-words text-primary">
@@ -146,8 +127,6 @@
                 </h1>
 
                 <p class="mt-3 inline-flex items-center gap-2 text-sm break-words text-muted">
-                    {{-- Motion says "still running" more directly than any
-                    wording, and is dropped for anyone who asked for less of it. --}}
                     <span class="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
                         <span class="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 motion-safe:animate-ping"></span>
                         <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary"></span>
@@ -164,8 +143,7 @@
             </div>
 
             @if ($publicBest !== null)
-                {{-- The number every offer has to beat, so an arriving offer
-                means something the second it lands. --}}
+                {{-- The number every offer has to beat, so an arriving offer means something the second it lands. --}}
                 <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-placeholder bg-white px-5 py-4">
                     <span class="min-w-0 text-sm break-words text-muted">{{ __('exchange_quotes.offers.public_best') }}</span>
                     <span class="font-semibold text-ink tabular-nums">
@@ -191,11 +169,7 @@
         </section>
 
     @elseif ($state === 'expired')
-        {{--
-            The window closed with nothing in it. Saying so plainly, and then
-            offering the two things worth doing next, beats an empty offers
-            list that looks like it is still loading.
-        --}}
+        {{-- The window closed with nothing in it. --}}
         <section class="mx-auto max-w-2xl px-6 py-16 lg:px-10">
             <div class="flex flex-col items-center rounded-2xl border border-placeholder bg-white px-6 py-12 text-center sm:px-12">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 text-subtle" aria-hidden="true">
@@ -207,8 +181,6 @@
                 <p class="mt-3 max-w-md text-sm leading-relaxed break-words text-muted">{{ __('exchange_quotes.offers.expired_body') }}</p>
 
                 <div class="mt-8 flex w-full flex-col justify-center gap-3 sm:flex-row">
-                    {{-- Prefilled from the request that just closed: the answer
-                    to "how much, in what" has not changed since they typed it. --}}
                     <button
                         type="button"
                         onclick="window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
@@ -240,8 +212,6 @@
                 </div>
             @endif
 
-            {{-- Kept for the record, and because "what exactly did I ask for"
-            is the question anyone re-reading a closed request has. --}}
             <h2 class="mt-10 border-b border-placeholder pb-2 font-heading text-lg font-semibold break-words text-ink">{{ __('exchange_quotes.offers.request_details') }}</h2>
             <dl class="mt-4 overflow-hidden rounded-xl border border-placeholder">
                 @foreach ([
@@ -259,10 +229,7 @@
         </section>
 
     @else
-        {{--
-            Offers are in. This is the comparison, and it is the whole reason
-            the request fanned out to more than one office.
-        --}}
+        {{-- Offers are in. --}}
         <section
             class="mx-auto max-w-5xl px-6 py-16 lg:px-10"
             x-data="{
@@ -292,8 +259,6 @@
                 @endif
             </div>
 
-            {{-- True as built: the fan-out job sends the amount, the direction
-            and the city, and the partner page shows the office nothing else. --}}
             <div class="mt-8 flex items-start gap-4 rounded-xl border border-placeholder bg-placeholder/20 px-5 py-4">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden="true">
                     <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -358,8 +323,7 @@
                                         </div>
                                         @if ($value['extra'] !== null && $value['extra'] >= 1)
                                             <div class="col-span-2 min-w-0 border-t border-placeholder pt-4 md:col-span-1 md:border-t-0 md:border-s md:ps-6 md:pt-0">
-                                                {{-- Named against what it beats. "You save X" with no
-                                                stated baseline is a number nobody can check. --}}
+                                                {{-- Named against what it beats. --}}
                                                 <dt class="text-[11px] font-semibold tracking-wider text-primary uppercase">{{ __('exchange_quotes.offers.net_gain') }}</dt>
                                                 <dd class="mt-1 font-semibold break-words text-primary tabular-nums">{{ __('exchange_quotes.value.extra', ['amount' => $money($value['extra']), 'currency' => $amd]) }}</dd>
                                             </div>
@@ -402,11 +366,6 @@
                 @endforeach
             </div>
 
-            {{--
-                Accepting is the one irreversible thing on this page - it tells
-                an office to hold money for you - so it is confirmed rather than
-                done on a single press.
-            --}}
             <div x-show="confirming" x-cloak x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/50 p-4 backdrop-blur-sm">
                 <div
                     @click.outside="close()"

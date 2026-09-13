@@ -2,9 +2,7 @@
 
 @if ($paginator->hasPages())
     @php
-        // A short window around the current page. The whole market is at most
-        // a handful of pages, so this rarely elides anything - but a currency
-        // with every organization quoting it should not print thirty numbers.
+        // A short window around the current page.
         $last = $paginator->lastPage();
         $current = $paginator->currentPage();
         $pages = collect(range(1, $last))
@@ -13,8 +11,6 @@
     @endphp
 
     <nav class="mt-6 flex items-center justify-center gap-1.5" aria-label="{{ __('rates.pagination_label') }}">
-        {{-- Present but inert at the ends rather than removed: a control that
-        disappears makes the row shift under the pointer that was aiming at it. --}}
         @if ($paginator->onFirstPage())
             <span aria-disabled="true" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-placeholder text-placeholder">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 rtl:rotate-180" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
@@ -26,8 +22,6 @@
         @endif
 
         @foreach ($pages as $index => $page)
-            {{-- A gap in the run means pages were skipped, and saying so is
-            more honest than numbers that jump without explanation. --}}
             @if ($index > 0 && $page - $pages[$index - 1] > 1)
                 <span class="px-1 text-sm text-placeholder" aria-hidden="true">&hellip;</span>
             @endif

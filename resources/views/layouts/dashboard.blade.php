@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', __('org.nav.overview')) — Findex</title>
 
-    {{-- Built from resources/images/brand by `npm run brand:assets`. No SVG:
-         the mark is a raster original, and the SVG that used to be served here
-         - and preferred by every browser that supports it - was a green "F"
-         tile from the brand before this one. --}}
+    {{-- Built from resources/images/brand by `npm run brand:assets`. --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" type="image/png" sizes="32x32">
     <link rel="icon" href="{{ asset('favicon-16x16.png') }}" type="image/png" sizes="16x16">
@@ -18,8 +15,6 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-{{-- min-h-dvh, not min-h-screen - see layouts/app.blade.php's comment on
-the same class for why (iOS Safari's expanding/collapsing address bar). --}}
 <body class="min-h-dvh bg-white font-sans text-body-text antialiased">
     @php $organization = auth('organization')->user()->organization; @endphp
 
@@ -50,8 +45,6 @@ the same class for why (iOS Safari's expanding/collapsing address bar). --}}
                 'org.dashboard.reports.index' => __('org.nav.reports'),
                 'org.dashboard.team.index' => __('org.nav.team'),
                 ...($organization->hasTourismPage() ? [
-                    // First of the tourism entries: answering requests is the
-                    // day-to-day work, the settings below it are set once.
                     'org.dashboard.travel-requests.index' => __('tourism.inbox.heading'),
                     'org.dashboard.tourism.index' => __('tourism.nav_label'),
                     'org.dashboard.quote-templates.index' => __('org.nav.quote_templates'),

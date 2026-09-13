@@ -11,20 +11,12 @@ use Illuminate\Validation\ValidationException;
 
 class MarketController extends ApiController
 {
-    /**
-     * The best rate available in the country, on each side.
-     *
-     * Best for the caller's customer, not for the bank: the highest anyone buys
-     * at, the lowest anyone sells at. Named so in the payload, because "best"
-     * on its own is the ambiguity this whole product exists to remove.
-     */
+    // The best rate available in the country, on each side.
     public function best(Request $request, MarketRateService $market): JsonResponse
     {
         $currency = $this->currencyFromRequest($request);
         $type = $this->rateTypeFromRequest($request);
 
-        // Shared with the widgets - see MarketRateService for why the two
-        // must not compute this separately.
         ['highest_buy' => $bestBuy, 'lowest_sell' => $bestSell] = $market->best($currency, $type);
 
         $side = fn (?CurrencyRate $rate, string $field) => $rate === null ? null : [
@@ -62,10 +54,6 @@ class MarketController extends ApiController
         ]);
     }
 
-    /**
-     * Daily best and average, carried forward across days nobody repriced -
-     * see RateHistoryService for why that matters.
-     */
     public function history(Request $request, RateHistoryService $history): JsonResponse
     {
         $currency = $this->currencyFromRequest($request);
@@ -78,9 +66,6 @@ class MarketController extends ApiController
             throw ValidationException::withMessages(['days' => 'days must be at least 1.']);
         }
 
-        // Clamped rather than rejected: asking for a year and being handed
-        // every day we hold is more useful than an error, as long as the
-        // response says plainly how much that was.
         $days = min($days, max($available, 1));
 
         return response()->json([

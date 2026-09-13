@@ -10,9 +10,6 @@
         </a>
     </div>
 
-    {{-- Only exchange offices take part in the currency exchange quote flow
-    (see Organization::exchangePartnersForCurrency) - banks don't get this
-    widget. --}}
     @if ($organization->type === 'exchange')
         <section class="mt-8 border border-placeholder p-5">
             <h2 class="font-heading text-base font-semibold text-ink">{{ __('org.rates.telegram_heading') }}</h2>

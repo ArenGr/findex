@@ -10,26 +10,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * These pages hold their whole Alpine component in an x-data="{...}"
- * attribute, which fails in a way nothing else here would catch: a single
- * double quote inside it - in a string, or just in a code comment - closes
- * the attribute early. The page still returns 200 and still looks right,
- * but every property defined past that point is silently dropped and the
- * browser throws "X is not defined" on first interaction.
- *
- * So these tests assert the attribute survives rendering intact, and that
- * the properties the markup actually reads are still in it.
- */
 class AlpineStateIntegrityTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * The x-data attribute of the first element on the page that has one
-     * containing $marker, read the way a browser would: up to the first
-     * unescaped double quote.
-     */
     private function alpineState(string $html, string $marker): string
     {
         $markerPosition = strpos($html, $marker);
@@ -46,8 +30,6 @@ class AlpineStateIntegrityTest extends TestCase
 
     private function assertStateIsComplete(string $state, array $expectedProperties): void
     {
-        // Balanced braces is the tell-tale: a truncated attribute always
-        // ends mid-object, so it can never close everything it opened.
         $this->assertSame(
             substr_count($state, '{'),
             substr_count($state, '}'),
@@ -59,12 +41,6 @@ class AlpineStateIntegrityTest extends TestCase
         }
     }
 
-    /**
-     * The branch filter on an organization page holds its whole component in
-     * the attribute - search, region, open-now and the show-all toggle. A
-     * stray double quote there takes the filtering down silently, and with it
-     * the only route to the branches past the sixth.
-     */
     public function test_the_branch_filters_state_survives_rendering(): void
     {
         $organization = Organization::create([
@@ -88,20 +64,9 @@ class AlpineStateIntegrityTest extends TestCase
 
         $this->assertStateIsComplete($state, ['search', 'city', 'openNow', 'expanded', 'preview', 'refresh']);
 
-        // A bare "<" inside the attribute is legal HTML but reads as a tag to
-        // anything parsing the page roughly, so the comparison is written the
-        // other way round.
         $this->assertStringNotContainsString('<', $state, 'The x-data attribute must not contain a raw "<".');
     }
 
-    /**
-     * The request form's behaviour now lives in a JS module and the
-     * attribute only carries its config as JSON (see
-     * resources/js/travel-request-form.js). That removes most of the
-     * truncation risk - Blade's @js() escapes quotes - but the config still
-     * has to arrive whole, because a summary panel bound to a half-parsed
-     * config fails exactly as silently as before.
-     */
     public function test_the_request_forms_state_survives_rendering(): void
     {
         $html = $this->get(route('tourism.request', ['locale' => 'en']))->assertOk()->getContent();
@@ -113,8 +78,7 @@ class AlpineStateIntegrityTest extends TestCase
             'maxPriorities',
             'childAges',
             'dateFlexibility',
-            // Last key in the config - if the JSON were cut short anywhere,
-            // this is what would go missing.
+            // Last key in the config - if the JSON were cut short anywhere, this is what would go missing.
             'labels',
         ]);
     }

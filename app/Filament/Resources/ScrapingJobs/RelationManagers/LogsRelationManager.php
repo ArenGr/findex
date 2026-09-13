@@ -17,10 +17,6 @@ class LogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'logs';
 
-    /**
-     * Logs are only ever written by RateScraper - this schema exists
-     * purely to render ViewAction's modal, no create/edit is wired up.
-     */
     public function form(Schema $schema): Schema
     {
         return $schema

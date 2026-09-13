@@ -18,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
-#[Fillable(['name', 'email', 'password', 'google_id', 'avatar', 'apple_id', 'telegram_chat_id', 'telegram_connect_token', 'viber_chat_id', 'locale'])]
+#[Fillable(['name', 'email', 'password', 'google_id', 'avatar', 'telegram_chat_id', 'telegram_connect_token', 'viber_chat_id', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
@@ -41,18 +41,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         ];
     }
 
-    /**
-     * The two letters that stand in for a face.
-     *
-     * First letter of the first word plus first letter of the last, so
-     * "Aren Grigoryan" reads AG and a one-word name reads as a single letter.
-     * mb_* throughout: names on this site are as often Armenian as Latin, and
-     * substr() would slice a multi-byte character in half.
-     *
-     * Falls back to the email's first letter, then to a dash, so the avatar is
-     * never an empty circle - a user created by an OAuth callback can arrive
-     * with no name at all.
-     */
+    // The two letters that stand in for a face.
     public function initials(): string
     {
         $words = preg_split('/\s+/u', trim($this->name ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [];
@@ -86,19 +75,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(ExchangeQuoteRequest::class);
     }
 
-    /**
-     * Only set when role is UserRole::ORGANIZATION - the business profile
-     * this account logs in on behalf of (see Organization::users()).
-     */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
-    /**
-     * Only set when role is UserRole::WRITER - the author profile this
-     * account logs in on behalf of (see Writer::users()).
-     */
     public function writer(): BelongsTo
     {
         return $this->belongsTo(Writer::class);
@@ -124,14 +105,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->role === UserRole::ADMIN;
     }
 
-    /**
-     * Gates the Filament admin panel (see AdminPanelProvider::authGuard('admin'))
-     * - the 'admin', 'organization', and 'web' guards all share this same
-     * users table/provider now, so this is what actually keeps a customer
-     * or organization session out of the panel rather than the guard name
-     * itself. See also EnsureUserRole, which enforces the equivalent for
-     * the non-Filament 'organization' guard routes.
-     */
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->isAdmin();
@@ -142,12 +115,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->banned_at !== null;
     }
 
-    /**
-     * banned_at is deliberately not mass-assignable (see $fillable above) -
-     * banning/unbanning goes through these dedicated methods instead, so a
-     * future `User::create($request->all())` or similar can't be tricked
-     * into self-unbanning or forging a ban timestamp.
-     */
     public function ban(): void
     {
         $this->forceFill(['banned_at' => now()])->save();
@@ -158,32 +125,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         $this->forceFill(['banned_at' => null])->save();
     }
 
-    /**
-     * Same forceFill-not-fillable reasoning as ban()/unban() above - reached
-     * only from the signed, one-click unsubscribe link in TripReviewPrompt's
-     * email footer (see TripReviewPromptController::unsubscribe()).
-     */
     public function optOutOfReviewPrompts(): void
     {
         $this->forceFill(['review_prompts_opted_out_at' => now()])->save();
     }
 
-    /**
-     * Overrides the MustVerifyEmail trait's default (which sends Laravel's
-     * generic notification) so verification email matches every other
-     * outbound email in this app: a branded Mailable sent directly via
-     * Mail::to(), not the Notification system.
-     */
     public function sendEmailVerificationNotification(): void
     {
         Mail::to($this)->send(new VerifyEmailAddress($this, $this->verificationUrl()));
     }
 
-    /**
-     * Guard-agnostic by design (see VerifyEmailController) - the link
-     * itself is the credential, so this doesn't need to know or care
-     * whether the account it's for is a customer or an organization.
-     */
     private function verificationUrl(): string
     {
         return URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [

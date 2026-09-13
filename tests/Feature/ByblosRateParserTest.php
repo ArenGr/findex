@@ -7,10 +7,6 @@ use Tests\TestCase;
 
 class ByblosRateParserTest extends TestCase
 {
-    /**
-     * The shape of the real page: three tables sharing one class, where the
-     * third publishes interest percentages rather than exchange rates.
-     */
     private function fixture(string $extra = ''): string
     {
         return <<<HTML
@@ -55,12 +51,7 @@ class ByblosRateParserTest extends TestCase
         );
     }
 
-    /**
-     * The one that matters. The bank's base-rate table carries the same
-     * class and the same first column as the rate tables, so a positional
-     * read would store USD at 4.36 dram - a plausible-looking number rather
-     * than an obviously broken one.
-     */
+    // The one that matters.
     public function test_it_ignores_the_base_rate_table_of_interest_percentages(): void
     {
         foreach ($this->parse() as $rate) {
@@ -80,11 +71,7 @@ class ByblosRateParserTest extends TestCase
         );
     }
 
-    /**
-     * If the bank adds a third rate table, its type cannot be guessed from
-     * position. Filing it under a wrong type is worse than leaving it out,
-     * and the two known tables must keep publishing either way.
-     */
+    // If the bank adds a third rate table, its type cannot be guessed from position.
     public function test_it_leaves_out_a_rate_table_it_cannot_name(): void
     {
         $extra = '<table class="currency_table fluid-x">'

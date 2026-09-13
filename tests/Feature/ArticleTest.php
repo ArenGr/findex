@@ -162,13 +162,6 @@ class ArticleTest extends TestCase
 
     public function test_home_news_section_shows_only_approved_articles(): void
     {
-        // Rendered in isolation via $this->blade() rather than a full GET to
-        // '/' - the home page also renders <x-top-rated-organizations />,
-        // whose HAVING-clause query is MySQL-only and errors under the
-        // SQLite test database, unrelated to anything article-related here.
-        // Mirrors what the 'setlocale' middleware does for a real request -
-        // route('articles.show', ...) needs a default {locale} to fill in
-        // since $this->blade() doesn't dispatch through the router.
         app()->setLocale('en');
         URL::defaults(['locale' => 'en']);
 

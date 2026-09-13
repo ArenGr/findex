@@ -6,27 +6,6 @@ use App\Enums\RateType;
 
 class EvocaRateParser implements RateParser
 {
-    /**
-     * Evocabank's homepage embeds its exchange-rate widget data as a plain
-     * (non-JSON) JS object literal:
-     *
-     *   var currency = {
-     *       cash : {
-     *           buy : { AMD: 1, RUB: 4, USD: 365, ..., CAD: NaN, XAU: NaN, },
-     *           sell : { AMD: 1, RUB: 4.65, USD: 370, ... }
-     *       },
-     *       non_cash : {
-     *           buy : { ... },
-     *           sell : { ... }
-     *       }
-     *   };
-     *
-     * Unquoted keys, trailing commas and `NaN` literals make this invalid
-     * JSON, so it can't be json_decode'd - instead we lean on the fixed
-     * structural order of the four buy/sell dicts (cash.buy, cash.sell,
-     * non_cash.buy, non_cash.sell) and pull key/value pairs out of each with
-     * a plain regex sweep.
-     */
     public function parse(string $html): array
     {
         if (! preg_match('/var\s+currency\s*=\s*\{(.*?)\n\s*\};/s', $html, $match)) {

@@ -6,28 +6,19 @@ import mortgageTable from './mortgage-table.js';
 
 window.Alpine = Alpine;
 
-// The /tourism request form's state. Registered as a named component rather
-// than written inline: the object is far too large to read inside an x-data
-// attribute, and a single double quote in one would close the attribute and
-// silently drop every property after it.
+// The /tourism request form's state.
 Alpine.data('travelRequestForm', travelRequestForm);
 
-// One panel of the homepage rates table. Same reasoning as above, plus the
-// homepage renders 53 of them - inlining the object would put ~80KB of
-// identical JavaScript in the HTML.
+// One panel of the homepage rates table.
 Alpine.data('homeRatesPanel', homeRatesPanel);
 
 // The /banks/mortgages calculator.
 Alpine.data('mortgageTable', mortgageTable);
 
-// Used by /rates to patch the filtered results in place. Morphing rather than
-// replacing innerHTML keeps the existing nodes, so nothing unchanged repaints
-// and focus, scroll and open popovers survive a filter change.
+// Used by /rates to patch the filtered results in place.
 Alpine.plugin(morph);
 
-// Bank/organization comparison shortlist. Stored in localStorage (not a
-// server session) so it works for guests and survives normal full-page
-// navigation between the directory, an organization page, and /compare.
+// Bank/organization comparison shortlist.
 const COMPARE_STORAGE_KEY = 'findex.compareList';
 const COMPARE_MAX = 3;
 
@@ -67,14 +58,7 @@ Alpine.store('compare', {
     },
 });
 
-// The /rates map. Deliberately not an Alpine component: #rates-panel is morphed
-// on every filter click, and Alpine does not run x-init over a subtree that
-// arrives that way - so the map appeared on a direct URL load and silently did
-// not when you pressed "Map". Mounted explicitly instead, on load and after
-// each morph.
-//
-// The Leaflet import stays dynamic so its 149KB never reaches anyone who does
-// not open the map.
+// The /rates map.
 const mountRatesMaps = () => {
     document.querySelectorAll('[data-rates-map]').forEach(async (wrapper) => {
         const canvas = wrapper.querySelector('[data-rates-map-canvas]');
@@ -84,9 +68,7 @@ const mountRatesMaps = () => {
             return;
         }
 
-        // Morph can hand back the same canvas with different rates behind it -
-        // a city filter, say. Re-rendering only when the data actually changed
-        // keeps a filter click from rebuilding an identical map.
+        // Morph can hand back the same canvas with different rates behind it - a city filter, say.
         if (canvas.dataset.renderedFor === payload.textContent) {
             return;
         }

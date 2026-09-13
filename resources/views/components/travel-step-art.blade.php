@@ -1,19 +1,6 @@
 @props(['name'])
 
-{{--
-    The four "how it works" illustrations.
-
-    Not the page's icon set. Those are 24px outline glyphs meant to sit inside
-    a field or a row of text, and blown up to 32px in a tile they read as
-    exactly that - a form control's icon, enlarged. These are drawn at 48 on
-    their own grid, with filled shapes and the brand's own three colours: the
-    olive of the mark, its blue, its yellow. Each one shows the thing
-    happening rather than naming it - a filled-in form, three replies arriving,
-    two offers side by side with one of them picked, a plane already gone.
-
-    Flat vector, no gradients: they are painted at 48px against a tinted tile,
-    where a gradient turns to mud.
---}}
+{{-- The four "how it works" illustrations. --}}
 @php
     $green = '#607E34';
     $greenSoft = '#A9C07F';
@@ -66,13 +53,8 @@
             <path d="m37.4 9 1.9 1.9 3.4-3.6" stroke="{{ $ink }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             @break
 
-        {{-- 4. Choose and travel: the trip already under way - the case is
-             packed and on the ground, the plane is already climbing away from
-             it. Composed on a diagonal so the two do not fight for the middle. --}}
         @case ('depart')
             <circle cx="10" cy="11" r="5" fill="{{ $yellow }}"/>
-            {{-- The trail starts clear of the case: run together they read as
-                 one object being towed rather than two at different distances. --}}
             <path d="M26 31c2.5-4.5 5-9 7.5-13" stroke="{{ $greenSoft }}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 4"/>
             <g transform="translate(37 12) rotate(42) scale(0.78) translate(-12 -12)">
                 <path d="M21 15.6v-1.8l-7.6-4.8V3.4a1.4 1.4 0 0 0-2.8 0V9l-7.6 4.8v1.8l7.6-2.4v4.9l-2 1.4v1.3l3.4-.9 3.4.9v-1.3l-2-1.4v-4.9l7.6 2.4Z" fill="{{ $blue }}"/>

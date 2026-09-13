@@ -18,9 +18,6 @@ class Organization extends Model
     /** @use HasFactory<OrganizationFactory> */
     use HasFactory, SoftDeletes;
 
-    // Organization is written far more often than the fields RateController's
-    // filters actually read (profile/contact-info edits, etc.) - only flush
-    // the 'rates' cache when a field that actually affects it changes.
     protected static function booted(): void
     {
         static::saved(function (self $organization) {
@@ -33,22 +30,10 @@ class Organization extends Model
 
     public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'other'];
 
-    /**
-     * Types that deal in currency rates - the only ones with a reason to see
-     * the dashboard's Rates page (see hasRatesPage()).
-     */
     public const RATES_TYPES = ['bank', 'exchange'];
 
-    /**
-     * Types that fulfil travel quote requests - the only ones with a reason
-     * to see the dashboard's Tourism page (see hasTourismPage()).
-     */
     public const TOURISM_TYPES = ['tourism'];
 
-    /**
-     * Types that quote auto insurance - the only ones with a reason to see
-     * the dashboard's Insurance page (see hasInsurancePage()).
-     */
     public const INSURANCE_TYPES = ['insurance'];
 
     protected $fillable = [
@@ -84,33 +69,25 @@ class Organization extends Model
         return 'slug';
     }
 
-    /**
-     * Get all sources for this organization.
-     */
+    // Get all sources for this organization.
     public function sources(): HasMany
     {
         return $this->hasMany(OrganizationSource::class);
     }
 
-    /**
-     * Get all currency rates from this organization.
-     */
+    // Get all currency rates from this organization.
     public function currencyRates(): HasMany
     {
         return $this->hasMany(CurrencyRate::class);
     }
 
-    /**
-     * Get all mortgage offers from this organization.
-     */
+    // Get all mortgage offers from this organization.
     public function mortgageOffers(): HasMany
     {
         return $this->hasMany(MortgageOffer::class);
     }
 
-    /**
-     * Get all reviews for this organization.
-     */
+    // Get all reviews for this organization.
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class)->latest();
@@ -126,122 +103,65 @@ class Organization extends Model
         return $this->reviews()->count();
     }
 
-    /**
-     * Eager-load `reviews_avg_rating` and `reviews_count` in a single query,
-     * for listing many organizations at once (homepage teaser, directory)
-     * without an N+1 query per organization.
-     */
     #[Scope]
     protected function withRatingStats(Builder $query): Builder
     {
         return $query->withCount('reviews')->withAvg('reviews', 'rating');
     }
 
-    /**
-     * Get all branches for this organization.
-     */
+    // Get all branches for this organization.
     public function branches(): HasMany
     {
         return $this->hasMany(Branch::class);
     }
 
-    /**
-     * Get all report requests for this organization.
-     */
+    // Get all report requests for this organization.
     public function reportRequests(): HasMany
     {
         return $this->hasMany(ReportRequest::class);
     }
 
-    /**
-     * Get all generated reports for this organization.
-     */
+    // Get all generated reports for this organization.
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
     }
 
-    /**
-     * Destination countries this organization (type: tourism) can quote for.
-     */
+    // Destination countries this organization (type: tourism) can quote for.
     public function tourismDestinations(): HasMany
     {
         return $this->hasMany(TourismDestination::class);
     }
 
-    /**
-     * Quote requests this organization has been asked to reply to.
-     */
+    // Quote requests this organization has been asked to reply to.
     public function quoteResponses(): HasMany
     {
         return $this->hasMany(QuoteResponse::class);
     }
 
-    /**
-     * Saved reply templates (see QuoteTemplate) this organization can
-     * prefill the response form with instead of typing every offer from
-     * scratch.
-     */
     public function quoteTemplates(): HasMany
     {
         return $this->hasMany(QuoteTemplate::class);
     }
 
-    /**
-     * Auto insurance quotes this organization (type: insurance) has provided.
-     */
+    // Auto insurance quotes this organization (type: insurance) has provided.
     public function autoInsuranceQuotes(): HasMany
     {
         return $this->hasMany(AutoInsuranceQuote::class);
     }
 
-    /**
-     * Staff accounts that can log in on this organization's behalf (guard
-     * 'organization', role 'organization') - see User::organization().
-     * A HasMany rather than a single owner so multiple staff logins per
-     * org can be supported later without another schema change.
-     */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
-    /**
-     * Scope a query to only include active organizations.
-     */
+    // Scope a query to only include active organizations.
     #[Scope]
     protected function active(Builder $query): Builder
     {
         return $query->where('is_active', 1);
     }
 
-    /**
-     * Active, Telegram-connected tourism partners currently able to quote
-     * for a destination - the single source of truth for "is anyone
-     * available for this country right now", shared by
-     * QuoteRequestController::store()'s pre-submit check and
-     * SendQuoteRequestToPartnersJob's actual fan-out, so the two can't
-     * silently drift out of sync (e.g. one honoring a paused destination
-     * and the other not).
-     *
-     * $partySize/$budgetAmd apply a partner's own opt-in minimums
-     * (min_lead_party_size/min_lead_budget_amd) - a partner with a
-     * threshold set is excluded when the value is unknown (null), not just
-     * when it's known to be too low, since an unverifiable lead is exactly
-     * what the filter exists to keep out.
-     */
-    /**
-     * The agencies one specific request should reach: the destination and
-     * lead-quality filters below, then capped.
-     *
-     * Both callers - the submit-time count shown to the traveller and the
-     * queued fan-out that actually creates the responses - go through here,
-     * so the number they are told and the number contacted cannot drift
-     * apart.
-     *
-     * Random order because past the cap somebody has to be left out, and
-     * there is no honest basis for always leaving out the same agencies.
-     */
     #[Scope]
     protected function tourismPartnersForRequest(Builder $query, QuoteRequest $request): Builder
     {
@@ -265,21 +185,8 @@ class Organization extends Model
     #[Scope]
     protected function tourismPartnersForDestination(Builder $query, string|array|null $countryCode, ?int $partySize = null, ?float $budgetAmd = null): Builder
     {
-        // $partySize/$budgetAmd === null deliberately still excludes any
-        // partner who's set a minimum, rather than skipping the filter -
-        // see LeadQualityFilterTest: a lead with no info at all is treated
-        // as unqualified. Callers needing "no ceiling" (a stated minimum,
-        // no maximum) must not collapse that to bare null - see
-        // QuoteRequestController::budgetCeilingForMatching().
         return $query->active()
             ->where('type', 'tourism')
-            // Reachable one way or the other: a connected Telegram chat we
-            // can push the request to, or a dashboard account that can find
-            // it in the travel-requests inbox. Before that inbox existed
-            // Telegram was the only way to answer at all, so requiring it
-            // was the same thing as requiring reachability - it isn't any
-            // more, and an agency that works from the dashboard would
-            // silently receive nothing.
             ->where(fn ($query) => $query
                 ->whereNotNull('telegram_chat_id')
                 ->orWhereHas('users'))
@@ -301,18 +208,6 @@ class Organization extends Model
             });
     }
 
-    /**
-     * Active, Telegram-connected exchange offices currently publishing a
-     * CASH rate for this currency - the single source of truth for "is
-     * anyone available to negotiate this currency right now", shared by
-     * ExchangeQuoteController::store()'s pre-submit check and
-     * SendExchangeQuoteToPartnersJob's actual fan-out. Deliberately
-     * 'exchange' only, not the full RATES_TYPES list - banks don't
-     * negotiate walk-in cash exchanges the way exchange offices do.
-     * $city optionally narrows this to offices with an active branch in
-     * that city, for a visitor who only wants to be contacted by offices
-     * near a preferred region.
-     */
     #[Scope]
     protected function exchangePartnersForCurrency(Builder $query, int $currencyId, ?string $city = null): Builder
     {
@@ -348,10 +243,7 @@ class Organization extends Model
         return in_array($this->type, self::INSURANCE_TYPES, true);
     }
 
-    /**
-     * Minimum sample sizes below which a badge would be noise rather than
-     * signal (e.g. one lucky fast reply out of one lead isn't "fast").
-     */
+    // Minimum sample sizes below which a badge would be noise rather than signal (e.g.
     public const FAST_RESPONDER_MAX_HOURS = 6;
 
     public const FAST_RESPONDER_MIN_RESPONSES = 3;
@@ -365,14 +257,6 @@ class Organization extends Model
         return $this->quoteResponses()->where('status', QuoteResponse::STATUS_RESPONDED)->whereNotNull('responded_at');
     }
 
-    /**
-     * abs() as a defensive floor - created_at is always set before
-     * responded_at in the normal request -> reply flow, but a negative
-     * diff (clock skew, a manually-corrected row) should never surface as
-     * a nonsensical negative number. Cached (TTL-only, no tags): unbounded
-     * full-history scan viewed only on this org's own dashboard, so a few
-     * minutes of staleness after they reply to a quote is harmless.
-     */
     public function avgQuoteResponseTimeHours(): ?float
     {
         return Cache::remember("org.{$this->id}.avg_response_time_hours", now()->addMinutes(10), function () {
@@ -395,12 +279,6 @@ class Organization extends Model
         });
     }
 
-    /**
-     * Only meaningful on a single-organization page (public profile,
-     * dashboard) - calling this in a loop over many organizations would
-     * N+1 (unlike isTopRated(), it has no eager-loadable equivalent to
-     * withRatingStats()).
-     */
     public function isFastResponder(): bool
     {
         $avg = $this->avgQuoteResponseTimeHours();
@@ -410,19 +288,9 @@ class Organization extends Model
             && $this->respondedQuoteResponses()->count() >= self::FAST_RESPONDER_MIN_RESPONSES;
     }
 
-    /**
-     * Uses the eager-loaded reviews_avg_rating/reviews_count from
-     * withRatingStats() when present (directory/homepage listings), so
-     * this is safe to call per-row without N+1 - falls back to a live
-     * query only when those aren't loaded (a single organization page).
-     */
     public function isTopRated(): bool
     {
-        // array_key_exists, not ?? - an organization with no reviews at all
-        // has an eager-loaded reviews_avg_rating of null, and ?? would read
-        // that as "not loaded" and fire the live query anyway. Which is to
-        // say: exactly the organizations with nothing to average were the
-        // ones still costing a query per row.
+        // array_key_exists, not ??
         $rating = array_key_exists('reviews_avg_rating', $this->attributes)
             ? $this->attributes['reviews_avg_rating']
             : $this->averageRating();
@@ -434,18 +302,6 @@ class Organization extends Model
         return $rating !== null && $rating >= self::TOP_RATED_MIN_RATING && $count >= self::TOP_RATED_MIN_REVIEWS;
     }
 
-    /**
-     * The description in the current visitor's locale, falling back
-     * through the site's default locale and then any other language the
-     * org wrote one in - orgs serve customers across all of
-     * config('localization.available') but often only write a
-     * description in one language, and showing nothing is worse than
-     * showing it in the wrong one. Named to match the dropped
-     * `description` column so every existing read site (e.g.
-     * organizations/show.blade.php) keeps working unchanged; the
-     * dashboard profile edit form reads/writes description_hy/en/ru
-     * directly instead, since it needs all of them at once.
-     */
     public function getDescriptionAttribute(): ?string
     {
         $locales = array_unique([

@@ -30,10 +30,6 @@ class Review extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * The account name if the review was left while signed in, otherwise
-     * the display name the guest reviewer typed in.
-     */
     public function getReviewerNameAttribute(): string
     {
         return $this->user->name ?? $this->guest_name;

@@ -7,16 +7,6 @@ use App\Models\AutoInsuranceRequest;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Turns "whatever the insurer said" into the row AutoInsuranceQuote stores,
- * so each provider only has to find the premium in its own response shape
- * and hand it over.
- *
- * Centralised mainly for the logging: a provider that failed is worth a log
- * line, and a log line written per-provider is a log line where somebody
- * eventually interpolates the plate or the ID number "just to debug it". The
- * only free-text this writes is a reason string built from a status code.
- */
 final class InsuranceQuoteResult
 {
     private const CURRENCY = 'AMD';
@@ -55,8 +45,7 @@ final class InsuranceQuoteResult
         Log::warning('Insurance quote unavailable', [
             'provider' => $providerSlug,
             'organization_id' => $partner->id,
-            // A status code and nothing else. Never an exception message,
-            // which would carry the request URL - see InsuranceHttpClient.
+            // A status code and nothing else.
             'status' => $status,
         ]);
 

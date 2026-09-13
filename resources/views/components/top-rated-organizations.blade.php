@@ -1,10 +1,4 @@
 @php
-    // whereHas(), not having('reviews_count', '>', 0) - reviews_count is a
-    // withCount() subquery-select alias, not a real GROUP BY aggregate,
-    // and MySQL's relaxed SQL mode is the only reason HAVING against it
-    // ever worked; SQLite (the test suite's driver) rejects it outright
-    // with "HAVING clause on a non-aggregate query". whereHas() compiles
-    // to a portable WHERE EXISTS and needs no such leniency.
     $topRated = \App\Models\Organization::active()
         ->withRatingStats()
         ->whereHas('reviews')
@@ -21,13 +15,6 @@
             {{ __('organizations.top_rated_subtitle') }}
         </p>
 
-        {{--
-            A ranked list rather than a card grid - the rank badge (gold for
-            #1, same convention as components/rates-table.blade.php's
-            leaderboard rows) is what carries the "top rated" meaning here,
-            and a row layout reads that ranking at a glance without needing
-            a separate mobile/desktop treatment.
-        --}}
         <div class="mt-10 divide-y divide-placeholder overflow-hidden rounded-2xl border border-placeholder bg-white shadow-sm">
             @foreach ($topRated as $i => $organization)
                 <a

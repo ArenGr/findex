@@ -7,11 +7,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers QuoteRequest::closes_in (the "closes in 3 days" countdown) and
- * that it actually renders on the pages a customer sees their trip
- * requests on.
- */
 class QuoteRequestCountdownTest extends TestCase
 {
     use RefreshDatabase;

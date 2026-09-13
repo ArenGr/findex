@@ -55,16 +55,7 @@ class QuoteRequestSubmissionTest extends TestCase
         ], $overrides);
     }
 
-    /**
-     * Every value an HTML form sends is a string, including the numbers.
-     *
-     * The rest of these tests post real PHP ints, which is not what a browser
-     * does - and that gap hid a bug that rejected every single browser
-     * submission: the age-per-child check compared count() (an int) against
-     * the submitted count with !==, so int(0) !== string("0") was always true
-     * and the form came back saying "an age for each of the 0 children" even
-     * when no children had been added.
-     */
+    // Every value an HTML form sends is a string, including the numbers.
     public function test_a_browser_style_submission_with_string_numbers_is_accepted(): void
     {
         Mail::fake();
@@ -163,9 +154,6 @@ class QuoteRequestSubmissionTest extends TestCase
         $this->tourismPartner();
         $user = User::factory()->create();
 
-        // Following the redirect lands on the status page with the fresh
-        // "quote-request-submitted" flash, which is what surfaces the
-        // confirmation card and the three-step Findex process.
         $response = $this->actingAs($user)
             ->followingRedirects()
             ->post(

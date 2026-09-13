@@ -22,9 +22,7 @@ class ScrapeRates extends Command
      */
     protected $description = 'Scrape currency rates from organizations';
 
-    /**
-     * Execute the console command.
-     */
+    // Execute the console command.
     public function handle(RateScraper $scraper)
     {
         $organizationSlug = $this->option('organization');
@@ -40,14 +38,7 @@ class ScrapeRates extends Command
                 return self::FAILURE;
             }
         } else {
-            // Only organizations that actually have an active source of this
-            // type. Without this the command tried every active org - so once
-            // non-bank types existed (insurers, which carry no currency_rates
-            // source), each one failed with "Source 'currency_rates' not
-            // found" and inflated the failure count. Scoping by the source
-            // itself is more robust than a hardcoded type == 'bank': it is
-            // correct for branches/mortgages too, and stays correct if an
-            // exchange office ever starts publishing rates.
+            // Only organizations that actually have an active source of this type.
             $organizations = Organization::active()
                 ->whereHas('sources', fn ($query) => $query
                     ->where('source_type', $sourceType)

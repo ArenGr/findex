@@ -9,8 +9,6 @@ class ApiDocsController extends Controller
     public function index(): View
     {
         return view('api.docs', [
-            // Straight from config/api.php, so the page cannot disagree with
-            // what the limiter actually enforces.
             'plans' => config('api.plans'),
             'anonymous' => config('api.anonymous'),
             'endpoints' => [

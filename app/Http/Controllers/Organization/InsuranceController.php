@@ -13,16 +13,6 @@ class InsuranceController extends Controller
     {
         $organization = Auth::guard('organization')->user()->organization;
 
-        // Cached (TTL-only, no tags): viewed only by this org's own staff,
-        // so a few minutes of staleness after a new lead/interest-mark is
-        // harmless. Flattened to a plain array rather than the raw
-        // quote+request models - config/cache.php's 'serializable_classes'
-        // => false means Redis can't round-trip objects, and this also
-        // sidesteps AutoInsuranceRequest::requester_name/_email lazy-loading
-        // the user relation per row on every uncached view. Includes
-        // requester name/phone/plate (PII) - acceptable since Redis here is
-        // purely an internal, non-exposed cache, but a heavier/more
-        // sensitive entry than the scalar org stats above.
         $data = Cache::remember("org.{$organization->id}.insurance_dashboard", now()->addMinutes(10), function () use ($organization) {
             $quotes = $organization->autoInsuranceQuotes()
                 ->with('autoInsuranceRequest.user')

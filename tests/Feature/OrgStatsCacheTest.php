@@ -10,12 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the plain-TTL (no tags) caching added for org-dashboard stats and
- * the tourism price aggregate - unlike RateCacheTest's tag-based
- * invalidation, these only need to prove a second call is served from
- * cache and that per-organization keys don't leak between organizations.
- */
 class OrgStatsCacheTest extends TestCase
 {
     use RefreshDatabase;

@@ -11,13 +11,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Switches each bank product page on or off site-wide. Deliberately
- * list-only: the rows are seeded from OfferController::CATEGORIES
- * (FeatureToggleSeeder) because a toggle is only meaningful if there's a
- * page behind it, so the panel can flip them but not invent or delete
- * them.
- */
+// Switches each bank product page on or off site-wide.
 class FeatureToggleResource extends Resource
 {
     protected static ?string $model = FeatureToggle::class;

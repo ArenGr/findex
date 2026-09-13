@@ -49,8 +49,6 @@ class QuoteResultsCurrencyConversionTest extends TestCase
             'price_currency' => 'USD',
         ]);
 
-        // Viewing in Armenian (default locale) - preferred currency AMD,
-        // quote priced in USD, so a converted estimate should show.
         $response = $this->get($quoteRequest->signedOffersUrl());
 
         $response->assertOk();

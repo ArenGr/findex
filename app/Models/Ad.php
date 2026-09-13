@@ -32,11 +32,6 @@ class Ad extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Public URL for the uploaded logo, or null if none was set - the
-     * `logo` column only stores the disk-relative path Filament's
-     * FileUpload writes.
-     */
     public function getLogoUrlAttribute(): ?string
     {
         return $this->logo ? Storage::disk('public')->url($this->logo) : null;

@@ -38,13 +38,6 @@ class QuoteTemplateController extends Controller
         return redirect()->route('org.dashboard.quote-templates.index')->with('status', 'quote-template-created');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own templates is
-     * also what enforces that an org can only edit its own.
-     */
     public function edit(string $locale, string $quoteTemplate): View
     {
         $organization = Auth::guard('organization')->user()->organization;

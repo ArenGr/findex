@@ -30,11 +30,6 @@ class OrganizationResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Organizations';
 
-    /**
-     * Organization::getRouteKeyName() returns 'slug' for the public site's
-     * URLs - without this override, Filament would inherit that and try to
-     * resolve its own {record} parameter (the numeric id) as a slug lookup.
-     */
     protected static ?string $recordRouteKeyName = 'id';
 
     public static function form(Schema $schema): Schema

@@ -23,14 +23,7 @@ class TelegramPoll extends Command
      */
     protected $description = 'Long-poll Telegram for bot updates (local development only - production registers a webhook instead, see the telegram:webhook command)';
 
-    /**
-     * Execute the console command.
-     *
-     * Telegram delivers updates via polling or a webhook, never both - if a
-     * webhook is currently registered (`telegram:webhook set`), this will
-     * fail with a "can't use getUpdates" error from the API until it's
-     * removed (`telegram:webhook unset`).
-     */
+    // Execute the console command.
     public function handle(TelegramClient $telegram, PartnerReplyHandler $partnerHandler, RatesBotHandler $ratesHandler): int
     {
         if (! config('services.telegram.bot_token')) {
@@ -47,13 +40,6 @@ class TelegramPoll extends Command
             try {
                 $updates = $telegram->getUpdates($offset);
             } catch (\Throwable $e) {
-                // A long poll that drops is routine, not fatal: the laptop
-                // sleeps, the wifi blips, Telegram restarts, or a second
-                // getUpdates elsewhere steals the slot and leaves this one
-                // hanging until it times out. Without this the command exits
-                // on the first such hiccup and the bot goes quiet with no
-                // obvious cause - which is exactly the failure this command
-                // exists to make visible.
                 $this->warn("Poll failed, retrying: {$e->getMessage()}");
                 sleep(3);
 

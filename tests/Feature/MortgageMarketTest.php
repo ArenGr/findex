@@ -9,11 +9,7 @@ use App\Services\MortgageMarket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * The benchmark tier: average / cheapest rates that give a single offer its
- * market context. Expired promos and rate-less offers are left out of the
- * average, since they aren't part of "today's" market.
- */
+// The benchmark tier: average / cheapest rates that give a single offer its market context.
 class MortgageMarketTest extends TestCase
 {
     use RefreshDatabase;

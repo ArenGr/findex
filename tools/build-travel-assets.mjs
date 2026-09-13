@@ -36,6 +36,16 @@ const TARGETS = [
     { stem: 'trip-empty', widths: [320, 640, 960], minWidth: 900 },
     // Full-bleed closing band.
     { stem: 'panorama', widths: [960, 1440, 1916], minWidth: 1900 },
+
+    // One photograph per popular trip, painted in a card panel about
+    // 240x128 CSS px - so 640 covers it at 2x and there is nothing above that
+    // worth shipping. A missing source is skipped rather than fatal: the card
+    // falls back to a tinted panel, so the page works with none, some or all
+    // four installed.
+    { stem: 'preset-georgia_break', widths: [400, 640], minWidth: 640 },
+    { stem: 'preset-dubai_city', widths: [400, 640], minWidth: 640 },
+    { stem: 'preset-egypt_all_in', widths: [400, 640], minWidth: 640 },
+    { stem: 'preset-cyprus_sea', widths: [400, 640], minWidth: 640 },
 ];
 
 // AVIF first (smallest at equal quality), WebP as the broad fallback.

@@ -15,10 +15,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Comparing offers, and the rules about when a comparison is honest enough
- * to show at all - see TravelOfferComparison.
- */
 class TravelOfferComparisonTest extends TestCase
 {
     use RefreshDatabase;
@@ -94,9 +90,7 @@ class TravelOfferComparisonTest extends TestCase
         $this->assertSame(1, $rows->filter(fn ($row) => in_array('lowest_price', $row['badges'], true))->count());
     }
 
-    /**
-     * One price is not a comparison - there is nothing it was lower than.
-     */
+    // One price is not a comparison - there is nothing it was lower than.
     public function test_a_lone_offer_is_not_badged_as_the_lowest_price(): void
     {
         $quoteRequest = $this->quoteRequest();
@@ -105,9 +99,7 @@ class TravelOfferComparisonTest extends TestCase
         $this->assertSame([], $this->rowsFor($quoteRequest)->first()['badges']);
     }
 
-    /**
-     * Picking a winner between two identical prices would be arbitrary.
-     */
+    // Picking a winner between two identical prices would be arbitrary.
     public function test_a_tie_for_the_lowest_price_badges_neither(): void
     {
         $quoteRequest = $this->quoteRequest();
@@ -119,11 +111,6 @@ class TravelOfferComparisonTest extends TestCase
         $this->assertSame(0, $rows->filter(fn ($row) => in_array('lowest_price', $row['badges'], true))->count());
     }
 
-    /**
-     * The one rule that matters most: with no rate available, "610 USD"
-     * must not be ranked against "500,000 AMD" as though the numbers were
-     * in the same unit.
-     */
     public function test_offers_in_different_currencies_are_not_ranked_without_a_rate(): void
     {
         $quoteRequest = $this->quoteRequest();
@@ -321,13 +308,9 @@ class TravelOfferComparisonTest extends TestCase
         $response->assertSee(__('tourism.meals.all_inclusive'));
         $response->assertSee(__('tourism.offer.choose'));
 
-        // A transfer the agency confirmed and an insurance it explicitly
-        // excluded must read differently from each other.
         $response->assertSee(__('tourism.offer.included'));
         $response->assertSee(__('tourism.offer.not_included'));
 
-        // No booking or payment anywhere on this page - see the scope note
-        // in TravelOfferComparison and the choose action.
         $response->assertDontSee('Proceed to Booking');
     }
 

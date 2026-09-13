@@ -6,36 +6,12 @@ use App\Enums\RateType;
 
 class AmioRateParser implements RateParser
 {
-    /**
-     * AMIO's exchange page is a Next.js app, so the rendered table is built
-     * in the browser and there is no HTML table to read. The data is still
-     * served with the page though: Next.js embeds the props it hydrated from
-     * in a <script id="__NEXT_DATA__"> block, and the rates sit inside it.
-     *
-     * Reading that JSON is both easier and sturdier than scraping a table -
-     * a redesign changes the markup constantly, but this shape belongs to
-     * the bank's own data layer and moves far less often.
-     *
-     *   props.pageProps.data.rates.cash = [
-     *       {"currency":"USD","buyValue":"362.50","sellValue":"367.50",
-     *        "isCash":true,"branchIndex":"00", ...}, ...
-     *   ]
-     *   props.pageProps.data.rates.card = [ ... same shape, isCash:false ]
-     *
-     * "card" is the bank's own wording for its non-cash rate, which is what
-     * RateType::NON_CASH means here - the same distinction every other
-     * parser in this directory draws.
-     */
     private const CATEGORIES = [
         'cash' => RateType::CASH,
         'card' => RateType::NON_CASH,
     ];
 
-    /**
-     * Rates are published per branch. Only the head office ("00") is taken:
-     * the comparison pages show one rate per bank, and mixing branches would
-     * silently make a bank look better or worse than it quotes anywhere.
-     */
+    // Rates are published per branch.
     private const HEAD_OFFICE = '00';
 
     public function parse(string $html): array
@@ -98,8 +74,6 @@ class AmioRateParser implements RateParser
             return null;
         }
 
-        // A zero on either side means the bank is not quoting that currency
-        // right now, not that it trades at nothing.
         if ((float) $buy <= 0 || (float) $sell <= 0) {
             return null;
         }

@@ -9,15 +9,6 @@
     display: none !important;
 }
 
-/*
- * iOS Safari zooms the whole page in when a focused form field's font-size
- * is below 16px - it's not a rendering bug, it's deliberate "make this
- * readable" behavior, but it feels broken to a user who didn't ask to
- * zoom. Every text/number/date/select/textarea in this app uses text-sm
- * (14px) for visual consistency with the rest of the UI, so this targets
- * just the mobile width where the zoom actually triggers, rather than
- * bumping the font-size (and disrupting the design) everywhere.
- */
 @media (max-width: 640px) {
     input,
     select,
@@ -26,41 +17,15 @@
     }
 }
 
-/*
- * WebKit (iOS Safari, and Chrome on Android/iOS) shows a gray tap-flash on
- * any tappable element by default - looks inconsistent against this app's
- * own custom hover/active states (e.g. peer-checked pills, hover:bg-*),
- * so it's turned off in favor of those.
- */
 a,
 button {
     -webkit-tap-highlight-color: transparent;
 }
 
-/*
- * FreeSans is self-hosted (not on Google/Bunny Fonts) - see the Findex
- * style guide ("Colors and fonts"): FreeSans for English/Armenian body
- * and UI text, Montserrat for decorative headings, Allerta Stencil for
- * the logo wordmark only.
- *
- * Its @font-face rules are declared in fonts-freesans.css, imported at the
- * top of this file, rather than through laravel-vite-plugin's font
- * provider - the provider cannot express unicode-range, so it shipped one
- * ~109 KB file per weight to every visitor regardless of script.
- */
-
 @theme {
-    /* Declared here now that FreeSans is hand-rolled rather than handled by
-       laravel-vite-plugin's font provider, which used to inject this. */
     --font-freesans: "FreeSans";
 
-    /* Each real face is followed by its metric-matched fallback from
-       fonts-fallbacks.css. Those render from a font the visitor already has,
-       resized and re-baselined to occupy exactly the space the real face
-       would, so text that paints before the font arrives - or that never gets
-       it, since every face is font-display: optional - sits at the same size
-       and wraps on the same words. Without them the generic families below
-       take over and the text visibly resizes. */
+    /* Each real face is followed by its metric-matched fallback from fonts-fallbacks.css. */
     --font-sans:
         var(--font-freesans), "FreeSans fallback", ui-sans-serif, system-ui,
         sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
@@ -75,9 +40,6 @@ button {
     --color-accent-blue: #005fb9;
     --color-accent-blue-dark: #004a91;
 
-    /* Sell-side rates, paired with primary green on the buy side - the
-       convention every currency board in the country uses. Named rather than
-       inlined so the two sides stay in step wherever they are shown. */
     --color-accent-red: #ba1a1a;
 
     /* Hero carousel per-slide accents */
@@ -86,21 +48,8 @@ button {
     --color-slide-yellow: #f8d97e;
     --color-slide-pink: #feb2b9;
     --color-slide-purple: #dcb0e9;
-    /* Solid equivalent of bg-slide-green/20 on white (#607e34 at 20% over
-       #fff) - the hero badge's little rotated "tail" square and the pill it
-       sits behind share the exact same badge color class, so where they
-       overlap needs to paint identically or the overlap shows through as a
-       darker patch. That's invisible with the other 3 slides' solid badge
-       colors (solid-over-solid of the same color is seamless), but slide-green
-       used the /20 opacity utility - two translucent layers of the same
-       color don't compound to themselves, so the tail's covered-by-the-pill
-       half showed as a visibly darker sliver. This is that same wash,
-       pre-mixed to a solid color instead. */
     --color-slide-green-pastel: #dfe5d6;
 
-    /* Services-grid category colors (resources/views/components/services-grid.blade.php) -
-       soft/pastel rather than saturated so they fit the khaki+yellow brand
-       without turning the homepage into a rainbow. */
     --color-currency-tint: #eaf3ff;
     --color-currency-line: #c7ddf7;
     --color-cards-tint: #ecf7ef;
@@ -118,16 +67,6 @@ button {
     --color-border-muted: #b3b3b3;
     --color-placeholder: #d9d9d9;
 
-    /* A sitewide bump over Tailwind's default type scale (text-xs was
-       12px, text-base was 16px, etc.) - the app read as cramped across
-       body copy, labels, and hints alike, and every text-* utility
-       already used everywhere means this one override reaches every page
-       at once rather than needing per-view edits. Only the sizes actually
-       used for reading (up through text-4xl, the largest h1 in the app)
-       are bumped - 5xl+ are unused display sizes, not worth touching.
-       (Revised up again - the first pass, ~6-8% over default, wasn't a
-       strong enough jump; this is roughly +25-30% over Tailwind's
-       defaults instead.) */
     --text-xs: 0.9375rem;
     --text-xs--line-height: 1.25rem;
     --text-sm: 1rem;
@@ -145,26 +84,11 @@ button {
     --text-4xl: 2.5rem;
     --text-4xl--line-height: 2.75rem;
 
-    /*
-     * The travel design system, from the approved Stitch designs for the
-     * quote request flow. Kept as its own set of names rather than folded
-     * into the Findex palette above: the two overlap but don't agree (the
-     * brand's --color-primary #607e34 is this system's *primary-container*,
-     * and its own primary is the darker #48651d), so redefining the shared
-     * names would repaint every other page on the site.
-     *
-     * Scoped by use, not by page: anything rendering a travel quote reads
-     * from here, everything else keeps reading the palette above.
-     */
-    /* The travel design's face. Latin and Cyrillic only - Armenian has no
-       coverage here and falls through to FreeSans, exactly as it did under
-       Manrope before it. */
+    /* The travel design system, from the approved Stitch designs for the quote request flow. */
+    /* The travel design's face. */
     --font-jakarta: "Plus Jakarta Sans", "Plus Jakarta Sans fallback", var(--font-sans);
 
-    /* The travel page's editorial script lines. Only ever painted on two
-       absolutely positioned decorations, so a late swap cannot move
-       anything. Latin and Cyrillic only - see _hero.blade.php for how
-       Armenian is handled. */
+    /* The travel page's editorial script lines. */
     --font-script: "Caveat", "Caveat fallback", ui-serif, cursive;
 
     --color-surface-alt: #f9faf1;
@@ -178,26 +102,10 @@ button {
     --color-on-primary-container: #fbffeb;
     --color-error: #ba1a1a;
 
-    /*
-     * The travel design's ink.
-     *
-     * Namespaced to travel rather than replacing the site token: the design's
-     * text colour is a cool navy where Findex uses a warm near-black, and
-     * adopting it globally would restyle Exchange Rates, Banking, Insurance
-     * and About along with this page. Everything else on the page reads from
-     * Tailwind's own grays, as the design does.
-     */
+    /* The travel design's ink. */
     --color-travel-ink: #0D1C2D;
 
-    /*
-     * The travel design's olive ramp, verbatim from its Tailwind config.
-     *
-     * 600 is the brand green the rest of the site already calls --color-primary;
-     * the rest of the ramp is what the design tints surfaces, borders and text
-     * with, and there was no way to say any of it before - the page reached for
-     * travel-primary/10 and travel-sage and got two greens that did not belong
-     * to the same scale.
-     */
+    /* The travel design's olive ramp, verbatim from its Tailwind config. */
     --color-travel-50: #F4F7EE;
     --color-travel-100: #E6EDD8;
     --color-travel-200: #D0DDB6;
@@ -206,14 +114,7 @@ button {
     --color-travel-700: #4D652A;
     --color-travel-800: #3D5022;
 
-
-
-    /*
-     * The travel type scale, stated in absolute pixels on purpose. The
-     * text-xs/sm/base scale above was deliberately bumped ~25% sitewide,
-     * so reusing it here would render every one of these designs a size
-     * too large - these carry their own metrics instead.
-     */
+    /* The travel type scale, stated in absolute pixels on purpose. */
     --text-label-caps: 13px;
     --text-label-caps--line-height: 18px;
     --text-label-caps--letter-spacing: 0.05em;
@@ -228,8 +129,7 @@ button {
     --text-body-lg: 18px;
     --text-body-lg--line-height: 28px;
 
-    /* Used by the summary panel and the review card. It had no token, so both
-       headings were rendering at whatever size they inherited. */
+    /* Used by the summary panel and the review card. */
     --text-headline-sm: 20px;
     --text-headline-sm--line-height: 26px;
     --text-headline-sm--letter-spacing: -0.01em;
@@ -250,9 +150,7 @@ button {
     --text-headline-lg-mobile--letter-spacing: -0.02em;
     --text-headline-lg-mobile--font-weight: 700;
 
-    /* One step above headline-lg, for the request page's opening title only.
-       The hero is the first thing to read and everything below it is set at
-       24px or smaller, so the jump is what establishes the order to read in. */
+    /* One step above headline-lg, for the request page's opening title only. */
     --text-headline-xl: 42px;
     --text-headline-xl--line-height: 48px;
     --text-headline-xl--letter-spacing: -0.025em;
@@ -264,31 +162,8 @@ button {
     --text-headline-xl-mobile--font-weight: 700;
 }
 
-/*
- * The site's one content column.
- *
- * Header, every page section and the footer all sit in this, so the logo, the
- * page's own content and the footer links all line up on the same edge. It was
- * repeated as `mx-auto max-w-7xl px-6 lg:px-10` in about forty places, which is
- * exactly the kind of thing that drifts a page at a time.
- *
- * Wider than the 1280px it replaces, and the padding steps down on small
- * screens rather than holding 24px all the way to a 360px phone.
- *
- * Anything that deliberately bleeds past this column - the phone carousels,
- * the sticky organization bar - cancels the padding with a matching negative
- * margin, so those have to track these three steps. Getting them out of step
- * is not a cosmetic problem: over-pulling by 8px gives the whole document a
- * horizontal scrollbar.
- */
-/*
- * The travel page's container.
- *
- * Wider than site-container on purpose: the approved travel design is an
- * editorial layout that runs to roughly 88% of a large desktop, where the rest
- * of the site holds a 1280px column. Separate utility rather than a change to
- * site-container, which every other page depends on.
- */
+/* The site's one content column. */
+/* The travel page's container. */
 @utility travel-container {
     margin-inline: auto;
     max-width: 80rem;
@@ -303,15 +178,7 @@ button {
     }
 }
 
-/*
- * A wizard step arriving.
- *
- * The steps are swapped by display, so the one leaving is gone in the same
- * frame the next one appears - there is no crossfade of two forms over each
- * other, and nothing animates the card's height. This is only the arrival: a
- * CSS animation rather than a transition, because it has to play on the way
- * out of `display: none`, which a transition cannot do.
- */
+/* A wizard step arriving. */
 @keyframes travel-step-in {
     from {
         opacity: 0;
@@ -333,20 +200,11 @@ button {
     }
 }
 
-/*
- * The travel flow's date fields.
- *
- * A <input type="date"> paints its own picker button on the right in Chrome
- * and Safari, and the field already carries the set's calendar glyph on the
- * left - so every date on this page showed two calendars. The native button
- * is the one that opens the picker, so it is stretched over the whole field
- * and made invisible rather than hidden: one calendar is drawn, and clicking
- * anywhere in the field still opens the picker instead of only the 12px the
- * button used to occupy.
- *
- * The field's wrapper is `relative`, which is what the absolute positioning
- * resolves against.
- */
+/* The travel flow's date fields. */
+.travel-date {
+    position: relative;
+}
+
 .travel-date::-webkit-calendar-picker-indicator {
     position: absolute;
     inset: 0;
@@ -372,19 +230,7 @@ button {
     }
 }
 
-/*
- * Buttons and fields.
- *
- * One definition each, so a page cannot invent its own. Before this there were
- * three paddings, five radii and three input shells in circulation, and about
- * sixty buttons were square while forty were rounded.
- *
- * The hover is the home page's - lift and deepen the shadow - kept because it
- * is the most recognisable thing about the site's buttons, with the pieces it
- * was missing added: it settles again on press, it shows a focus ring for
- * anyone on a keyboard, it stops lifting when disabled, and it holds still for
- * anyone who asked their system not to animate.
- */
+/* Buttons and fields. */
 @utility btn {
     display: inline-flex;
     align-items: center;
@@ -438,9 +284,6 @@ button {
     }
 }
 
-/* White with a hairline, warming to the brand green on hover - the same
-   reaction the rates filters give, so every non-primary control behaves the
-   same way. */
 @utility btn-secondary {
     background-color: #fff;
     color: var(--color-ink);
@@ -493,23 +336,10 @@ button {
     }
 }
 
-/* Leaflet numbers its own panes, controls and popups from 400 up to 1000, and
-   it does so against the document's root stacking context - .leaflet-container
-   sets `position: relative` with no z-index, so it never contains them. A z-50
-   dialog therefore opens *underneath* the map. Isolating the container keeps
-   Leaflet's numbering to itself without touching any of it. */
 .leaflet-container {
     isolation: isolate;
 }
 
-/*
- * Auto-insurance "getting your quotes" loader (see
- * resources/views/components/findex-loader.blade.php), from the approved
- * Stitch loading screen. The staged checklist fades in on a timer and the
- * active row carries an expanding pulse ring - both are pure decoration: the
- * request is a single synchronous POST, so there is no real per-step progress
- * to report, only the reassurance that something is happening.
- */
 @keyframes findex-fade-up {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }

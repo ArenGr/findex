@@ -12,8 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            // Null = offered regardless of destination - a generic
-            // template, not tied to one country.
+            // Null = offered regardless of destination - a generic template, not tied to one country.
             $table->string('destination_country', 2)->nullable();
             $table->decimal('price_amount', 10, 2)->nullable();
             $table->string('price_currency', 3)->nullable();

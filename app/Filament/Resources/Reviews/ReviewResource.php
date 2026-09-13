@@ -23,10 +23,6 @@ class ReviewResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Community';
 
-    /**
-     * Reviews only ever come from real users - the panel manages them for
-     * moderation (view + delete) only, never creation or editing.
-     */
     public static function canCreate(): bool
     {
         return false;

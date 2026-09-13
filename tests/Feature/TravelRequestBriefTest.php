@@ -10,11 +10,6 @@ use App\Services\Telegram\TelegramClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * The trip-brief half of a travel request - everything beyond "where and
- * when" that an agency needs in order to price a package: departure point,
- * date flexibility, flight/hotel/meal preferences, and priorities.
- */
 class TravelRequestBriefTest extends TestCase
 {
     use RefreshDatabase;
@@ -88,13 +83,6 @@ class TravelRequestBriefTest extends TestCase
         }
     }
 
-    /**
-     * The request page is built in the travel design system (Plus Jakarta
-     * Sans and the olive ramp - see the travel block in app.css) rather than
-     * the sitewide one. These are the classes the whole layout hangs off, so
-     * losing them means the page silently reverts to looking like the rest of
-     * the site.
-     */
     public function test_the_request_page_renders_in_the_travel_design_system(): void
     {
         $response = $this->get(route('tourism.request', ['locale' => 'en']))->assertOk();
@@ -103,9 +91,7 @@ class TravelRequestBriefTest extends TestCase
             $this->assertStringContainsString($class, $response->getContent());
         }
 
-        // The four sections of the approved design. assertSee, not a raw
-        // string check - a label like "Budget & Notes" reaches the page
-        // HTML-escaped.
+        // The four sections of the approved design.
         $response->assertSee(__('tourism.request.section_trip'));
         $response->assertSee(__('tourism.request.section_preferences'));
         $response->assertSee(__('tourism.request.priorities_label'));
@@ -148,11 +134,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(7, $request->nights);
     }
 
-    /**
-     * The three preference fields are nullable rather than required - an
-     * omitted one means "any"/"flexible", which is exactly what the column
-     * default already says (see the rules in QuoteRequestController).
-     */
     public function test_omitted_preferences_fall_back_to_their_defaults(): void
     {
         $this->tourismPartner();
@@ -169,10 +150,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertFalse($request->has_flexible_dates);
     }
 
-    /* -----------------------------------------------------------------
-     * Multiple destinations, and the "open to suggestions" alternative
-     * ----------------------------------------------------------------- */
-
     public function test_several_destinations_are_stored_as_a_list(): void
     {
         $this->tourismPartner();
@@ -183,9 +160,6 @@ class TravelRequestBriefTest extends TestCase
 
         $this->assertSame(['GE', 'GR'], $request->destinations);
 
-        // The single-destination column stays in step, holding the first -
-        // the Telegram brief, the emails and the destination alerts all
-        // still read it (see QuoteRequest::setDestinations()).
         $this->assertSame('GE', $request->destination_country);
     }
 
@@ -199,10 +173,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
-    /**
-     * Naming nowhere is fine as long as the traveller says so - it matches
-     * every agency serving any destination rather than none.
-     */
     public function test_open_to_suggestions_is_accepted_without_a_destination(): void
     {
         $this->tourismPartner();
@@ -237,9 +207,7 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
-    /* -----------------------------------------------------------------
-     * Children and their ages
-     * ----------------------------------------------------------------- */
+    // ----------------------------------------------------------------- Children and their ages
 
     public function test_an_age_is_stored_for_every_child(): void
     {
@@ -279,9 +247,7 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame([], QuoteRequest::sole()->child_ages);
     }
 
-    /* -----------------------------------------------------------------
-     * Custom budget
-     * ----------------------------------------------------------------- */
+    // ----------------------------------------------------------------- Custom budget
 
     public function test_a_custom_budget_range_is_stored(): void
     {
@@ -305,10 +271,7 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
-    /**
-     * A band and a custom range answer the same question. The band wins, so
-     * the two can't be combined into a range nobody chose.
-     */
+    // A band and a custom range answer the same question.
     public function test_a_band_overrides_any_custom_range_sent_with_it(): void
     {
         $this->tourismPartner();
@@ -390,11 +353,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
-    /**
-     * The form asks for a band rather than two figures - it still has to
-     * land in budget_min_amd/budget_max_amd, which is what partner matching
-     * reads (see QuoteRequestController::applyBudgetBand).
-     */
     public function test_a_budget_band_is_stored_as_its_two_bounds(): void
     {
         $this->tourismPartner();
@@ -419,10 +377,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertNull($request->budget_max_amd);
     }
 
-    /**
-     * "Flexible" is a stated answer meaning no bound either way - it must
-     * not smuggle in a ceiling that would filter agencies out.
-     */
     public function test_a_flexible_budget_stores_no_bounds(): void
     {
         $this->tourismPartner();
@@ -444,10 +398,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
-    /**
-     * Anything still submitting explicit figures - the voice extraction, or
-     * any non-form caller - keeps working exactly as before.
-     */
     public function test_explicit_budget_figures_are_still_accepted(): void
     {
         $this->tourismPartner();
@@ -490,10 +440,6 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(0, QuoteRequest::count());
     }
 
-    /**
-     * A double-tapped submit must not fan the same trip out twice - see
-     * QuoteRequestController::existingOpenRequest().
-     */
     public function test_resubmitting_the_same_trip_reuses_the_existing_request(): void
     {
         $this->tourismPartner();
@@ -548,8 +494,7 @@ class TravelRequestBriefTest extends TestCase
         $this->assertSame(QuoteRequestStatus::EXPIRED, $request->currentStatus());
         $this->assertFalse($request->is_open);
 
-        // Derived, never stored - the column still holds the state it was
-        // last actually put into.
+        // Derived, never stored - the column still holds the state it was last actually put into.
         $this->assertSame(QuoteRequestStatus::SUBMITTED->value, $request->getRawOriginal('status'));
     }
 

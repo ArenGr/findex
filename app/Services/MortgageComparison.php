@@ -8,48 +8,15 @@ use App\Support\Mortgage\MortgageScenario;
 use App\Support\Mortgage\RankedMortgage;
 use Illuminate\Support\Collection;
 
-/**
- * Ranks mortgage offers for a borrower, honestly.
- *
- * The three rules that keep the ranking meaningful:
- *   1. Never compare across products. Offers are ranked only within one
- *      (category, currency) cohort - a USD new-build loan and an AMD resale
- *      loan are different questions, and their headline rates aren't
- *      comparable.
- *   2. Rank on the effective rate (APR / փաստացի տոկոսադրույք), which folds
- *      in fees and mandatory insurance - not the headline nominal. Nominal
- *      is only a fallback, and offers ranked on it are badged 'rate_only'.
- *   3. Data quality is part of the ranking. An offer missing a rate can't be
- *      ranked at all (it goes to a separate "incomplete" list); an expired
- *      promo is excluded; a stale or low-tier figure is badged and demoted.
- *
- * Subsidised cohorts (young-family buy-down, NMC) are ranked in their own
- * cohort because eligibility gates who can take them - the offer row already
- * stores the post-buy-down rate, so no extra modelling is needed here. The
- * income-tax (IJEV) refund is deliberately NOT applied in this base ranker:
- * it depends on the borrower's tax paid, the property being primary-market,
- * the region, and the agreement date, so it belongs in an opt-in decorator,
- * not the default comparison.
- */
+// Ranks mortgage offers for a borrower, honestly.
 class MortgageComparison
 {
-    /**
-     * Categories whose rate is only available to eligible borrowers, ranked
-     * as their own cohort rather than mixed in with open-market products.
-     */
     public const SUBSIDIZED_CATEGORIES = ['young_family', 'nmc'];
 
-    /**
-     * How far a figure can drift from "now" before it is flagged stale. A
-     * daily scrape means anything older than this went unrefreshed - the
-     * source probably changed shape or started blocking us.
-     */
+    // How far a figure can drift from "now" before it is flagged stale.
     private const STALE_AFTER_DAYS = 45;
 
-    /**
-     * Trust order for where a figure came from, high to low. A fresh
-     * official page should never be outranked by a news snippet on a tie.
-     */
+    // Trust order for where a figure came from, high to low.
     private const SOURCE_TIER_RANK = [
         'official_page' => 0,
         'official_pdf' => 1,
@@ -154,11 +121,7 @@ class MortgageComparison
         );
     }
 
-    /**
-     * A missing constraint is not a disqualification - only a stated one the
-     * scenario violates. (An offer that doesn't publish its amount band is
-     * not thereby ineligible; it just can't be checked on that axis.)
-     */
+    // A missing constraint is not a disqualification - only a stated one the scenario violates.
     private function isEligible(MortgageOffer $offer, MortgageScenario $scenario): bool
     {
         if ($offer->min_amount !== null && $scenario->amount < (float) $offer->min_amount) {
@@ -187,10 +150,6 @@ class MortgageComparison
     }
 
     /**
-     * Standard annuity: the level monthly payment that amortises `principal`
-     * over `months` at the given annual rate, and the total paid across the
-     * term. A zero rate degenerates to straight-line repayment.
-     *
      * @return array{0: float, 1: float} [monthly payment, total cost]
      */
     private function annuity(float $principal, float $annualRatePercent, int $months): array
@@ -208,12 +167,6 @@ class MortgageComparison
         return [$payment, $payment * $months];
     }
 
-    /**
-     * Cheapest effective rate first, then the tie-breakers in the order that
-     * matters to a borrower: a lower required down payment, a longer term
-     * ceiling (more flexibility), a fixed rate over a floating one, a more
-     * trustworthy source, and finally the fresher figure.
-     */
     private function comparator(): callable
     {
         return function (RankedMortgage $a, RankedMortgage $b): int {

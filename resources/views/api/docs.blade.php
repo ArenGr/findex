@@ -39,8 +39,6 @@
 
         <h2 class="mt-12 font-heading text-xl font-semibold break-words text-ink">{{ __('api.plans') }}</h2>
 
-        {{-- Read straight from config/api.php, so this page cannot disagree
-        with what the limiter actually enforces. --}}
         <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ($plans as $slug => $plan)
                 <div class="flex min-w-0 flex-col rounded-xl border border-placeholder bg-white p-5">
@@ -72,8 +70,6 @@
         <h2 class="mt-12 font-heading text-xl font-semibold break-words text-ink">{{ __('api.widgets') }}</h2>
         <p class="mt-2 max-w-2xl text-sm leading-relaxed break-words text-muted">{{ __('api.widgets_tagline') }}</p>
 
-        {{-- Live, not screenshots: the embed on this page is the same URL the
-        copy-paste below produces, so what a customer sees is what they get. --}}
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
             @foreach ([
                 'rate' => __('api.widget_rate'),

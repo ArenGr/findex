@@ -12,13 +12,6 @@ class BranchScraper
 {
     public const SOURCE_TYPE = 'branches';
 
-    /**
-     * Below this, a listing that came back short is treated as a broken
-     * parser rather than a bank that closed everything overnight, and the
-     * retire-the-missing step is skipped. Banks here run between 3 and 60
-     * branches, so a scrape returning a single row is far more likely to be
-     * a markup change than real news.
-     */
     private const MIN_BRANCHES_TO_RETIRE_OTHERS = 3;
 
     public function __construct(
@@ -88,10 +81,6 @@ class BranchScraper
                     continue;
                 }
 
-                // Keyed on the address rather than the name: banks rename
-                // branches ("Avan" becoming "Avan 2") far more readily than
-                // they move them, and keying on the name would leave the old
-                // row behind as a duplicate of a branch that still exists.
                 $record = Branch::updateOrCreate(
                     ['organization_id' => $organization->id, 'address' => $address],
                     [
@@ -114,9 +103,7 @@ class BranchScraper
     }
 
     /**
-     * A branch the bank has stopped listing has almost certainly closed. It
-     * is deactivated rather than deleted: reviews and any history hang off
-     * it, and a branch that vanishes from the table takes them with it.
+     * A branch the bank has stopped listing has almost certainly closed.
      *
      * @param  array<int, int>  $seen
      */

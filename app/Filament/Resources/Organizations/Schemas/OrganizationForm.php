@@ -34,10 +34,6 @@ class OrganizationForm
                     ->image()
                     ->disk('public')
                     ->directory('organizations/logos'),
-                // One description per site language (see
-                // config('localization.available')) - Organization
-                // no longer has a single 'description' column, see
-                // 2026_07_14_000001_add_localized_description_to_organizations_table.
                 Textarea::make('description_hy')
                     ->label('Description (Armenian)')
                     ->columnSpanFull(),

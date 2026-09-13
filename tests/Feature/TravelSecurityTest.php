@@ -15,11 +15,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * The security properties of the travel flow that are easy to regress
- * silently: where an offer attachment lives and who may fetch it, and
- * whether a browser-supplied URL can bounce a visitor off the site.
- */
 class TravelSecurityTest extends TestCase
 {
     use RefreshDatabase;
@@ -79,15 +74,8 @@ class TravelSecurityTest extends TestCase
         $this->offer->forceFill(['attachment_path' => $path])->save();
     }
 
-    /* -----------------------------------------------------------------
-     * Attachments
-     * ----------------------------------------------------------------- */
+    // ----------------------------------------------------------------- Attachments
 
-    /**
-     * The point of the whole change: a quote attachment is one traveller's
-     * pricing, so it must not sit on the public disk where its URL works
-     * forever for anyone who ever receives it.
-     */
     public function test_an_uploaded_attachment_is_not_stored_on_the_public_disk(): void
     {
         Storage::fake('local');
@@ -158,10 +146,6 @@ class TravelSecurityTest extends TestCase
         ]))->assertForbidden();
     }
 
-    /**
-     * The response token is one agency's credential - it must not reach
-     * another agency's file by guessing a suggestion id.
-     */
     public function test_an_agency_token_cannot_fetch_another_agencys_attachment(): void
     {
         $this->attachFile();
@@ -197,14 +181,9 @@ class TravelSecurityTest extends TestCase
         ]))->assertOk()->assertDownload();
     }
 
-    /* -----------------------------------------------------------------
-     * Open redirect
-     * ----------------------------------------------------------------- */
+    // ----------------------------------------------------------------- Open redirect
 
-    /**
-     * Referer is browser-supplied. Honouring it unchecked turns a link that
-     * starts on this domain into one that silently lands somewhere else.
-     */
+    // Referer is browser-supplied.
     public function test_selecting_an_offer_ignores_an_off_site_referer(): void
     {
         $response = $this->actingAs($this->owner)->post(
@@ -236,9 +215,7 @@ class TravelSecurityTest extends TestCase
         )->assertRedirect($onSite);
     }
 
-    /**
-     * The guard itself, including the shapes that look relative but aren't.
-     */
+    // The guard itself, including the shapes that look relative but aren't.
     public function test_the_redirect_guard_rejects_every_off_site_shape(): void
     {
         $request = Request::create('https://findex.am/en/tourism', 'GET');

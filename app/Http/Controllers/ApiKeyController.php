@@ -29,8 +29,7 @@ class ApiKeyController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:60'],
-            // Only the plans a customer can actually sign up to. Enterprise is
-            // a conversation, not a button.
+            // Only the plans a customer can actually sign up to.
             'plan' => ['required', Rule::in(['free'])],
         ]);
 
@@ -40,8 +39,6 @@ class ApiKeyController extends Controller
             'plan' => $validated['plan'],
         ]);
 
-        // Flashed, not stored: this is the only moment the key exists in a form
-        // anyone can read, and the page says so.
         return redirect()->route('api.keys.index')->with('new_api_key', $token);
     }
 
@@ -49,8 +46,6 @@ class ApiKeyController extends Controller
     {
         abort_unless($apiKey->user_id === $request->user()->id, 403);
 
-        // Revoked rather than deleted, so the usage counted against it survives
-        // for reporting and billing questions.
         $apiKey->forceFill(['revoked_at' => now()])->save();
 
         return redirect()->route('api.keys.index')->with('status', 'api-key-revoked');

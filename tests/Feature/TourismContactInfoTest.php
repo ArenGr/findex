@@ -10,12 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers surfacing an org's contact info (entered on the response form, see
- * PartnerResponseController::store) to the customer on the results page -
- * the step after a customer sees an offer they like, and to the org on
- * their own dashboard.
- */
 class TourismContactInfoTest extends TestCase
 {
     use RefreshDatabase;

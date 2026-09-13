@@ -11,12 +11,6 @@ use App\Services\RateHistoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * The history table is a list of MOVES, not a daily log - RateScraper only
- * appends a row when a rate actually changed. Every assertion here exists
- * because grouping it by date instead would report the days nobody repriced as
- * days with no market.
- */
 class RateHistoryTest extends TestCase
 {
     use RefreshDatabase;
@@ -31,8 +25,7 @@ class RateHistoryTest extends TestCase
         $rate = CurrencyRate::create(['organization_id' => $org->id, 'currency_id' => $usd->id,
             'rate_type' => RateType::CASH, 'buy_rate' => 366, 'sell_rate' => 370, 'scraped_at' => now()]);
 
-        // Moved eight days ago and again yesterday. Everything between has no
-        // rows at all - the rate simply held.
+        // Moved eight days ago and again yesterday.
         foreach ([[8, 360.0, 364.0], [1, 366.0, 370.0]] as [$daysAgo, $buy, $sell]) {
             CurrencyRateHistory::create([
                 'currency_rate_id' => $rate->id, 'buy_rate' => $buy, 'sell_rate' => $sell,
@@ -43,22 +36,17 @@ class RateHistoryTest extends TestCase
         return $usd;
     }
 
-    /**
-     * The days between two moves are not gaps. A rate set on Monday was still
-     * on the board on Wednesday, and a chart that omits Wednesday is wrong.
-     */
+    // The days between two moves are not gaps.
     public function test_a_rate_that_did_not_move_still_counts_on_the_days_between(): void
     {
         $usd = $this->seedHistory();
 
         $series = app(RateHistoryService::class)->marketSeries($usd->id, RateType::CASH, 7);
 
-        // Seven days asked for, seven days drawn - none skipped for want of a
-        // snapshot.
+        // Seven days asked for, seven days drawn - none skipped for want of a snapshot.
         $this->assertCount(7, $series);
 
-        // Days six through two carry the eight-day-old value forward rather
-        // than vanishing from the chart.
+        // Days six through two carry the eight-day-old value forward rather than vanishing from the chart.
         foreach ([0, 1, 2, 3, 4] as $index) {
             $this->assertSame(360.0, $series[$index]['best_buy'], "day {$index} should carry the last known rate");
         }
@@ -80,10 +68,6 @@ class RateHistoryTest extends TestCase
         $this->assertContains(now()->subDays(8)->toDateString(), $dates);
     }
 
-    /**
-     * Offering "1 year" over a week of history would draw a chart that is
-     * mostly a straight line and entirely a lie.
-     */
     public function test_only_ranges_the_data_covers_are_offered(): void
     {
         $this->seedHistory();

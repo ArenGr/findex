@@ -14,8 +14,8 @@ and `public/images/logo/`. Nothing else has to change - the layouts and
 | source | what it is | what it becomes |
 |---|---|---|
 | `findex-mark-source.png` | the leaf mark alone, 2048², transparent | `favicon.ico` (16/32/48), `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png` |
-| `findex-wordmark-source.png` | mark + "Findex", transparent | `images/logo/logo.png` |
-| `findex-wordmark-tagline-source.png` | the same with "Your Guide to Better Choices" | `images/logo/logo-tagline.png` |
+| `findex-wordmark-source.png` | the lockup, transparent - the leaf stands in for the F, so the type reads "index" | `images/logo/logo.png` |
+| `findex-wordmark-tagline-source.png` | an older lockup, spelling "Findex" in full under the tagline | `images/logo/logo-tagline.png` |
 
 ## Why the build trims them
 
@@ -32,6 +32,14 @@ whatever canvas they arrived on.
 because the header shows it 32px tall and the tagline would be about three
 pixels of that. `logo-tagline.png` is built for anywhere it can be set large
 enough to read.
+
+The two no longer match: the tagline lockup still spells "Findex" in full,
+while the current wordmark lets the leaf be the F. Replace
+`findex-wordmark-tagline-source.png` and re-run before using it anywhere.
+
+`<x-brand-logo>` carries the wordmark's aspect ratio as `width`/`height` so the
+row does not reflow while it decodes - currently 127x32. Change the ratio of
+the source and that pair has to move with it.
 
 The wordmark is near-black, so it needs a light ground. There is no light-on-dark
 variant in the set; if one is ever needed it has to come from the designer

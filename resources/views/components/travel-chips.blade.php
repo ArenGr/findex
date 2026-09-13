@@ -5,15 +5,10 @@
     'multiple' => false,
     'selected' => null,
     'icons' => [],
-    // Optional Alpine method name taking an option value and returning
-    // whether that option is currently unavailable - used by the priorities
-    // group to grey out the chips past its cap.
     'lock' => null,
 ])
 
 @php
-    // A multi-select posts an array, so the submitted name carries the []
-    // suffix - but old() and the error bag are both keyed on the bare name.
     $field = $multiple ? $name . '[]' : $name;
     $current = old($name, $selected);
     $chosen = $multiple ? (array) ($current ?? []) : $current;
@@ -22,9 +17,6 @@
     $pill = 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs transition-colors';
 @endphp
 
-{{-- fieldset/legend rather than a div and a <p>: these are genuine groups
-     of related controls, and without it a screen reader reads each chip
-     with no idea which question it answers. --}}
 <fieldset {{ $attributes->only('class') }}>
     @if ($label)
         <legend class="mb-2.5 block text-xs font-semibold text-gray-600">{{ $label }}</legend>
@@ -47,15 +39,10 @@
                     value="{{ $value }}"
                     @checked($isChosen)
                     @if ($lock) x-bind:disabled="{{ $lock }}(@js((string) $value))" @endif
-                    {{-- x-model and friends are forwarded so the live summary
-                         reads the same state the form submits, rather than a
-                         second copy that has to be kept in step. --}}
                     {{ $attributes->except('class') }}
                     class="peer sr-only"
                 >
                 <span class="{{ $pill }} border-gray-200 bg-white font-medium text-gray-700 peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-200 group-hover:bg-gray-50/70">
-                    {{-- Shown only when the pill is selected (via the peer input),
-                         so the choice reads as chosen without relying on colour. --}}
                     <span data-check class="hidden shrink-0 text-travel-600">
                         <x-travel-icon name="check" class="h-3.5 w-3.5" />
                     </span>

@@ -10,30 +10,12 @@ use RuntimeException;
 
 class VoiceFillController extends Controller
 {
-    /**
-     * Backs the "fill by voice" button on the trip request form. Takes a
-     * short in-browser audio recording, returns the trip fields extracted
-     * from it as JSON, and the page's own JS fills the actual form inputs -
-     * this endpoint never touches QuoteRequest itself, so a bad or empty
-     * extraction just leaves the form as the visitor left it.
-     *
-     * Validated by hand rather than via $request->validate() - this route
-     * isn't under api/*, and bootstrap/app.php's shouldRenderJsonWhen only
-     * turns a ValidationException into JSON for those, so the framework's
-     * default handling would redirect a failure back to the page instead of
-     * returning JSON, which the frontend's fetch() call can't act on.
-     */
+    // Backs the "fill by voice" button on the trip request form.
     public function store(Request $request, VoiceTripFillService $voiceFill): JsonResponse
     {
-        // Hidden means off, not just invisible: this endpoint spends money per
-        // call, so leaving it reachable while the card is gone would be a
-        // button nobody can see and anybody can press.
         abort_unless(config('services.openai.voice_fill'), 404);
 
         $validator = Validator::make($request->all(), [
-            // Short recordings only - MediaRecorder output on the frontend
-            // is capped at 60 seconds, so anything near this limit already
-            // indicates a non-recording upload.
             'audio' => ['required', 'file', 'max:10240', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,video/webm'],
         ]);
 

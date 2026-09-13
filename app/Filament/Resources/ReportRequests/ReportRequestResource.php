@@ -23,12 +23,6 @@ class ReportRequestResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Organizations';
 
-    /**
-     * Requests are only ever created from the organization dashboard (which
-     * dispatches GenerateReportJob) - creating one here would just insert a
-     * row with no job behind it, so that path is disabled. Editing is still
-     * allowed, e.g. to manually reset a stuck request back to "pending".
-     */
     public static function canCreate(): bool
     {
         return false;

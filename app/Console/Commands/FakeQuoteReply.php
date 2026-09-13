@@ -6,16 +6,6 @@ use App\Models\Organization;
 use App\Models\QuoteResponse;
 use Illuminate\Console\Command;
 
-/**
- * Local-testing tool: a real offer normally arrives by a partner submitting
- * the secure response form (see PartnerResponseController), which requires
- * clicking a real link a live Telegram send would have delivered. Demo
- * partners (see TourismDemoSeeder) have a fake telegram_chat_id, so
- * SendQuoteRequestToPartnersJob's real send to them fails - but the pending
- * QuoteResponse row (with its response_token) is still created regardless of
- * delivery success, so this command just fills that row in directly to
- * preview the results page without a real Telegram round trip.
- */
 class FakeQuoteReply extends Command
 {
     /**

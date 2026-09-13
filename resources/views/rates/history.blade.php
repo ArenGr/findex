@@ -16,8 +16,6 @@
             {{ __('rates.history.subheading', ['code' => $code, 'count' => $availableDays]) }}
         </p>
 
-        {{-- Currency is the only question with no sensible default here either,
-        so it is the one asked on sight - the same strip as /rates. --}}
         <div class="mt-8 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
             @foreach ($currencies as $currency)
                 <a
@@ -35,10 +33,7 @@
                 <p class="text-sm text-muted">{{ __('rates.history.more_soon') }}</p>
             </div>
         @else
-            {{-- Only the ranges the data covers. A "1 year" tab over ten days of
-            history would draw a chart that is mostly a straight line and
-            entirely a lie, so the ones we cannot draw yet are named as coming
-            rather than silently missing. --}}
+            {{-- Only the ranges the data covers. --}}
             <div class="mt-6 flex flex-wrap items-center gap-2">
                 @foreach ($ranges as $range)
                     <a
@@ -92,8 +87,6 @@
                             <span class="font-semibold tabular-nums {{ $card['tone'] }}">{{ number_format($card['stat']['low'], 2) }}</span>
                         </p>
 
-                        {{-- Only with at least two points behind it: one reading
-                        against its own average is always exactly zero. --}}
                         @if ($card['change'] !== null)
                             <p class="mt-1 text-sm break-words text-muted tabular-nums">
                                 {{ __('rates.history.vs_average', ['value' => ($card['change'] > 0 ? '+' : '').$card['change'], 'days' => $days]) }}

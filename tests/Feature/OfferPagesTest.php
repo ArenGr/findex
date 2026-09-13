@@ -26,16 +26,6 @@ class OfferPagesTest extends TestCase
         $response->assertSee('Credit Cards');
     }
 
-    /**
-     * Regression test: OfferController::show() previously declared only
-     * `string $category` (no leading `$locale`) - since Laravel binds route
-     * parameters to controller parameters by position, not name, that made
-     * $category silently receive the *locale* segment's value instead
-     * ('en'/'hy'/'ru'), which never matches a real category key and 404s
-     * every single request. Exercised across all three locales here so any
-     * regression back to that positional-binding bug fails immediately,
-     * not just on the default locale.
-     */
     public function test_an_available_category_page_loads_in_every_locale(): void
     {
         foreach (['en', 'hy', 'ru'] as $locale) {
@@ -66,14 +56,6 @@ class OfferPagesTest extends TestCase
         $response->assertNotFound();
     }
 
-    /**
-     * /banks/all (the bank directory - OrganizationController::banks(),
-     * unrelated to the {category} product pages) sits right next to the
-     * {category} wildcard route - only the regex whitelist on that route
-     * (see routes/web/public/pages.php) keeps "all" from being swallowed
-     * as an unrecognized category and 404ing instead of reaching the
-     * directory.
-     */
     public function test_the_bank_directory_is_reachable_and_not_swallowed_by_the_category_wildcard(): void
     {
         $response = $this->get(route('banks.all', ['locale' => 'en']));

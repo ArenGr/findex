@@ -1,10 +1,6 @@
 @props(['response', 'organization' => null, 'fallback' => null])
 
 @php
-    // The details this agency gave when answering this particular request
-    // take priority over whatever is on its public profile - that's the
-    // number it asked to be reached on about this quote. The profile is a
-    // fallback, not a replacement.
     $profile = $organization ?? $response->organization;
 
     $channels = array_filter([

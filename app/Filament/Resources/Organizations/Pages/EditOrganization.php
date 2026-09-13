@@ -16,11 +16,6 @@ class EditOrganization extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            // One-click approve/suspend, matching OrganizationsTable's row
-            // action - the topbar "Review" notification (see
-            // RegisteredOrganizationController) lands here, so approving a
-            // pending org shouldn't require finding the "Approved" toggle
-            // buried in the form below and remembering to hit Save.
             Action::make('toggleApproval')
                 ->label(fn () => $this->getRecord()->is_active ? 'Suspend' : 'Approve')
                 ->icon(fn () => $this->getRecord()->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')

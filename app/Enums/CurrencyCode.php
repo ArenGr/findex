@@ -2,11 +2,7 @@
 
 namespace App\Enums;
 
-/**
- * The set of currencies we track across every organization. A bank may
- * publish more currencies than this - anything outside this list is
- * discarded during parsing/saving.
- */
+// The set of currencies we track across every organization.
 enum CurrencyCode: string
 {
     case USD = 'USD';

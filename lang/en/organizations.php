@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'breadcrumb' => 'Breadcrumb',
+    'compare_selected' => 'Compare selected',
     'website' => 'Website',
     'type' => 'Type',
     'country' => 'Country',

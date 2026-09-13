@@ -12,18 +12,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers PartnerReplyHandler: the /start <token> connect deep link (see
- * TourismController::index, which generates the token) and the "Not
- * Interested" inline-button callback. Giving an actual quote happens on the
- * secure web response page (see PartnerResponseController), not by typing a
- * reply in Telegram - see that controller's tests for the response flow.
- *
- * The same /start <token> deep link also connects a customer's account for
- * rate alerts (see RateAlertController, users.telegram_connect_token) -
- * covered here too since it's the same handler and token space, just a
- * different model.
- */
 class TelegramPartnerFlowTest extends TestCase
 {
     use RefreshDatabase;
@@ -164,10 +152,6 @@ class TelegramPartnerFlowTest extends TestCase
 
     public function test_a_decline_from_another_organizations_chat_is_ignored(): void
     {
-        // callback_data is client-supplied, so the response id alone can't
-        // authorize the decline - it must come from the chat that actually
-        // received the message, or a partner could knock a competitor out
-        // of the traveler's results by guessing the (sequential) id.
         $response = $this->pendingResponse();
 
         $this->mock(TelegramClient::class, function ($mock) {

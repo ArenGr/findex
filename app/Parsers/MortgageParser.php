@@ -5,12 +5,6 @@ namespace App\Parsers;
 interface MortgageParser
 {
     /**
-     * `apr_min`/`apr_max` (the published "actual" rate / փաստացի
-     * տոկոսադրույք) and `source_tier` are optional: a parser that can reach
-     * the APR - usually one page deeper than the headline nominal - should
-     * return it, since the comparison ranks on APR when present. Omitting
-     * them is fine; the offer then ranks on its nominal rate.
-     *
      * @return array<int, array{
      *     currency: string,
      *     rate_type: string,

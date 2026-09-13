@@ -1,12 +1,6 @@
 @php
     use App\Support\TravelHero;
 
-    // Every row derives from the same Alpine state the form submits - see
-    // resources/js/travel-request-form.js. Nothing here holds its own copy, so
-    // the summary cannot drift from what is about to be sent. In the stepped
-    // flow this panel is read-only: consent and submit live on the final step.
-    //
-    // One glyph per row, so a row is recognisable before it is read.
     $rows = [
         ['label' => __('tourism.request.summary_destination'), 'value' => 'destinationSummary', 'icon' => 'location_on'],
         ['label' => __('tourism.request.summary_dates'), 'value' => 'datesSummary', 'icon' => 'calendar_month'],
@@ -18,9 +12,6 @@
 
     $emptyArt = TravelHero::asset('trip-empty');
 
-    // The server's answer to Alpine's hasAnyDetail, so the branch that paints
-    // first is the branch that stays. Cloaking both left the panel blank until
-    // Alpine booted; cloaking neither showed both for a frame.
     $hasDetail = (bool) (
         trim((string) old('departure_location', ''))
         || array_filter((array) old('destination_countries', []))
@@ -33,9 +24,7 @@
     );
 @endphp
 
-{{-- What you have told us so far. Sticky on desktop, so it is still there when
-     the fields it is summarising have scrolled past. The tip below it is a
-     card of its own rather than a panel inside the panel. --}}
+{{-- What you have told us so far. --}}
 <div id="travel-request-summary" class="scroll-mt-24 space-y-4 lg:sticky lg:top-24">
     <div class="space-y-6 rounded-2xl border border-gray-200/80 bg-white p-6 shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -92,8 +81,6 @@
                     </div>
                 @endforeach
 
-                {{-- Budget sits below a rule: it is the one row that is still
-                     blank by the time the other six are answered. --}}
                 <div class="flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
                     <dt class="flex shrink-0 items-center gap-2 text-gray-500">
                         <x-travel-icon name="wallet" class="h-4 w-4 text-travel-600" />
@@ -121,8 +108,6 @@
         </div>
     </div>
 
-    {{-- Says what the panel above is for: the rows are only worth filling in
-         because fuller answers come back as better offers. --}}
     <div class="flex items-start gap-3 rounded-2xl border border-travel-200/80 bg-travel-50/70 p-4">
         <x-travel-icon name="lightbulb" class="mt-0.5 h-5 w-5 text-travel-600" />
         <span class="min-w-0">

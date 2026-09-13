@@ -7,10 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('meta.home_title'))</title>
 
-    {{-- Built from resources/images/brand by `npm run brand:assets`. No SVG:
-         the mark is a raster original, and the SVG that used to be served here
-         - and preferred by every browser that supports it - was a green "F"
-         tile from the brand before this one. --}}
+    {{-- Built from resources/images/brand by `npm run brand:assets`. --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" type="image/png" sizes="32x32">
     <link rel="icon" href="{{ asset('favicon-16x16.png') }}" type="image/png" sizes="16x16">
@@ -47,14 +44,10 @@
             @endif
         @endforeach
     @endforeach
-    {{-- Pages that use a face the rest of the site does not - the travel
-         request flow and its Manrope - push their own preloads here rather
-         than taxing every other page with them. --}}
     @stack('head')
 </head>
 <body class="flex min-h-dvh flex-col bg-white font-sans text-body-text antialiased">
-    {{-- A page opts into the floating capsule with
-         @section('header-style', 'floating'). Everything else keeps the flat bar. --}}
+    {{-- A page opts into the floating capsule with @section('header-style', 'floating'). --}}
     <x-site-header :floating="$__env->yieldContent('header-style') === 'floating'" />
 
     @if (session('status') === 'email-verified')

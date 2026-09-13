@@ -6,11 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Standard Laravel notifications table (Illuminate\Notifications\DatabaseNotification)
-     * - backs the admin panel's topbar notification bell (see AdminPanelProvider's
-     * ->databaseNotifications()) and any future notifiable model.
-     */
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {

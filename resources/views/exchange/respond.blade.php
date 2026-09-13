@@ -13,10 +13,7 @@
             @php $request = $response->exchangeQuoteRequest; @endphp
 
             @if ($response->has_replied)
-                {{-- Chosen: the code, and then the one question only this shop
-                can answer. Findex has no affiliate link and no payment passing
-                through it, so if the counter does not say whether the customer
-                turned up, nobody does. --}}
+                {{-- Chosen: the code, and then the one question only this shop can answer. --}}
                 @if ($response->is_accepted)
                     <div class="rounded-2xl border-2 border-primary/40 bg-primary/5 p-6">
                         <h1 class="font-heading text-xl font-semibold break-words text-ink">{{ __('exchange_quotes.outcome.accepted_heading') }}</h1>

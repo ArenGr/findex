@@ -8,16 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Tells an agency a travel request is waiting for it.
- *
- * The fallback for agencies with no Telegram chat connected, which used to
- * be nobody - matching required a connected chat, so Telegram was the only
- * channel that could ever be needed. Now that an agency can work entirely
- * from its dashboard inbox (see Organization::tourismPartnersForDestination),
- * one that never connected Telegram would otherwise be matched to requests
- * and never told about them.
- */
+// Tells an agency a travel request is waiting for it.
 class TravelRequestReceived extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;

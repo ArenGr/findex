@@ -18,13 +18,7 @@ use GuzzleHttp\Psr7\Request as PsrRequest;
 use GuzzleHttp\Psr7\Response;
 use Tests\TestCase;
 
-/**
- * The two live insurer integrations, driven off recorded responses.
- *
- * Every fixture here is a real response body observed against the live API,
- * with the plate and ID that produced it left out - the point of the flow is
- * that those never get written down, and a test fixture is written down.
- */
+// The two live insurer integrations, driven off recorded responses.
 class InsuranceProviderTest extends TestCase
 {
     private function request(int $termMonths = 12, string $locale = 'en'): AutoInsuranceRequest
@@ -85,9 +79,6 @@ class InsuranceProviderTest extends TestCase
 
     public function test_a_dead_endpoint_declines_rather_than_throwing(): void
     {
-        // One insurer being unreachable must not take the whole comparison
-        // down with it - and the exception must not escape, because its
-        // message would carry the URL and with it the ID number.
         $http = $this->http([
             new ConnectException('cURL error 28: timeout for https://ingoarmenia.am/api/appa/price?idNumber=AN1234567', new PsrRequest('GET', 'https://ingoarmenia.am')),
         ]);
@@ -113,9 +104,6 @@ class InsuranceProviderTest extends TestCase
 
     public function test_armenia_insurance_treats_a_non_zero_error_code_as_bad_input(): void
     {
-        // The trap: a failure here arrives inside a 201, not as an HTTP
-        // error, so a provider that only checked the status would store the
-        // absence of a premium as a decline and hide a fixable typo.
         $http = $this->http([
             new Response(201, [], '{"responseData":{"errorCode":"33","errorText":"Vehicle owner mismatch","premium":null}}'),
         ]);
@@ -128,9 +116,6 @@ class InsuranceProviderTest extends TestCase
 
     public function test_a_missing_rating_factor_declines_rather_than_blocking_the_whole_request(): void
     {
-        // "BM class of insured is required" is this insurer unable to price,
-        // not the user's ID being wrong - so it must NOT throw (which would
-        // roll back every other insurer's quote too), it declines.
         $http = $this->http([
             new Response(201, [], '{"responseData":{"errorCode":"12","errorText":"BM class of insured is required","premium":null}}'),
         ]);

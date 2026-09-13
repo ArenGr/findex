@@ -8,28 +8,13 @@ use App\Services\Cache\RateCache;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * What the market did, day by day.
- *
- * The one thing to understand before reading any of this: RateScraper only
- * writes a history row when a rate actually CHANGED. So the table is a list of
- * moves, not a daily log - grouping it by date would report the days nobody
- * repriced as days with no data, and average away half the market.
- *
- * Every series here therefore carries the last known value forward: a rate that
- * has not moved since Tuesday still counted on Wednesday, because it was still
- * on the board. A rate with no snapshot at or before a given day is genuinely
- * unknown and is left out of that day rather than guessed at.
- */
+// What the market did, day by day.
 class RateHistoryService
 {
     /** Ranges worth offering, longest first. Only those the data covers survive. */
     public const RANGES = [7, 30, 90, 365];
 
-    /**
-     * How many days of history we actually hold. Everything else keys off this,
-     * so a range is never offered that would draw a flat line from nothing.
-     */
+    // How many days of history we actually hold.
     public function availableDays(): int
     {
         $earliest = Cache::tags([RateCache::TAG])->remember(
@@ -42,10 +27,6 @@ class RateHistoryService
     }
 
     /**
-     * The ranges there is enough data to draw honestly, plus how far the data
-     * actually reaches - so the page can say "30 days" is coming rather than
-     * silently omitting it.
-     *
      * @return array<int, int>
      */
     public function offerableRanges(): array
@@ -57,15 +38,11 @@ class RateHistoryService
             fn (int $days) => $days <= $available,
         ));
 
-        // Always offer something. With four days on file, a four-day chart is
-        // still a true chart - it just is not a week.
+        // Always offer something.
         return $ranges === [] ? [max(1, $available)] : $ranges;
     }
 
     /**
-     * One point per day for a currency: the best rate available on each side,
-     * and the average across everyone quoting.
-     *
      * @return array<int, array{date: string, best_buy: float|null, best_sell: float|null, average_buy: float|null, average_sell: float|null}>
      */
     public function marketSeries(int $currencyId, RateType $type, int $days): array
@@ -81,9 +58,6 @@ class RateHistoryService
     {
         $from = now()->startOfDay()->subDays($days - 1);
 
-        // Every snapshot for this currency and type, including ones older than
-        // the window - the value on day one is whatever was last set before it,
-        // which may have been set weeks earlier.
         $snapshots = CurrencyRateHistory::query()
             ->join('currency_rates', 'currency_rates.id', '=', 'currency_rate_history.currency_rate_id')
             ->join('organizations', 'organizations.id', '=', 'currency_rates.organization_id')
@@ -126,8 +100,7 @@ class RateHistoryService
 
             $series[] = [
                 'date' => $day->toDateString(),
-                // Best for the visitor: the highest anyone buys at, the lowest
-                // anyone sells at.
+                // Best for the visitor: the highest anyone buys at, the lowest anyone sells at.
                 'best_buy' => max($buys),
                 'best_sell' => min($sells),
                 'average_buy' => round(array_sum($buys) / count($buys), 2),
@@ -140,9 +113,6 @@ class RateHistoryService
 
     /**
      * One organization's own rate over time, for a single currency.
-     *
-     * Same carry-forward rule as the market series: the days between two moves
-     * are days the rate held, not days it was missing.
      *
      * @return array<int, array{date: string, buy_rate: float, sell_rate: float}>
      */
@@ -196,11 +166,7 @@ class RateHistoryService
         );
     }
 
-    /**
-     * Where today's figure sits against the period it closes. Null when there
-     * is nothing to compare against, rather than 0% - "unchanged" and "we have
-     * one data point" are different statements.
-     */
+    // Where today's figure sits against the period it closes.
     public function changeAgainstAverage(array $series, string $key): ?float
     {
         $values = array_values(array_filter(array_column($series, $key), fn ($value) => $value !== null));

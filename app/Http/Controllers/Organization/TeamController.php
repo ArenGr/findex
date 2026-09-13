@@ -47,22 +47,12 @@ class TeamController extends Controller
         return redirect()->route('org.dashboard.team.index')->with('status', 'teammate-added');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own users is also
-     * what enforces that an org can only remove its own teammates.
-     */
     public function destroy(string $locale, string $user): RedirectResponse
     {
         $currentUser = Auth::guard('organization')->user();
         $organization = $currentUser->organization;
         $teammate = $organization->users()->findOrFail($user);
 
-        // Mirrors AdminResource::canDelete()'s self/last-remaining guard -
-        // removing either would either lock the acting user out mid-action
-        // or leave the organization with no way to log in at all.
         if ($teammate->is($currentUser) || $organization->users()->count() <= 1) {
             return redirect()->route('org.dashboard.team.index')->with('status', 'teammate-remove-blocked');
         }

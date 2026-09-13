@@ -20,12 +20,6 @@ class CurrencyRateController extends Controller
     {
         $organization = Auth::guard('organization')->user()->organization;
 
-        // Only exchange offices take part in the currency exchange quote
-        // flow (see Organization::exchangePartnersForCurrency - deliberately
-        // 'exchange' only, not banks). A connect link is only useful before
-        // the org has linked their chat - generated lazily so the dashboard
-        // always has a live link to show, same pattern as
-        // Organization\TourismController::index().
         if ($organization->type === 'exchange' && ! $organization->telegram_chat_id && ! $organization->telegram_connect_token) {
             $organization->update(['telegram_connect_token' => Str::random(32)]);
         }
@@ -80,13 +74,6 @@ class CurrencyRateController extends Controller
         return redirect()->route('org.dashboard.rates.index')->with('status', 'rate-saved');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own rates is also
-     * what enforces that an org can only edit its own rates.
-     */
     public function edit(string $locale, string $rate): View
     {
         $organization = Auth::guard('organization')->user()->organization;

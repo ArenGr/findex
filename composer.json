@@ -15,7 +15,6 @@
         "predis/predis": "^2.3",
         "resend/resend-php": "^1.7",
         "sentry/sentry-laravel": "^4.26",
-        "socialiteproviders/apple": "^5.10",
         "symfony/css-selector": "^7.4",
         "symfony/dom-crawler": "^7.4",
         "symfony/intl": "^7.4"

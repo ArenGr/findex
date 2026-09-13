@@ -9,14 +9,6 @@ use App\Models\Organization;
 use App\Services\Cache\RateCache;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * Every rate one organization publishes, grouped by transaction type, with
- * enough market context to say whether each one is worth walking to.
- *
- * Extracted from the controller so the query results can be cached as a plain
- * array - config/cache.php sets 'serializable_classes' => false, so nothing
- * here may return an Eloquent model or a Carbon instance.
- */
 class OrganizationRatesData
 {
     public function build(Organization $organization): array
@@ -42,9 +34,6 @@ class OrganizationRatesData
         $bests = $this->marketBests($rates->pluck('currency_id')->unique()->all());
         $changed = $this->lastChanged($rates->pluck('id')->all());
 
-        // Grouped by transaction type rather than listed flat: cash and card
-        // rates for the same currency are different products at different
-        // prices, and a single list invites reading one as the other.
         $groups = $rates
             ->sortBy(fn (CurrencyRate $rate) => $rate->currency->sort_order)
             ->groupBy(fn (CurrencyRate $rate) => $rate->rate_type->value)
@@ -56,9 +45,6 @@ class OrganizationRatesData
                     'name' => $rate->currency->name,
                     'buy_rate' => (float) $rate->buy_rate,
                     'sell_rate' => (float) $rate->sell_rate,
-                    // Whether this organization holds the best rate in the
-                    // country for that side, which is the one fact a visitor
-                    // cannot work out from this page alone.
                     'best_buy' => $this->matches((float) $rate->buy_rate, $bests[$key]['buy'] ?? null),
                     'best_sell' => $this->matches((float) $rate->sell_rate, $bests[$key]['sell'] ?? null),
                     'scraped_at' => $rate->scraped_at?->toIso8601String(),
@@ -80,9 +66,6 @@ class OrganizationRatesData
     }
 
     /**
-     * The best rate available anywhere for each currency and transaction type
-     * this organization quotes. One grouped query, not one per row.
-     *
      * @param  array<int, int>  $currencyIds
      * @return array<string, array{buy: float, sell: float}>
      */
@@ -104,10 +87,7 @@ class OrganizationRatesData
     }
 
     /**
-     * When each rate last actually moved. RateScraper only appends history on
-     * a change, so the newest snapshot is the last change - which separates an
-     * organization that repriced this morning from one that has not moved in a
-     * week, where "checked today" says the same thing about both.
+     * When each rate last actually moved.
      *
      * @param  array<int, int>  $rateIds
      * @return array<int, string>

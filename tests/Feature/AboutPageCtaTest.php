@@ -6,10 +6,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Regression test for the about-page CTA showing "Sign Up Free" even to
- * users who already have an account and are logged in.
- */
 class AboutPageCtaTest extends TestCase
 {
     use RefreshDatabase;

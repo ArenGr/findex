@@ -11,12 +11,7 @@ use App\Services\Insurance\QuoteIdentity;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
-/**
- * The cache in front of the single quote source. Sil is the only upstream, so
- * the value here is not speed but volume - a refresh or a retry must not cost
- * another pair of calls. And the whole point of hashing the key is that the
- * plate and ID never reach the cache, so those get asserted too.
- */
+// The cache in front of the single quote source.
 class CachedMarketQuoteSourceTest extends TestCase
 {
     private function request(int $term = 12): AutoInsuranceRequest
@@ -34,11 +29,7 @@ class CachedMarketQuoteSourceTest extends TestCase
         return new MarketQuoteDetails('+37400000000', 'a@example.com', '1234567890123456');
     }
 
-    /**
-     * A counting stub so we can prove how many times the inner source ran.
-     * $returns is either the premium array to hand back, or a Throwable to
-     * throw; public $calls records how often it was invoked.
-     */
+    // A counting stub so we can prove how many times the inner source ran.
     private function countingInner(array|\Throwable $returns): MarketQuoteSourceInterface
     {
         return new class($returns) implements MarketQuoteSourceInterface
@@ -92,8 +83,6 @@ class CachedMarketQuoteSourceTest extends TestCase
 
     public function test_the_bank_details_do_not_affect_the_key(): void
     {
-        // Same vehicle, different bank account - still one upstream call,
-        // because the account does not change the premium.
         config(['insurance.quote_cache_ttl' => 1800]);
         $inner = $this->countingInner(['liga-insurance' => '39000.00']);
         $source = $this->source($inner);
@@ -112,8 +101,6 @@ class CachedMarketQuoteSourceTest extends TestCase
 
         $source->premiums($this->request(), $this->identity('01AA123', 'SECRETID99'), $this->details());
 
-        // The key is the sha256 of the inputs, not the inputs - so a lookup
-        // by the raw plate or ID finds nothing, and the hashed key does.
         $this->assertNull(Cache::store('array')->get('01AA123'));
         $this->assertNull(Cache::store('array')->get('SECRETID99'));
 

@@ -1,7 +1,4 @@
 @php
-    // Query results are cached as a plain array by HomeRatesTableData (see
-    // its docblock) - this component only assembles the already-computed
-    // data for display, it doesn't query directly anymore.
     $homeRatesData = app(\App\Services\HomeRatesTableData::class)->build();
     $currencies = $homeRatesData['currencies'];
     $ratesByCurrency = $homeRatesData['ratesByCurrency'];
@@ -40,9 +37,6 @@
             </a>
         </div>
 
-        {{-- The rating star, defined once and <use>d by every row: it is drawn
-             up to 165 times on this page (11 currencies x 5 rate types x 5
-             rows) and the path data is ~180 bytes each time. --}}
         <svg width="0" height="0" aria-hidden="true" class="absolute"><symbol id="findex-star" viewBox="0 0 20 20"><path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" /></symbol></svg>
 
         {{-- Currency tabs --}}

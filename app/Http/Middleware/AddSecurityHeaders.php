@@ -12,7 +12,7 @@ class AddSecurityHeaders
     {
         $response = $next($request);
 
-        if (!$request->routeIs('widgets.*')) {
+        if (! $request->routeIs('widgets.*')) {
             $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         }
 

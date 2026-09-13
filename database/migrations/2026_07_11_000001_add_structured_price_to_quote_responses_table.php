@@ -6,12 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * A structured price, filled in either via the org dashboard's quote
-     * form or parsed from a "Price: 610 USD"-style Telegram reply - lets the
-     * results page show a confirmed figure instead of only ever guessing
-     * one out of the agency's free-text reply_text.
-     */
     public function up(): void
     {
         Schema::table('quote_responses', function (Blueprint $table) {

@@ -71,16 +71,11 @@
 
     $showMarket = collect($ranked['rows'])->pluck('organization_type')->unique()->count() > 1;
 
-
     $labelClass = 'block text-xs font-semibold tracking-wider text-muted uppercase';
 
-    // The home page's card: rounded-2xl, a light border, shadow-sm. Every
-    // surface on this page uses it, so the rates page looks like the rest of
-    // the site rather than like its own product.
+    // The home page's card: rounded-2xl, a light border, shadow-sm.
     $cardClass = 'rounded-2xl border border-placeholder bg-white shadow-sm';
 
-    // Utility filters (open now / near me) and the currency chips share one
-    // shape, so the row reads as one set of controls.
     $pillBase = 'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border px-4 text-sm font-medium transition';
     $pillOff = 'border-placeholder bg-white text-muted hover:border-primary hover:bg-primary/10 hover:text-primary';
     $pillOn = 'border-primary bg-primary text-white hover:bg-primary-dark';
@@ -110,9 +105,7 @@
 @endphp
 
 @section('content')
-    {{-- Hero geometry lives in x-page-hero, shared by every main page. This
-         page chooses its tint and supplies its own illustration; the CTAs and
-         their handlers are unchanged. --}}
+    {{-- Hero geometry lives in x-page-hero, shared by every main page. --}}
     <x-page-hero :title="__('rates.all_heading')" :subtitle="__('rates.all_subheading')">
                 <div class="flex flex-wrap items-center gap-3">
                 @if ($quoteMinimum !== null)
@@ -186,8 +179,7 @@
                 </x-info-popover>
                 </div>
 
-        {{-- Currency composition in Findex greens. Now that every hero shares
-             one tint, the illustration is where this page's identity lives. --}}
+        {{-- Currency composition in Findex greens. --}}
         <x-slot:illustration>
             <div class="relative" aria-hidden="true">
                 <div class="absolute right-4 bottom-2 h-20 w-80 rounded-[50%] bg-primary/5"></div>
@@ -206,8 +198,6 @@
             $everyday = is_array($everyday) && $everyday !== []
                 ? $everyday
                 : $currencies->pluck('code')->all();
-            // The chosen currency is what the whole page is about, so it wears
-            // the brand green rather than a wash of it.
             $currencyChip = fn ($currency) => $selectedCurrency?->id === $currency->id
                 ? 'border-primary bg-primary text-white'
                 : 'border-placeholder bg-white text-muted hover:border-primary hover:bg-primary/10 hover:text-primary';
@@ -251,9 +241,6 @@
                         class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-placeholder bg-white px-4 text-sm font-medium text-muted transition hover:border-primary hover:bg-primary/10 hover:text-primary"
                     >
                         <span x-show="!showAll">+{{ $otherCurrencies->count() }}</span>
-                        {{-- The collapsed label is rendered here as well as bound:
-                             an empty span paints a visibly narrower button until
-                             Alpine fills it in. --}}
                         <span x-text="showAll ? @js(__('rates.currency_fewer')) : @js(__('rates.currency_more'))">{{ __('rates.currency_more') }}</span>
                     </button>
                 @endif
@@ -364,10 +351,6 @@
             ];
         @endphp
 
-        {{-- FILTER BAR (from the approved redesign): search + labelled selects
-             + open-now / near-me, on one card directly above the table. Same
-             URL wiring as the old menu - every control navigates to a $link
-             that sets its own param and carries the rest. --}}
         <section class="{{ $cardClass }} mt-6 p-3">
             <div class="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-stretch">
                 @if ($viewMode !== 'map')
@@ -894,7 +877,6 @@
                 </div>
             </div>
         @endif
-
 
         <p class="mt-8 border-t border-placeholder pt-5 text-xs leading-relaxed break-words text-muted">
             {{ __('rates.disclaimer') }}

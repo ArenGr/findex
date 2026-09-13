@@ -7,10 +7,7 @@
 
     $status = $quoteRequest->currentStatus();
 
-    // The four steps a request moves through, and how far along it is. Every
-    // one is read off persisted state (see QuoteRequest::scopeWithProgressCounts
-    // and QuoteResponse::markViewed) - nothing here advances on a timer or
-    // fills in a step nobody has actually taken.
+    // The four steps a request moves through, and how far along it is.
     $steps = [
         [
             'label' => __('tourism.status_page.step_submitted'),
@@ -43,10 +40,6 @@
         </a>
 
         @if (session('status') === 'quote-request-submitted')
-            {{-- The confirmation moment: a clear "done", then the three-step
-                 Findex process the traveler is now in. Shown only on the fresh
-                 submission flash - a later visit gets the detailed, real-time
-                 progress card below instead of this celebratory one. --}}
             @php
                 $processSteps = [
                     __('tourism.status_page.process_sent'),
@@ -123,8 +116,6 @@
                 <div class="rounded-2xl border border-placeholder bg-white p-6 shadow-sm">
                     <h2 class="font-heading text-base font-semibold text-ink">{{ __('tourism.status_page.progress_heading') }}</h2>
 
-                    {{-- The filled track stops at the last completed step, so
-                    it can never run ahead of what has actually happened. --}}
                     <div class="relative mt-6 pb-2">
                         <div class="absolute top-2 right-2 left-2 h-1 rounded-full bg-placeholder/60"></div>
                         <div
@@ -148,10 +139,6 @@
                     <h2 class="font-heading text-base font-semibold text-ink">{{ __('tourism.status_page.activity_heading') }}</h2>
 
                     @if ($quoteRequest->contacted_count === 0)
-                        {{-- Only reachable if the fan-out job hasn't run yet:
-                        store() refuses to create a request with no matching
-                        agency at all (see the no_partners_for_destination
-                        error), so this is "not sent yet", not "nobody wants it". --}}
                         <p class="mt-3 text-sm text-muted">{{ __('tourism.status_page.no_agencies_yet') }}</p>
                     @else
                         <ul class="mt-4 space-y-3">
@@ -194,8 +181,7 @@
                             <span aria-hidden="true">&rarr;</span>
                         </a>
                     @elseif ($status->isOpen())
-                        {{-- The honest empty state: contacted, nobody has
-                        answered yet. No spinner pretending work is happening. --}}
+                        {{-- The honest empty state: contacted, nobody has answered yet. --}}
                         <p class="mt-6 rounded-lg bg-primary/5 px-4 py-3 text-sm text-muted">
                             {{ __('tourism.status_page.waiting_for_offers') }}
                         </p>

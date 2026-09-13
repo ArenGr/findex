@@ -9,9 +9,6 @@ class AraratbankRateParserTest extends TestCase
 {
     private function fixture(): string
     {
-        // Trimmed real structure: a "cash" wrapper table, a decoy gold-price
-        // table (reusing the same cell markup) that must NOT be swept in,
-        // then the "not-cash" wrapper table.
         return <<<'HTML'
         <div class="exchange__wrapper cash">
             <table class="exchange__table"><tbody>

@@ -21,9 +21,7 @@ class ApproveOrganization extends Command
      */
     protected $description = 'Approve a pending self-registered organization, making its public page visible';
 
-    /**
-     * Execute the console command.
-     */
+    // Execute the console command.
     public function handle(): int
     {
         $organization = Organization::where('slug', $this->argument('slug'))->first();

@@ -22,9 +22,7 @@ class ScrapeMortgages extends Command
      */
     protected $description = 'Scrape mortgage offers from organizations';
 
-    /**
-     * Execute the console command.
-     */
+    // Execute the console command.
     public function handle(MortgageScraper $scraper)
     {
         $organizationSlug = $this->option('organization');

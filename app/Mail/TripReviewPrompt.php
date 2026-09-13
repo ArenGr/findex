@@ -29,10 +29,6 @@ class TripReviewPrompt extends Mailable implements ShouldQueue
 
     public function build(): self
     {
-        // Only offered when this request belongs to a real account - a
-        // guest has nothing persistent to opt out on (see
-        // User::optOutOfReviewPrompts()), so there's no honest unsubscribe
-        // action to offer them here.
         $unsubscribeUrl = $this->quoteRequest->user
             ? URL::signedRoute('tourism.review-prompts.unsubscribe', [
                 'locale' => $this->quoteRequest->locale,

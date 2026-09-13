@@ -9,13 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers the insurance org dashboard - the one vertical that previously had
- * no dashboard page at all (see Organization::hasInsurancePage()). Quotes
- * are generated automatically (no per-request human response like tourism),
- * so this is read-only: quote history plus how many customers marked
- * interest (see AutoInsuranceController::markInterested).
- */
 class OrganizationInsuranceDashboardTest extends TestCase
 {
     use RefreshDatabase;

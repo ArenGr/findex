@@ -11,10 +11,6 @@
 
         <x-form-input name="name" :label="__('org.profile.name')" :value="$organization->name" required />
 
-        {{-- One description per site language (see config('localization.available'))
-             so visitors in each language see a description written for them,
-             rather than whatever language it happened to be entered in -
-             see Organization::getDescriptionAttribute(). --}}
         @foreach (config('localization.available') as $code => $locale)
             <div>
                 <label for="description_{{ $code }}" class="block text-sm font-medium text-ink">

@@ -1,15 +1,4 @@
-/**
- * State for the travel request form (/tourism).
- *
- * A single source of truth for everything the traveller picks: the summary
- * panel, the mobile action bar and the form inputs all read from here, so
- * the summary can never disagree with what is about to be submitted.
- *
- * Lives in a module rather than an x-data attribute because an object this
- * size is unreadable inline - and because a single double quote anywhere
- * inside an x-data="..." attribute closes it and silently discards every
- * property after that point.
- */
+// State for the travel request form (/tourism).
 export default function travelRequestForm(config) {
     return {
         countries: config.countries,
@@ -40,53 +29,32 @@ export default function travelRequestForm(config) {
         priorities: config.priorities,
         maxPriorities: config.maxPriorities,
 
-        // The insurance checkbox is x-model'd in _preferences.blade.php. It was
-        // never declared here, so Alpine threw "insurance is not defined" on
-        // every render of step 2 and the checkbox did not bind at all.
+        // The insurance checkbox is x-model'd in _preferences.blade.php.
         insurance: config.insurance,
 
         // Budget
         budgetBand: config.budgetBand,
         budgetMin: config.budgetMin,
         budgetMax: config.budgetMax,
-        // Opens already expanded when a custom range came back from a failed
-        // submission, so the traveller can see the values being complained
-        // about instead of an empty section.
         customBudgetOpen: Boolean(config.budgetMin || config.budgetMax),
 
         mobileSummaryOpen: false,
 
-        // Multi-step wizard. The form stays a single POST - these only govern
-        // which fields are on screen. initialStep lets a failed submission
-        // reopen the step whose field the server rejected.
+        // Multi-step wizard.
         step: config.initialStep || 1,
         totalSteps: 3,
         consented: config.consented,
 
         init() {
-            // A children count restored from old() can arrive without a
-            // matching set of ages (or with too many); the form must always
-            // render exactly one age field per child.
             this.syncChildAges();
         },
 
-        /* ---------------------------------------------------------------
-         * Popular trips
-         * ------------------------------------------------------------- */
+        // --------------------------------------------------------------- Popular trips
 
         /** The preset last applied, so the chosen card can show as chosen. */
         preset: '',
 
-        /**
-         * Fills the whole request from one of the popular trips and moves to
-         * the last step.
-         *
-         * Every field it touches is a field the traveller could have set by
-         * hand, and none of them lock: the point of landing on step 3 rather
-         * than submitting outright is that the request is there to be read and
-         * changed before it goes. Contact details and consent are still
-         * theirs to give - a preset cannot answer those for them.
-         */
+        // Fills the whole request from one of the popular trips and moves to the last step.
         applyPreset(preset) {
             this.preset = preset.key;
 
@@ -110,15 +78,6 @@ export default function travelRequestForm(config) {
             this.goToStep(this.totalSteps);
         },
 
-        /* ---------------------------------------------------------------
-         * Wizard navigation
-         *
-         * One step is on screen and the other two are display:none - see the
-         * class binding in request.blade.php. There is no measured height and
-         * no stack of screens at opacity 0: the steps replace each other
-         * rather than the card growing to take in the next one's fields.
-         * ------------------------------------------------------------- */
-
         goToStep(n) {
             const target = Math.min(this.totalSteps, Math.max(1, n));
 
@@ -129,14 +88,9 @@ export default function travelRequestForm(config) {
             this.step = target;
             this.scrollToTop();
 
-            // Focus follows the slide, so a keyboard or screen-reader user is
-            // moved to the screen that just replaced the one they were on.
             this.$nextTick(() => this.$refs[`heading${target}`]?.focus({ preventScroll: true }));
         },
 
-        /** Advances only if the current step's own required fields are valid,
-         *  so a step is never left half-answered. The form itself is novalidate
-         *  and the server is the real gate; this is a courtesy check. */
         next() {
             if (!this.validateStep(this.step)) {
                 return;
@@ -147,6 +101,15 @@ export default function travelRequestForm(config) {
 
         back() {
             this.goToStep(this.step - 1);
+        },
+
+        // The search button: straight from the four trip fields to the last step, skipping preferences.
+        toContact() {
+            if (!this.validateStep(1)) {
+                return;
+            }
+
+            this.goToStep(this.totalSteps);
         },
 
         validateStep(n) {
@@ -187,9 +150,7 @@ export default function travelRequestForm(config) {
             return false;
         },
 
-        /* ---------------------------------------------------------------
-         * Destinations
-         * ------------------------------------------------------------- */
+        // --------------------------------------------------------------- Destinations
 
         get destinationsFull() {
             return this.destinations.length >= this.maxDestinations;
@@ -226,17 +187,13 @@ export default function travelRequestForm(config) {
             this.destinations = this.destinations.filter((existing) => existing !== code);
         },
 
-        /* ---------------------------------------------------------------
-         * Dates
-         * ------------------------------------------------------------- */
+        // --------------------------------------------------------------- Dates
 
         get datesAreFlexible() {
             return this.dateFlexibility !== '';
         },
 
         setDateMode(flexible) {
-            // Switching back to exact dates has to clear the window, or the
-            // form would submit a flexibility the traveller just withdrew.
             this.dateFlexibility = flexible ? this.dateFlexibility || 'plus_3' : '';
         },
 
@@ -250,9 +207,7 @@ export default function travelRequestForm(config) {
             return diff > 0 ? diff : null;
         },
 
-        /* ---------------------------------------------------------------
-         * Travellers
-         * ------------------------------------------------------------- */
+        // --------------------------------------------------------------- Travellers
 
         stepAdults(by) {
             this.adults = Math.min(20, Math.max(1, this.adults + by));
@@ -263,11 +218,7 @@ export default function travelRequestForm(config) {
             this.syncChildAges();
         },
 
-        /**
-         * Keeps one age per child. Growing adds empty ages rather than a
-         * guessed default - an age nobody chose is worse than a visibly
-         * unanswered field, because the traveller cannot tell it is wrong.
-         */
+        // Keeps one age per child.
         syncChildAges() {
             const ages = this.childAges.slice(0, this.children);
 
@@ -282,9 +233,7 @@ export default function travelRequestForm(config) {
             return Array.from({ length: this.maxChildAge + 1 }, (_, age) => age);
         },
 
-        /* ---------------------------------------------------------------
-         * Priorities
-         * ------------------------------------------------------------- */
+        // --------------------------------------------------------------- Priorities
 
         get prioritiesFull() {
             return this.priorities.length >= this.maxPriorities;
@@ -307,15 +256,10 @@ export default function travelRequestForm(config) {
             }
         },
 
-        /* ---------------------------------------------------------------
-         * Budget
-         * ------------------------------------------------------------- */
+        // --------------------------------------------------------------- Budget
 
         selectBudgetBand(band) {
             this.budgetBand = band;
-            // A band and a custom range are two answers to one question, so
-            // picking a band drops the range rather than leaving both to be
-            // reconciled server-side.
             this.budgetMin = '';
             this.budgetMax = '';
             this.customBudgetOpen = false;
@@ -329,10 +273,6 @@ export default function travelRequestForm(config) {
         get usingCustomBudget() {
             return this.customBudgetOpen && Boolean(this.budgetMin || this.budgetMax);
         },
-
-        /* ---------------------------------------------------------------
-         * Summary - derived, never stored separately
-         * ------------------------------------------------------------- */
 
         get destinationSummary() {
             if (this.destinations.length) {
@@ -389,11 +329,6 @@ export default function travelRequestForm(config) {
             return this.budgetBand ? this.labels.budget[this.budgetBand] : this.labels.notSet;
         },
 
-        /* ---------------------------------------------------------------
-         * Section completion - drives the tick that appears in a section's
-         * icon once it holds enough to be useful to an agency.
-         * ------------------------------------------------------------- */
-
         get tripComplete() {
             return Boolean(
                 (this.departure || '').trim() &&
@@ -415,10 +350,6 @@ export default function travelRequestForm(config) {
             return Boolean(this.budgetBand) || this.usingCustomBudget;
         },
 
-        /* ---------------------------------------------------------------
-         * Itinerary - the headline version shown once a trip takes shape
-         * ------------------------------------------------------------- */
-
         /** True once anything worth summarising has been entered. */
         get hasItinerary() {
             return Boolean(
@@ -429,15 +360,7 @@ export default function travelRequestForm(config) {
             );
         },
 
-        /**
-         * True once the visitor has told us anything at all.
-         *
-         * Wider than hasItinerary, which only covers where and when: someone
-         * who skipped ahead and picked a budget has given us something, and
-         * the summary showing "Nothing here yet" underneath it would be wrong.
-         * Mirrored server-side in _summary.blade.php so the right branch is
-         * the one that paints first.
-         */
+        // True once the visitor has told us anything at all.
         get hasAnyDetail() {
             return Boolean(
                 this.hasItinerary ||

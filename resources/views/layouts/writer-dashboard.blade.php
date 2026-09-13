@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', __('writer.nav.overview')) — Findex</title>
 
-    {{-- Built from resources/images/brand by `npm run brand:assets`. No SVG:
-         the mark is a raster original, and the SVG that used to be served here
-         - and preferred by every browser that supports it - was a green "F"
-         tile from the brand before this one. --}}
+    {{-- Built from resources/images/brand by `npm run brand:assets`. --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" type="image/png" sizes="32x32">
     <link rel="icon" href="{{ asset('favicon-16x16.png') }}" type="image/png" sizes="16x16">

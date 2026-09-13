@@ -6,19 +6,6 @@ use App\Support\OpeningHours;
 
 class ConverseBranchParser implements BranchParser
 {
-    /**
-     * Converse publishes every location it has through one endpoint:
-     *
-     *   https://sapi.conversebank.am/api/v2/branches
-     *
-     *   [{"title":"Khudyakov 161/2","branch":"\"Avan\" branch",
-     *     "body":"<p>Mon. - Fri.: 9:15-17:30</p>","phone":"+374 10 511 211",
-     *     "lat":40.23,"lng":44.43,"type":"1","status":"1","city":11}, ...]
-     *
-     * `title` is the street address and `branch` the name - except for the
-     * ATMs, where `branch` holds the host business ("Outside of 'Emmy'
-     * florist's") rather than a branch of the bank at all.
-     */
     private const BRANCH_TYPE = '1';
 
     private const ACTIVE = '1';
@@ -45,11 +32,7 @@ class ConverseBranchParser implements BranchParser
     }
 
     /**
-     * The response mixes branches in with 164 ATMs and payment terminals,
-     * separated only by `type`. Types 2 and 3 stand in supermarkets, clinics
-     * and florists' shops - real places, but not counters where anyone
-     * changes money, and listing them as branches would roughly quintuple
-     * this bank's apparent footprint.
+     * The response mixes branches in with 164 ATMs and payment terminals, separated only by `type`.
      *
      * @param  array<string, mixed>  $row
      * @return array{name: string, address: string, city: ?string, latitude: ?float, longitude: ?float, opening_hours: array<string, array{0: string, 1: string}|null>|null}|null
@@ -83,11 +66,6 @@ class ConverseBranchParser implements BranchParser
         ];
     }
 
-    /**
-     * A 0 is not a coordinate anywhere this bank operates - it is the
-     * default a missing value falls back to, and it would drop the branch
-     * into the Gulf of Guinea on the "find nearby" map.
-     */
     private function coordinate(mixed $value): ?float
     {
         if (! is_numeric($value) || (float) $value === 0.0) {

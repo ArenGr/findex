@@ -23,12 +23,6 @@ class RemindExchangePartnersOfPendingQuotes extends Command
      */
     protected $description = 'Send a one-time nudge to exchange offices with a rate request still pending after 24 hours';
 
-    /**
-     * Same reasoning as RemindPartnersOfPendingQuotes (travel): a response
-     * older than this with no reply yet gets exactly one nudge, not a
-     * repeating spam loop, and only while the underlying request is still
-     * open.
-     */
     private const REMIND_AFTER_HOURS = 24;
 
     public function handle(ExchangeNotifierInterface $notifier): int
@@ -48,9 +42,6 @@ class RemindExchangePartnersOfPendingQuotes extends Command
                 ]);
             }
 
-            // Marked regardless of delivery success - a failed reminder will
-            // fail identically on every future run, so retrying it isn't a
-            // repeating nudge to the partner, just a repeating no-op.
             $response->update(['reminded_at' => now()]);
         }
 

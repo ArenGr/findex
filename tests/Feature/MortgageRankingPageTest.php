@@ -9,12 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
 
-/**
- * The mortgages page prepares APR-enriched, promo-filtered offer data for the
- * single interactive offers table (which ranks client-side). This covers the
- * server-side preparation - the enrichment and the exclusions - since the
- * pure client-side sort isn't reachable from a request test.
- */
 class MortgageRankingPageTest extends TestCase
 {
     use EnablesBankProducts;
@@ -54,16 +48,11 @@ class MortgageRankingPageTest extends TestCase
 
     private function page(): string
     {
-        // The offer data is embedded via @js inside an x-data attribute, so
-        // its JSON quotes arrive HTML-escaped - decode so assertions can read
-        // the embedded structure.
         $html = $this->get(route('banks.show', ['locale' => 'en', 'category' => 'mortgages']))
             ->assertOk()
             ->getContent();
 
-        // Offer data is embedded via @js inside an x-data attribute, which
-        // encodes JSON quotes as \u0022. Normalise so assertions can read the
-        // embedded structure directly.
+        // Offer data is embedded via @js inside an x-data attribute, which encodes JSON quotes as \u0022.
         return str_replace('\u0022', '"', html_entity_decode($html));
         // TEMP
         file_put_contents('/tmp/page.html', $out ?? '');
@@ -91,8 +80,6 @@ class MortgageRankingPageTest extends TestCase
         $html = $this->page();
 
         $this->assertStringContainsString('Live Bank', $html);
-        // Its only figure is a lapsed promo, so the bank drops off entirely -
-        // out of the offers table, the benchmark and the overview.
         $this->assertStringNotContainsString('Expired Bank', $html);
     }
 

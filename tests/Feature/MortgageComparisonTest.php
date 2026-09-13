@@ -11,11 +11,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
-/**
- * The ranking rules of the mortgage comparator: cohort isolation, APR-first
- * ranking with a nominal fallback, eligibility gating, data-quality gating,
- * and the tie-break order.
- */
 class MortgageComparisonTest extends TestCase
 {
     use RefreshDatabase;
@@ -105,9 +100,7 @@ class MortgageComparisonTest extends TestCase
 
     public function test_an_offer_with_no_rate_goes_to_the_incomplete_bucket(): void
     {
-        // A "terms on request" offer - the DB requires a nominal rate, so
-        // this is an in-memory row (e.g. one a parser couldn't fully fill).
-        // The ranker must still shelve it rather than crash or rank it blind.
+        // A "terms on request" offer - the DB requires a nominal rate, so this is an in-memory row (e.g.
         $noRate = (new MortgageOffer)->forceFill([
             'organization_id' => $this->bank()->id,
             'currency' => 'AMD',

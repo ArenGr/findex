@@ -7,11 +7,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers multi-staff org logins: adding a teammate, and the guard against
- * removing yourself or the last remaining login (mirrors
- * AdminResource::canDelete()'s self/last-admin guard).
- */
 class OrganizationTeamTest extends TestCase
 {
     use RefreshDatabase;
@@ -65,8 +60,6 @@ class OrganizationTeamTest extends TestCase
     {
         [, $owner] = $this->organizationOwner();
 
-        // $owner is the only login this org has - removing anyone (even
-        // via a crafted request against their own id) must be blocked.
         $this->actingAs($owner, 'organization')
             ->delete(route('org.dashboard.team.destroy', ['locale' => 'en', 'user' => $owner->id]))
             ->assertRedirect();

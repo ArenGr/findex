@@ -12,12 +12,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
-/**
- * Covers the "I'm interested" action on a quote (see
- * AutoInsuranceController::markInterested) - unlike tourism's promo-code
- * claim, this needs no login (no identity to protect, just a signal), so
- * both guests and logged-in customers can use it the same way.
- */
 class AutoInsuranceQuoteInterestTest extends TestCase
 {
     use RefreshDatabase;
@@ -63,10 +57,6 @@ class AutoInsuranceQuoteInterestTest extends TestCase
         $response = $this->post($this->interestUrl($quote));
         $response->assertRedirect($quote->autoInsuranceRequest->signedResultsUrl());
 
-        // The redirect target itself must actually be reachable by a guest -
-        // a plain route() redirect here would 403 (see
-        // AutoInsuranceController::markInterested), so this is the real
-        // regression guard, not just the redirect target string.
         $this->get($response->headers->get('Location'))->assertOk();
 
         $this->assertTrue($quote->fresh()->is_interested);

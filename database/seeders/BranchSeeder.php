@@ -6,17 +6,7 @@ use App\Models\Branch;
 use App\Models\Organization;
 use Illuminate\Database\Seeder;
 
-/**
- * Invented branch locations, and NOT part of the default seed run.
- *
- * The addresses and opening hours here were made up; only the coordinates
- * are real places. Attached to real banks they read as fact on the map and
- * in the "open now" filter, so they are no longer seeded.
- *
- * Real branch data is scraped from the banks: see BranchScraper and
- * `php artisan scrape:branches`. Kept for local work where you need the
- * city filter populated without hitting the network.
- */
+// Invented branch locations, and NOT part of the default seed run.
 class BranchSeeder extends Seeder
 {
     public function run(): void
@@ -82,10 +72,7 @@ class BranchSeeder extends Seeder
             ],
         ];
 
-        // Demo opening hours, in Yerevan local time. Two realistic patterns:
-        // banks keep office hours and shut at the weekend, exchange offices
-        // open longer and trade seven days - which is exactly the difference
-        // "Open now" exists to surface at 7pm on a Sunday.
+        // Demo opening hours, in Yerevan local time.
         $bankHours = [
             'mon' => ['09:30', '17:30'], 'tue' => ['09:30', '17:30'], 'wed' => ['09:30', '17:30'],
             'thu' => ['09:30', '17:30'], 'fri' => ['09:30', '17:30'], 'sat' => null, 'sun' => null,
@@ -97,9 +84,6 @@ class BranchSeeder extends Seeder
             'sat' => ['10:00', '20:00'], 'sun' => ['10:00', '18:00'],
         ];
 
-        // One branch of each kind is left without hours on purpose, so the
-        // "we do not know" path stays exercised in demo data rather than only
-        // in tests - it renders differently from "closed" and should.
         $withoutHours = ['ACBA Gyumri', 'Northside Exchange - Avan'];
 
         foreach ([...$banks, ...$exchangeOffices] as $slug => $branches) {

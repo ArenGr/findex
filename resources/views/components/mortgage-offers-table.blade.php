@@ -1,21 +1,12 @@
 @php
     use App\Models\MortgageOffer;
 
-    // Only one category is supported so far ('secondary_market' - buying an
-    // existing home) since banks split mortgages into incompatible product
-    // types (new-construction, renovation, government programs, ...) and
-    // comparing across those wouldn't be meaningful. See MortgageOffer
-    // parsers for how each bank's products were mapped to this category.
     $category = 'secondary_market';
 
     $preferredCurrencyOrder = ['AMD', 'USD', 'EUR', 'GBP', 'CHF', 'RUR', 'GEL'];
 
-    // Precomputed once (instead of per-row) so displaying a rating badge
-    // next to each organization doesn't add an N+1 query per row.
     $ratingsByOrgId = \App\Models\Organization::withRatingStats()->get()->keyBy('id');
 
-    // Rough starting points per currency so the calculator shows a sensible
-    // result before the user changes anything.
     $defaultPropertyPrice = ['AMD' => 30000000, 'USD' => 80000, 'EUR' => 70000];
 
     $availableCurrencies = MortgageOffer::query()
@@ -29,10 +20,6 @@
             : count($preferredCurrencyOrder))
         ->values();
 
-    // Every qualifying row is embedded (not pre-ranked) because eligibility
-    // and the resulting monthly payment depend on the property price/down
-    // payment/term the user picks - that has to be computed client-side as
-    // those inputs change, not fixed at render time.
     $offersByCurrency = $availableCurrencies->mapWithKeys(function ($currency) use ($category, $ratingsByOrgId) {
         $rows = MortgageOffer::query()
             ->where('category', $category)
@@ -40,9 +27,6 @@
             ->whereHas('organization', fn ($query) => $query->active())
             ->with('organization')
             ->get()
-            // A lapsed promotion isn't part of today's market, so it never
-            // enters the table (same rule as MortgageComparison / the
-            // benchmark).
             ->reject(fn ($offer) => $offer->promo_ends_at !== null && $offer->promo_ends_at->isPast())
             ->map(function ($offer) use ($ratingsByOrgId) {
                 // Rank on APR when the bank publishes it, else nominal.
@@ -96,17 +80,6 @@
     $defaultDownPaymentPercent = 20;
     $defaultTermMonths = 60;
 
-    /*
-     * The same ranking Alpine does (resources/js/mortgage-table.js), for the
-     * values the inputs start on.
-     *
-     * It is duplicated deliberately. The table used to live entirely in a
-     * <template x-for>, so the page painted without it and then grew by
-     * ~975px the moment Alpine booted; rendering the first state here is what
-     * removes that jump. Alpine then only moves, hides and relabels the rows
-     * below - it never creates them. Change one of these and you must change
-     * the other, or first paint stops matching first render.
-     */
     $monthlyPayment = function (float $ratePercent, float $principal, int $months): float {
         $rate = $ratePercent / 100 / 12;
 
@@ -133,8 +106,6 @@
             $eligible = $loanAmount >= $row['min_amount']
                 && $loanAmount <= $row['max_amount']
                 && $defaultDownPaymentPercent >= $row['min_down_payment_percent']
-                // Null terms compare exactly as they do in JS: a missing
-                // ceiling fails `termMonths <= null` and drops the offer.
                 && $defaultTermMonths >= (int) $row['term_min_months']
                 && $defaultTermMonths <= (int) $row['term_max_months'];
 
@@ -147,8 +118,6 @@
             }
         }
 
-        // JS walks an object with integer-like keys in ascending numeric
-        // order, which is what settles rows the sort below leaves tied.
         ksort($bestPerBank, SORT_NUMERIC);
 
         $payments = [];
@@ -170,9 +139,6 @@
 @endphp
 
 @if ($availableCurrencies->isNotEmpty())
-    {{-- The component object lives in resources/js/mortgage-table.js: it is
-         far too large to read inside an attribute, and its maths has to be
-         readable next to the PHP mirror above. --}}
     <div
         x-data="mortgageTable(@js([
             'currency' => $defaultCurrency,
@@ -236,8 +202,6 @@
         </div>
         <p class="px-6 py-3 text-sm text-muted">
             {{ __('offers.mortgage_table.loan_amount') }}:
-            {{-- Rendered as well as bound: an empty span here is a visibly
-                 half-written sentence until Alpine boots. --}}
             <span class="font-semibold text-ink" x-text="format(loanAmount)">{{ number_format(max(0, ($defaultPropertyPrice[$defaultCurrency] ?? 0) * (1 - $defaultDownPaymentPercent / 100)), 0, '.', ',') }}</span>
             <span x-text="currencyTab">{{ $defaultCurrency }}</span>
         </p>
@@ -268,10 +232,6 @@
                         <span class="hidden w-24 shrink-0 text-right sm:block"></span>
                     </div>
 
-                    {{-- flex-col so a row can be placed with CSS `order`; -mb-px
-                         hides the last row's bottom border under the panel
-                         border, which last:border-b-0 can no longer do now that
-                         DOM order is not paint order. --}}
                     <div class="-mb-px flex flex-col">
                         @foreach ($rows as $i => $row)
                             <x-mortgage-offer-row

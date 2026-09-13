@@ -23,12 +23,6 @@ class RemindPartnersOfPendingQuotes extends Command
      */
     protected $description = 'Send a one-time nudge to partners with a quote request still pending after 24 hours';
 
-    /**
-     * A response older than this with no reply yet gets exactly one nudge
-     * (see reminded_at) - not a repeating spam loop, and only while the
-     * underlying request is still open (a reminder for an already-expired
-     * request would just be noise).
-     */
     private const REMIND_AFTER_HOURS = 24;
 
     public function handle(PartnerNotifierInterface $notifier): int
@@ -48,10 +42,7 @@ class RemindPartnersOfPendingQuotes extends Command
                 ]);
             }
 
-            // Marked regardless of delivery success - a failed reminder
-            // (e.g. the partner's chat is gone) will fail identically on
-            // every future run, so retrying it isn't a repeating nudge to
-            // the partner, just a repeating no-op that clutters the logs.
+            // Marked regardless of delivery success - a failed reminder (e.g.
             $response->update(['reminded_at' => now()]);
         }
 

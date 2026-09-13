@@ -12,24 +12,11 @@ use App\Services\Insurance\QuoteIdentity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers the auto insurance request/results flow end to end: unlike tourism
- * there's no Telegram/secure-token round trip - every insurer is priced in
- * one call to Sil's Bureau calculator (AutoInsuranceQuoteService), and the
- * quotes land on the results page immediately.
- *
- * That single source is faked here so the flow, sorting and access rules can
- * be exercised without a live call. Sil's own two-step and icId mapping have
- * their own coverage in SilMarketQuoteSourceTest.
- */
 class AutoInsuranceQuoteFlowTest extends TestCase
 {
     use RefreshDatabase;
 
     /**
-     * Bind a market source that returns a fixed slug => premium map, standing
-     * in for Sil's live response.
-     *
      * @param  array<string, string>  $premiums
      */
     private function fakeMarket(array $premiums): void
@@ -138,22 +125,50 @@ class AutoInsuranceQuoteFlowTest extends TestCase
         $quotes = AutoInsuranceQuote::with('organization')->orderBy('premium_amount')->get();
         $this->assertNotEquals($quotes->first()->premium_amount, $quotes->last()->premium_amount);
 
-        // Each org's name also appears earlier in the page inside the Alpine
-        // `comparable` JSON blob (in sorted order too), so search for the
-        // LAST occurrence to land on the actual rendered card rather than
-        // that blob - guards against a sort that runs without error but
-        // orders the visible cards wrong.
         $html = $response->getContent();
         $cheapestPosition = strrpos($html, $quotes->first()->organization->name);
         $pricierPosition = strrpos($html, $quotes->last()->organization->name);
         $this->assertLessThan($pricierPosition, $cheapestPosition);
 
-        // The "Best price" ribbon sits at the top of the cheapest card, so it
-        // renders before the pricier insurer's card - proving the badge is on
-        // the first (cheapest) card, not the second.
         $badgePosition = strpos($html, __('auto_insurance.results.best_price_badge'));
         $this->assertLessThan($pricierPosition, $badgePosition);
         $this->assertSame(1, substr_count($html, __('auto_insurance.results.best_price_badge')));
+    }
+
+    public function test_sorting_reorders_the_list_without_breaking_the_signed_link(): void
+    {
+        $this->insurancePartner('ins-cheap');
+        $this->insurancePartner('ins-pricey');
+        $this->fakeMarket(['ins-cheap' => '40000.00', 'ins-pricey' => '47000.00']);
+        $this->post(route('insurance.auto.request.store', ['locale' => 'en']), $this->validPayload());
+        $autoInsuranceRequest = AutoInsuranceRequest::sole();
+
+        $cheap = AutoInsuranceQuote::with('organization')->orderBy('premium_amount')->first()->organization->name;
+        $pricey = AutoInsuranceQuote::with('organization')->orderByDesc('premium_amount')->first()->organization->name;
+
+        $html = $this->get($autoInsuranceRequest->signedResultsUrl().'&sort=price_desc')
+            ->assertOk()
+            ->getContent();
+
+        $offers = substr($html, 0, strpos($html, __('auto_insurance.results.compare_heading')));
+
+        $this->assertLessThan(strrpos($offers, $cheap), strrpos($offers, $pricey));
+
+        $this->assertSame(1, substr_count($html, __('auto_insurance.results.best_price_badge')));
+        $this->assertGreaterThan(
+            strrpos($offers, $pricey),
+            strpos($offers, __('auto_insurance.results.best_price_badge')),
+        );
+    }
+
+    public function test_an_unknown_sort_falls_back_to_price_rather_than_erroring(): void
+    {
+        $this->insurancePartner('ins-a');
+        $this->fakeMarket(['ins-a' => '40000.00']);
+        $this->post(route('insurance.auto.request.store', ['locale' => 'en']), $this->validPayload());
+        $autoInsuranceRequest = AutoInsuranceRequest::sole();
+
+        $this->get($autoInsuranceRequest->signedResultsUrl().'&sort=%27%20OR%201=1')->assertOk();
     }
 
     public function test_show_page_requires_ownership_or_a_valid_signature(): void

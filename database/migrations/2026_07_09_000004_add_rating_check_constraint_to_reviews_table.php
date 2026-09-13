@@ -6,15 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * `rating` was only ever bounded to 1-5 in ReviewController's validation
-     * - any other write path (a seeder, tinker, a future API) could insert 0
-     * or 255. SQLite's schema builder can't add a CHECK constraint to an
-     * existing table without a full table rebuild, and this app already
-     * runs on MySQL in every real environment (see config/database.php), so
-     * this is skipped there rather than adding that complexity for a
-     * developer-only sqlite database.
-     */
     public function up(): void
     {
         $driver = Schema::getConnection()->getDriverName();

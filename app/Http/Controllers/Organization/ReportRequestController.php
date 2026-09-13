@@ -55,13 +55,6 @@ class ReportRequestController extends Controller
         return redirect()->route('org.dashboard.reports.index')->with('status', 'report-requested');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own report requests
-     * is also what enforces that an org can only view its own reports.
-     */
     public function show(string $locale, string $reportRequest): View
     {
         $organization = Auth::guard('organization')->user()->organization;

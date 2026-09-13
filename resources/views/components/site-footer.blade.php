@@ -1,9 +1,6 @@
 @php
     $columns = [
-        // The rate product's own pages. They existed with nothing linking to
-        // them, which for the history and API pages meant nobody would ever
-        // arrive. Here rather than in the header nav: crowding the nav is the
-        // thing to avoid, and API promotion belongs somewhere quiet.
+        // The rate product's own pages.
         [
             'title' => __('footer.columns.rates.title'),
             'links' => [
@@ -63,10 +60,6 @@
                 </a>
             </div>
 
-            {{-- min-w-0 and break-words together: a grid track defaults to
-            minmax(auto, 1fr), so a single unbreakable word - "Политика
-            конфиденциальности" at 320px - widens its track and pushes the
-            whole page sideways rather than wrapping. --}}
             @foreach ($columns as $column)
                 <div class="min-w-0">
                     <p class="text-xs font-semibold tracking-wider break-words text-subtle uppercase">{{ $column['title'] }}</p>

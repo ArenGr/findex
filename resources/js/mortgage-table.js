@@ -1,19 +1,6 @@
 /**
  * The mortgage comparison table on /banks/mortgages.
  *
- * Eligibility, ranking and the monthly payment all depend on the property
- * price / down payment / term the visitor picks, so they have to be
- * recomputed in the browser. What they must NOT do is decide whether the
- * table exists at all: the rows are rendered by Blade for the values these
- * inputs start on (see the @php block in mortgage-offers-table.blade.php,
- * which mirrors the maths below), and this component only moves, hides and
- * relabels rows that are already on the page. Previously the whole table
- * lived in a <template x-for>, so the page painted without it and then grew
- * by ~975px the moment Alpine booted.
- *
- * Any change to isEligible/monthlyPayment/the sort has to be made in that
- * @php block too, or the first paint stops matching the first render.
- *
  * @param {object} config - defaults and row data, supplied by the view.
  */
 export default (config) => ({
@@ -42,12 +29,6 @@ export default (config) => ({
         return principal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
     },
 
-    /**
-     * What the current inputs make of the rendered rows: where each one goes
-     * (row index -> position, absent when the row should be hidden), what it
-     * costs a month, and how many are left. One offer per bank survives - the
-     * cheapest it has that the visitor qualifies for.
-     */
     get view() {
         const rows = this.offersByCurrency[this.currencyTab] || [];
         const loanAmount = this.loanAmount;
@@ -62,8 +43,6 @@ export default (config) => ({
         });
 
         const payments = {};
-        // Integer-like keys, so this walks the banks in ascending id order -
-        // which is what settles rows the sort below leaves tied.
         const ranked = Object.values(bestPerBank);
 
         ranked.forEach((index) => {
@@ -92,11 +71,6 @@ export default (config) => ({
         return payment === undefined ? '' : this.format(payment);
     },
 
-    /**
-     * en-US grouping, not the visitor's browser locale: every other figure on
-     * this page is formatted by PHP's number_format, and the first paint of
-     * these same numbers is server-rendered, so they have to agree.
-     */
     format(value) {
         return Math.round(value).toLocaleString('en-US');
     },

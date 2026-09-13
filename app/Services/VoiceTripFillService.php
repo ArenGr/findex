@@ -10,15 +10,6 @@ use RuntimeException;
 use Symfony\Component\Intl\Countries;
 use Throwable;
 
-/**
- * Powers the "fill by voice" button on the trip request form
- * (tourism/request.blade.php): a visitor records themselves describing
- * their trip, and this turns that recording into structured form fields -
- * two OpenAI calls under the hood (Whisper transcription, then a GPT pass
- * to pull structured data out of the transcript). Both calls are metered
- * and billed, so callers must go through the `voice_fill` rate limiter (see
- * AppServiceProvider) rather than calling this unthrottled.
- */
 class VoiceTripFillService
 {
     private const TRANSCRIBE_URL = 'https://api.openai.com/v1/audio/transcriptions';
@@ -165,19 +156,11 @@ class VoiceTripFillService
             'adults' => isset($raw['adults']) ? max(1, min(20, (int) $raw['adults'])) : null,
             'children' => isset($raw['children']) ? max(0, min(20, (int) $raw['children'])) : null,
             'departure_location' => ! empty($raw['departure_location']) ? mb_substr((string) $raw['departure_location'], 0, 120) : null,
-            // Each checked against the list the form actually offers rather
-            // than passed through - the model is perfectly capable of
-            // answering "four stars" or "полупансион", and a value the
-            // select can't hold would silently fail to apply.
             'flight_preference' => $this->oneOf($raw['flight_preference'] ?? null, QuoteRequest::FLIGHT_PREFERENCES),
             'hotel_preference' => $this->oneOf($raw['hotel_preference'] ?? null, QuoteRequest::HOTEL_PREFERENCES),
             'meal_preference' => $this->oneOf($raw['meal_preference'] ?? null, QuoteRequest::MEAL_PREFERENCES),
             'insurance' => is_bool($raw['insurance'] ?? null) ? $raw['insurance'] : null,
             'hotel_name' => ! empty($raw['hotel_name']) ? mb_substr((string) $raw['hotel_name'], 0, 255) : null,
-            // Clamped to the same ceiling QuoteRequestController::store()
-            // validates against, so a voice-filled value can never trip a
-            // confusing "invalid" error on the field the visitor never
-            // touched by hand.
             'budget_min_amd' => isset($raw['budget_min_amd']) ? max(0, min(99999999, (int) $raw['budget_min_amd'])) : null,
             'budget_max_amd' => isset($raw['budget_max_amd']) ? max(0, min(99999999, (int) $raw['budget_max_amd'])) : null,
             'notes' => ! empty($raw['notes']) ? mb_substr((string) $raw['notes'], 0, 1000) : null,
@@ -194,12 +177,6 @@ class VoiceTripFillService
 
     private function dateOrNull(?string $date): ?string
     {
-        // checkdate(), not a Carbon::createFromFormat() try/catch - Carbon
-        // silently rolls a calendrically-invalid date over into a real one
-        // instead of throwing (e.g. "2026-02-30" parses to "2026-03-02"
-        // with no exception), so a hallucinated date from the extraction
-        // model would have silently landed in the form under a different
-        // date than what was actually said, instead of being dropped.
         if (! $date || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $parts)) {
             return null;
         }

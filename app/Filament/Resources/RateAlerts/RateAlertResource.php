@@ -23,11 +23,6 @@ class RateAlertResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Rates & Scraping';
 
-    /**
-     * Alerts are only ever created by users from the public /alerts page -
-     * the panel offers visibility plus edit/delete for support (fixing a bad
-     * telegram_chat_id, disabling an abusive or broken alert), not authoring.
-     */
     public static function canCreate(): bool
     {
         return false;

@@ -28,23 +28,11 @@ class AdminResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Settings';
 
-    /**
-     * `User` now backs the customer/organization/admin guards alike (see
-     * App\Enums\UserRole) - this resource only ever lists/edits the
-     * admin-role rows, matching what AdminResource showed back when Admin
-     * was its own table.
-     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('role', UserRole::ADMIN);
     }
 
-    /**
-     * Every admin is an unconditional superadmin (see User::canAccessPanel)
-     * - there's no lower-privileged role to fall back to, so deleting your
-     * own account or the last remaining one would permanently lock everyone
-     * out of the panel with no recovery UI.
-     */
     public static function canDelete(Model $record): bool
     {
         return $record->isNot(Filament::auth()->user()) && User::where('role', UserRole::ADMIN)->count() > 1;

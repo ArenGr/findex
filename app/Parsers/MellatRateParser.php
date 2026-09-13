@@ -6,31 +6,12 @@ use App\Enums\RateType;
 
 class MellatRateParser implements RateParser
 {
-    /**
-     * Mellat Bank's site is an Angular app that renders no rate markup at
-     * all - the served HTML is a 40 KB shell. It fills itself from the
-     * bank's own API, which this parser reads:
-     *
-     *   https://api.mellatbank.am/api/v1/rate/list
-     *
-     *   {"status":200,"result":{"data":[
-     *      {"currency":"USD","buy":362,"sell":367,
-     *       "buyCash":362,"sellCash":367,"updated_at":"..."}, ...
-     *   ]}}
-     *
-     * A short list - the bank quotes only the three major currencies.
-     */
     private const CATEGORIES = [
         RateType::NON_CASH->value => ['buy', 'sell'],
         RateType::CASH->value => ['buyCash', 'sellCash'],
     ];
 
-    /**
-     * The dram is in the list, quoted against itself at 1/1. It is the
-     * currency every other row is priced in, not something the bank trades,
-     * and publishing it would put a meaningless "AMD 1.00 / 1.00" row on the
-     * comparison page.
-     */
+    // The dram is in the list, quoted against itself at 1/1.
     private const BASE_CURRENCY = 'AMD';
 
     public function parse(string $html): array

@@ -41,8 +41,6 @@ class OrganizationSourceTest extends TestCase
 
     public function test_relative_url_without_a_website_fails_loudly_instead_of_erroring(): void
     {
-        // website is intentionally nullable (self-registered orgs may not
-        // have one yet) - a relative source URL is meaningless without it.
         $organization = Organization::create([
             'name' => 'Bank', 'slug' => 'bank', 'type' => 'bank',
             'country_code' => 'AM', 'is_active' => true, 'website' => null,

@@ -2,14 +2,6 @@
 
 @section('title', __('tourism.request.heading') . ' — Findex')
 
-{{-- The flat site bar, not the floating capsule: the design opens on a
-     gradient that runs from under the header, and a card floating over it cut
-     the gradient in two. --}}
-
-{{-- This page sets font-jakarta on its wrapper, so Plus Jakarta Sans is its
-     body face at every weight. Preloaded here rather than in the layout: no
-     other page uses it. Without it the whole page paints in the fallback and
-     then re-renders once Jakarta lands. --}}
 @push('head')
     @foreach (App\Support\FontPreloads::urls('plus-jakarta-sans', app()->getLocale()) as $href)
         <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ $href }}">
@@ -19,8 +11,7 @@
 @php
     use App\Models\QuoteRequest;
 
-    // The page's shared shapes, stated once. `$fieldIcon` is the same field
-    // with room for a leading glyph.
+    // The page's shared shapes, stated once.
     $field = 'w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition-colors placeholder:text-gray-400 focus:border-travel-600 focus:ring-1 focus:ring-travel-600 focus:outline-none';
     $fieldIcon = $field.' pl-10';
     $label = 'block text-xs font-semibold text-gray-600';
@@ -28,19 +19,15 @@
     $cardHeading = 'text-lg font-bold text-gray-900';
     $stepper = 'flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition-colors hover:border-travel-600 hover:text-travel-700 disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600';
 
-    // The selection pill, in its two states. Every group on the page - flights,
-    // hotel class, meals, priorities, budget bands, date flexibility - is the
-    // same control, and each had grown its own copy of these classes.
+    // The selection pill, in its two states.
     $pill = 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
     $pillOff = 'border-gray-200 bg-white font-medium text-gray-700 hover:border-travel-200 hover:bg-gray-50/70';
     $pillOn = 'border-travel-600 bg-travel-50 font-semibold text-travel-800';
 
-    // Which wizard step a failed submission should reopen: the earliest step
-    // holding a rejected field. It is all one form and one POST - these
-    // groupings only decide what is on screen, never what is validated.
+    // Which wizard step a failed submission should reopen: the earliest step holding a rejected field.
     $stepFields = [
-        1 => ['departure_location', 'destination_countries', 'check_in', 'check_out', 'date_flexibility', 'adults', 'children', 'child_ages', 'hotel_name'],
-        2 => ['flight_preference', 'hotel_preference', 'meal_preference', 'priorities', 'budget_band', 'budget_min_amd', 'budget_max_amd', 'notes', 'insurance'],
+        1 => ['departure_location', 'destination_countries', 'check_in', 'check_out', 'date_flexibility', 'adults', 'children', 'child_ages'],
+        2 => ['flight_preference', 'hotel_preference', 'meal_preference', 'hotel_name', 'priorities', 'budget_band', 'budget_min_amd', 'budget_max_amd', 'notes', 'insurance'],
         3 => ['guest_name', 'guest_email', 'consent'],
     ];
     $errorKeys = collect($errors->keys());
@@ -97,15 +84,7 @@
             ],
         ]))"
     >
-        {{-- On every step, not just the first.
-
-             The hero used to be x-show="step === 1", with a bare heading and
-             a step count standing in for it on steps 2 and 3. Moving off step
-             1 therefore took the whole top of the page away and left the
-             wizard hanging under a single line of text, so the steps did not
-             read as three screens of one page - they read as the first screen
-             and then something else. The page keeps its head throughout; the
-             stepper inside the card is what says where you are. --}}
+        {{-- On every step, not just the first. --}}
         @include('tourism.request._hero')
 
         @include('tourism.request._presets')
@@ -132,59 +111,35 @@
                     <input type="text" name="company" id="company" tabindex="-1" autocomplete="off">
                 </div>
 
-                {{-- The card shell. The stepper is a bar of its own across the
-                     top, on its own tint, rather than a row sharing the body's
-                     padding - so progress reads as a property of the card and
-                     not as the first thing inside the step. --}}
-                {{-- relative z-10 and a deeper shadow: page and card are both
-                     white now, so nothing but elevation separates them, and
-                     the card has to sit clearly above the hero's gradient
-                     rather than blend into it. --}}
+                {{-- The card shell. --}}
                 <div class="relative z-10 overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-18px_rgba(15,23,42,0.22)] ring-1 ring-gray-200/80">
-                    {{-- White like the rest of the body, delimited by its rule
-                         rather than by a tint. --}}
+                    {{-- White like the rest of the body, delimited by its rule rather than by a tint. --}}
                     <div class="border-b border-gray-100 px-6 py-5 sm:px-12">
                         @include('tourism.request._stepper')
                     </div>
 
                     <div class="grid grid-cols-1 gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:items-start lg:p-12">
-                        {{-- The step viewport.
-
-                             One step is on screen at a time and the other two
-                             are `display: none` - not stacked on top of it at
-                             opacity 0 inside a box whose height is animated
-                             between them, which is what this was. That read as
-                             the first step growing to take in the second one's
-                             fields rather than as moving to a new screen, and
-                             it crossfaded the two forms over each other on the
-                             way.
-
-                             Which step is shown is decided by a class, not by
-                             x-show: the server prints it for the step this
-                             request opens on, so the right one is on screen in
-                             the first frame rather than after Alpine boots. --}}
-                        <div class="relative lg:col-span-8">
+                        {{-- The step viewport. --}}
+                        {{-- Full width on step 1, two thirds after it. --}}
+                        <div
+                            class="relative"
+                            :class="{ 'lg:col-span-12': step === 1, 'lg:col-span-8': step !== 1 }"
+                            @class([
+                                'lg:col-span-12' => $initialStep === 1,
+                                'lg:col-span-8' => $initialStep !== 1,
+                            ])
+                        >
                             {{-- STEP 1 --}}
                             <div
                                 data-step="1"
                                 x-ref="slide1"
-                                {{-- Object form, so Alpine takes away whichever
-                                     of the two the server printed once it no
-                                     longer applies. --}}
                                 :class="{ 'flex': step === 1, 'hidden': step !== 1 }"
                                 @class([
                                     'travel-step w-full flex-col gap-4',
-                                    // Server-rendered to match the step this request opens on,
-                                    // so a validation error that reopens step 2 paints step 2.
                                     'flex' => $initialStep === 1,
                                     'hidden' => $initialStep !== 1,
                                 ])
                             >
-                                {{-- sr-only: the card below opens with its own
-                                     "Trip details" heading, so painting this one too
-                                     gave the step two titles and cost ~85px of the
-                                     wizard's height. It stays in the accessibility tree
-                                     and remains the slide's focus target. --}}
                                 <h2 x-ref="heading1" tabindex="-1" class="sr-only">{{ __('tourism.request.step1_heading') }}</h2>
 
                                 @include('tourism.request._voice-fill')
@@ -196,42 +151,21 @@
                             <div
                                 data-step="2"
                                 x-ref="slide2"
-                                {{-- Object form, so Alpine takes away whichever
-                                     of the two the server printed once it no
-                                     longer applies. --}}
                                 :class="{ 'flex': step === 2, 'hidden': step !== 2 }"
                                 @class([
                                     'travel-step w-full flex-col gap-4',
-                                    // Server-rendered to match the step this request opens on,
-                                    // so a validation error that reopens step 2 paints step 2.
                                     'flex' => $initialStep === 2,
                                     'hidden' => $initialStep !== 2,
                                 ])
                             >
-                                {{-- tabindex="-1" so goToStep() can move focus here; it is
-                                     not a tab stop, only a focus target. --}}
+                                {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
                                     <h2 x-ref="heading2" tabindex="-1" class="text-2xl font-bold text-travel-ink outline-none">{{ __('tourism.request.step2_heading') }}</h2>
                                     <p class="text-sm text-gray-500">{{ __('tourism.request.step2_sub') }}</p>
                                 </div>
 
-                                {{-- Two columns, not three stacked cards. Step 2
-                                     carries the most content of the three and
-                                     ran to ~1260px tall against step 1's ~600,
-                                     which made the wizard feel like a different,
-                                     much longer page rather than the next screen
-                                     of the same one. Balanced by hand - the
-                                     preferences card is roughly as tall as the
-                                     other two together - because grid
-                                     auto-placement would put them on two rows
-                                     and save nothing. --}}
-                                {{-- Stacked, each across the width of the form
-                                     column. Set side by side these cards are
-                                     about 280px wide, which wraps every pill
-                                     group onto three and four rows - "Half
-                                     board" and "Full board" end up on lines of
-                                     their own - and the two columns never come
-                                     out the same height anyway. --}}
+                                {{-- Two columns, not three stacked cards. --}}
+                                {{-- Stacked, each across the width of the form column. --}}
                                 @include('tourism.request._preferences')
                                 @include('tourism.request._priorities')
                                 @include('tourism.request._budget-notes')
@@ -252,29 +186,19 @@
                             <div
                                 data-step="3"
                                 x-ref="slide3"
-                                {{-- Object form, so Alpine takes away whichever
-                                     of the two the server printed once it no
-                                     longer applies. --}}
                                 :class="{ 'flex': step === 3, 'hidden': step !== 3 }"
                                 @class([
                                     'travel-step w-full flex-col gap-4',
-                                    // Server-rendered to match the step this request opens on,
-                                    // so a validation error that reopens step 2 paints step 2.
                                     'flex' => $initialStep === 3,
                                     'hidden' => $initialStep !== 3,
                                 ])
                             >
-                                {{-- tabindex="-1" so goToStep() can move focus here; it is
-                                     not a tab stop, only a focus target. --}}
+                                {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
                                     <h2 x-ref="heading3" tabindex="-1" class="text-2xl font-bold text-travel-ink outline-none">{{ __('tourism.request.step3_heading') }}</h2>
                                     <p class="text-sm text-gray-500">{{ __('tourism.request.step3_sub') }}</p>
                                 </div>
 
-                                {{-- Arriving here from a popular trip skips
-                                     two screens, so it has to be said that the
-                                     answers below were filled in rather than
-                                     given. --}}
                                 <p
                                     x-show="preset"
                                     x-cloak
@@ -284,15 +208,6 @@
                                     {{ __('tourism.presets.applied') }}
                                 </p>
 
-                                {{-- md:hidden: from md up the summary panel is
-                                     beside this column, sticky and already
-                                     showing every one of these rows plus the
-                                     three this card leaves out - so on a
-                                     desktop the step opened with the same
-                                     "Your trip" panel printed twice, side by
-                                     side. Below md the panel is further down
-                                     the page, and this is the only review
-                                     within reach of the submit button. --}}
                                 <section class="{{ $card }} lg:hidden">
                                     <div class="mb-4 flex items-center justify-between gap-3">
                                         <h3 class="text-base font-bold text-gray-900">{{ __('tourism.request.review_heading') }}</h3>
@@ -390,7 +305,10 @@
                             </div>
                         </div>
 
-                        <aside class="lg:col-span-4">
+                        <aside
+                            :class="{ 'hidden': step === 1 }"
+                            @class(['lg:col-span-4', 'hidden' => $initialStep === 1])
+                        >
                             @include('tourism.request._summary')
                         </aside>
                     </div>
@@ -410,8 +328,6 @@
             @enderror
         </main>
 
-        {{-- All three shown on every step: someone who reached step 3 is
-             exactly the person deciding whether to trust what happens next. --}}
         @include('tourism.request._how-it-works')
         <x-travel.partners :partners="$partners" />
         @include('tourism.request._closing-band')

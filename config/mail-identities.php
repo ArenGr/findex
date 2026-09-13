@@ -1,10 +1,5 @@
 <?php
 
-// Selectable "From" identities for admin-authored emails (see the
-// Organizations "Message" action) - kept separate from mail.from (which
-// stays the no-reply address every automated/system email uses) so an
-// admin can pick which identity a one-off message reads as.
-
 return [
     'findex-team' => [
         'label' => 'The Findex Team',

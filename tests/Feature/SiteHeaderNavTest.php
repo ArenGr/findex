@@ -7,11 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
 
-/**
- * Covers the top-level nav in site-header.blade.php: Banking (a dropdown
- * with exactly three real product links) and Insurance/Travel (plain
- * links, each with one real destination and no dropdown chrome around it).
- */
 class SiteHeaderNavTest extends TestCase
 {
     use EnablesBankProducts, RefreshDatabase;
@@ -22,11 +17,7 @@ class SiteHeaderNavTest extends TestCase
         $this->enableBankProducts();
     }
 
-    /**
-     * Banking groups its products into Loans and Cards submenus. The leaf
-     * links are derived from OfferController::CATEGORIES rather than
-     * hardcoded in the view, so this also pins that wiring.
-     */
+    // Banking groups its products into Loans and Cards submenus.
     public function test_the_banking_menu_links_to_every_grouped_bank_product(): void
     {
         $response = $this->get('/en');
@@ -63,12 +54,6 @@ class SiteHeaderNavTest extends TestCase
         $response->assertSee(route('tourism.request', ['locale' => 'en']), false);
     }
 
-    /**
-     * The header's Connect entry is an account action, not a group invite: it
-     * points at the alert page's Telegram connect flow, which is auth-gated,
-     * so notifications end up bound to a registered user rather than to a
-     * bot session tied to nothing.
-     */
     public function test_the_connect_menu_offers_telegram_through_the_account_flow(): void
     {
         $response = $this->get('/en');

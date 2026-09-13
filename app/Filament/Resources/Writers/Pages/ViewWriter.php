@@ -15,8 +15,7 @@ class ViewWriter extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            // Matches WritersTable's row action and EditWriter's header
-            // action - see the comment there.
+            // Matches WritersTable's row action and EditWriter's header action - see the comment there.
             Action::make('toggleApproval')
                 ->label(fn () => $this->getRecord()->is_active ? 'Suspend' : 'Approve')
                 ->icon(fn () => $this->getRecord()->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')

@@ -1,30 +1,4 @@
-/*
- * FreeSans, split per script.
- *
- * Declared here by hand rather than through laravel-vite-plugin's font
- * provider: that provider has no way to express unicode-range, so it can
- * only ship the font as one ~109 KB file that every visitor downloads in
- * full to render a few hundred characters. These faces let the browser
- * fetch only the scripts a page actually paints - the same thing the
- * Bunny-hosted families already do.
- *
- * The files come from tools/subset-freesans.py. The unicode-range values
- * below are kept byte-identical to the ones in that script: if they ever
- * disagree, the browser requests a subset that does not contain the glyph
- * and the character silently falls back to another font.
- *
- * Served straight from public/fonts/subset rather than through Vite, so the
- * paths are stable and the files are cached by name. Rename them if the
- * source font is ever replaced with different metrics.
- *
- * font-display: optional, not swap. swap paints the fallback and then
- * re-renders every line once FreeSans lands - the visible "text changed size"
- * flash. optional gives it a ~100ms window: the Latin subset and the current
- * locale's script are preloaded (see layouts/app.blade.php), so it normally
- * wins; when it does not, the browser keeps the fallback for that page view
- * and never swaps. fonts-fallbacks.css makes that fallback metrically
- * identical, so the layout is the same either way.
- */
+/* FreeSans, split per script. */
 
 @font-face {
     font-family: "FreeSans";

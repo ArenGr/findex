@@ -13,10 +13,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * The agency side: seeing the requests it was sent, answering with a
- * structured offer, revising it, and being kept out of everyone else's.
- */
 class AgencyTravelRequestInboxTest extends TestCase
 {
     use RefreshDatabase;
@@ -140,10 +136,6 @@ class AgencyTravelRequestInboxTest extends TestCase
         $this->assertTrue($assignment->is_reviewing);
     }
 
-    /**
-     * "First seen" has to stay first seen, or the traveller's status page
-     * would report the agency as having only just looked at it.
-     */
     public function test_reopening_a_request_does_not_move_the_first_viewed_time(): void
     {
         $organization = $this->agency();
@@ -190,10 +182,6 @@ class AgencyTravelRequestInboxTest extends TestCase
         $this->assertTrue($assignment->quoteRequest->fresh()->currentStatus()->value === 'offers_received');
     }
 
-    /**
-     * A field the agency left alone must come back as "not stated", not as
-     * a definite "no" - see TravelOfferSubmission::boolOrNull().
-     */
     public function test_an_unanswered_yes_no_field_stays_unstated(): void
     {
         Mail::fake();
@@ -235,16 +223,10 @@ class AgencyTravelRequestInboxTest extends TestCase
         $this->actingAs($user, 'organization')
             ->post(route('org.dashboard.travel-requests.offer.store', ['locale' => 'en', 'response' => $assignment->id]), $revision);
 
-        // Revised, not duplicated - the traveller must not end up comparing
-        // two versions of the same offer.
         $this->assertSame(1, QuoteSuggestion::count());
         $this->assertSame('790000.00', QuoteSuggestion::sole()->price_amount);
     }
 
-    /**
-     * A revision isn't a new answer - re-notifying would tell the traveller
-     * "you have a new offer" every time a typo was fixed.
-     */
     public function test_revising_an_offer_does_not_email_the_traveller_again(): void
     {
         Mail::fake();
@@ -310,10 +292,6 @@ class AgencyTravelRequestInboxTest extends TestCase
         $this->assertTrue($assignment->fresh()->is_declined);
     }
 
-    /**
-     * Matching used to require a connected Telegram chat, which would now
-     * leave a dashboard-only agency matched to nothing at all.
-     */
     public function test_an_agency_without_telegram_is_still_matched(): void
     {
         $organization = $this->agency();
@@ -328,8 +306,7 @@ class AgencyTravelRequestInboxTest extends TestCase
 
     public function test_an_agency_reachable_by_neither_channel_is_not_matched(): void
     {
-        // No Telegram chat and no dashboard account: nothing we send would
-        // ever reach anyone.
+        // No Telegram chat and no dashboard account: nothing we send would ever reach anyone.
         $organization = $this->agency('Unreachable');
 
         $this->assertFalse(

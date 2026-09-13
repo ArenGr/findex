@@ -9,27 +9,6 @@ use App\Models\Writer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-/**
- * Called from DatabaseSeeder::run() - demo data, not production data, but
- * kept in the default run so `migrate:fresh --seed` produces a fully
- * populated demo environment. Kept separate from ArticleSeeder (rather than
- * added to it) so its 7 existing articles - which double as admin-review
- * demo fixtures for the submitted/rejected/draft states - stay untouched.
- *
- * 4 topics x 3 languages (en/hy/ru) = 12 articles, each topic sharing one
- * real photo (see storage/app/public/articles/*-hero.jpg, resized from
- * /home/devnomad/Downloads/articles-images/) across all 3 language rows -
- * featured_image is just a string path, no need to duplicate the file.
- *
- * The credit-cards article carries a native mention of a recommended card
- * ("Solaris Bank" / "Solaris Black Card") woven into otherwise ordinary
- * comparison-article prose - no "Sponsored" label, no discount code, no
- * outlandish claims, just consistently favorable coverage. Solaris Bank is
- * entirely fictitious, deliberately not a real Armenian bank, so no
- * fabricated promotional claims are attached to an actual company.
- *
- * Can still be run alone: php artisan db:seed --class=ArticleDemoSeeder
- */
 class ArticleDemoSeeder extends Seeder
 {
     public function run(): void

@@ -14,22 +14,11 @@ class TelegramClient
         $this->httpClient = new Client([
             'base_uri' => "https://api.telegram.org/bot{$this->botToken}/",
             'timeout' => 35,
-            // Telegram returns a normal JSON body (ok: false, description: ...)
-            // for logical failures like messaging a user who hasn't opened a
-            // DM with the bot yet - callers need to inspect that, not a thrown
-            // exception, so 4xx/5xx responses shouldn't blow up the request.
             'http_errors' => false,
         ]);
     }
 
     /**
-     * Send a text message, optionally with a persistent reply keyboard (the
-     * button row that sits above the text box - tapping one sends its label
-     * as a normal text message) or an inline keyboard (buttons attached to
-     * the message itself - a url button opens a link, a callback_data
-     * button silently notifies our webhook instead of sending any text).
-     * Telegram allows only one or the other per message.
-     *
      * @param  array<int, array<int, string>>|null  $keyboard  Rows of button labels.
      * @param  array<int, array<int, array{text: string, url?: string, callback_data?: string}>>|null  $inlineKeyboard  Rows of inline buttons.
      */
@@ -53,12 +42,7 @@ class TelegramClient
         return $this->call('sendMessage', $payload);
     }
 
-    /**
-     * Acknowledge an inline-button tap (a "callback query"). Telegram shows
-     * a loading spinner on the button until this is called, regardless of
-     * whether the tap needs any visible response - $text, if given, pops up
-     * as a small toast for the user.
-     */
+    // Acknowledge an inline-button tap (a "callback query").
     public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): array
     {
         $payload = ['callback_query_id' => $callbackQueryId];
@@ -71,14 +55,7 @@ class TelegramClient
     }
 
     /**
-     * Long-poll for new updates. Telegram holds the connection open for up
-     * to $timeout seconds and returns as soon as an update arrives, so this
-     * is cheap to call in a tight loop (no busy-waiting).
-     *
-     * Only usable when no webhook is registered - Telegram delivers updates
-     * via one channel or the other, never both. Intended for local
-     * development (see the telegram:poll command); production registers a
-     * webhook instead so nothing needs a supervised long-running process.
+     * Long-poll for new updates.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -92,12 +69,7 @@ class TelegramClient
         return $response['result'] ?? [];
     }
 
-    /**
-     * Register the URL Telegram should POST updates to. $secretToken, if
-     * given, comes back on every webhook request as the
-     * X-Telegram-Bot-Api-Secret-Token header, so the receiving route can
-     * verify the request actually came from Telegram.
-     */
+    // Register the URL Telegram should POST updates to.
     public function setWebhook(string $url, ?string $secretToken = null): array
     {
         $payload = ['url' => $url];
@@ -128,11 +100,6 @@ class TelegramClient
 
         $decoded = json_decode((string) $response->getBody(), true) ?? [];
 
-        // Telegram signals logical failures (bad chat id, user never opened
-        // a DM with the bot, etc.) via ok:false in an otherwise-normal JSON
-        // body rather than an HTTP error status - without this, callers
-        // that don't check `ok` themselves (e.g. CheckRateAlerts::notify)
-        // would silently treat a failed send as delivered.
         if (($decoded['ok'] ?? null) === false) {
             Log::warning("Telegram API call failed: {$method}", [
                 'chat_id' => $payload['chat_id'] ?? null,

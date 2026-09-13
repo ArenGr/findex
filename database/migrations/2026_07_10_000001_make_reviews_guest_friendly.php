@@ -7,9 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    // Run the migrations.
     public function up(): void
     {
         Schema::table('reviews', function (Blueprint $table) {
@@ -25,10 +23,6 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
 
-        // MySQL treats NULL as distinct in a unique index, so the existing
-        // (organization_id, user_id) unique constraint already lets multiple
-        // guest reviews (user_id null) through untouched - only authenticated
-        // users are still limited to one review per organization.
         $driver = Schema::getConnection()->getDriverName();
 
         if ($driver === 'mysql') {
@@ -38,9 +32,7 @@ return new class extends Migration
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
+    // Reverse the migrations.
     public function down(): void
     {
         $driver = Schema::getConnection()->getDriverName();

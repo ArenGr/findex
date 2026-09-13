@@ -12,12 +12,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
-/**
- * Covers reaching customers who already have an *open* request for a
- * destination when a new agency starts serving it - the complementary
- * case to NotifyDestinationAlertsJob, which only reaches people who
- * explicitly subscribed for an alert (see DestinationAlertTest).
- */
 class BackfillOpenRequestsToNewPartnerJobTest extends TestCase
 {
     use RefreshDatabase;
@@ -32,11 +26,6 @@ class BackfillOpenRequestsToNewPartnerJobTest extends TestCase
         ], $overrides));
     }
 
-    /**
-     * The org already has a tourismDestinations row for TH by the time this
-     * job runs in real usage - it's created in
-     * TourismController::updateDestinations() before the job is dispatched.
-     */
     private function newPartner(array $overrides = []): Organization
     {
         $organization = Organization::create(array_merge([

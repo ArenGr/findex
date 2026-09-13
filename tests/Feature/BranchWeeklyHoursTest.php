@@ -27,11 +27,7 @@ class BranchWeeklyHoursTest extends TestCase
         ], $week);
     }
 
-    /**
-     * Two days with identical hours either side of a different one are two
-     * runs, not one. Merging them would print "Mon - Fri" over a branch that
-     * shuts on Wednesday.
-     */
+    // Two days with identical hours either side of a different one are two runs, not one.
     public function test_it_does_not_span_a_run_across_a_day_that_differs(): void
     {
         $week = $this->branch([
@@ -53,10 +49,6 @@ class BranchWeeklyHoursTest extends TestCase
         $this->assertSame([], $this->branch([])->weeklyHours());
     }
 
-    /**
-     * A day the source never mentioned is absent, not closed - the page must
-     * not print "Sunday: closed" on a branch that may well open.
-     */
     public function test_it_leaves_out_a_day_the_bank_never_published(): void
     {
         $week = $this->branch(['mon' => ['09:00', '17:00']])->weeklyHours();

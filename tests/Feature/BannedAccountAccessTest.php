@@ -8,18 +8,6 @@ use App\Models\Writer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * All four guards authenticate against the same `users` table and share one
- * banned_at column, so a ban has to hold on every one of them - not just the
- * customer guard. It previously only held there: the organization and writer
- * AuthenticatedSessionControllers omitted banned_at from their credentials,
- * and the 'banned' middleware (which only ever read the 'web' guard) wasn't
- * applied to either dashboard. A banned organization could therefore keep
- * reading customer leads and publishing rates indefinitely.
- *
- * Two layers per guard, both covered below: banned_at as a login credential
- * (blocks a new session) and EnsureUserIsNotBanned (kills one already open).
- */
 class BannedAccountAccessTest extends TestCase
 {
     use RefreshDatabase;

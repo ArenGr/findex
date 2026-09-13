@@ -40,11 +40,6 @@ class OrganizationSendMessageActionTest extends TestCase
                 'body' => 'Hello from the Findex team.',
             ]);
 
-        // hasFrom() isn't used here: from() is only set inside build(), which
-        // Mail::fake() doesn't invoke before handing the mailable to this
-        // closure - the fromAddress/fromName constructor properties (set
-        // directly from the selected "Send as" option) are the reliable
-        // way to assert which identity was chosen.
         Mail::assertQueued(AdminMessageToOrganization::class, function (AdminMessageToOrganization $mail) use ($organization, $orgUser) {
             return $mail->organization->is($organization)
                 && $mail->messageSubject === 'A quick update'

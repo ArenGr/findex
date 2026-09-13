@@ -12,9 +12,7 @@
 
     <h1 class="mt-4 font-heading text-xl font-semibold text-ink">{{ __('tourism.inbox.request_heading') }}</h1>
 
-    {{-- The trip requirements, and nothing beyond them. The traveler's name
-         and email are deliberately not here: an agency needs to know what to
-         price, not who is asking, until the traveler chooses to make contact. --}}
+    {{-- The trip requirements, and nothing beyond them. --}}
     <div class="mt-6 rounded-2xl border border-placeholder p-5">
         <x-trip-brief :request="$quoteRequest" />
     </div>
@@ -61,9 +59,7 @@
             </form>
         @endunless
     @else
-        {{-- Already answered, but the request has since closed or run out.
-             The offer stays readable - it is the record of what was quoted -
-             it just can't be changed any more. --}}
+        {{-- Already answered, but the request has since closed or run out. --}}
         <h2 class="mt-8 font-heading text-base font-semibold text-ink">{{ __('tourism.inbox.your_offer_heading') }}</h2>
 
         <div class="mt-4 space-y-4">

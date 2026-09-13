@@ -5,14 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * A partner is no longer limited to one offer per request - they can send
- * several priced options (e.g. a budget and a premium package) within a
- * single response. Extracts the offer-specific columns off quote_responses
- * (which becomes just the org<->request engagement: token, status, an
- * optional overall note) into this new child table, one row per suggested
- * option.
- */
 return new class extends Migration
 {
     public function up(): void
@@ -29,9 +21,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Every existing responded QuoteResponse had exactly one offer -
-        // becomes its one QuoteSuggestion row, so nothing already answered
-        // loses its data.
         foreach (DB::table('quote_responses')->whereNotNull('price_amount')->get() as $response) {
             DB::table('quote_suggestions')->insert([
                 'quote_response_id' => $response->id,
@@ -69,9 +58,6 @@ return new class extends Migration
             $table->string('attachment_path')->nullable();
         });
 
-        // Best-effort only - if a response had more than one suggestion,
-        // only the first (cheapest) survives the downgrade back to a
-        // single-offer row.
         foreach (DB::table('quote_suggestions')->orderBy('price_amount')->get() as $suggestion) {
             DB::table('quote_responses')->where('id', $suggestion->quote_response_id)->whereNull('price_amount')->update([
                 'price_amount' => $suggestion->price_amount,

@@ -196,9 +196,19 @@ return [
      * summary says what was assumed on the traveller's behalf.
      */
     'presets' => [
-        'eyebrow' => 'One-click requests',
-        'heading' => 'Popular trips',
-        'sub' => 'Pick one and send it as it is - or use it as a starting point and change anything.',
+        'heading' => 'Popular destinations',
+        'sub' => 'Explore the most requested destinations by our travellers.',
+        'view_all' => 'View all destinations',
+        // Where the trip actually goes. "Egypt" could be the pyramids or a
+        // Red Sea resort, and only one of those is an all-inclusive week.
+        'cities' => [
+            'tbilisi' => 'Tbilisi',
+            'dubai' => 'Dubai',
+            'hurghada' => 'Hurghada',
+            'ayia_napa' => 'Ayia Napa',
+        ],
+        'previous' => 'Previous trip',
+        'next' => 'Next trip',
         'choose' => 'Use this trip',
         'nights' => ':count nights',
         'travellers' => ':count adults',
@@ -267,7 +277,7 @@ return [
         'adults_short' => '{1} 1 adult|[2,*] :count adults',
         'children_short' => '{1} 1 child|[2,*] :count children',
         'heading' => 'Create a travel request',
-        'subheading' => 'Share your trip details once and receive personalized offers from trusted travel agencies.',
+        'subheading' => 'Compare offers from trusted travel agencies, find the best deals and plan your next adventure with confidence.',
         'destination' => 'Where do you want to go?',
         'destination_add_another' => 'Add another destination',
         'destination_placeholder' => 'Destination city or airport',
@@ -314,17 +324,22 @@ return [
         'notify_me_button' => 'Notify me',
         'notify_me_confirmed' => "Got it - we'll email you as soon as an agency covers that destination.",
         'badge' => 'Partner Travel Agencies',
-        'benefit_trusted' => 'Trusted agencies',
+        'benefit_trusted' => 'Verified agencies',
         'benefit_value' => 'Best value offers',
         'benefit_time' => 'Saves you time',
         'hero_image_alt' => 'Whitewashed village with blue domes above the sea in Santorini',
-        'benefit_trusted_sub' => 'Verified partners',
+        'benefit_trusted_sub' => 'Trusted partners',
         'benefit_value_sub' => 'Compare and choose',
         'benefit_time_sub' => 'One request, multiple offers',
-        'hero_line1' => 'Plan less.',
+        'hero_line1' => 'Don’t just travel.',
         'hero_line2' => 'Travel',
-        'hero_line2_accent' => 'more.',
+        'hero_line2_accent' => 'smarter.',
         'hero_script' => 'Good trips better people',
+        // Where the hero photograph was taken - it is a real place and the
+        // caption used to be a slogan.
+        // Where the hero photograph was taken - it is a real place and the
+        // caption used to be a slogan.
+        'hero_photo_place' => 'Santorini, Greece',
         'hero_badge_title' => 'Discover',
         'hero_badge_sub' => 'amazing places',
         'summary_empty_title' => 'Nothing here yet',
@@ -344,6 +359,11 @@ return [
         // Multi-step wizard (client-side; one form, one POST).
         'wizard_continue' => 'Continue',
         'wizard_continue_prefs' => 'Continue to preferences',
+        'search_heading' => 'Find your perfect trip',
+        'search_sub' => 'Tell us where and when. Agencies come back with offers.',
+        'search_script' => "It's free and takes 1 minute",
+        'more_options' => 'More options (hotel, budget, preferences)',
+        'get_offers' => 'Get offers',
         'wizard_back' => 'Back',
         'wizard_step_of' => 'Step :current of :total',
         'fstep_1_title' => 'Trip details',

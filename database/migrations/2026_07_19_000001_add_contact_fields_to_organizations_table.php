@@ -6,13 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Generalized across every org type (not tourism-specific like
-     * quote_responses' own contact fields) - a bank or insurer's public
-     * profile can show these too, and auto insurance quotes (generated
-     * automatically, with no per-request human response step to attach
-     * contact info to) read from here directly.
-     */
     public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {

@@ -15,9 +15,7 @@
             </td>
         </tr>
 
-        {{-- The trip requirements only. No name, no email address - an
-             agency needs what to price, not who is asking, until the
-             traveller chooses to make contact. --}}
+        {{-- The trip requirements only. --}}
         <tr>
             <td style="font-size:14px; line-height:1.8; color:#262626; padding-bottom:24px;">
                 <strong>{{ __('tourism.request.destination') }}:</strong>

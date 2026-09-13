@@ -1,17 +1,6 @@
 /**
  * One currency/rate-type panel of the homepage rates table.
  *
- * The rows themselves are rendered by Blade (see rates-table-row.blade.php),
- * so this holds only what a sort needs: the two numbers per row it can key
- * on. It hands back the position each row should occupy, which the markup
- * feeds to CSS `order` - sorting reorders rows that are already painted
- * rather than re-creating them, which is what kept the table from existing
- * at all until Alpine had booted.
- *
- * Registered here rather than written inline for the same reason as
- * travelRequestForm: the homepage renders 53 of these panels, and an inline
- * copy of the object costs ~1.5 KB of markup each.
- *
  * @param {Array<{buy_rate: number, sell_rate: number}>} metrics - one entry
  *        per row, in the order Blade rendered them.
  */

@@ -50,9 +50,7 @@ class MortgageOffer extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the organization that provided this mortgage offer.
-     */
+    // Get the organization that provided this mortgage offer.
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);

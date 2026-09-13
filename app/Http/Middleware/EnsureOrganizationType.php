@@ -9,12 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureOrganizationType
 {
-    /**
-     * Blocks org-type-specific dashboard pages (e.g. Rates for bank/exchange,
-     * Tourism for tourism) at the route level, not just in the nav - without
-     * this, hiding a link in dashboard.blade.php doesn't stop another org
-     * type from hitting the URL directly.
-     */
+    // Blocks org-type-specific dashboard pages (e.g.
     public function handle(Request $request, Closure $next, string ...$types): Response
     {
         $organization = Auth::guard('organization')->user()?->organization;

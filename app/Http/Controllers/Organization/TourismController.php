@@ -18,20 +18,12 @@ use Illuminate\View\View;
 
 class TourismController extends Controller
 {
-    /**
-     * Below this many *other* organizations contributing a price for a
-     * destination, showing a "market average" would really just be showing
-     * one specific competitor's price - not enough to anonymize.
-     */
     private const BENCHMARK_MIN_MARKET_ORGS = 2;
 
     public function index(TourismPriceData $priceData): View
     {
         $organization = Auth::guard('organization')->user()->organization;
 
-        // A connect link is only useful before the partner has linked their
-        // chat - generate one lazily so the dashboard always has a live link
-        // to show, without a separate "generate" step for the common case.
         if (! $organization->telegram_chat_id && ! $organization->telegram_connect_token) {
             $organization->update(['telegram_connect_token' => Str::random(32)]);
         }
@@ -54,15 +46,6 @@ class TourismController extends Controller
         ]);
     }
 
-    /**
-     * Aggregate, historical price comparison rather than live per-request
-     * bids - showing an org what other agencies quoted on a request still
-     * open for replies would encourage anchoring to "just undercut the
-     * lowest visible price" instead of genuine competition. This only ever
-     * looks at already-responded quotes, across every request, in AMD
-     * (converted at today's rate - approximate by nature, matching
-     * CurrencyConverter's own doc comment).
-     */
     private function priceBenchmark(Organization $organization, array $countryCodes, TourismPriceData $priceData): Collection
     {
         if (empty($countryCodes)) {
@@ -122,12 +105,6 @@ class TourismController extends Controller
             $organization->tourismDestinations()->firstOrCreate(['country_code' => $countryCode]);
         }
 
-        // A destination newly added here is created active (not paused),
-        // so it's always eligible to trigger alerts - see
-        // NotifyDestinationAlertsJob. BackfillOpenRequestsToNewPartnerJob
-        // covers the complementary case: customers who already have an
-        // open request for this destination, not just people who
-        // subscribed to be notified.
         foreach ($newlyAdded as $countryCode) {
             NotifyDestinationAlertsJob::dispatch($countryCode);
             BackfillOpenRequestsToNewPartnerJob::dispatch($organization->id, $countryCode);
@@ -136,13 +113,6 @@ class TourismController extends Controller
         return redirect()->route('org.dashboard.tourism.index')->with('status', 'destinations-saved');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own destinations is
-     * also what enforces that an org can only pause its own.
-     */
     public function updateDestinationPause(Request $request, string $locale, string $destination): RedirectResponse
     {
         $organization = Auth::guard('organization')->user()->organization;
@@ -161,11 +131,6 @@ class TourismController extends Controller
         return redirect()->route('org.dashboard.tourism.index')->with('status', 'destination-pause-updated');
     }
 
-    /**
-     * Both minimums are optional and independent - either can be set
-     * without the other, and clearing a field removes that filter (see
-     * Organization::tourismPartnersForDestination()).
-     */
     public function updateLeadPreferences(Request $request): RedirectResponse
     {
         $organization = Auth::guard('organization')->user()->organization;

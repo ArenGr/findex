@@ -10,10 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * How wide one request may reach, and how long the details it carries are
- * kept afterwards.
- */
+// How wide one request may reach, and how long the details it carries are kept afterwards.
 class TravelRetentionAndFanOutTest extends TestCase
 {
     use RefreshDatabase;
@@ -62,14 +59,8 @@ class TravelRetentionAndFanOutTest extends TestCase
         ], $overrides));
     }
 
-    /* ---------------------------------------------------------------
-     * Fan-out cap
-     * ------------------------------------------------------------- */
+    // --------------------------------------------------------------- Fan-out cap
 
-    /**
-     * A request naming no destination matches every agency on the platform,
-     * so without a ceiling one submission pages the whole market.
-     */
     public function test_a_request_reaches_no_more_agencies_than_the_cap(): void
     {
         $this->agencies(QuoteRequest::MAX_PARTNERS_PER_REQUEST + 8);
@@ -82,10 +73,6 @@ class TravelRetentionAndFanOutTest extends TestCase
         );
     }
 
-    /**
-     * The count the traveller is told about has to be the count actually
-     * contacted - the two used to be worked out by separate code.
-     */
     public function test_the_reported_agency_count_matches_the_responses_created(): void
     {
         $this->agencies(QuoteRequest::MAX_PARTNERS_PER_REQUEST + 5);
@@ -107,9 +94,7 @@ class TravelRetentionAndFanOutTest extends TestCase
         $this->assertSame(3, QuoteRequest::sole()->responses()->count());
     }
 
-    /* ---------------------------------------------------------------
-     * Retention
-     * ------------------------------------------------------------- */
+    // --------------------------------------------------------------- Retention
 
     private function requestWithChildren(array $overrides = []): QuoteRequest
     {

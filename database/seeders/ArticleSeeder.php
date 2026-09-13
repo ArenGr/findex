@@ -32,8 +32,6 @@ class ArticleSeeder extends Seeder
             'email_verified_at' => now(),
         ])->save();
 
-        // The admin who "reviewed" the approved/rejected demo articles -
-        // reuses AdminSeeder's account rather than minting a new one.
         $admin = User::firstOrNew(['email' => 'admin@findex.test']);
         if (! $admin->exists) {
             $admin->forceFill([

@@ -9,13 +9,6 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Tests\TestCase;
 
-/**
- * Regression coverage for the account-preemption fix: linking Google to an
- * existing password account by email alone previously let an attacker who
- * pre-registered the victim's email keep using their own password on the
- * account after the real owner signed in with Google (see
- * GoogleAuthController::callback).
- */
 class GoogleAuthTest extends TestCase
 {
     use RefreshDatabase;
@@ -38,9 +31,6 @@ class GoogleAuthTest extends TestCase
 
     public function test_first_google_link_to_an_existing_account_revokes_its_prior_password(): void
     {
-        // Simulates an attacker pre-registering the victim's email with a
-        // password only the attacker knows, before the real owner ever
-        // signs in with Google.
         $squatted = User::factory()->create([
             'email' => 'victim@example.com',
             'password' => Hash::make('attacker-known-password'),
@@ -90,14 +80,6 @@ class GoogleAuthTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    /**
-     * The callback is registered with Google at a fixed URL, so it sits outside
-     * the {locale} prefix and has no locale segment to read. An already-signed-
-     * in visitor landing back on it - Google's silent prompt=none re-auth, a
-     * refresh, a stale tab - trips the guest middleware, and building the
-     * redirect used to throw UrlGenerationException for a missing parameter
-     * rather than sending them home.
-     */
     public function test_an_authenticated_visitor_hitting_the_callback_is_sent_home_not_a_500(): void
     {
         $user = User::factory()->create(['locale' => 'ru']);

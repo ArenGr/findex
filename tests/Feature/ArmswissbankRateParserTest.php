@@ -7,12 +7,6 @@ use Tests\TestCase;
 
 class ArmswissbankRateParserTest extends TestCase
 {
-    /**
-     * Trimmed from https://www.armswissbank.am/include/ajax.php, keeping the
-     * real shape: BID/OFFER are the non-cash pair and BID_cash/OFFER_cash
-     * the cash one, "0.00" marks a currency not traded in that form, and the
-     * response carries unrelated market data alongside the rates.
-     */
     private function fixture(): string
     {
         return <<<'JSON'
@@ -33,10 +27,6 @@ class ArmswissbankRateParserTest extends TestCase
         return (new ArmswissbankRateParser)->parse($json ?? $this->fixture());
     }
 
-    /**
-     * The two pairs sit on one row and are easy to transpose, which would
-     * publish the cash spread as the non-cash one and vice versa.
-     */
     public function test_it_keeps_the_cash_and_non_cash_pairs_on_their_own_sides(): void
     {
         $rates = $this->parse();
@@ -51,10 +41,6 @@ class ArmswissbankRateParserTest extends TestCase
         );
     }
 
-    /**
-     * SEK and CNH are quoted non-cash only; the bank writes "0.00" for the
-     * cash side and its own page renders that as a dash.
-     */
     public function test_it_does_not_publish_a_zero_as_though_it_were_a_rate(): void
     {
         foreach ($this->parse() as $rate) {
@@ -66,11 +52,6 @@ class ArmswissbankRateParserTest extends TestCase
         $this->assertEqualsCanonicalizing(['USD', 'RUB'], array_column($cash, 'code'));
     }
 
-    /**
-     * Normalising codes is the scraper's job, not the parser's (see
-     * RateParser) - this bank's CNH and RUB are folded to the app's CNY and
-     * RUR downstream, and RateCurrencyAliasTest guards that mapping.
-     */
     public function test_it_reports_the_codes_the_bank_publishes_rather_than_normalising_them(): void
     {
         $codes = array_column($this->parse(), 'code');

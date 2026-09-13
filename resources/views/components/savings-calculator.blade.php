@@ -1,6 +1,4 @@
 @php
-    // Rough starting points so the calculator shows a sensible result
-    // before the user changes anything.
     $defaultInitialDeposit = 500000;
     $defaultMonthlyContribution = 20000;
 @endphp

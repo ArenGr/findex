@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 class TravelPartners
 {
     public const MIN_TO_SHOW = 1;
+
     private const LIMIT = 8;
 
     /** @return Collection<int, object{name: string, logo: ?string, initial: string}> */
@@ -30,6 +31,7 @@ class TravelPartners
                 ])
                 ->all()
         );
+
         return collect($rows)->map(fn (array $row) => (object) $row);
     }
 }

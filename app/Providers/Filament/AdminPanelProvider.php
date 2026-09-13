@@ -32,8 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            // Topbar bell + unread count (e.g. "new organization awaiting
-            // approval" - see RegisteredOrganizationController::store()).
+            // Topbar bell + unread count (e.g.
             ->databaseNotifications()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

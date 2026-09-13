@@ -6,18 +6,6 @@ use App\Models\ExchangeQuoteResponse;
 use App\Models\Organization;
 use Illuminate\Console\Command;
 
-/**
- * Local-testing tool: a real offer normally arrives by a partner submitting
- * the secure response form (see ExchangePartnerResponseController), which
- * requires clicking a real link a live Telegram send would have delivered.
- * Demo partners (see ExchangeOrgSeeder) have a fake telegram_chat_id, so
- * TelegramExchangeNotifier's real send to them fails - but the pending
- * ExchangeQuoteResponse row (with its response_token and posted_rate
- * snapshot) is still created regardless of delivery success, so this
- * command just fills that row in directly to preview the results page
- * without a real Telegram round trip. Mirrors tourism:fake-reply
- * (FakeQuoteReply.php) for the exchange-quote domain.
- */
 class ExchangeFakeReply extends Command
 {
     /**
@@ -68,9 +56,7 @@ class ExchangeFakeReply extends Command
         $postedRate = (float) $response->posted_rate;
         $offeredRate = $this->option('rate') !== null ? (float) $this->option('rate') : $this->sampleRate($postedRate);
 
-        // Mirrors ExchangePartnerResponseController::store()'s own
-        // 'min:' . $response->posted_rate validation rule - fake data
-        // shouldn't be able to produce a state the real form can't.
+        // Mirrors ExchangePartnerResponseController::store()'s own 'min:' .
         if ($offeredRate < $postedRate) {
             $this->error("Offered rate ({$offeredRate}) can't be below the posted rate ({$postedRate}).");
 

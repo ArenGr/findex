@@ -12,11 +12,6 @@ class AdminMessageToOrganization extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    /**
-     * $messageSubject/$messageBody rather than $subject/$body - Mailable
-     * already defines a subject() method, so a same-named public property
-     * would collide with it.
-     */
     public function __construct(
         public readonly Organization $organization,
         public readonly string $messageSubject,

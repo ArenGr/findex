@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'breadcrumb' => 'Навигация',
+    'compare_selected' => 'Сравнить выбранные',
     'website' => 'Веб-сайт',
     'type' => 'Тип',
     'country' => 'Страна',

@@ -5,25 +5,7 @@
     'count' => null,       // number of insurers being asked, for the checklist
 ])
 
-{{--
-    Full-screen "getting your quotes" loader, from the approved Stitch loading
-    screen. Rendered with Findex tokens and inline icons (no CDN Tailwind,
-    Google fonts or Material Symbols).
-
-    It covers the whole viewport on a solid light ground so it reads as a page
-    rather than a translucent overlay - the request is one synchronous POST,
-    so this is what the user watches while the server fans out to the insurers
-    and comes back with the results page.
-
-    The three-line checklist and its pulse ring are decoration: there is no
-    real per-step progress to report from a single blocking request, only the
-    reassurance that something is happening. Animations live in app.css
-    (findex-stagger-*, findex-pulse-ring).
-
-    Driven by an Alpine boolean in the parent scope (default `loading`); the
-    parent flips it true on submit. x-cloak keeps it hidden before Alpine
-    boots so it never flashes on first paint.
---}}
+{{-- Full-screen "getting your quotes" loader, from the approved Stitch loading screen. --}}
 <div
     x-show="{{ $show }}"
     x-cloak

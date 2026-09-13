@@ -10,11 +10,6 @@ use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers pausing/resuming a tourism destination: the dashboard toggle
- * itself, ownership scoping, and that SendQuoteRequestToPartnersJob
- * actually excludes paused destinations (with paused_until auto-resuming).
- */
 class TourismDestinationPauseTest extends TestCase
 {
     use RefreshDatabase;

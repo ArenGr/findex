@@ -23,9 +23,6 @@
         'promo_note' => '',
     ];
 
-    // Three sources, in order of precedence: what the agency just submitted
-    // and failed validation on, what it has already sent (so revising is
-    // editing rather than retyping), and finally one blank option.
     $existing = $response->suggestions
         ->map(fn ($suggestion) => array_merge($blank, [
             'id' => $suggestion->id,
@@ -50,9 +47,6 @@
 
     $isRevision = $response->has_replied;
 
-    // A three-way control, not a checkbox: "included", "not included" and
-    // "didn't say" are three different answers, and a checkbox can only
-    // carry two (see TravelOfferSubmission::boolOrNull).
     $tristate = [
         '' => __('tourism.offer.not_stated'),
         '1' => __('tourism.offer.included'),
@@ -118,9 +112,6 @@
                 </button>
             </div>
 
-            {{-- Carries the row's identity through a revision so an edit
-                 updates this option rather than replacing it (and losing its
-                 attachment) - see TravelOfferSubmission::persist(). --}}
             <input type="hidden" :name="`suggestions[${index}][id]`" :value="suggestion.id ?? ''">
 
             <div class="grid grid-cols-2 gap-4">
@@ -155,10 +146,7 @@
                 </div>
             </div>
 
-            {{-- The structured half of the offer. These are the fields the
-                 traveler's comparison table lines up, so they are proper
-                 controls rather than something to be written into the notes
-                 box and hoped for. --}}
+            {{-- The structured half of the offer. --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <label class="block text-sm font-medium text-ink">{{ __('tourism.respond.flight_included_label') }}</label>

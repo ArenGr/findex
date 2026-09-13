@@ -25,19 +25,8 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
         return [10, 30, 60];
     }
 
-    /**
-     * Matching partners is business logic and stays here regardless of
-     * notification channel; a QuoteResponse row (with its secure respond
-     * token) is created for every match up front, so the response - and the
-     * link a partner would use to answer it - exists independently of
-     * whether this particular notification attempt succeeds.
-     */
     public function handle(PartnerNotifierInterface $notifier): void
     {
-        // Capped, and matched the same way the submit-time count was - see
-        // Organization::tourismPartnersForRequest(). A request open to
-        // suggestions names no country and would otherwise reach every
-        // agency on the platform.
         $partners = Organization::tourismPartnersForRequest($this->quoteRequest)->get();
 
         foreach ($partners as $partner) {
@@ -57,10 +46,6 @@ class SendQuoteRequestToPartnersJob implements ShouldQueue
                     'organization_id' => $partner->id,
                 ]);
 
-                // Usually because the agency has no Telegram chat connected,
-                // which is now a perfectly ordinary way to work (see the
-                // dashboard inbox) rather than a misconfiguration - so it
-                // gets told by email instead of not at all.
                 AgencyRequestMailer::notify($response);
             }
         }

@@ -23,10 +23,6 @@
     <section class="site-container pt-10 pb-16">
 
         <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {{-- Browsing by individual bank (ratings, reviews, contact info)
-            is a different, complementary way into the same data - not a
-            product category, so it's visually distinct (filled background)
-            rather than one more tile in the loop below. --}}
             <a
                 href="{{ route('banks.all') }}"
                 class="group block rounded-2xl border border-primary/30 bg-primary/5 p-6 shadow-sm transition hover:border-primary/60 hover:shadow-md"

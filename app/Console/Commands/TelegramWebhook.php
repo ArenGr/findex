@@ -5,12 +5,6 @@ namespace App\Console\Commands;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Console\Command;
 
-/**
- * Deploy-time step for production: registers (or removes) the webhook so
- * Telegram pushes updates to a normal route instead of requiring
- * telegram:poll to run forever under a supervisor. Run once after each
- * deploy where APP_URL changes, or on first setup.
- */
 class TelegramWebhook extends Command
 {
     protected $signature = 'telegram:webhook {action=set : set|unset|info}';

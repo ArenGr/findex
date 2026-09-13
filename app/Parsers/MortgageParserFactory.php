@@ -7,8 +7,7 @@ use App\Models\Organization;
 class MortgageParserFactory
 {
     /**
-     * Map of organization slug => parser class. Add an entry here (and a
-     * matching parser class) for each new organization we support.
+     * Map of organization slug => parser class.
      *
      * @var array<string, class-string<MortgageParser>>
      */

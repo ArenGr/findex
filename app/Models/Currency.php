@@ -8,14 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Currency extends Model
 {
-    /**
-     * A currency code has no country of its own to derive a flag from the way
-     * QuoteRequestController::worldCountries() does for ISO-3166 countries
-     * (that trick needs a 2-letter country code, not a 3-letter currency one) -
-     * so this is a small hand-picked map to one representative country/region
-     * per currency, the same convention used by most currency-converter apps.
-     * EUR gets the real EU flag rather than any single member state's.
-     */
     public const FLAGS = [
         'AMD' => '🇦🇲',
         'USD' => '🇺🇸',
@@ -57,17 +49,13 @@ class Currency extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get all currency rates for this currency.
-     */
+    // Get all currency rates for this currency.
     public function rates(): HasMany
     {
         return $this->hasMany(CurrencyRate::class);
     }
 
-    /**
-     * Get the latest rates for this currency from all organizations.
-     */
+    // Get the latest rates for this currency from all organizations.
     public function latestRates(): HasMany
     {
         return $this->rates()->where('scraped_at', '>=', now()->subHours(24));

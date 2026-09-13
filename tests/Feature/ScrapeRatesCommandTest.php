@@ -10,12 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-/**
- * scrape:rates must only touch organizations that actually have an active
- * source of the requested type. Before this, it iterated every active org, so
- * non-bank types (insurers, which carry no currency_rates source) each failed
- * with "Source not found" and inflated the failure count.
- */
 class ScrapeRatesCommandTest extends TestCase
 {
     use RefreshDatabase;

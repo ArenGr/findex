@@ -2,18 +2,7 @@
 
 namespace App\Enums;
 
-/**
- * Where a travel request stands. Only the first three are ever written to
- * quote_requests.status - EXPIRED is a function of expires_at rather than a
- * stored value, so it can never go stale between the clock passing and
- * something getting round to updating the row (see
- * QuoteRequest::currentStatus(), which is the only thing that should be
- * asked "what state is this request in").
- *
- * There is deliberately no "draft": nothing in the flow saves a
- * half-finished request, so a state nothing can reach would only be a
- * status string for views to handle and never hit.
- */
+// Where a travel request stands.
 enum QuoteRequestStatus: string
 {
     /** Sent to the matched agencies; none has answered yet. */
@@ -28,10 +17,7 @@ enum QuoteRequestStatus: string
     /** Past expires_at without being closed - derived, never stored. */
     case EXPIRED = 'expired';
 
-    /**
-     * Whether agencies can still reply. Both terminal states look the same
-     * from an agency's side; only the reason differs.
-     */
+    // Whether agencies can still reply.
     public function isOpen(): bool
     {
         return $this === self::SUBMITTED || $this === self::OFFERS_RECEIVED;
@@ -42,11 +28,6 @@ enum QuoteRequestStatus: string
         return __('tourism.status.'.$this->value);
     }
 
-    /**
-     * Tailwind classes for the status pill, so the same state can't end up
-     * styled three different ways across the status page, the request list
-     * and the agency inbox.
-     */
     public function badgeClasses(): string
     {
         return match ($this) {

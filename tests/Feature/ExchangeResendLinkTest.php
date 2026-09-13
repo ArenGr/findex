@@ -10,11 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-/**
- * Covers the "resend my results link" flow
- * (ExchangeQuoteController::resend) - same shape as ResendQuoteLinkTest
- * (travel).
- */
 class ExchangeResendLinkTest extends TestCase
 {
     use RefreshDatabase;

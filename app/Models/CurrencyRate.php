@@ -34,25 +34,19 @@ class CurrencyRate extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the organization that provided this rate.
-     */
+    // Get the organization that provided this rate.
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
-    /**
-     * Get the currency for this rate.
-     */
+    // Get the currency for this rate.
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
     }
 
-    /**
-     * Calculate the spread between buy and sell rates.
-     */
+    // Calculate the spread between buy and sell rates.
     public function getSpread(): float
     {
         return (float) ($this->sell_rate - $this->buy_rate);

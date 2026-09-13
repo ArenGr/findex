@@ -47,13 +47,6 @@ class ArticleController extends Controller
         return redirect()->route('writer.dashboard.articles.index')->with('status', 'article-created');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated writer's own articles is also what
-     * enforces that a writer can only edit their own.
-     */
     public function edit(string $locale, string $article): View
     {
         $writer = Auth::guard('writer')->user()->writer;
@@ -74,8 +67,6 @@ class ArticleController extends Controller
 
         $data = $this->validated($request);
 
-        // A validated-but-absent file input resolves to null - drop it so a
-        // save without picking a new image doesn't wipe out the existing one.
         if ($request->hasFile('featured_image')) {
             $data['featured_image'] = $request->file('featured_image')->store('articles', 'public');
         } else {
@@ -95,11 +86,6 @@ class ArticleController extends Controller
         return redirect()->route('writer.dashboard.articles.index')->with('status', 'article-deleted');
     }
 
-    /**
-     * A dedicated action rather than a status field on the update form, so
-     * a writer can't tamper with status through the edit form - the only
-     * way an article becomes 'submitted' is through this explicit endpoint.
-     */
     public function submit(string $locale, string $article): RedirectResponse
     {
         $writer = Auth::guard('writer')->user()->writer;

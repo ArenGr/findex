@@ -36,13 +36,6 @@ class BranchController extends Controller
         return redirect()->route('org.dashboard.branches.index')->with('status', 'branch-created');
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment. Scoping the
-     * lookup through the authenticated organization's own branches is also
-     * what enforces that an org can only edit its own branches.
-     */
     public function edit(string $locale, string $branch): View
     {
         $organization = Auth::guard('organization')->user()->organization;

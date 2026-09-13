@@ -11,12 +11,7 @@ use App\Services\Notifications\PartnerNotifierInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers the partner-matching/fan-out logic only. Message content and
- * delivery live in TelegramPartnerNotifier (see TelegramPartnerNotifierTest)
- * behind the PartnerNotifierInterface seam, so this job is tested against
- * that interface and shouldn't care which channel implements it.
- */
+// Covers the partner-matching/fan-out logic only.
 class SendQuoteRequestToPartnersJobTest extends TestCase
 {
     use RefreshDatabase;

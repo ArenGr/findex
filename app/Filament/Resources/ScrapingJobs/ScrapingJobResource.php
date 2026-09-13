@@ -23,10 +23,6 @@ class ScrapingJobResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Rates & Scraping';
 
-    /**
-     * Jobs are only ever created by the scrape:rates command - the panel
-     * offers visibility (view/delete for cleanup) but never authoring.
-     */
     public static function canCreate(): bool
     {
         return false;

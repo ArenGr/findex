@@ -5,14 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * A customer's budget is a range they're willing to spend within (e.g.
- * "$2000-2500"), not a single figure - lets a partner see the ceiling
- * they're quoting against, not just a bare minimum. Replaces the single
- * budget_amd added in 2026_07_15_000005_add_lead_quality_filters; existing
- * values become budget_min_amd (that's what they were already compared
- * against a partner's minimum as).
- */
+// A customer's budget is a range they're willing to spend within (e.g.
 return new class extends Migration
 {
     public function up(): void

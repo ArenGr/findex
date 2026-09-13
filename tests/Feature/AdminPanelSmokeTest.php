@@ -107,9 +107,6 @@ class AdminPanelSmokeTest extends TestCase
             'summary' => 'Mostly positive feedback.',
         ]);
 
-        // Renders all five relation managers (branches, reviews, report
-        // requests, currency rates, sources) in one page - the most surface
-        // area for a PHP error among these resources.
         $this->get("/admin/organizations/{$organization->id}")->assertOk();
         $this->get("/admin/organizations/{$organization->id}/edit")->assertOk();
         $this->get("/admin/reviews/{$review->id}")->assertOk();
@@ -146,8 +143,7 @@ class AdminPanelSmokeTest extends TestCase
             'email' => 'second-admin@example.com',
         ]);
 
-        // With two admins, the acting admin still can't delete themselves,
-        // but can delete the other one.
+        // With two admins, the acting admin still can't delete themselves, but can delete the other one.
         $this->assertFalse(AdminResource::canDelete($admin));
         $this->assertTrue(AdminResource::canDelete($second));
     }

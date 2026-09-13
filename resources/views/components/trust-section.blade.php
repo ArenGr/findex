@@ -17,8 +17,6 @@
     <div class="site-container grid grid-cols-1 items-center gap-12 py-16 lg:grid-cols-2">
         {{-- Decorative composition of the four things Findex compares --}}
         <div class="relative mx-auto w-full max-w-sm">
-            {{-- -inset-3 below sm: the column pads 16px on a phone, so a 24px
-             bleed on every side escapes the viewport and scrolls the page. --}}
             <div class="absolute -inset-3 -z-10 rounded-[2rem] bg-slide-purple/20 sm:-inset-6"></div>
             <div class="grid grid-cols-2 gap-4">
                 @foreach ($pillars as $i => $pillar)

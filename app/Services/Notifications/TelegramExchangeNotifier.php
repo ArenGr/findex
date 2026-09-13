@@ -108,11 +108,6 @@ class TelegramExchangeNotifier implements ExchangeNotifierInterface
         return true;
     }
 
-    /**
-     * Written in Armenian regardless of the requester's own site language -
-     * this goes to local exchange-office staff, not the customer who filed
-     * the request (same reasoning as TelegramPartnerNotifier).
-     */
     private function buildMessage(ExchangeQuoteResponse $response): string
     {
         $request = $response->exchangeQuoteRequest;

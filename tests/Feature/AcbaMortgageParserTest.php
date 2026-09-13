@@ -5,13 +5,6 @@ namespace Tests\Feature;
 use App\Parsers\AcbaMortgageParser;
 use Tests\TestCase;
 
-/**
- * There is no textual anchor tying a rate span to a currency on ACBA's
- * mortgage page (see the parser's class docblock) - the AMD/EUR/USD mapping
- * is purely positional. This covers the one column-layout change the parser
- * can actually detect: a column being added or removed, which must now fail
- * loudly instead of silently misattributing a rate to the wrong currency.
- */
 class AcbaMortgageParserTest extends TestCase
 {
     private function rateSpan(string $value): string
@@ -38,10 +31,7 @@ class AcbaMortgageParserTest extends TestCase
 
     public function test_throws_instead_of_misattributing_when_a_column_is_missing(): void
     {
-        // Only two rate spans where three are expected - e.g. ACBA dropped
-        // a currency column. Silently mapping these to AMD/EUR (skipping
-        // USD, or worse, shifting every currency down by one) would publish
-        // wrong rates with no error anywhere.
+        // Only two rate spans where three are expected - e.g.
         $html = $this->tierHtml('Fixed annual interest rate', ['10.5', '9.5']);
 
         $this->expectException(\RuntimeException::class);
@@ -55,8 +45,6 @@ class AcbaMortgageParserTest extends TestCase
 
         $offers = (new AcbaMortgageParser)->parse($html);
 
-        // Only the one tier present in the fixture should produce offers -
-        // the two floating-rate tiers aren't in this HTML at all.
         $this->assertCount(3, $offers);
     }
 }

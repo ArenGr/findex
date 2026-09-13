@@ -8,13 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Applies whatever the caller's plan allows.
- *
- * Two windows, because they answer different questions: the per-minute limit
- * stops a runaway loop taking the site down, and the daily limit is the product
- * being sold. Both come from config/api.php - no limit is written down here.
- */
+// Applies whatever the caller's plan allows.
 class ThrottleApiRequests
 {
     public function handle(Request $request, Closure $next): Response
@@ -28,8 +22,7 @@ class ThrottleApiRequests
         foreach ([['minute', 60], ['day', 86400]] as [$window, $seconds]) {
             $allowance = $limits['requests_per_'.$window] ?? null;
 
-            // Null is unmetered - an enterprise agreement where the contract is
-            // the limit, not the code.
+            // Null is unmetered - an enterprise agreement where the contract is the limit, not the code.
             if ($allowance === null) {
                 continue;
             }
@@ -54,8 +47,6 @@ class ThrottleApiRequests
 
         $response = $next($request);
 
-        // Reported against the daily allowance: that is the one a customer is
-        // budgeting against, and the per-minute guard is ours, not theirs.
         $daily = $limits['requests_per_day'] ?? null;
 
         if ($daily !== null) {

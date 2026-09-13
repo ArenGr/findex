@@ -23,12 +23,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\URL;
 
-/**
- * Dev-only visual preview for transactional emails - lets us eyeball the
- * shared layout/copy in a real browser without triggering a send or hunting
- * through an inbox. Every model here is built unpersisted (new Model([...])
- * + setRelation()) specifically so this never touches the database.
- */
 class EmailPreviewController extends Controller
 {
     public function index(string $locale)

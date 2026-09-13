@@ -5,16 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * An admin-controlled on/off switch for one bank product page. Enabling a
- * key surfaces that category in the header menu and on the /banks hub, and
- * makes its page reachable; disabling hides it everywhere and 404s the page
- * (see OfferController).
- *
- * Rows are seeded rather than created from the panel - a toggle only means
- * something if the app has a page behind it, so the set is defined in code
- * (FeatureToggleSeeder) and the panel only flips them.
- */
+// An admin-controlled on/off switch for one bank product page.
 class FeatureToggle extends Model
 {
     private const CACHE_KEY = 'feature-toggles.enabled';
@@ -28,12 +19,6 @@ class FeatureToggle extends Model
         'is_enabled' => 'boolean',
     ];
 
-    /**
-     * Read on every request that renders the header, so it's cached as a
-     * plain array of enabled keys and busted on any write. Forever, not a
-     * TTL: the only thing that changes it is a save/delete here, and both
-     * are covered.
-     */
     protected static function booted(): void
     {
         static::saved(fn () => static::forgetCache());

@@ -2,25 +2,11 @@
 
 namespace App\Support;
 
-/**
- * Turns the free text banks print next to a branch ("Mon. - Fri.: 9:15-17:30")
- * into the day-keyed array Branch::$opening_hours casts to:
- *
- *   ['mon' => ['09:15', '17:30'], ..., 'sat' => null, 'sun' => null]
- *
- * A day mapped to null means closed, which the UI renders differently from a
- * missing entry ("we don't know"). So a day this cannot read is left out
- * rather than assumed shut - claiming a branch is closed when it isn't sends
- * someone to a locked door.
- */
+// Turns the free text banks print next to a branch ("Mon.
 class OpeningHours
 {
     public const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
-    /**
-     * Longer spellings first: matching "mon" inside "monday" would leave a
-     * stray "day" behind and break the range that follows.
-     */
     private const DAY_NAMES = [
         'monday' => 'mon', 'tuesday' => 'tue', 'wednesday' => 'wed',
         'thursday' => 'thu', 'friday' => 'fri', 'saturday' => 'sat', 'sunday' => 'sun',
@@ -33,12 +19,7 @@ class OpeningHours
 
     private const ALL_DAY_PATTERN = '/round the clock|24\s*\/\s*7|24 hours|non-?stop/u';
 
-    /**
-     * Punctuation that separates an hour from its minutes on Armenian
-     * sites. Araratbank writes its times with the Armenian full stop
-     * (U+0589) rather than a colon - visually a colon, and it cost that
-     * bank half its opening hours before this map existed.
-     */
+    // Punctuation that separates an hour from its minutes on Armenian sites.
     private const TIME_SEPARATORS = [
         "\u{589}" => ':',   // Armenian full stop
         "\u{55d}" => ':',   // Armenian comma, used the same way
@@ -46,12 +27,7 @@ class OpeningHours
         "\u{2236}" => ':',  // ratio
     ];
 
-    /**
-     * Cyrillic lookalikes. Armenian sites are authored on keyboards that
-     * switch layouts constantly, and the text really does arrive with a
-     * Cyrillic а in "аround the clock" or a Cyrillic о in "Мon" - visually
-     * identical, and invisible to an ASCII pattern.
-     */
+    // Cyrillic lookalikes.
     private const HOMOGLYPHS = [
         'а' => 'a', 'е' => 'e', 'о' => 'o', 'р' => 'p', 'с' => 'c',
         'х' => 'x', 'у' => 'y', 'М' => 'M', 'Т' => 'T', 'В' => 'B',
@@ -90,20 +66,11 @@ class OpeningHours
             return null;
         }
 
-        // Days the text never mentions are genuinely shut - a branch listing
-        // "Mon. - Fri." is telling you about its weekend too.
+        // Days the text never mentions are genuinely shut - a branch listing "Mon.
         return array_replace(array_fill_keys(self::DAYS, null), $hours);
     }
 
     /**
-     * Build the same structure from a source that already publishes hours
-     * per weekday, instead of as a sentence to be read - AMIO ships
-     * {"weekdayEn":"Monday","opensAt":"09:15:00.000","closesAt":"16:45:00.000"}.
-     *
-     * Keys may be full day names or the short forms. A day mapped to null is
-     * closed; a day left out entirely is also closed, since a source listing
-     * its days one by one has said all it intends to about the rest.
-     *
      * @param  array<string, array{0: string, 1: string}|null>  $byDay
      * @return array<string, array{0: string, 1: string}|null>|null
      */
@@ -127,8 +94,7 @@ class OpeningHours
             $open = self::clockTime($span[0] ?? null);
             $close = self::clockTime($span[1] ?? null);
 
-            // Half a span is not a span. Left out rather than recorded as
-            // closed - see the note on this class.
+            // Half a span is not a span.
             if ($open === null || $close === null) {
                 continue;
             }
@@ -150,10 +116,7 @@ class OpeningHours
         return self::DAY_NAMES[$name] ?? null;
     }
 
-    /**
-     * Accepts "9:15", "09:15", and the "09:15:00.000" that databases hand
-     * back for a time column.
-     */
+    // Accepts "9:15", "09:15", and the "09:15:00.000" that databases hand back for a time column.
     private static function clockTime(mixed $value): ?string
     {
         if (! is_string($value) && ! is_int($value)) {
@@ -173,10 +136,6 @@ class OpeningHours
     {
         $text = strtr($text, self::HOMOGLYPHS + self::TIME_SEPARATORS);
 
-        // Every rule sits in its own <br> or block element, and strip_tags
-        // closes the gap without leaving a separator. The rule scanner
-        // tolerates that now, but a break is still a real boundary and
-        // keeping it stops two rules being read as one phrase.
         $text = preg_replace('#<(br|/p|/div|/li|/tr)\b[^>]*>#i', "\n", $text) ?? $text;
 
         $text = str_replace(["\u{a0}", '–', '—', '−'], [' ', '-', '-', '-'], $text);
@@ -186,17 +145,6 @@ class OpeningHours
     }
 
     /**
-     * Every rule in the text, found by anchoring on the days rather than by
-     * splitting the text into lines.
-     *
-     * Splitting was the earlier approach and it silently lost hours:
-     * Araratbank prints "Monday-Friday 09:00-17:00 Saturday 10:00-14:00" as
-     * one unbroken line, so only the first rule was read and Saturday came
-     * out closed - a branch that opens shown as shut. Anchoring on day names
-     * reads both, and lines with no day in them at all (ACBA's "Cash
-     * register service: 09:30-16:30", which closes an hour before the
-     * branch) are ignored for free.
-     *
      * @return array<int, array{0: array<int, string>, 1: array{0: string, 1: string}|null}>
      */
     private static function rules(string $text): array
@@ -234,7 +182,6 @@ class OpeningHours
         $names = implode('|', array_keys(self::DAY_NAMES));
 
         // "mon - fri" is a range; "mon, wed" is a list.
-        // "mon - fri" and "monday to friday" are both ranges.
         if (preg_match("/^\s*({$names})\.?\s*(?:-|to)\s*({$names})\.?\s*$/u", $expression, $m)) {
             return self::range(self::DAY_NAMES[$m[1]], self::DAY_NAMES[$m[2]]);
         }

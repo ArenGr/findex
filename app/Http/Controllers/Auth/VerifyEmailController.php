@@ -8,17 +8,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Guard-agnostic on purpose: the signed link a customer or organization
- * user gets emailed (see User::sendEmailVerificationNotification()) may be
- * opened in a browser/session that isn't currently logged in on the
- * matching guard - or logged in at all. Rather than Laravel's default
- * EmailVerificationRequest (which requires Auth::user() on whichever guard
- * happens to be active), this authenticates the request itself via the
- * signature + email hash, the same "possession of the link is the
- * credential" model already used for PartnerResponseController and
- * QuoteRequest::signedResultsUrl().
- */
 class VerifyEmailController extends Controller
 {
     public function verify(Request $request, string $locale, int $id, string $hash): RedirectResponse

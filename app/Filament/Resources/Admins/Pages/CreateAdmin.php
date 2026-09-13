@@ -12,11 +12,6 @@ class CreateAdmin extends CreateRecord
 {
     protected static string $resource = AdminResource::class;
 
-    /**
-     * `role` is deliberately excluded from User::$fillable (see
-     * User::canAccessPanel's docblock) so a plain `User::create($data)`
-     * here would silently drop it - forceFill it after creation instead.
-     */
     protected function handleRecordCreation(array $data): Model
     {
         $user = User::create($data);

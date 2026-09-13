@@ -5,41 +5,22 @@ namespace App\Support;
 use App\Models\QuoteRequest;
 use Illuminate\Support\Carbon;
 
-/**
- * The popular trips offered on the request page.
- *
- * A preset is a whole answer to step 1 and step 2 - where, when, how many,
- * flights, hotel class, board - so that choosing one leaves nothing to fill in
- * but the contact details a guest has to give anyway. It is not a package on
- * sale: the request that goes out is the same request as any other, and the
- * agencies still quote it themselves.
- *
- * Declared here rather than in the database because these are a handful of
- * editorial picks that change a few times a year, not records anyone
- * administers. They are keyed off QuoteRequest::DESTINATIONS, so a preset can
- * never name a country the form itself would refuse.
- */
+// The popular trips offered on the request page.
 class TravelPresets
 {
-    /**
-     * How far ahead a preset's check-in is placed.
-     *
-     * Far enough out that agencies can actually price it - a request for next
-     * weekend is one most of them decline - and near enough to read as a trip
-     * the traveller could take. The dates are recomputed on every request, so
-     * a preset never goes stale the way a hardcoded date would.
-     */
+    // How far ahead a preset's check-in is placed.
     private const LEAD_DAYS = 30;
 
     /**
      * @return list<array{
-     *     key: string, country: string, nights: int, adults: int,
+     *     key: string, city: string, country: string, nights: int, adults: int,
      *     flight: string, hotel: string, meals: string, priorities: list<string>
      * }>
      */
     private const PRESETS = [
         [
             'key' => 'georgia_break',
+            'city' => 'tbilisi',
             'country' => 'GE',
             'nights' => 4,
             'adults' => 2,
@@ -50,6 +31,7 @@ class TravelPresets
         ],
         [
             'key' => 'dubai_city',
+            'city' => 'dubai',
             'country' => 'AE',
             'nights' => 5,
             'adults' => 2,
@@ -60,6 +42,7 @@ class TravelPresets
         ],
         [
             'key' => 'egypt_all_in',
+            'city' => 'hurghada',
             'country' => 'EG',
             'nights' => 7,
             'adults' => 2,
@@ -70,6 +53,7 @@ class TravelPresets
         ],
         [
             'key' => 'cyprus_sea',
+            'city' => 'ayia_napa',
             'country' => 'CY',
             'nights' => 7,
             'adults' => 2,
@@ -92,17 +76,15 @@ class TravelPresets
         $checkIn = Carbon::today()->addDays(self::LEAD_DAYS);
 
         return collect(self::PRESETS)
-            // A preset naming a country the form no longer offers would fill
-            // the destination picker with a chip it cannot render.
             ->filter(fn (array $preset) => in_array($preset['country'], QuoteRequest::DESTINATIONS, true))
             ->map(fn (array $preset) => [
                 ...$preset,
                 'title' => __('tourism.presets.'.$preset['key'].'.title'),
                 'summary' => __('tourism.presets.'.$preset['key'].'.summary'),
+                'city_label' => __('tourism.presets.cities.'.$preset['city']),
+                'photo' => TravelHero::asset('preset-'.$preset['key']),
                 'check_in' => $checkIn->toDateString(),
                 'check_out' => $checkIn->copy()->addDays($preset['nights'])->toDateString(),
-                // Null unless enough agencies have actually answered for this
-                // destination - see QuoteRequestController::typicalPrices().
                 'typical_price' => $typicalPrices[$preset['country']] ?? null,
             ])
             ->values()

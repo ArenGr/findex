@@ -13,27 +13,11 @@ use App\Parsers\RateParserFactory;
 
 class RateScraper
 {
-    /**
-     * Currency-code aliases, applied before a row is matched against
-     * CurrencyCode::codes().
-     *
-     * This app canonicalises the Russian ruble on the legacy RUR, not the
-     * current ISO RUB - see CurrencyCode::RUB and the
-     * fix_rub_currency_code_to_rur migration. Armenian bank sites use both
-     * spellings, so the ISO one has to be folded in here.
-     *
-     * It previously mapped only 'RUR' => 'RUR', which is a no-op: every bank
-     * publishing RUB (IDBank and AMIO among them) had its ruble row quietly
-     * discarded as an untracked currency, and the comparison pages simply
-     * showed no ruble for those banks.
-     */
+    // Currency-code aliases, applied before a row is matched against CurrencyCode::codes().
     private const CURRENCY_ALIASES = [
         'RUB' => 'RUR',
 
-        // Armswissbank quotes the offshore yuan (CNH) where every other
-        // bank quotes CNY. They are the same currency traded in two
-        // markets; for a retail exchange comparison the distinction is
-        // immaterial, and without this the bank shows no yuan at all.
+        // Armswissbank quotes the offshore yuan (CNH) where every other bank quotes CNY.
         'CNH' => 'CNY',
     ];
 
@@ -42,16 +26,9 @@ class RateScraper
         private ScraperHttpClient $http,
     ) {}
 
-    /**
-     * Scrape currency rates for an organization.
-     */
+    // Scrape currency rates for an organization.
     public function scrape(Organization $organization, string $sourceType = 'currency_rates'): ScrapingJob
     {
-        // One row per organization+source_type, updated in place on every
-        // run - the admin's scraping jobs table is a current-status view,
-        // not a growing history log. Updating (rather than deleting the old
-        // row and inserting a new one) means the row is never briefly
-        // absent from the table while a run is in progress.
         $job = ScrapingJob::updateOrCreate(
             ['organization_id' => $organization->id, 'source_type' => $sourceType],
             ['status' => 'pending', 'started_at' => null, 'finished_at' => null, 'records_found' => 0, 'error_message' => null],
@@ -82,10 +59,6 @@ class RateScraper
 
             $job->log('info', "Successfully parsed {$recordsFound} records");
 
-            // The fetch succeeded and the parser didn't throw, but found
-            // nothing - most likely the site's markup changed under the
-            // parser. Left unflagged, this looks identical to "rates didn't
-            // change since last time" with no error anywhere.
             if ($recordsFound === 0) {
                 $job->log('warning', 'Zero records parsed - the source markup may have changed');
                 AdminNotifier::zeroRecordsScraped($organization->name, $sourceType);
@@ -118,8 +91,6 @@ class RateScraper
     ): int {
         $recordsCount = 0;
 
-        // Each organization has its own HTML/JSON structure, so parsing is
-        // delegated to an organization-specific parser.
         $rows = $this->parsers->for($organization)->parse($html);
 
         foreach ($rows as $row) {
@@ -129,8 +100,6 @@ class RateScraper
                 $buyRate = (float) $row['buy'];
                 $sellRate = (float) $row['sell'];
 
-                // Enforced for every organization, regardless of what its
-                // parser extracted - only these currencies are tracked.
                 if (! in_array($currencyCode, CurrencyCode::codes(), true)) {
                     $job->log('debug', "Skipping untracked currency: {$currencyCode}");
 
@@ -164,8 +133,6 @@ class RateScraper
                     ]
                 );
 
-                // Only append history when the rate is new or actually changed,
-                // so the history table doesn't fill up with identical rows.
                 if ($rate->wasRecentlyCreated || $rate->wasChanged(['buy_rate', 'sell_rate'])) {
                     CurrencyRateHistory::createFromRate($rate);
                 }
@@ -181,9 +148,7 @@ class RateScraper
         return $recordsCount;
     }
 
-    /**
-     * Normalize a currency code to its canonical ISO form.
-     */
+    // Normalize a currency code to its canonical ISO form.
     private function normalizeCurrencyCode(string $code): string
     {
         $code = strtoupper(trim($code));

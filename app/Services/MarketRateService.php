@@ -9,15 +9,7 @@ use App\Services\Cache\RateCache;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * The state of the market right now: who leads each side, and what the middle
- * looks like.
- *
- * Extracted so the public API and the embeddable widgets read the same numbers
- * from the same place. A widget that computed "the best USD rate" separately
- * would eventually disagree with the API that sells the same figure, and the
- * first anyone would hear of it is a customer asking which one is wrong.
- */
+// The state of the market right now: who leads each side, and what the middle looks like.
 class MarketRateService
 {
     /** @return Collection<int, CurrencyRate> */
@@ -32,9 +24,6 @@ class MarketRateService
     }
 
     /**
-     * Best from the visitor's side, never the institution's: the highest anyone
-     * buys at, the lowest anyone sells at.
-     *
      * @return array{highest_buy: ?CurrencyRate, lowest_sell: ?CurrencyRate}
      */
     public function best(Currency $currency, RateType $type): array
@@ -61,11 +50,6 @@ class MarketRateService
         ];
     }
 
-    /**
-     * A widget is embedded on someone else's page and may be hit far more often
-     * than our own, so its figures are cached briefly. Tagged, so a scrape
-     * flushes it like everything else.
-     */
     public function cachedBest(Currency $currency, RateType $type): array
     {
         return Cache::tags([RateCache::TAG])->remember(

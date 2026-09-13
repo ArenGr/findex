@@ -11,15 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * The popular trips above the form.
- *
- * A preset's whole promise is that choosing it leaves nothing to fill in but
- * the contact details, so the values it carries have to be values the server
- * would accept from the form itself. A preset that names a retired destination
- * or a hotel class the validator has dropped fails silently: the traveller
- * chooses it, lands on the last step and only finds out at submit.
- */
+// The popular trips above the form.
 class TravelPresetsTest extends TestCase
 {
     use RefreshDatabase;
@@ -50,8 +42,6 @@ class TravelPresetsTest extends TestCase
             $checkIn = Carbon::parse($preset['check_in']);
             $checkOut = Carbon::parse($preset['check_out']);
 
-            // Recomputed per request rather than hardcoded, so a preset cannot
-            // go stale into a date that has already passed.
             $this->assertTrue($checkIn->isFuture(), $preset['key']);
             $this->assertSame($preset['nights'], (int) $checkIn->diffInDays($checkOut), $preset['key']);
         }
@@ -102,8 +92,6 @@ class TravelPresetsTest extends TestCase
         $preset = TravelPresets::all()[0];
         $this->agencyFor($preset['country']);
 
-        // Exactly what the page posts after applyPreset() plus the three
-        // fields a guest has to give whichever way they reached this step.
         $response = $this->post(route('tourism.request.store', ['locale' => 'en']), [
             'departure_location' => __('tourism.request.departure_default'),
             'destination_countries' => [$preset['country']],

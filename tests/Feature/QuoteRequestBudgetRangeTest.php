@@ -38,16 +38,6 @@ class QuoteRequestBudgetRangeTest extends TestCase
         ], $overrides);
     }
 
-    /**
-     * The slider on the request form documents dragging the max handle to
-     * its cap as "no upper limit" - submitting only a minimum must not
-     * silently reuse that minimum as a ceiling when matching partners
-     * (see the comment on $budgetForFiltering in
-     * QuoteRequestController::store()). QuoteRequest::budget_for_filtering
-     * (used separately by BackfillOpenRequestsToNewPartnerJob) deliberately
-     * keeps the min-as-ceiling fallback - this test is only about the
-     * live, submit-time match.
-     */
     public function test_a_min_only_budget_does_not_exclude_a_partner_requiring_more_than_that_minimum(): void
     {
         $organization = $this->tourismPartner();

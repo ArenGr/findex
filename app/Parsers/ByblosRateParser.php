@@ -7,34 +7,8 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class ByblosRateParser implements RateParser
 {
-    /**
-     * Byblos Bank Armenia renders its rates server-side, as plain
-     * <table class="currency_table"> markup:
-     *
-     *   | Currency | Buy    | Sell   |
-     *   | USD      | 362.00 | 366.50 |
-     *
-     * The page holds three such tables, and they are NOT all exchange
-     * rates. Alongside the cash and non-cash tables sits the bank's "base
-     * rate" table, which uses the same class and the same first column but
-     * publishes interest percentages:
-     *
-     *   | Currency | Percent |
-     *   | AMD      | 8.27%   |
-     *   | USD      | 4.36%   |
-     *
-     * Read positionally, that table would store USD at 4.36 dram. So a
-     * table qualifies only if its header actually offers a buy and a sell
-     * column; the percentage table has neither and is skipped by shape
-     * rather than by its position on the page.
-     */
     private const REQUIRED_HEADERS = ['buy', 'sell'];
 
-    /**
-     * Among the tables that do qualify, order is the only thing separating
-     * them - the two carry identical markup and no distinguishing class,
-     * differing only in which tab they sit behind ("Cash", "Non-cash").
-     */
     private const CATEGORIES = [RateType::CASH, RateType::NON_CASH];
 
     public function parse(string $html): array
@@ -58,9 +32,7 @@ class ByblosRateParser implements RateParser
             $rateType = self::CATEGORIES[$matched] ?? null;
             $matched++;
 
-            // More rate tables than the two we know how to label. Taking a
-            // guess would file rates under the wrong type, so the extras
-            // are left out and the known ones still publish.
+            // More rate tables than the two we know how to label.
             if ($rateType === null) {
                 continue;
             }
@@ -122,10 +94,6 @@ class ByblosRateParser implements RateParser
         return $rates;
     }
 
-    /**
-     * Figures are printed plainly ("362.00"), but thousands separators show
-     * up on the larger ones, so they are stripped before casting.
-     */
     private function toRate(string $value): ?float
     {
         $value = str_replace([',', ' ', "\u{a0}"], '', trim($value));

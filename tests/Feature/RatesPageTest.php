@@ -12,12 +12,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Covers the intent-driven rebuild of /rates: buy/sell decides the ranking,
- * an optional amount turns each row into a real total, every market shares one
- * ranked table (with tabs to narrow it), and no filter combination is a dead
- * end.
- */
 class RatesPageTest extends TestCase
 {
     use RefreshDatabase;
@@ -50,11 +44,6 @@ class RatesPageTest extends TestCase
         return $usd;
     }
 
-    /**
-     * Most people arrive to read today's rates, and the Buy/Sell table everyone
-     * in this market already knows is the honest answer to that. Totals are a
-     * second question, asked by typing an amount.
-     */
     public function test_without_an_amount_the_page_is_a_plain_buy_and_sell_table(): void
     {
         $this->seedMarket();
@@ -71,12 +60,7 @@ class RatesPageTest extends TestCase
         $this->assertSame(3, $response->viewData('ranked')['count']);
     }
 
-    /**
-     * An amount adds a column; it does not swap the table for a different one.
-     * The rate pair a visitor was already reading stays exactly where it was,
-     * which is the whole point - the page used to reshape itself the moment a
-     * number was typed, and it was no longer obvious it was the same table.
-     */
+    // An amount adds a column; it does not swap the table for a different one.
     public function test_an_amount_adds_a_total_column_to_the_same_table(): void
     {
         $this->seedMarket();
@@ -94,8 +78,6 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Handing over 500 USD, the exchange office's 384.00 buy rate returns
-        // 192,000 AMD and the cheapest bank's 360.00 returns 180,000.
         $this->get('/en/rates?currency=USD&amount=500')
             ->assertOk()
             ->assertViewHas('amount', 500.0)
@@ -104,18 +86,10 @@ class RatesPageTest extends TestCase
             ->assertSee('180,000');
     }
 
-    /**
-     * The other direction is a division, not a multiplication: the amount is
-     * denominated in whatever the visitor HAS, so handing over dram asks how
-     * much foreign currency it buys. Getting this wrong would multiply two
-     * dram figures together and report a number in the millions.
-     */
     public function test_handing_over_dram_divides_rather_than_multiplies(): void
     {
         $this->seedMarket();
 
-        // 100,000 AMD at the cheapest sell rate of 365.00 buys 273.97 USD;
-        // at the dearest, 388.00, only 257.73.
         $this->get('/en/rates?currency=USD&amount=100000&intent=buy')
             ->assertOk()
             ->assertSee('273.97')
@@ -141,8 +115,7 @@ class RatesPageTest extends TestCase
 
         $response->assertOk()->assertViewHas('intent', 'buy');
 
-        // Cheapest to buy USD across every market: the bank at 365, not the
-        // exchange office at 388.
+        // Cheapest to buy USD across every market: the bank at 365, not the exchange office at 388.
         $ranked = $response->viewData('ranked');
         $this->assertSame(365.0, (float) $ranked['best_value'], 'buying should rank by the lowest sell rate');
         $this->assertSame('Cheap bank', $ranked['rows'][0]->organization_name);
@@ -156,8 +129,6 @@ class RatesPageTest extends TestCase
 
         $response->assertOk()->assertViewHas('intent', 'sell');
 
-        // Selling USD, the exchange office's 384 beats every bank - which only
-        // surfaces because both markets share one ranking.
         $ranked = $response->viewData('ranked');
         $this->assertSame(384.0, (float) $ranked['best_value'], 'selling should rank by the highest buy rate');
         $this->assertSame('Corner exchange', $ranked['rows'][0]->organization_name);
@@ -230,20 +201,14 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Sorted by spread, the cheapest row is no longer row one - the podium
-        // must still track the rate. Corner exchange has the tightest spread
-        // at 4.00, against Cheap bank's 5.00.
+        // Sorted by spread, the cheapest row is no longer row one - the podium must still track the rate.
         $rows = collect($this->get('/en/rates?currency=USD&intent=buy&sort=spread')->viewData('ranked')['rows']);
 
         $this->assertNotSame('Cheap bank', $rows->first()->organization_name, 'precondition: the sort moved it');
         $this->assertSame(1, $rows->firstWhere('organization_name', 'Cheap bank')->rank);
     }
 
-    /**
-     * Sorting runs off the column headings, so the keys are column names. An
-     * unknown or stale one falls back to the default rather than erroring or
-     * quietly ordering by nothing.
-     */
+    // Sorting runs off the column headings, so the keys are column names.
     public function test_the_column_sorts_are_offered_and_an_unknown_one_falls_back(): void
     {
         $this->seedMarket();
@@ -253,8 +218,6 @@ class RatesPageTest extends TestCase
             ->assertViewHas('sort', 'best')
             ->assertViewHas('sortOptions', ['best', 'buy', 'sell', 'spread', 'updated']);
 
-        // "Closest" has no column of its own but sorts the same table, and is
-        // only meaningful once we have somewhere to measure from.
         $this->get('/en/rates?currency=USD&lat=40.1792&lng=44.4991')
             ->assertOk()
             ->assertViewHas('sort', 'distance')
@@ -272,8 +235,7 @@ class RatesPageTest extends TestCase
 
         $rows = collect($this->get('/en/rates?currency=USD&sort=spread')->viewData('ranked')['rows']);
 
-        // Corner exchange 388-384 = 4.00, Cheap bank 365-360 = 5.00,
-        // Pricey bank 370-358 = 12.00.
+        // Corner exchange 388-384 = 4.00, Cheap bank 365-360 = 5.00, Pricey bank 370-358 = 12.00.
         $this->assertSame(
             ['Corner exchange', 'Cheap bank', 'Pricey bank'],
             $rows->pluck('organization_name')->all(),
@@ -283,8 +245,7 @@ class RatesPageTest extends TestCase
     public function test_rates_a_fraction_apart_do_not_collapse_onto_one_rank(): void
     {
         $usd = $this->seedMarket();
-        // Float array keys cast to int in PHP, so 365.50 could silently land on
-        // 365.00's rank.
+        // Float array keys cast to int in PHP, so 365.50 could silently land on 365.00's rank.
         $this->rate($this->organization('halfway-bank'), $usd, 360.0, 365.5);
 
         $byName = collect($this->get('/en/rates?currency=USD&intent=buy')->viewData('ranked')['rows'])
@@ -320,8 +281,6 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Branches, or the city menu has nothing to offer and this would test
-        // only half of what its name says.
         $this->branch(Organization::where('slug', 'cheap-bank')->firstOrFail(), 'Centre', 40.18, 44.51);
         $this->branch(Organization::where('slug', 'pricey-bank')->firstOrFail(), 'North', 40.79, 43.85, 'Gyumri');
 
@@ -330,9 +289,6 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        // Derived from the page rather than hard-coded: every link that
-        // changes bank or city has to carry the coordinates, so adding another
-        // one cannot quietly satisfy this by leaving them out.
         preg_match_all('/(?:href|value)="([^"]*city=[^"]*)"/', $html, $cityLinks);
         preg_match_all('/(?:href|value)="([^"]*organization=[^"]*)"/', $html, $bankLinks);
 
@@ -373,8 +329,6 @@ class RatesPageTest extends TestCase
 
     public function test_the_quote_cta_is_hidden_for_a_currency_with_no_minimum(): void
     {
-        // A currency the quote form does not accept would otherwise send the
-        // visitor to a request they cannot complete.
         $jpy = Currency::create(['code' => 'JPY', 'name' => 'Yen', 'symbol' => '¥', 'sort_order' => 2, 'is_active' => true]);
         $this->rate($this->organization('jpy-bank'), $jpy, 2.4, 2.6);
 
@@ -388,8 +342,6 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Under "All" the list would mix banks and exchange offices, and no
-        // single label describes what it contains - so it is not offered.
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertDontSee('All banks')
@@ -411,8 +363,6 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Otherwise "Corner exchange" would survive a jump to Banks and every
-        // filter combination would return nothing.
         $this->get('/en/rates?currency=USD&org_type=exchange&organization=corner-exchange')
             ->assertOk()
             ->assertDontSee('org_type=bank&amp;organization=corner-exchange');
@@ -430,11 +380,7 @@ class RatesPageTest extends TestCase
             ->assertDontSee('Hidden bank');
     }
 
-    /**
-     * Six banks quoting 368.00 all hold rank 1. Marking one of them looked
-     * arbitrary next to five identical numbers, so the winning figure is stated
-     * once above the table and every row that holds it is marked.
-     */
+    // Six banks quoting 368.00 all hold rank 1.
     public function test_the_best_rate_is_stated_once_above_the_table(): void
     {
         $this->seedMarket();
@@ -445,11 +391,6 @@ class RatesPageTest extends TestCase
             ->assertSee('You receive');
     }
 
-    /**
-     * A column the table can be ranked by is not one to hide behind a view
-     * toggle, so spread is always there - with or without an amount, and
-     * whether or not the old both=1 is still on a bookmarked link.
-     */
     public function test_the_spread_column_is_always_present(): void
     {
         $this->seedMarket();
@@ -476,12 +417,6 @@ class RatesPageTest extends TestCase
         }
     }
 
-    /**
-     * Three banks quoting the same winning rate all get a star, and three
-     * identical stars with nothing explaining them read as a fault. The label
-     * accounts for the repetition wherever the star is read from - tooltip,
-     * hover, or screen reader.
-     */
     public function test_a_shared_best_rate_says_how_many_organizations_hold_it(): void
     {
         $usd = $this->seedMarket();
@@ -503,11 +438,6 @@ class RatesPageTest extends TestCase
             ->assertDontSee('available at');
     }
 
-    /**
-     * Staleness used to be amber text and nothing else, which reaches neither a
-     * screen reader nor anyone who cannot separate the amber from the grey. The
-     * warning carries the same meaning in words.
-     */
     public function test_stale_rates_are_flagged_in_words_not_only_in_colour(): void
     {
         $usd = $this->seedMarket();
@@ -528,11 +458,7 @@ class RatesPageTest extends TestCase
             ->assertDontSee('Rates older than a day');
     }
 
-    /**
-     * When a rate last moved, as opposed to when it was last looked at.
-     * "Checked 22 hours ago" is true of every bank at once; "unchanged for a
-     * week" is what tells them apart.
-     */
+    // When a rate last moved, as opposed to when it was last looked at.
     public function test_a_row_says_when_its_rate_last_changed(): void
     {
         $usd = $this->seedMarket();
@@ -558,19 +484,11 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('Rate unchanged since');
     }
 
-    /**
-     * The saving beside the results count measures against the WORST rate on
-     * the page, which flatters us - nobody would have picked it. This is the
-     * honest version, and it must reconcile with the average card printed
-     * above it or the page is doing arithmetic the reader cannot check.
-     */
     public function test_the_best_result_is_compared_against_the_market_average(): void
     {
         $this->seedMarket();
 
-        // Handing over 100 USD. Buy rates 360, 358 and 384 average 367.33, and
-        // the best is 384.00, so the winner is worth 100 x 16.67 = 1,667 AMD
-        // more than average.
+        // Handing over 100 USD.
         $this->get('/en/rates?currency=USD&amount=100')
             ->assertOk()
             ->assertSee('367.33')
@@ -587,11 +505,7 @@ class RatesPageTest extends TestCase
             ->assertDontSee('more than the market average');
     }
 
-    /**
-     * Everything /rates already knows travels to the negotiation form. Asking
-     * for the currency, amount, city and direction a second time is the surest
-     * way to lose someone between two pages.
-     */
+    // Everything /rates already knows travels to the negotiation form.
     public function test_the_negotiation_link_carries_the_whole_exchange_context(): void
     {
         $this->seedMarket();
@@ -601,22 +515,12 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        // intent=sell means they hold the currency, which is the organization's
-        // buy side - and the amount is already in that currency, so it crosses
-        // over untouched.
         $this->assertStringContainsString('currency=USD', $html);
         $this->assertMatchesRegularExpression('/exchange\?[^"]*amount=5000/', $html);
         $this->assertMatchesRegularExpression('/exchange\?[^"]*city=Yerevan/', $html);
         $this->assertMatchesRegularExpression('/exchange\?[^"]*rate_field=buy_rate/', $html);
     }
 
-    /**
-     * The two pages denominate the amount differently: this one in whatever the
-     * visitor has, the exchange form always in the foreign currency - its
-     * minimum reads "1,000 USD" whichever way the trade runs. Handing a dram
-     * figure straight over would ask them to confirm a transaction some 370
-     * times the size of the one they wanted.
-     */
     public function test_a_dram_amount_is_converted_before_it_reaches_the_exchange_form(): void
     {
         $this->seedMarket();
@@ -628,10 +532,7 @@ class RatesPageTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/exchange\?[^"]*amount=5000/', $html);
     }
 
-    /**
-     * Below the minimum the amount still travels. The form states its own
-     * minimum; blanking the number they typed teaches them nothing.
-     */
+    // Below the minimum the amount still travels.
     public function test_an_amount_below_the_quote_minimum_still_travels(): void
     {
         $this->seedMarket();
@@ -641,17 +542,10 @@ class RatesPageTest extends TestCase
         $this->assertMatchesRegularExpression('/exchange\?[^"]*amount=50/', $html);
     }
 
-    /**
-     * The map is never the default and its library is never loaded until it is
-     * asked for: most visits are here to read a table of numbers, which a map
-     * is slower at.
-     */
     public function test_the_list_is_the_default_and_the_map_is_opt_in(): void
     {
         $this->seedMarket();
 
-        // Without a mapped branch the map view shows its empty state instead of
-        // a canvas, which is a different assertion (see below).
         Branch::create([
             'organization_id' => Organization::where('slug', 'cheap-bank')->firstOrFail()->id,
             'name' => 'Kentron', 'city' => 'Yerevan',
@@ -668,17 +562,11 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->assertViewHas('viewMode', 'map')
             ->assertSee('data-rates-map', false)
-            // The map replaces the table rather than joining it: two renderings
-            // of the same rows is the duplication this page keeps shedding.
             ->assertDontSee('<table', false);
 
         $this->get('/en/rates?currency=USD&view=nonsense')->assertOk()->assertViewHas('viewMode', 'list');
     }
 
-    /**
-     * A rate belongs to an organization and an address belongs to a branch, so
-     * one row can put several pins on the map.
-     */
     public function test_every_geocoded_branch_becomes_a_pin(): void
     {
         $this->seedMarket();
@@ -710,11 +598,7 @@ class RatesPageTest extends TestCase
             ->assertSee('No mapped branches for these rates yet.');
     }
 
-    /**
-     * Narrowing by name describes the table. A map shows every branch by
-     * position, so there it would be a control that visibly does nothing - and
-     * the sortable headings go with the table they head.
-     */
+    // Narrowing by name describes the table.
     public function test_table_only_controls_stand_down_in_map_view(): void
     {
         $this->seedMarket();
@@ -728,11 +612,6 @@ class RatesPageTest extends TestCase
             ->assertDontSee('Spread');
     }
 
-    /**
-     * "Open now" is a promise that someone is standing behind a counter, so it
-     * is asked in Yerevan time - the app runs on UTC, and comparing the raw
-     * clock would shut every branch four hours early.
-     */
     public function test_open_now_keeps_only_organizations_with_a_branch_open(): void
     {
         $this->seedMarket();
@@ -764,10 +643,6 @@ class RatesPageTest extends TestCase
         $this->assertSame(3, $this->get('/en/rates?currency=USD')->viewData('ranked')['count']);
     }
 
-    /**
-     * A branch we have no hours for is not a closed one - but it is not one we
-     * can promise is open either, so it stays out of "open now".
-     */
     public function test_a_branch_without_hours_is_never_claimed_to_be_open(): void
     {
         $this->seedMarket();
@@ -800,10 +675,6 @@ class RatesPageTest extends TestCase
             ->assertSee('the rate you are given at the counter is the one that counts');
     }
 
-    /**
-     * The filters sit on one always-visible bar now (no bottom sheet), so the
-     * guarantee that matters is simply that choosing one narrows the table.
-     */
     public function test_filtering_narrows_the_table(): void
     {
         $this->seedMarket();
@@ -812,10 +683,6 @@ class RatesPageTest extends TestCase
         $this->assertSame(1, $this->get('/en/rates?currency=USD&org_type=exchange')->viewData('ranked')['count']);
     }
 
-    /**
-     * Freshness moves out of the line under the name and into a column of its
-     * own, so it can be read down the list rather than row by row.
-     */
     public function test_the_table_carries_an_updated_column(): void
     {
         $this->seedMarket();
@@ -823,18 +690,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')->assertOk()->assertSee('Updated');
     }
 
-    /**
-     * Three figures above the table, so the answer to "what is the best rate
-     * here" does not require reading fourteen rows twice. The seeded market
-     * quotes 360/365, 358/370 and 384/388, so the visitor's best buy is the
-     * highest buy and their best sell is the lowest sell.
-     *
-     * The average is taken over the column the visitor is transacting on -
-     * by default the buy side, (360 + 358 + 384) / 3 - rather than over the
-     * midpoint between buy and sell. A midpoint average is a number nobody
-     * quotes, and comparing a real total against it produced a saving that did
-     * not reconcile with the card printed above it.
-     */
     public function test_the_summary_cards_state_the_best_of_each_side(): void
     {
         $this->seedMarket();
@@ -862,11 +717,7 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&intent=buy')->assertOk()->assertSee('374.33');
     }
 
-    /**
-     * The cards stay put when an amount is entered, and the best-rate band
-     * joins them. Swapping one for the other was the single biggest reason
-     * typing a number felt like landing on a different page.
-     */
+    // The cards stay put when an amount is entered, and the best-rate band joins them.
     public function test_the_summary_cards_survive_a_calculation(): void
     {
         $this->seedMarket();
@@ -878,10 +729,6 @@ class RatesPageTest extends TestCase
             ->assertSee('Current best rate');
     }
 
-    /**
-     * It is the official reference rate, not a venue - offering it beside Cash
-     * and Card sent visitors to rows they could not act on.
-     */
     public function test_the_central_bank_rate_is_a_reference_line_not_a_filter(): void
     {
         $usd = $this->seedMarket();
@@ -897,10 +744,7 @@ class RatesPageTest extends TestCase
         $this->assertNotContains('central_bank', $response->viewData('availableTypes')->all());
     }
 
-    /**
-     * Every alert route is behind auth. A guest who filled in the modal would
-     * be bounced to login and lose it, so they are asked to sign in first.
-     */
+    // Every alert route is behind auth.
     public function test_the_alert_modal_asks_a_guest_to_sign_in_before_the_form(): void
     {
         $this->seedMarket();
@@ -911,11 +755,6 @@ class RatesPageTest extends TestCase
             ->assertDontSee('name="threshold"', false);
     }
 
-    /**
-     * The point of the modal over the redirect: /rates already knows the
-     * currency, the transaction type, the buy/sell direction and the going
-     * rate, so the form arrives answered rather than blank.
-     */
     public function test_the_alert_modal_is_prefilled_from_what_is_on_screen(): void
     {
         $this->seedMarket();
@@ -926,8 +765,6 @@ class RatesPageTest extends TestCase
             ->assertSee('name="threshold"', false)
             ->getContent();
 
-        // Buying ranks on sell_rate, and the visitor wants to be told when it
-        // drops - so the alert watches that field, below the current best.
         $this->assertSame([
             'currency_id' => (string) Currency::where('code', 'USD')->value('id'),
             'organization_id' => '',
@@ -956,8 +793,6 @@ class RatesPageTest extends TestCase
 
     /**
      * The trigger hands the modal its prefill as a JSON payload on a CustomEvent.
-     * Decoded rather than string-matched: what matters is the values reaching
-     * the form, not how Blade happened to escape them into the attribute.
      *
      * @return array<string, string>
      */
@@ -970,11 +805,6 @@ class RatesPageTest extends TestCase
         return json_decode(json_decode('"'.$matches[1].'"'), true)['form'];
     }
 
-    /**
-     * An alert set from /rates is a side errand - the visitor was comparing
-     * rates and should land back on the same filtered view, not on the alert
-     * management page with their filters gone.
-     */
     public function test_creating_an_alert_from_rates_returns_to_the_same_filtered_view(): void
     {
         $this->seedMarket();
@@ -1010,11 +840,6 @@ class RatesPageTest extends TestCase
         ])->assertRedirect(route('alerts.index'));
     }
 
-    /**
-     * store() rejects an unconnected channel server-side, and the modal - unlike
-     * the alerts page - has nowhere to show connection state or a connect
-     * button, so offering one that will bounce is a dead end.
-     */
     public function test_the_modal_only_offers_channels_the_account_can_receive_on(): void
     {
         $this->seedMarket();
@@ -1031,12 +856,6 @@ class RatesPageTest extends TestCase
             ->assertSee('value="telegram"', false);
     }
 
-    /**
-     * Totals were formatted to whole dram, which is right at 368,000 and wrong
-     * at 4.60: it rendered as "5", and so did the office next to it quoting
-     * 4.75 - so the table stopped telling two rows apart at exactly the amounts
-     * where the difference is easiest to read.
-     */
     public function test_a_small_total_keeps_the_decimals_that_distinguish_it(): void
     {
         $kzt = Currency::create(['code' => 'KZT', 'name' => 'Tenge', 'symbol' => '\u{20b8}', 'sort_order' => 2, 'is_active' => true]);
@@ -1049,8 +868,6 @@ class RatesPageTest extends TestCase
             ->assertSee('0.77')
             ->assertSee('0.76')
             ->assertDontSee('>1 AMD<', false)
-            // The saving line has its own floor, which was written for dram
-            // totals in the thousands and swallowed this whole.
             ->assertSee('0.01 AMD');
     }
 
@@ -1065,11 +882,6 @@ class RatesPageTest extends TestCase
             ->assertDontSee('192,000.00');
     }
 
-    /**
-     * "Current best rate" sitting above "1 day ago", with "these rates are more
-     * than a day old" below it, is a contradiction the visitor resolves by
-     * trusting the page less. The claim drops to what is actually true.
-     */
     public function test_the_best_rate_stops_calling_itself_current_once_it_is_stale(): void
     {
         $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
@@ -1094,14 +906,11 @@ class RatesPageTest extends TestCase
     {
         $this->seedMarket();
 
-        // Handing over 100 USD: 384.00 at the exchange office against 358.00
-        // at the worst bank is 2,600 AMD.
         $this->get('/en/rates?currency=USD&amount=100&intent=sell')
             ->assertOk()
             ->assertSee('Choosing the best rate here earns you 2,600 AMD more.');
 
-        // Handing over 100,000 AMD: 100000/365 - 100000/388 = 16.24 USD. The
-        // saving follows the units of what you receive, so it is quoted in USD.
+        // Handing over 100,000 AMD: 100000/365 - 100000/388 = 16.24 USD.
         $this->get('/en/rates?currency=USD&amount=100000&intent=buy')
             ->assertOk()
             ->assertSee('earns you 16.24 USD more.');
@@ -1115,12 +924,6 @@ class RatesPageTest extends TestCase
         ]);
     }
 
-    /**
-     * A rate belongs to an organization, but you walk to a branch - and most
-     * organizations here have more than one. Guessing sends people across town,
-     * so with nothing to disambiguate on, only a single-branch organization
-     * gets a link.
-     */
     public function test_directions_appear_only_when_one_branch_is_identifiable(): void
     {
         $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
@@ -1137,8 +940,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertSee('destination=40.1811,44.5136', false)
-            // The two-branch organization is on the page, but with nothing to
-            // choose between Kentron and Vagharshapat it gets no link.
             ->assertSee('Two branch bank')
             ->assertDontSee('destination=40.177', false);
     }
@@ -1162,10 +963,6 @@ class RatesPageTest extends TestCase
             ->assertSee('destination=40.1611,44.2916', false);
     }
 
-    /**
-     * Once location is shared the branch is known, so every row with one gets a
-     * link - and it points at the nearest, not the first the database returns.
-     */
     public function test_with_location_directions_point_at_the_nearest_branch(): void
     {
         $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1, 'is_active' => true]);
@@ -1190,16 +987,6 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')->assertOk()->assertDontSee('maps/dir', false);
     }
 
-    /**
-     * The filters are all on the always-visible bar now, so a narrowed table
-     * is signalled on the controls themselves: the matching option is marked
-     * current and its URL still names the active filter.
-     *
-     * Asserted against a link rather than an <option>: these filters are a
-     * menu of URLs, not a form control, and they moved back off the native
-     * <select> whose option list the browser draws itself and refuses to
-     * style.
-     */
     public function test_the_filter_bar_reflects_a_non_default_selection(): void
     {
         $this->seedMarket();
@@ -1208,20 +995,13 @@ class RatesPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        // Scoped to a filter option: the list/map toggle also carries the
-        // active filters in its href and is also marked current, so a pattern
-        // without the hook passes whether the filter works or not.
         $this->assertMatchesRegularExpression(
             '/<a[^>]*href="[^"]*org_type=exchange[^"]*"[^>]*data-filter-option[^>]*aria-current="true"/',
             $html,
         );
     }
 
-    /**
-     * Eleven chips turn one decision into eleven and push the rates off the
-     * screen. The four almost everyone came for are shown; the rest are one
-     * click away rather than gone.
-     */
+    // Eleven chips turn one decision into eleven and push the rates off the screen.
     public function test_only_the_everyday_currencies_are_shown_at_first(): void
     {
         $this->seedMarket();
@@ -1230,9 +1010,6 @@ class RatesPageTest extends TestCase
 
         $response = $this->get('/en/rates?currency=USD')->assertOk();
 
-        // Both are rendered - the hidden ones are collapsed client-side, not
-        // withheld, so they cost no extra request and are in the page for
-        // anyone reading it without JavaScript.
         $response->assertSee('currency=CHF', false)
             ->assertSee('currency=GEL', false)
             // ...but the page opens collapsed, and says how many are behind it.
@@ -1243,10 +1020,6 @@ class RatesPageTest extends TestCase
         $this->assertSame('GEL', $gel->code);
     }
 
-    /**
-     * A currency picked from behind the button must not vanish when the page
-     * reloads on it - that reads as the choice having been lost.
-     */
     public function test_landing_on_a_hidden_currency_opens_the_rest(): void
     {
         $this->seedMarket();
@@ -1272,11 +1045,6 @@ class RatesPageTest extends TestCase
             ->assertDontSee('More currencies');
     }
 
-    /**
-     * Each column has one direction that answers the question people ask of
-     * it, and a first press gives that: the highest buy rate, the lowest sell
-     * rate, the tightest spread.
-     */
     public function test_a_column_sorts_the_way_it_is_usually_asked(): void
     {
         $this->seedMarket();
@@ -1303,17 +1071,11 @@ class RatesPageTest extends TestCase
         $this->assertSame('Pricey bank', $first('sort=buy&dir=asc'), 'buy reversed: lowest first');
         $this->assertSame('Pricey bank', $first('sort=spread&dir=desc'), 'spread reversed: widest first');
 
-        // Nonsense falls back to the column's own direction rather than
-        // ordering by nothing.
+        // Nonsense falls back to the column's own direction rather than ordering by nothing.
         $this->assertSame('Corner exchange', $first('sort=buy&dir=sideways'));
         $this->get('/en/rates?currency=USD&sort=buy&dir=DESC')->assertOk()->assertViewHas('direction', 'desc');
     }
 
-    /**
-     * The heading marks the column actually ordering the table - including on
-     * arrival, where the ordering runs on whichever rate column the visitor's
-     * intent points at rather than on anything they pressed.
-     */
     public function test_the_default_ordering_marks_its_own_column(): void
     {
         $this->seedMarket();
@@ -1327,11 +1089,7 @@ class RatesPageTest extends TestCase
             ->assertSee('sorted lowest first');
     }
 
-    /**
-     * Finding one organization among fourteen was a job the page had no answer
-     * for. The search is a filter over rows already fetched, so it costs no
-     * query and never fragments the listing cache.
-     */
+    // Finding one organization among fourteen was a job the page had no answer for.
     public function test_searching_narrows_the_table_by_name(): void
     {
         $this->seedMarket();
@@ -1347,11 +1105,6 @@ class RatesPageTest extends TestCase
         $this->assertSame([], $names('q=nothing here'));
     }
 
-    /**
-     * A search that found nothing is a different miss from a filter
-     * combination with no rows: suggesting another rate type would be
-     * answering a question nobody asked.
-     */
     public function test_an_empty_search_result_offers_to_clear_the_search(): void
     {
         $this->seedMarket();
@@ -1389,17 +1142,11 @@ class RatesPageTest extends TestCase
             ->assertViewHas('search', str_repeat('a', 60));
     }
 
-    /**
-     * Ten rows a page, but the page is ranked, averaged and starred against
-     * the whole market. Paging in SQL would have quietly redefined "best rate"
-     * as "best of the ten currently on screen".
-     */
+    // Ten rows a page, but the page is ranked, averaged and starred against the whole market.
     public function test_paging_shows_ten_rows_while_ranking_the_whole_market(): void
     {
         $usd = $this->seedMarket();
 
-        // Twelve more, all worse than the 384.00 the corner exchange buys at,
-        // so the winner is on page one and the filler runs onto page two.
         foreach (range(1, 12) as $n) {
             $this->rate($this->organization("filler-{$n}"), $usd, 300.0 + $n, 400.0 - $n);
         }
@@ -1449,10 +1196,6 @@ class RatesPageTest extends TestCase
         $this->assertCount(2, $response->viewData('pageRows'));
     }
 
-    /**
-     * One page of results needs no pagination, and printing "1" under a table
-     * that is all there is says the opposite.
-     */
     public function test_no_pagination_when_everything_fits(): void
     {
         $this->seedMarket();
@@ -1483,10 +1226,6 @@ class RatesPageTest extends TestCase
         }
     }
 
-    /**
-     * Buy is what you are paid and sell is what you pay, and the summary cards
-     * have always said so in green and red. The table says it the same way.
-     */
     public function test_the_rate_pair_is_coloured_the_same_way_in_the_table(): void
     {
         $this->seedMarket();
@@ -1497,11 +1236,6 @@ class RatesPageTest extends TestCase
             ->assertSee('tabular-nums text-accent-red', false);
     }
 
-    /**
-     * The map plots every branch behind every matching rate, so it is not
-     * paged - and page numbers under it would claim it was, sending people
-     * looking for pins that are already on screen.
-     */
     public function test_the_map_is_not_paged(): void
     {
         $usd = $this->seedMarket();
@@ -1521,13 +1255,6 @@ class RatesPageTest extends TestCase
         $this->assertGreaterThan(10, count($map->viewData('mapBranches')));
     }
 
-    /**
-     * A deploy whose config cache predates config/rates.php returns null for
-     * the everyday list, and that took the whole rates page down with an
-     * in_array() TypeError - a missing file breaking the page that shows the
-     * rates. It now degrades to showing every currency, which is what this
-     * control replaced.
-     */
     public function test_a_missing_everyday_config_does_not_break_the_page(): void
     {
         $this->seedMarket();

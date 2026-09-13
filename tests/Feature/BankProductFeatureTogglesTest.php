@@ -8,13 +8,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\EnablesBankProducts;
 use Tests\TestCase;
 
-/**
- * A bank product page is visible only while an admin has its toggle on
- * (Feature Toggles in the panel). "Off" has to mean off everywhere at once
- * - hidden from the header, absent from the /banks hub, and 404 on its own
- * URL - otherwise a page with sample data in it could still be reached by
- * anyone who guessed or bookmarked the link.
- */
 class BankProductFeatureTogglesTest extends TestCase
 {
     use EnablesBankProducts, RefreshDatabase;
@@ -38,11 +31,6 @@ class BankProductFeatureTogglesTest extends TestCase
         $this->get(route('banks.index', ['locale' => 'en']))->assertDontSee('banks/credit-cards');
     }
 
-    /**
-     * The enabled list is cached forever, so the model's saved() hook doing
-     * the busting is what makes a flip in the panel take effect at all.
-     * This exercises the same write path Filament's ToggleColumn uses.
-     */
     public function test_flipping_a_toggle_takes_effect_immediately(): void
     {
         $this->enableBankProducts([]);
@@ -80,11 +68,6 @@ class BankProductFeatureTogglesTest extends TestCase
         }
     }
 
-    /**
-     * The sample pages exist to be shown to a prospective partner, so the
-     * figures on them must be visibly labelled as invented rather than
-     * passing for real market data.
-     */
     public function test_a_sample_page_states_that_its_figures_are_not_real(): void
     {
         $this->enableBankProducts();
@@ -95,11 +78,6 @@ class BankProductFeatureTogglesTest extends TestCase
             ->assertSee(__('bank_products.needed_heading'));
     }
 
-    /**
-     * config/bank-products.php holds row values and the lang files hold the
-     * column headings; they're matched by position, so a mismatch would
-     * silently render a table with a missing or orphaned column.
-     */
     public function test_sample_rows_line_up_with_their_column_headings(): void
     {
         foreach (array_keys(config('bank-products')) as $category) {

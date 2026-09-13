@@ -1,7 +1,5 @@
 @php
-    // Single-choice pill groups. Rendered as real radios behind the pill so
-    // they submit, tab and announce like a normal group - the pill is the
-    // label, not a button pretending to be one.
+    // Single-choice pill groups.
     $groups = [
         ['name' => 'flight_preference', 'label' => __('tourism.request.flights_label'), 'options' => $flightOptions, 'model' => 'flightPreference'],
         ['name' => 'hotel_preference', 'label' => __('tourism.request.hotel_class_label'), 'options' => $hotelOptions, 'model' => 'hotelPreference'],
@@ -35,5 +33,20 @@
                 {{ __('tourism.request.insurance') }}
             </span>
         </label>
+
+        <div class="flex flex-col gap-1">
+            <label for="hotel_name" class="{{ $label }}">{{ __('tourism.request.hotel_name') }}</label>
+            <input
+                type="text"
+                name="hotel_name"
+                id="hotel_name"
+                value="{{ old('hotel_name') }}"
+                placeholder="{{ __('tourism.request.hotel_name_placeholder') }}"
+                class="{{ $field }}"
+            >
+            @error('hotel_name')
+                <p class="text-xs text-error">{{ $message }}</p>
+            @enderror
+        </div>
     </div>
 </section>

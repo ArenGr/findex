@@ -6,27 +6,8 @@ use App\Models\AutoInsuranceQuote;
 use App\Models\AutoInsuranceRequest;
 use App\Models\Organization;
 
-/**
- * Stands in for the insurers that have no integration of their own yet -
- * this generates a plausible, deterministic premium so the request/results
- * flow can be demoed to partners end to end. Deterministic (no randomness)
- * so the same request always reproduces the same quotes: variance across
- * partners comes from their organization id, not chance, so a demo never
- * looks flaky on a re-run.
- *
- * It ignores the QuoteIdentity entirely: a real insurer prices from the
- * Bureau registry keyed on that plate and ID (see IngoAppaProvider), which
- * this has no access to, so it works from the rating factors on the request
- * instead. Those are nullable and the intake form no longer asks for them,
- * so in practice every factor below falls back to 1.0 and the spread across
- * partners comes from the per-partner variance alone.
- */
 class MockInsuranceProvider implements InsuranceQuoteProviderInterface
 {
-    // Compulsory motor TPL in Armenia has one fixed product (no
-    // comprehensive/third-party choice) - the base annual rate mainly
-    // differs by whether the vehicle is privately owned or belongs to a
-    // legal entity (which typically carries a commercial-use surcharge).
     private const BASE_ANNUAL_PREMIUM = [
         'individual' => 25_000,
         'legal_entity' => 45_000,
@@ -39,8 +20,6 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
         12 => 1.0,
     ];
 
-    // Compulsory motor TPL in Armenia really does rate on engine power -
-    // a bigger engine is a bigger payout risk. Upper bound of each band.
     private const ENGINE_POWER_BANDS = [
         70 => 0.85,
         100 => 1.0,
@@ -51,8 +30,6 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
 
     private const ENGINE_POWER_TOP_FACTOR = 1.7;
 
-    // A newly licensed driver is a bigger risk than someone with a decade
-    // behind the wheel - real insurers price this in, this doesn't yet.
     private const EXPERIENCE_FACTOR = [
         2 => 1.15,
         6 => 1.05,
@@ -61,10 +38,6 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
 
     private const EXPERIENCE_TOP_FACTOR = 0.95;
 
-    /**
-     * Bonus-malus: each consecutive accident-free year earns a discount,
-     * capped so a lifetime of clean driving doesn't imply a free policy.
-     */
     private const ACCIDENT_FREE_DISCOUNT_PER_YEAR = 0.03;
 
     private const ACCIDENT_FREE_MAX_YEARS = 5;
@@ -77,19 +50,12 @@ class MockInsuranceProvider implements InsuranceQuoteProviderInterface
         $experienceFactor = $this->experienceFactor($request->driver_experience_years);
         $bonusMalusFactor = $this->bonusMalusFactor($request->accident_free_years);
 
-        // Stand-in for each partner's own real-world rate differences -
-        // deterministic from the partner's id so quotes stay stable across
-        // page reloads instead of reshuffling on every request.
         $partnerVariance = 0.85 + ($partner->id % 7) * 0.05;
 
         $premium = (int) round(
             $base * $termFactor * $engineFactor * $experienceFactor * $bonusMalusFactor * $partnerVariance / 1000
         ) * 1000;
 
-        // Each partner also gets a distinct coverage/perks pitch, again
-        // picked deterministically by id - real insurers won't all phrase
-        // their product the same way, and identical boilerplate across
-        // every card would give the game away when demoing this to them.
         $coverageOptions = (array) __('auto_insurance.provider.coverage_summaries', [], $request->locale);
         $notesOptions = (array) __('auto_insurance.provider.quote_notes', [], $request->locale);
 

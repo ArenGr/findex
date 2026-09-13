@@ -11,23 +11,16 @@ return new class extends Migration
         Schema::create('api_keys', function (Blueprint $table) {
             $table->id();
 
-            // A key belongs to whoever will be billed for it. Both are nullable
-            // because an internal key belongs to neither.
+            // A key belongs to whoever will be billed for it.
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('organization_id')->nullable()->constrained()->nullOnDelete();
 
             $table->string('name');
 
-            // The first characters, shown in the dashboard so a customer can
-            // tell two keys apart without us ever storing the key itself.
             $table->string('prefix', 12)->unique();
-            // SHA-256 of the full key. We cannot recover it, only recognise it -
-            // if a customer loses their key they get a new one, which is the
-            // correct answer rather than an inconvenience.
+            // SHA-256 of the full key.
             $table->string('token_hash', 64)->unique();
 
-            // Names a plan in config/api.php rather than storing the limits, so
-            // repricing a plan does not mean rewriting every row that bought it.
             $table->string('plan')->default('free');
 
             $table->timestamp('last_used_at')->nullable();
@@ -37,9 +30,7 @@ return new class extends Migration
             $table->index(['revoked_at']);
         });
 
-        // One row per key per day. Deliberately not a log of every request:
-        // usage reporting needs counts, and keeping request-level rows for a
-        // busy customer would cost far more than the answer is worth.
+        // One row per key per day.
         Schema::create('api_key_usages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('api_key_id')->constrained()->cascadeOnDelete();

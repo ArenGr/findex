@@ -18,8 +18,6 @@ class ApiKeyDashboardTest extends TestCase
             ->assertOk()
             ->assertSee('/api/v1/rates/best')
             ->assertSee('Business')
-            // Read from config rather than written into the page, so the price
-            // list cannot drift from what the limiter enforces.
             ->assertSee('$'.config('api.plans.business.price_usd_monthly'))
             ->assertSee(number_format(config('api.plans.basic.requests_per_day')));
     }
@@ -37,10 +35,6 @@ class ApiKeyDashboardTest extends TestCase
         $this->assertNull($key->refresh()->revoked_at);
     }
 
-    /**
-     * The key is shown once, on the redirect after creating it, and never
-     * again - because after this request nothing can recover it.
-     */
     public function test_a_new_key_is_shown_exactly_once(): void
     {
         $user = $this->actingAs(User::factory()->create());

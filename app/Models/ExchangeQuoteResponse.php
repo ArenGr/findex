@@ -17,11 +17,7 @@ class ExchangeQuoteResponse extends Model
     /** An offer the visitor picked. Still a reply, so has_replied stays true. */
     public const STATUS_ACCEPTED = 'accepted';
 
-    /*
-     * What happened in the shop, as opposed to what happened with us. An
-     * accepted offer whose customer never appeared is still accepted - status
-     * and outcome answer different questions and must not be collapsed.
-     */
+    // What happened in the shop, as opposed to what happened with us.
     public const OUTCOME_COMPLETED = 'completed';
 
     public const OUTCOME_NO_SHOW = 'no_show';
@@ -69,11 +65,6 @@ class ExchangeQuoteResponse extends Model
         return $this->status === self::STATUS_ACCEPTED;
     }
 
-    /**
-     * The office can only report an outcome for an offer that was actually
-     * chosen, and only once - a shop that could revise "completed" to "no show"
-     * a week later would make the conversion numbers worthless.
-     */
     public function getAwaitsOutcomeAttribute(): bool
     {
         return $this->is_accepted && $this->outcome === null;
@@ -90,11 +81,7 @@ class ExchangeQuoteResponse extends Model
         return true;
     }
 
-    /**
-     * What the visitor reads out at the counter: the request's code plus this
-     * offer's letter. Null until the office has actually been given a letter,
-     * which happens when the response is created.
-     */
+    // What the visitor reads out at the counter: the request's code plus this offer's letter.
     public function getRedemptionCodeAttribute(): ?string
     {
         if ($this->offer_letter === null) {
@@ -109,21 +96,11 @@ class ExchangeQuoteResponse extends Model
         return $this->status === self::STATUS_DECLINED;
     }
 
-    /**
-     * True once the org has offered something better than what was posted
-     * when the request went out - drives the "Improved" badge/filter on the
-     * results page. False for a plain "kept as is" confirmation.
-     */
     public function getHasImprovedRateAttribute(): bool
     {
         return $this->has_replied && $this->offered_rate !== null && (float) $this->offered_rate > (float) $this->posted_rate;
     }
 
-    /**
-     * The secure, unauthenticated link a partner uses to respond - the
-     * response_token itself is the credential, same pattern as
-     * QuoteResponse::secureRespondUrl().
-     */
     public function secureRespondUrl(): string
     {
         return URL::route('exchange.respond', [

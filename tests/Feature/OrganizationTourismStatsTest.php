@@ -10,11 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the tourism performance stats card on the org dashboard overview
- * (response rate / avg response time) - only shown for tourism-type orgs,
- * and only once there's at least one lead.
- */
 class OrganizationTourismStatsTest extends TestCase
 {
     use RefreshDatabase;
@@ -41,10 +36,6 @@ class OrganizationTourismStatsTest extends TestCase
             'status' => QuoteResponse::STATUS_PENDING,
         ], $overrides));
 
-        // created_at isn't in QuoteResponse::$fillable (only touched
-        // through normal Eloquent timestamps in real usage), so a
-        // create()-time override is silently dropped - forceFill it
-        // afterward to backdate it for a controlled response-time test.
         if (isset($overrides['created_at'])) {
             $response->forceFill(['created_at' => $overrides['created_at']])->save();
         }

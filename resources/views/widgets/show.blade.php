@@ -6,13 +6,6 @@
     <title>Findex — {{ $currency->code }}</title>
     <meta name="robots" content="noindex">
 
-    {{--
-        No app layout and no shared stylesheet: this renders inside somebody
-        else's page, so it carries only what it needs. The brand colours are
-        repeated here as literals rather than pulled from the Tailwind build,
-        because shipping the site's whole stylesheet into an iframe to colour
-        four numbers is not a trade worth making.
-    --}}
     <style>
         :root {
             --ink: #161515; --muted: #676767; --line: #d9d9d9;
@@ -31,9 +24,6 @@
         .card { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
         .label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
         .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-        /* Fluid, because the host decides the box and 200px is a box people
-           genuinely use - two six-character rates at a fixed 26px do not fit
-           one, and a widget that overflows its iframe looks broken. */
         .rate { font-size: clamp(17px, 8.5vw, 26px); font-weight: 700; font-variant-numeric: tabular-nums; }
         .buy { color: var(--buy); } .sell { color: var(--sell); }
         .who { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
@@ -56,9 +46,6 @@
     <div class="card">
         @if ($type === 'converter')
             <div class="label">{{ $currency->code }} &rarr; AMD</div>
-            {{-- Stacked, not side by side: a six-figure dram total does not
-            fit half of a 240px embed, and the answer being clipped is worse
-            than the widget being one row taller. --}}
             <div style="margin-top:8px; display:grid; gap:8px;">
                 <input id="amount" type="number" inputmode="decimal" min="0" value="100" aria-label="{{ $currency->code }}">
                 <input id="result" type="text" readonly aria-label="AMD" style="font-weight:600;">
@@ -67,9 +54,6 @@
                 {{ $buy ? number_format($buy['rate'], 2).' AMD / 1 '.$currency->code : '—' }}
             </div>
 
-            {{-- The rate is printed into the page rather than fetched: the
-            widget must render before any network round trip on a host page we
-            do not control. --}}
             <script>
                 (function () {
                     var rate = {{ $buy ? $buy['rate'] : 'null' }};
@@ -111,8 +95,6 @@
             </div>
 
         @else
-            {{-- 'rate' and 'best' both answer "what can I get right now"; best
-            names the organization, rate just gives the pair. --}}
             <div class="label">{{ $currency->code }} / AMD</div>
             <div class="row" style="margin-top:6px;">
                 <div>

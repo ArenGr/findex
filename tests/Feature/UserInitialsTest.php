@@ -4,11 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
-/**
- * The initials that stand in for a face beside the signed-in user's name.
- */
+// The initials that stand in for a face beside the signed-in user's name.
 class UserInitialsTest extends TestCase
 {
     use RefreshDatabase;
@@ -20,8 +19,7 @@ class UserInitialsTest extends TestCase
     {
         return [
             'first and last' => ['Aren Grigoryan', 'a@example.com', 'AG'],
-            // Armenian is as common here as Latin, and substr() would cut a
-            // multi-byte character in half.
+            // Armenian is as common here as Latin, and substr() would cut a multi-byte character in half.
             'armenian' => ['Արեն Գրիգորյան', 'b@example.com', 'ԱԳ'],
             'single word' => ['Cher', 'c@example.com', 'C'],
             'middle names are skipped' => ['Mary Jane Watson', 'd@example.com', 'MW'],
@@ -32,7 +30,7 @@ class UserInitialsTest extends TestCase
         ];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('names')]
+    #[DataProvider('names')]
     public function test_initials_are_derived_from_the_name(string $name, string $email, string $expected): void
     {
         $user = new User(['name' => $name, 'email' => $email]);

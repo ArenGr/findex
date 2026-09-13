@@ -6,18 +6,6 @@ use App\Enums\RateType;
 
 class ArtsakhbankRateParser implements RateParser
 {
-    /**
-     * Artsakhbank's exchange-rates page renders two plain HTML tables inside
-     * "tab_block cash_section" / "tab_block non_cash_section" divs:
-     *
-     *   <tr><td>USD</td><td>1</td><td>365.00</td><td>369.50</td><td>0.00</td><td>0.00</td></tr>
-     *
-     * (currency, unit, buy, sell, then two "rate difference" columns we
-     * don't use). The div class values also appear earlier on the page as
-     * `data-tab="cash_section"` tab-button attributes, so the search is
-     * anchored on the full "tab_block ..._section" string to land on the
-     * actual content div rather than the button.
-     */
     private const ROW_PATTERN = '/<td>([A-Z]{3,4})<\/td>\s*<td>1<\/td>\s*<td>([\d.]+)\s*<\/td>\s*<td>([\d.]+)<\/td>/';
 
     public function parse(string $html): array

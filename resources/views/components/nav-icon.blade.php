@@ -1,21 +1,6 @@
 @props(['name'])
 
 @php
-    /*
-     * Colours are referenced as CSS custom properties, not hex, so these
-     * icons track resources/css/app.css's @theme block - retune a brand
-     * colour there and the nav follows. Tailwind v4 emits every @theme
-     * entry on :root, which is what makes var() resolve inside these
-     * presentation attributes.
-     *
-     * One hue per nav item, taken from the documented palette (see
-     * /style-guide): the brand trio plus two of the slide accents, which
-     * together give five distinguishable product areas.
-     *
-     * Each glyph is its own colour at full strength for the stroke and 20%
-     * for the fill, which is what makes them read as duotone without
-     * needing a separate tint token per hue.
-     */
     $hue = [
         'rates' => 'var(--color-primary)',
         'ratesAlt' => 'var(--color-accent-blue)',
@@ -23,8 +8,6 @@
         'insurance' => 'var(--color-accent-yellow)',
         'insuranceMark' => 'var(--color-primary)',
         'travel' => 'var(--color-slide-blue)',
-        // Neutral rather than a hue: About Us isn't a product area, so it
-        // sits back from the four that are.
         'about' => 'var(--color-muted)',
     ];
 @endphp

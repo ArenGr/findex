@@ -16,8 +16,7 @@ return new class extends Migration
             $table->text('comment');
             $table->timestamps();
 
-            // One review per user per organization - resubmitting updates it
-            // instead of creating a duplicate.
+            // One review per user per organization - resubmitting updates it instead of creating a duplicate.
             $table->unique(['organization_id', 'user_id']);
         });
     }

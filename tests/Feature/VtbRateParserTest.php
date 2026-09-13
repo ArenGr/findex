@@ -20,10 +20,6 @@ class VtbRateParserTest extends TestCase
 
     private function fixture(): string
     {
-        // Trimmed real structure: two Bootstrap tab panes (#home = cash,
-        // #options = non-cash), each with its own wrapper-currency-data
-        // block, plus a decoy converter widget reusing the same markup
-        // after each block that must not be swept in.
         $cashItem = $this->currencyItem('USD', '364.5', '369');
         $nonCashItem = $this->currencyItem('USD', '364.5', '370');
         $decoy = $this->currencyItem('EUR', '999', '999');

@@ -12,18 +12,6 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
-/**
- * A worked exchange request with offers already on it, so the results page can
- * be looked at without waiting on real exchange offices to answer a Telegram
- * message.
- *
- * Local-testing data only - deliberately not called from DatabaseSeeder::run(),
- * so it can never land in a production seed. It also refuses to run in
- * production outright, because a fabricated request with fabricated offers is
- * exactly the sort of thing that should never appear in a real dataset.
- *
- * Run with: php artisan db:seed --class=ExchangeOfferDemoSeeder
- */
 class ExchangeOfferDemoSeeder extends Seeder
 {
     private const GUEST_EMAIL = 'demo-offers@findex.test';
@@ -52,8 +40,6 @@ class ExchangeOfferDemoSeeder extends Seeder
             return;
         }
 
-        // Re-runnable: clear the previous demo rather than piling up a new
-        // request every time somebody wants another look at the page.
         ExchangeQuoteRequest::where('guest_email', self::GUEST_EMAIL)->each(function (ExchangeQuoteRequest $old) {
             $old->responses()->delete();
             $old->delete();
@@ -68,21 +54,15 @@ class ExchangeOfferDemoSeeder extends Seeder
             'guest_email' => self::GUEST_EMAIL,
             'locale' => 'en',
             'preferred_city' => 'Yerevan',
-            // One of the real windows, so the demo shows what a request
-            // actually looks like rather than a day-long one nobody can make.
             'expires_at' => now()->addHour(),
         ]);
 
-        // What the market is publicly offering, so the "extra value" figures on
-        // the page are measured against something real rather than invented.
         $publicBest = (float) CurrencyRate::query()
             ->where('currency_id', $currency->id)
             ->where('rate_type', RateType::CASH)
             ->whereHas('organization', fn ($query) => $query->active())
             ->max('buy_rate');
 
-        // A spread of outcomes, because the page has to look right in all of
-        // them: three real offers, one office still thinking, one that passed.
         $offers = [
             ['letter' => 'A', 'rate' => $publicBest + 1.70, 'minutes' => 11, 'note' => 'Happy to hold this rate for an hour.'],
             ['letter' => 'B', 'rate' => $publicBest + 1.50, 'minutes' => 24, 'note' => null],

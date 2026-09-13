@@ -1,132 +1,161 @@
 @php
-    use Illuminate\Support\Carbon;
-
-    // The flag the destination chips already use, so a preset's country reads
-    // the same here as it does once it is applied.
     $countryFlag = fn (string $code) => collect($countries)->firstWhere('code', $code)['flag'] ?? '';
 
-    $dateRange = fn (array $preset) => Carbon::parse($preset['check_in'])->isoFormat('D MMM')
-        .' – '.Carbon::parse($preset['check_out'])->isoFormat('D MMM');
+    // The three facts under each destination.
+    $tags = fn (array $preset) => [
+        ['icon' => 'calendar_month', 'label' => __('tourism.presets.nights', ['count' => $preset['nights']])],
+        ['icon' => 'hotel', 'label' => __('tourism.hotel_class.'.$preset['hotel'])],
+        ['icon' => 'restaurant', 'label' => __('tourism.meals.'.$preset['meals'])],
+    ];
 @endphp
 
 @if (! empty($presets))
-    {{-- Between the hero's rule and the form, because it is the shortest way
-         through that form.
-
-         Choosing one fills every trip field and lands on "Review & send", so
-         what is left is the contact details a guest has to give whichever way
-         they got there. Nothing is locked: the request is there to be read and
-         changed before it goes.
-
-         Hidden once the traveller is past step 1 - the hero stays on every
-         step, and a row of one-click presets sitting over a half-answered
-         request is an invitation to throw it away by accident. Object form and
-         a server-rendered match, so the right state paints in the first frame
-         rather than after Alpine boots. --}}
+    {{-- Between the hero's rule and the form, because it is the shortest way through that form. --}}
     <section
         class="travel-container py-14"
         aria-labelledby="presets-heading"
         :class="{ 'hidden': step !== 1 }"
         @class(['hidden' => $initialStep !== 1])
     >
-        {{-- Centred heading block, like every other card section on the site. --}}
-        <div class="mx-auto max-w-2xl text-center">
-            <span class="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
-                {{ __('tourism.presets.eyebrow') }}
-            </span>
-            <h2 id="presets-heading" class="mt-4 font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('tourism.presets.heading') }}</h2>
-            <p class="mt-3 text-sm leading-relaxed text-muted">{{ __('tourism.presets.sub') }}</p>
+        {{-- Heading left, the way out to the full list right. --}}
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="max-w-xl">
+                <h2 id="presets-heading" class="text-2xl font-extrabold tracking-tight text-travel-ink lg:text-[1.75rem]">
+                    {{ __('tourism.presets.heading') }}
+                </h2>
+                <p class="mt-2 text-sm leading-relaxed text-gray-600">{{ __('tourism.presets.sub') }}</p>
+            </div>
+
+            <a
+                href="#travel-form-top"
+                class="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-travel-600 transition-colors hover:text-travel-700"
+            >
+                {{ __('tourism.presets.view_all') }}
+                <x-travel-icon name="arrow_forward" class="h-4 w-4" />
+            </a>
         </div>
 
-        {{-- The home page's service cards, in the same carousel: below sm a
-             native scroll-snap row, one card per swipe, with the browser's own
-             momentum scrolling; a plain grid from sm up. See
-             x-services-grid, which this deliberately mirrors rather than
-             inventing a second card shape for the same site. --}}
+        {{-- Four across from lg, which is the whole set on one screen. --}}
         <div
             x-data="{
                 active: 0,
                 total: {{ count($presets) }},
-                scrollToActive() {
-                    this.$refs.track.children[this.active]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                go(to) {
+                    this.active = Math.min(Math.max(to, 0), this.total - 1);
+                    this.$refs.track.children[this.active]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                },
+                sync() {
+                    const card = this.$refs.track.children[0];
+                    if (!card) return;
+                    const step = card.getBoundingClientRect().width + 20;
+                    this.active = Math.round(this.$refs.track.scrollLeft / step);
                 },
             }"
-            class="mt-12"
+            class="relative mt-8"
         >
             <div
                 x-ref="track"
-                @scroll.debounce.100ms="active = Math.round($el.scrollLeft / $el.clientWidth)"
-                class="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
+                @scroll.debounce.100ms="sync()"
+                class="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible [&::-webkit-scrollbar]:hidden"
             >
                 @foreach ($presets as $preset)
                     <button
                         type="button"
                         @click="applyPreset(@js($preset + ['departure' => __('tourism.request.departure_default')]))"
-                        :class="preset === @js($preset['key']) && 'border-primary ring-2 ring-primary/20'"
-                        class="group relative flex w-full shrink-0 snap-center flex-col items-center gap-5 rounded-2xl border border-travel-200 bg-white px-6 pt-8 pb-14 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-auto sm:shrink"
+                        :class="preset === @js($preset['key']) && 'border-travel-600 ring-2 ring-travel-600/20'"
+                        class="group relative flex w-[78%] shrink-0 snap-start flex-col items-start rounded-2xl border border-gray-200 bg-white p-3 pb-16 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[46%] lg:w-auto"
                     >
-                        {{-- The destination's flag where the services grid puts
-                             its illustration. There is no photograph per preset
-                             and a stock one would be a picture of somewhere the
-                             agencies have not quoted yet. --}}
-                        <span class="flex h-32 w-full items-center justify-center rounded-2xl bg-travel-50 text-6xl leading-none" aria-hidden="true">
-                            <span class="transition duration-300 group-hover:scale-105">{{ $countryFlag($preset['country']) }}</span>
+                        <span class="relative block h-40 w-full overflow-hidden rounded-xl bg-travel-50">
+                            @if ($preset['photo'])
+                                <picture>
+                                    @isset($preset['photo']['srcset']['avif'])
+                                        <source type="image/avif" srcset="{{ $preset['photo']['srcset']['avif'] }}" sizes="(min-width: 1024px) 300px, 80vw">
+                                    @endisset
+                                    <source type="image/webp" srcset="{{ $preset['photo']['srcset']['webp'] }}" sizes="(min-width: 1024px) 300px, 80vw">
+                                    <img
+                                        src="{{ $preset['photo']['src'] }}"
+                                        alt="{{ $preset['title'] }}"
+                                        width="{{ $preset['photo']['width'] }}"
+                                        height="{{ $preset['photo']['height'] }}"
+                                        loading="lazy"
+                                        decoding="async"
+                                        class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                    >
+                                </picture>
+                            @else
+                                <span class="flex h-full w-full items-center justify-center text-6xl leading-none" aria-hidden="true">
+                                    <span class="transition duration-300 group-hover:scale-105">{{ $countryFlag($preset['country']) }}</span>
+                                </span>
+                            @endif
+
+                            {{-- The city, on the picture. --}}
+                            <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-travel-ink shadow-sm backdrop-blur-sm">
+                                <x-travel-icon name="location_on" class="h-3 w-3 text-travel-600" />
+                                {{ $preset['city_label'] }}
+                            </span>
                         </span>
 
-                        <span class="block">
-                            <span class="block font-semibold text-ink">{{ $preset['title'] }}</span>
-                            <span class="mt-1.5 block text-xs leading-relaxed text-muted">{{ $preset['summary'] }}</span>
+                        <span class="mt-4 block w-full px-1">
+                            <span class="block text-[15px] font-bold text-travel-ink">{{ $preset['title'] }}</span>
+
+                            @if ($preset['typical_price'])
+                                <span class="mt-1 block text-[13px] font-semibold text-travel-600">
+                                    {{ __('tourism.presets.from', ['amount' => number_format($preset['typical_price']).' '.__('tourism.request.amd')]) }}
+                                </span>
+                            @endif
                         </span>
 
-                        <span class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-muted">
-                            <span class="inline-flex items-center gap-1.5">
-                                <x-travel-icon name="calendar_month" class="h-3.5 w-3.5 text-primary" />
-                                {{ $dateRange($preset) }}
-                            </span>
-                            <span class="inline-flex items-center gap-1.5">
-                                <x-travel-icon name="hotel" class="h-3.5 w-3.5 text-primary" />
-                                {{ __('tourism.presets.nights', ['count' => $preset['nights']]) }}
-                            </span>
-                            <span class="inline-flex items-center gap-1.5">
-                                <x-travel-icon name="group" class="h-3.5 w-3.5 text-primary" />
-                                {{ __('tourism.presets.travellers', ['count' => $preset['adults']]) }}
-                            </span>
+                        <span class="mt-3 flex w-full flex-wrap gap-1 px-1">
+                            @foreach ($tags($preset) as $tag)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-travel-50 px-2 py-1 text-[10.5px] font-medium whitespace-nowrap text-travel-800">
+                                    <x-travel-icon :name="$tag['icon']" class="h-2.5 w-2.5 text-travel-600" />
+                                    {{ $tag['label'] }}
+                                </span>
+                            @endforeach
                         </span>
 
-                        @if ($preset['typical_price'])
-                            {{-- Only when enough agencies have actually answered
-                                 for this destination - see
-                                 QuoteRequestController::typicalPrices(). --}}
-                            <span class="absolute top-4 left-4 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-bold text-primary shadow-sm">
-                                {{ __('tourism.presets.from', ['amount' => number_format($preset['typical_price']).' '.__('tourism.request.amd')]) }}
-                            </span>
-                        @endif
-
-                        <span class="sr-only">{{ __('tourism.presets.choose') }}</span>
-                        <span class="absolute right-4 bottom-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary bg-primary text-white transition-colors duration-300 group-hover:bg-white group-hover:text-primary">
-                            <x-travel-icon name="arrow_forward" class="h-3 w-3" />
+                        {{-- What the card leaves out, for anyone who cannot see the photograph or the chips. --}}
+                        <span class="sr-only">{{ $preset['summary'] }} {{ __('tourism.presets.choose') }}</span>
+                        <span class="absolute right-4 bottom-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-600 text-white transition-colors duration-300 group-hover:bg-travel-700">
+                            <x-travel-icon name="arrow_forward" class="h-4 w-4" />
                         </span>
                     </button>
                 @endforeach
             </div>
 
-            {{-- Swipe position dots - mobile only, the sm:grid above needs no
-                 page indicator. --}}
-            <div class="mt-4 flex items-center justify-center gap-2 sm:hidden">
+            {{-- Only while the row scrolls. --}}
+            <div class="mt-5 flex items-center justify-center gap-3 lg:hidden">
+                <button
+                    type="button"
+                    @click="go(active - 1)"
+                    :disabled="active === 0"
+                    class="flex h-9 w-9 items-center justify-center rounded-full border border-travel-200 bg-white text-travel-700 transition hover:border-travel-500 disabled:opacity-30 disabled:hover:border-travel-200"
+                    aria-label="{{ __('tourism.presets.previous') }}"
+                >
+                    <x-travel-icon name="arrow_back" class="h-4 w-4" />
+                </button>
+
+                <div class="flex items-center gap-2">
                 @foreach ($presets as $i => $preset)
-                    {{-- The width lives in the class attribute as well as the
-                         binding, or every dot paints at zero width and pops out
-                         to 2/6px when Alpine boots. Object form, not a ternary:
-                         a ternary only clears what Alpine itself added, so the
-                         width rendered here would never come off. --}}
                     <button
                         type="button"
-                        @click="active = {{ $i }}; scrollToActive()"
-                        :class="{ 'bg-primary w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
-                        class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-primary w-6' : 'bg-border-muted w-2' }}"
-                        aria-label="{{ __('hero.go_to_slide', ['n' => $i + 1]) }}"
+                        @click="go({{ $i }})"
+                        :class="{ 'bg-travel-600 w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
+                        class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-travel-600 w-6' : 'bg-border-muted w-2' }}"
+                        aria-label="{{ $preset['title'] }}"
                     ></button>
                 @endforeach
+                </div>
+
+                <button
+                    type="button"
+                    @click="go(active + 1)"
+                    :disabled="active >= total - 1"
+                    class="flex h-9 w-9 items-center justify-center rounded-full border border-travel-200 bg-white text-travel-700 transition hover:border-travel-500 disabled:opacity-30 disabled:hover:border-travel-200"
+                    aria-label="{{ __('tourism.presets.next') }}"
+                >
+                    <x-travel-icon name="arrow_forward" class="h-4 w-4" />
+                </button>
             </div>
         </div>
     </section>

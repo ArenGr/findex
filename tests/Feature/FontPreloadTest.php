@@ -5,17 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Font preloads have to resolve against the host the visitor actually used.
- *
- * They did not: App\Support\FontPreloads cached the output of asset(), which
- * builds an absolute URL from the current request. Whichever host warmed the
- * cache was then served to everyone - a cache warmed on 127.0.0.1 handed
- * localhost visitors cross-origin <link rel="preload"> tags. Fonts are always
- * fetched in CORS mode, so the browser blocked them, and the face arrived late
- * through the stylesheet's own relative URL instead: a visible swap on every
- * heading, on every page load.
- */
+// Font preloads have to resolve against the host the visitor actually used.
 class FontPreloadTest extends TestCase
 {
     use RefreshDatabase;
@@ -45,10 +35,6 @@ class FontPreloadTest extends TestCase
         }
     }
 
-    /**
-     * The regression itself: a second request from a different host must not
-     * be served the first host's URLs out of the cache.
-     */
     public function test_a_second_host_is_not_served_the_first_hosts_cached_urls(): void
     {
         $this->preloadedFontHrefs('http://localhost/en/insurance/auto');

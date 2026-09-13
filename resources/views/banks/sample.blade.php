@@ -4,8 +4,6 @@
 @section('description', __('bank_products.'.$category.'.intro'))
 
 @php
-    // Columns/field list are translated (lang/*/bank_products.php); the row
-    // values are language-neutral and live in config/bank-products.php.
     $columns = __('bank_products.'.$category.'.columns');
     $rows = config('bank-products.'.$category.'.rows', []);
     $fields = __('bank_products.'.$category.'.fields');
@@ -24,22 +22,13 @@
             {{ __('bank_products.'.$category.'.intro') }}
         </p>
 
-        {{-- Stated plainly and above the table, not in a footnote: these
-        figures are invented, and a partner reading this page has to be able
-        to tell that at a glance. --}}
         <div class="mt-8 flex flex-wrap items-start gap-3 rounded-2xl border border-accent-yellow/40 bg-accent-yellow/10 px-5 py-4">
             <span class="max-w-full rounded-full bg-accent-yellow/30 px-2.5 py-1 text-[10px] font-semibold tracking-wide break-words text-ink uppercase">
                 {{ __('bank_products.sample_badge') }}
             </span>
-            {{-- min-w + flex-wrap drops this onto its own line instead of being
-            squeezed beside the badge; break-words because a single long
-            Armenian word otherwise overflows the narrow column. --}}
             <p class="min-w-[12rem] flex-1 text-sm leading-relaxed break-words text-ink">{{ __('bank_products.sample_notice') }}</p>
         </div>
 
-        {{-- Horizontally scrollable rather than collapsed to a card list:
-        the point of this page is to show the full column set a bank has to
-        supply, so nothing is hidden at narrow widths. --}}
         <div class="mt-6 overflow-x-auto rounded-2xl border border-placeholder">
             <table class="w-full border-collapse text-sm">
                 <thead>

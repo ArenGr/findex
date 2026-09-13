@@ -8,24 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionMethod;
 use Tests\TestCase;
 
-/**
- * Guards the currency-code normalisation every scraped row passes through.
- *
- * The parser contract (see App\Parsers\RateParser) puts normalisation on the
- * caller, so a parser is entitled to emit whatever spelling its bank
- * publishes. RateScraper then folds that to a canonical code and drops
- * anything not in CurrencyCode::codes().
- *
- * The alias map used to hold only 'RUR' => 'RUR' - a no-op - while this app
- * canonicalises the ruble on RUR. Every bank publishing the ISO 'RUB'
- * (IDBank and AMIO among them) therefore had its ruble row discarded as an
- * untracked currency. It failed silently: the scrape still reported success,
- * one row lighter, and the comparison pages just showed no ruble.
- *
- * Reaching the private method by reflection is deliberate. It is the exact
- * unit that was wrong, and going through the public scrape() would mean
- * standing up Guzzle plus a fake bank page to assert the same thing.
- */
+// Guards the currency-code normalisation every scraped row passes through.
 class RateCurrencyAliasTest extends TestCase
 {
     private function normalize(string $code): string
@@ -58,11 +41,6 @@ class RateCurrencyAliasTest extends TestCase
         );
     }
 
-    /**
-     * The general form of the same bug: wherever this app's canonical code
-     * differs from the ISO one it is named after, the ISO spelling has to be
-     * aliased - otherwise any bank publishing it loses that currency.
-     */
     public function test_every_currency_whose_canonical_code_differs_from_its_iso_name_is_aliased(): void
     {
         foreach (CurrencyCode::cases() as $currency) {
@@ -79,10 +57,7 @@ class RateCurrencyAliasTest extends TestCase
         }
     }
 
-    /**
-     * Armswissbank quotes the offshore yuan. Same currency, different
-     * market - and without the alias that bank simply shows no yuan.
-     */
+    // Armswissbank quotes the offshore yuan.
     public function test_the_offshore_yuan_is_stored_as_the_yuan(): void
     {
         $this->assertSame('CNY', $this->normalize('CNH'));

@@ -1,22 +1,7 @@
 @props(['row', 'index'])
 
-{{--
-    One bank's rate for the homepage table. Lives in its own file rather than
-    inline in rates-table.blade.php for two reasons: the loop there is nested
-    six levels deep, so every line of an inline row carried ~40 bytes of pure
-    indentation (~1.2 KB per row, ~200 KB per page across all the tab panels),
-    and the row is now server-rendered, so it is real markup worth reading on
-    its own rather than an Alpine template.
-
-    `order` is what sorting moves - the rows themselves stay put. `index` is
-    the row's position as rendered (cheapest sell rate first); `positions`
-    comes from the panel's x-data and maps that to where the current sort
-    wants it.
---}}
+{{-- One bank's rate for the homepage table. --}}
 <div :style="{ order: positions[{{ $index }}] }" class="flex items-center gap-4 border-b border-placeholder px-6 py-5">
-    {{-- Object form, not a ternary: a ternary only clears the classes Alpine
-         itself added, so the colour rendered here would survive every
-         re-sort. --}}
     <span
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold {{ $index === 0 ? 'bg-accent-yellow text-ink' : 'bg-placeholder/60 text-muted' }}"
         :class="{
@@ -46,10 +31,6 @@
         </div>
     </div>
 
-    {{-- Both figures in ink on the body face, matching /rates: green-against-red
-         read as a verdict on each number rather than a label for the column, and
-         Montserrat is the style guide's decorative heading face, not a face for
-         data. --}}
     <div class="w-20 text-right"><p class="text-lg font-bold text-ink tabular-nums">{{ number_format($row['buy_rate'], 2, '.', '') }}</p></div>
     <div class="w-20 text-right"><p class="text-lg font-bold text-ink tabular-nums">{{ number_format($row['sell_rate'], 2, '.', '') }}</p></div>
 

@@ -39,17 +39,13 @@ class ReportRequest extends Model
         return $this->hasOne(Report::class);
     }
 
-    /**
-     * Mark the request as currently being processed.
-     */
+    // Mark the request as currently being processed.
     public function markAsProcessing(): void
     {
         $this->update(['status' => 'processing']);
     }
 
-    /**
-     * Mark the request as successfully completed.
-     */
+    // Mark the request as successfully completed.
     public function markAsCompleted(): void
     {
         $this->update([
@@ -58,9 +54,7 @@ class ReportRequest extends Model
         ]);
     }
 
-    /**
-     * Mark the request as failed.
-     */
+    // Mark the request as failed.
     public function markAsFailed(string $errorMessage): void
     {
         $this->update([

@@ -8,10 +8,6 @@
         'body' => __("exchange_quotes.request.step_{$n}_body"),
     ]);
 
-    // Both direction labels, pre-translated per currency, so switching the
-    // currency select client-side can relabel the direction options without
-    // a round trip - the :currency placeholder can't be filled in until a
-    // currency is actually chosen.
     $directionLabels = $currencies->mapWithKeys(fn ($currency) => [
         $currency->code => [
             'buy_rate' => __('exchange_quotes.request.direction_buy_rate', ['currency' => $currency->code]),

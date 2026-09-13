@@ -1,9 +1,4 @@
 @php
-    // Each category gets a soft/pastel tint (icon backdrop) and a matching
-    // border line - defined in resources/css/app.css so the hex values live
-    // in one place. Cards stay white by default (not fully colored) - the
-    // tinted icon backdrop is enough to read as distinct per category
-    // without turning the section into a rainbow.
     $services = [
         ['key' => 'currency_exchange', 'image' => 'images/services/currency-exchange.webp', 'href' => route('rates.index'), 'border' => 'border-currency-line', 'tint' => 'bg-currency-tint'],
         ['key' => 'credit_card', 'image' => 'images/services/credit-card.webp', 'href' => route('banks.index'), 'border' => 'border-cards-line', 'tint' => 'bg-cards-tint'],
@@ -22,12 +17,6 @@
             <p class="mt-3 text-sm leading-relaxed text-muted">{{ __('home.services.subtitle') }}</p>
         </div>
 
-        {{--
-            Below sm, this is a native CSS scroll-snap carousel (one card per
-            swipe, touch/momentum scrolling comes free from the browser - no
-            JS gesture handling needed) instead of a cramped 2-column grid.
-            At sm and up it reverts to the plain grid used on tablet/desktop.
-        --}}
         <div
             x-data="{
                 active: 0,
@@ -46,22 +35,6 @@
                 @foreach ($services as $service)
                     <a href="{{ $service['href'] }}" class="group relative flex w-full shrink-0 snap-center flex-col items-center justify-center gap-5 rounded-2xl border {{ $service['border'] }} bg-white px-6 py-10 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-auto sm:shrink">
                         <span class="flex h-32 w-44 items-center justify-center rounded-2xl {{ $service['tint'] }}">
-                            {{-- ?v=mtime busts the browser's image cache whenever this file is
-                            replaced on disk - these are plain public/ files, not run through
-                            Vite's content-hashed asset pipeline, so the URL never changes on its
-                            own when the image does.
-
-                            Deliberately NOT loading="lazy". This is the first section under the
-                            hero, so on most screens these four are at or just past the fold - and
-                            a lazy image is invisible to the preload scanner, so the browser only
-                            discovers it after parsing, styling and laying the page out. That is
-                            why these four blinked in one after the other on every refresh while
-                            everything around them was already painted. Without the attribute they
-                            are fetched during HTML parsing, alongside the hero, and are decoded
-                            before the first frame. They are ~12 KB each.
-
-                            fetchpriority="low" is the other half of that: eager, so the scanner
-                            sees them, but never ahead of the hero photo they sit below. --}}
                             <img
                                 src="{{ asset($service['image']) }}?v={{ filemtime(public_path($service['image'])) }}"
                                 alt=""
@@ -89,11 +62,6 @@
             {{-- Swipe position dots - mobile only, the sm:grid above needs no page indicator. --}}
             <div class="mt-4 flex items-center justify-center gap-2 sm:hidden">
                 @foreach ($services as $i => $service)
-                    {{-- The width lives in the class attribute as well as the
-                         binding, or every dot paints at zero width and pops out
-                         to 2/6px when Alpine boots. Object form, not a ternary:
-                         a ternary only clears what Alpine itself added, so the
-                         width rendered here would never come off. --}}
                     <button
                         type="button"
                         @click="active = {{ $i }}; scrollToActive()"

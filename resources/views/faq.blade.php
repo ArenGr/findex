@@ -4,16 +4,6 @@
 @section('description', __('meta.faq_description'))
 
 @section('content')
-    {{--
-        Outer section matches the home page's column - the actual
-        reading content (heading, intro, every Q&A) stays inside a
-        narrower inner wrapper, the same pattern the home page's own
-        sections use for their body copy (e.g. trust-section's paragraph
-        sits at max-w-xl inside its own full-width section). This is all
-        single-column prose top to bottom with no grid to spread wider -
-        widening it to 1280px directly would just stretch every line of
-        text uncomfortably long, not make it easier to read.
-    --}}
     <section class="site-container py-16">
         <div class="mx-auto max-w-3xl">
             <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('faq.heading') }}</h1>

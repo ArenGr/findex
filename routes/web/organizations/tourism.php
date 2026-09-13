@@ -6,12 +6,8 @@ use App\Http\Controllers\Organization\TravelRequestController;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Route;
 
-// Tourism lead management and quote templates only apply to tourism
-// organizations (see Organization::TOURISM_TYPES).
 Route::middleware('org.type:'.implode(',', Organization::TOURISM_TYPES))->group(function () {
-    // The agency's inbox of travel requests it has been sent. Every route
-    // here is scoped to the signed-in agency's own organization inside the
-    // controller - see TravelRequestController::ownedResponse().
+    // The agency's inbox of travel requests it has been sent.
     Route::get('/travel-requests', [TravelRequestController::class, 'index'])->name('travel-requests.index');
     Route::get('/travel-requests/{response}', [TravelRequestController::class, 'show'])->name('travel-requests.show');
     Route::post('/travel-requests/{response}/offer', [TravelRequestController::class, 'store'])->name('travel-requests.offer.store');

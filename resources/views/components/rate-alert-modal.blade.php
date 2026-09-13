@@ -3,37 +3,20 @@
 @php
     $user = auth()->user();
 
-    // Only channels the account can actually receive on. store() rejects an
-    // unconnected one server-side anyway, and a modal - unlike the alerts page -
-    // has nowhere to show connection state or a connect button, so offering a
-    // channel here that will bounce is a dead end.
+    // Only channels the account can actually receive on.
     $channels = collect(['email' => true, 'telegram' => (bool) $user?->telegram_chat_id, 'viber' => (bool) $user?->viber_chat_id])
         ->filter()
         ->keys();
 
-    // A failed POST lands back on this page with the modal shut and the input
-    // in the session. Reopening it is the difference between "fix one field"
-    // and "start again".
+    // A failed POST lands back on this page with the modal shut and the input in the session.
     $reopen = $errors->any() && old('return_to') !== null;
 
     $fieldLabel = 'block text-xs font-semibold tracking-wider text-muted uppercase';
     $field = 'w-full rounded-lg border border-placeholder bg-white px-4 py-3 text-sm text-ink transition focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none';
 @endphp
 
-{{--
-    Lives outside #rates-panel on purpose: the panel is morphed on every filter
-    click, and a dialog that gets patched underneath an open form would lose
-    whatever was typed into it.
-
-    Because it sits outside, it cannot read the panel's current state directly -
-    the trigger passes that in on the event, so the prefill is whatever was on
-    screen at the moment of the click rather than whatever was there at page
-    load.
---}}
 @if (session('status') === 'alert-created')
-    {{-- The alerts page confirms its own creates. Submitting from here returns
-    to the rates page instead, which would otherwise reload looking untouched -
-    the one thing worse than a slow form is one that gives no sign it worked. --}}
+    {{-- The alerts page confirms its own creates. --}}
     <div
         x-data="{ shown: true }"
         x-show="shown"
@@ -55,8 +38,7 @@
 <div
     x-data="{
         open: @js($reopen),
-        {{-- Seeded from old() so a rejected submission comes back filled in.
-        Overwritten wholesale by show() on a fresh open. --}}
+        {{-- Seeded from old() so a rejected submission comes back filled in. --}}
         form: @js([
             'currency_id' => (string) old('currency_id', ''),
             'organization_id' => (string) old('organization_id', ''),
@@ -78,8 +60,6 @@
     x-cloak
 >
     <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/40 p-4 backdrop-blur-sm sm:items-center">
-        {{-- The panel is a column: only the middle scrolls, so the title stays
-        readable and Create Alert stays reachable on a short screen. --}}
         <div
             @click.outside="open = false"
             role="dialog"
@@ -107,8 +87,6 @@
             </div>
 
             @guest
-                {{-- Every alert route is behind auth, so a guest who filled this
-                in would be bounced to login and lose it. Ask first instead. --}}
                 <div class="px-6 pb-8">
                     <p class="text-sm break-words text-ink">{{ __('alerts.modal.sign_in_required') }}</p>
                     <div class="mt-6 flex flex-wrap gap-3">
@@ -125,14 +103,9 @@
                     @csrf
                     <input type="hidden" name="return_to" value="{{ request()->fullUrl() }}">
 
-                    {{-- Buy or sell rate is derived from what the visitor was
-                    already doing on the page, so the modal never asks a question
-                    the page has an answer to. --}}
                     <input type="hidden" name="rate_field" :value="form.rate_field">
 
                     <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
-                        {{-- The four things that define which rate to watch,
-                        paired off: currency with where, kind with condition. --}}
                         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             @php
                                 $selects = [
@@ -146,9 +119,6 @@
                             @foreach ($selects as [$name, $label])
                                 <div class="min-w-0 space-y-1.5">
                                     <label for="alert-{{ $name }}" class="{{ $fieldLabel }}">{{ $label }}</label>
-                                    {{-- The browser's own arrow is dropped for
-                                    one that matches the rest of the form at
-                                    every zoom level and in every engine. --}}
                                     <div class="relative">
                                         <select
                                             name="{{ $name }}" id="alert-{{ $name }}"
@@ -196,13 +166,11 @@
                                     placeholder="{{ __('alerts.modal.threshold_placeholder') }}"
                                     class="{{ $field }} pr-20 text-base font-medium tabular-nums"
                                 >
-                                {{-- Clear of right-4 so it never collides with
-                                the number field's own spinner. --}}
+                                {{-- Clear of right-4 so it never collides with the number field's own spinner. --}}
                                 <span class="pointer-events-none absolute right-12 text-sm font-medium text-muted">{{ __('exchange_quotes.request.amd') }}</span>
                             </div>
 
-                            {{-- Says what the rate is now, so the number typed
-                            above is a decision rather than a guess. --}}
+                            {{-- Says what the rate is now, so the number typed above is a decision rather than a guess. --}}
                             <p x-show="context.rate" class="flex items-center gap-1.5 pt-1 text-xs break-words text-muted">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="h-3.5 w-3.5 shrink-0 fill-accent-yellow" aria-hidden="true">
                                     <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.9l-5.2 2.61.99-5.79-4.21-4.1 5.82-.85z" />
@@ -233,8 +201,7 @@
                                 @endforeach
                             </div>
 
-                            {{-- Telegram and Viber need a linked account, which
-                            only the alerts page can set up. --}}
+                            {{-- Telegram and Viber need a linked account, which only the alerts page can set up. --}}
                             @if ($channels->count() < 3)
                                 <a href="{{ route('alerts.index') }}" class="inline-block text-sm break-words text-primary underline decoration-primary/30 underline-offset-4 transition hover:text-primary-dark">
                                     {{ __('alerts.modal.more_channels') }}
@@ -247,8 +214,6 @@
                         </div>
                     </div>
 
-                    {{-- Reversed below sm so the primary action is the one under
-                    the thumb rather than the one Cancel is. --}}
                     <div class="flex shrink-0 flex-col-reverse items-center justify-end gap-3 bg-placeholder/25 px-6 py-5 sm:flex-row">
                         <button type="button" @click="open = false" class="w-full rounded-full bg-placeholder/50 px-6 py-2.5 text-sm font-semibold break-words text-ink transition hover:bg-placeholder sm:w-auto">
                             {{ __('alerts.modal.cancel') }}

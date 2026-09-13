@@ -1,10 +1,4 @@
-{{--
-    Banking's hero illustration: a small stack of cards.
-
-    Findex green leads, with the muted blue accent the banking tint carries,
-    so the category has an identity of its own without the background needing
-    to differ much from every other hero.
---}}
+{{-- Banking's hero illustration: a small stack of cards. --}}
 <div class="relative h-[220px] w-full" aria-hidden="true">
     <div class="absolute right-6 bottom-4 h-16 w-72 rounded-[50%] bg-primary/5"></div>
 

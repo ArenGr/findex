@@ -1,19 +1,10 @@
 @props(['currencies', 'cities' => [], 'minimums' => []])
 
 @php
-    // A failed POST lands back with the input in the session. Reopening the
-    // dialog is the difference between "fix one field" and "start again".
+    // A failed POST lands back with the input in the session.
     $reopen = $errors->any() && old('from_modal') !== null;
 @endphp
 
-{{--
-    One question - how much, and how long will you wait - asked about a rate the
-    visitor is already looking at, so it belongs on top of that rather than on a
-    page of its own.
-
-    Lives outside #rates-panel: that panel is morphed on every filter click, and
-    a dialog patched underneath an open form would lose whatever was typed.
---}}
 <div
     x-data="{
         open: @js($reopen),
@@ -29,8 +20,6 @@
         show(detail) {
             this.form = { ...this.form, ...(detail?.form ?? {}) };
             this.context = { ...this.context, ...(detail?.context ?? {}) };
-            // Remembered so closing puts the caret back where it came from,
-            // rather than dropping it at the top of the document.
             this.opener = document.activeElement;
             this.open = true;
             this.$nextTick(() => (this.$refs.panel?.querySelector('#modal-amount') ?? this.$refs.panel?.querySelector('button'))?.focus());
@@ -39,9 +28,6 @@
             this.open = false;
             this.opener?.focus?.();
         },
-        {{-- A dialog you can Tab out of is a dialog that hands the keyboard to
-        the page it is covering, where every control is inert behind a backdrop
-        the pointer cannot reach either. --}}
         trap(event) {
             const focusable = [...this.$refs.panel.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea')]
                 .filter((node) => !node.disabled && node.offsetParent !== null);
@@ -63,8 +49,6 @@
     @keydown.escape.window="open && close()"
     x-cloak
 >
-    {{-- A bottom sheet on a phone and a centred dialog from sm up - the same
-    panel either way, so there is one of these to maintain rather than two. --}}
     <div x-show="open" x-transition.opacity class="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/50 backdrop-blur-sm sm:items-center sm:p-4">
         <div
             x-ref="panel"
@@ -76,8 +60,6 @@
             class="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-[0_-8px_30px_rgba(27,28,29,0.12)] sm:max-h-[calc(100vh-2rem)] sm:max-w-[520px] sm:rounded-2xl sm:shadow-[0_24px_40px_rgba(27,28,29,0.14)]"
             x-transition
         >
-            {{-- Says the sheet can be dragged away, on the one viewport where
-            that is the gesture people reach for. --}}
             <div class="flex shrink-0 justify-center pt-3 pb-1 sm:hidden" aria-hidden="true">
                 <span class="h-1.5 w-12 rounded-full bg-placeholder"></span>
             </div>
@@ -87,10 +69,7 @@
                     <h2 id="better-rate-title" class="font-heading text-xl font-bold tracking-tight break-words text-ink">
                         {{ __('rates.cta_button') }}
                     </h2>
-                    {{-- Named when the request started from one office's page.
-                    It still goes to every reachable office - that is what makes
-                    the offers worth comparing - so the subtitle names where you
-                    came from, not who will answer. --}}
+                    {{-- Named when the request started from one office's page. --}}
                     <p class="mt-1.5 text-sm leading-relaxed break-words text-muted" x-show="context.organization" x-cloak>
                         {{ __('exchange_quotes.modal.for_organization', ['name' => '']) }}<span x-text="context.organization" class="font-medium"></span>
                     </p>
@@ -113,16 +92,13 @@
                 @csrf
                 <input type="hidden" name="from_modal" value="1">
 
-                {{-- Honeypot, same as the full page: hidden from real visitors,
-                a bot filling every field trips it. --}}
+                {{-- Honeypot, same as the full page: hidden from real visitors, a bot filling every field trips it. --}}
                 <div class="hidden" aria-hidden="true">
                     <label for="modal-company">Company</label>
                     <input type="text" name="company" id="modal-company" tabindex="-1" autocomplete="off">
                 </div>
 
                 <div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-6 sm:px-6">
-                    {{-- What they would get without asking, so the request has
-                    something to be measured against from the first second. --}}
                     <div x-show="context.rate" class="flex items-center justify-between gap-4 rounded-xl border border-placeholder bg-placeholder/25 p-4">
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ __('exchange_quotes.modal.current_rate') }}</p>
@@ -138,9 +114,7 @@
                         </span>
                     </div>
 
-                    {{-- Everything, not just the fields that happen to have a
-                    message slot beneath them. A validation failure with nowhere
-                    to render is a form that rejects you and will not say why. --}}
+                    {{-- Everything, not just the fields that happen to have a message slot beneath them. --}}
                     @if ($errors->any())
                         <ul class="space-y-1 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
                             @foreach ($errors->all() as $message)
@@ -149,16 +123,7 @@
                         </ul>
                     @endif
 
-                    {{--
-                        "I have 5,000 USD" and "I want AMD". The select is the
-                        currency being handed over, not the one being asked for -
-                        putting it under "I want" made the modal offer to swap
-                        USD for USD.
-
-                        The amount is always denominated in the foreign currency
-                        here, whichever way the trade runs, so "I want" is
-                        stated rather than asked.
-                    --}}
+                    {{-- "I have 5,000 USD" and "I want AMD". --}}
                     <div>
                         <span class="block text-[11px] font-semibold tracking-wider text-ink uppercase">{{ __('exchange_quotes.modal.exchange_details') }}</span>
 
@@ -183,8 +148,7 @@
                                 </div>
                             </div>
 
-                            {{-- Rotated a quarter turn on a phone, where the two
-                            boxes stack instead of sitting side by side. --}}
+                            {{-- Rotated a quarter turn on a phone, where the two boxes stack instead of sitting side by side. --}}
                             <span class="flex items-center justify-center text-muted" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 rotate-90 sm:rotate-0">
                                     <path d="M5 12h14M13 6l6 6-6 6" />
@@ -198,13 +162,8 @@
                         </div>
                     </div>
 
-                    {{-- Carried from wherever they pressed the button, so the
-                    direction they were already looking at survives. --}}
                     <input type="hidden" name="rate_field" :value="form.rate_field">
 
-                    {{-- Kept even though the design drops it: it decides which
-                    offices are contacted at all, and without it every request
-                    goes to every office in the country. --}}
                     @if ($cities !== [])
                         <div>
                             <label for="modal-city" class="block text-[11px] font-semibold tracking-wider text-ink uppercase">{{ __('exchange_quotes.modal.where') }}</label>
@@ -220,14 +179,9 @@
                         </div>
                     @endif
 
-                    {{-- The offer's shelf life. A rate held for a week is not a
-                    rate anyone is holding, and an office answering a two-day-old
-                    request is quoting into a market that has moved. --}}
+                    {{-- The offer's shelf life. --}}
                     <fieldset>
                         <legend class="block text-[11px] font-semibold tracking-wider text-ink uppercase">{{ __('exchange_quotes.modal.wait_question') }}</legend>
-                        {{-- Three cards on a phone, one joined control from sm
-                        up: the same three choices, sized for the pointer each
-                        viewport actually has. --}}
                         <div class="mt-3 grid grid-cols-3 gap-2 sm:gap-0 sm:overflow-hidden sm:rounded-xl sm:border sm:border-border-muted">
                             @foreach ([['15m', '15', __('exchange_quotes.modal.wait_unit_min')], ['30m', '30', __('exchange_quotes.modal.wait_unit_min')], ['1h', '1', __('exchange_quotes.modal.wait_unit_hour')]] as [$value, $number, $unit])
                                 <label class="min-w-0 cursor-pointer sm:border-e sm:border-border-muted sm:last:border-e-0">
@@ -242,10 +196,6 @@
                     </fieldset>
 
                     @guest
-                        {{-- The one field a guest is asked for, and the office
-                        never sees it: it is how the private offers link reaches
-                        someone who is not signed in, and what /exchange/resend
-                        re-sends. Signed in, the modal asks for nothing. --}}
                         <div>
                             <label for="modal-email" class="block text-[11px] font-semibold tracking-wider text-ink uppercase">{{ __('exchange_quotes.modal.email_label') }}</label>
                             <input
@@ -261,9 +211,6 @@
                         </div>
                     @endguest
 
-                    {{-- True as built: the fan-out job sends the amount, the
-                    direction and the city, and the partner page shows the office
-                    nothing else - guest_email appears nowhere on that path. --}}
                     <div class="flex items-start gap-3 rounded-xl border border-placeholder bg-white p-3">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden="true">
                             <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -276,9 +223,7 @@
                 </div>
 
                 <div class="flex shrink-0 flex-col-reverse gap-3 border-t border-placeholder bg-placeholder/20 px-5 py-4 pb-6 sm:flex-row sm:justify-end sm:px-6 sm:pb-4">
-                    {{-- Desktop only. The sheet already has two ways out that
-                    a thumb reaches first - the handle and the X - and a second
-                    button under the primary one is just a bigger footer. --}}
+                    {{-- Desktop only. --}}
                     <button
                         type="button" @click="close()"
                         class="hidden min-h-11 items-center justify-center rounded-xl border border-border-muted px-6 py-3 text-sm font-semibold break-words text-ink transition hover:bg-placeholder/40 sm:inline-flex"

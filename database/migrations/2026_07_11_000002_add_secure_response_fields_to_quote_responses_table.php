@@ -9,13 +9,6 @@ use Illuminate\Support\Str;
 
 return new class extends Migration
 {
-    /**
-     * Backs the secure, no-login partner response page: response_token is
-     * the credential embedded in the link we send, status tracks the
-     * pending/responded/declined lifecycle explicitly (rather than
-     * inferring it from responded_at being null), and the remaining
-     * columns are the structured fields the response form collects.
-     */
     public function up(): void
     {
         Schema::table('quote_responses', function (Blueprint $table) {
@@ -27,10 +20,6 @@ return new class extends Migration
             $table->string('attachment_path')->nullable()->after('reply_text');
         });
 
-        // Backfill: every existing row needs a token (used to be nullable
-        // only so the column could be added without a default), and any row
-        // that already has a reply counts as already "responded" so it
-        // doesn't regress to "pending" under the new explicit status.
         DB::table('quote_responses')->orderBy('id')->get(['id', 'responded_at'])->each(function ($row) {
             DB::table('quote_responses')->where('id', $row->id)->update([
                 'response_token' => Str::random(40),

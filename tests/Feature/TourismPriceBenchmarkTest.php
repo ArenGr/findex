@@ -10,12 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the aggregate, historical price-comparison card on the tourism
- * dashboard (see TourismController::priceBenchmark) - deliberately not a
- * live per-request comparison, to avoid encouraging orgs to anchor to each
- * other's bids on requests still open for replies.
- */
 class TourismPriceBenchmarkTest extends TestCase
 {
     use RefreshDatabase;

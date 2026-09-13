@@ -28,8 +28,6 @@ class OrganizationRegistrationNotifiesAdminsTest extends TestCase
 
         $response->assertRedirect();
 
-        // Login credentials now live on `users`, not `organizations` - see
-        // RegisteredOrganizationController::store().
         $organizationUser = User::where('email', 'new-test-bank@example.com')->first();
         $this->assertNotNull($organizationUser);
         $organization = $organizationUser->organization;
@@ -42,9 +40,6 @@ class OrganizationRegistrationNotifiesAdminsTest extends TestCase
         $notification = $adminOne->fresh()->unreadNotifications()->first();
         $this->assertSame('New organization awaiting approval', $notification->data['title']);
 
-        // OrganizationResource routes admin pages by id, not by the model's
-        // own slug-based getRouteKeyName() used for public routes - the
-        // review link must be built from the id or it 404s once clicked.
         $reviewUrl = $notification->data['actions'][0]['url'];
         $this->assertStringContainsString("/admin/organizations/{$organization->id}/edit", $reviewUrl);
         $this->assertStringNotContainsString("/organizations/{$organization->slug}/edit", $reviewUrl);

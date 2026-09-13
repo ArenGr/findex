@@ -8,14 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
-/**
- * The "trusted by" strip.
- *
- * It makes a claim about real companies, so it is driven by partner records
- * rather than the design pack's mockup logos - those are invented brands. It
- * also has to disappear rather than look thin: a strip listing one agency
- * argues against itself.
- */
+// The "trusted by" strip.
 class TravelPartnersTest extends TestCase
 {
     use RefreshDatabase;
@@ -29,8 +22,6 @@ class TravelPartnersTest extends TestCase
 
     private function makePartners(int $count): void
     {
-        // Not range(1, $count): PHP counts *down* when the end is below the
-        // start, so range(1, 0) is [1, 0] and "no partners" created two.
         foreach ($count > 0 ? range(1, $count) : [] as $n) {
             Organization::factory()->create([
                 'type' => 'tourism',

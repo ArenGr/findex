@@ -14,14 +14,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-/**
- * Covers the Redis-tagged caching added to RateController: that the
- * visitor-agnostic dropdown queries and the paginated listing are actually
- * served from cache on a second hit, and that writes through the real
- * paths (not an explicit flush call) invalidate them via each model's
- * booted() hook - see CurrencyRate/MortgageOffer/Currency/Organization/
- * Branch/Review.
- */
 class RateCacheTest extends TestCase
 {
     use RefreshDatabase;
@@ -71,9 +63,6 @@ class RateCacheTest extends TestCase
 
         $this->get('/en/rates'); // warms rates.listing.*
 
-        // Simulates a scrape/manual entry writing a fresh rate - no
-        // explicit cache-flush call here, relies entirely on
-        // CurrencyRate::booted()'s static::saved hook.
         CurrencyRate::create([
             'organization_id' => $bank->id, 'currency_id' => $usd->id, 'rate_type' => 'cash',
             'buy_rate' => 380, 'sell_rate' => 385, 'scraped_at' => now(),

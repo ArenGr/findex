@@ -9,19 +9,8 @@ use Illuminate\Support\Facades\URL;
 
 class QuoteResponse extends Model
 {
-    /**
-     * Kept as a plain const list rather than reusing the Currency model -
-     * Currency tracks foreign-exchange rates against AMD, a different
-     * concept from "which currency is this travel quote priced in" (where
-     * AMD itself is a valid answer).
-     */
     public const CURRENCIES = ['AMD', 'USD', 'EUR'];
 
-    /**
-     * A partner can propose several options within one response (see
-     * QuoteSuggestion) - capped to keep the response form and the
-     * customer-facing comparison usable rather than a wall of options.
-     */
     public const MAX_SUGGESTIONS = 5;
 
     public const STATUS_PENDING = 'pending';
@@ -61,41 +50,23 @@ class QuoteResponse extends Model
         return $this->status === self::STATUS_RESPONDED;
     }
 
-    /**
-     * The agency has opened the request but not answered it yet - the only
-     * thing that lets the status page say "reviewing" without inventing it.
-     */
     public function getIsReviewingAttribute(): bool
     {
         return $this->status === self::STATUS_PENDING && $this->viewed_at !== null;
     }
 
-    /**
-     * Past the deadline the agency itself set. An offer with no stated
-     * deadline never expires - the agency chose not to put a clock on it,
-     * and inventing one would retire an offer it is still honouring.
-     */
+    // Past the deadline the agency itself set.
     public function getIsExpiredAttribute(): bool
     {
         return $this->valid_until !== null && $this->valid_until->isPast();
     }
 
-    /**
-     * Whether the agency may still submit or revise its offer. Tied to the
-     * request being open rather than to anything on the response: once the
-     * traveler has closed the request or it has run out, a new price can't
-     * reach them, so accepting one would be a silent no-op.
-     */
+    // Whether the agency may still submit or revise its offer.
     public function getIsEditableAttribute(): bool
     {
         return $this->status !== self::STATUS_DECLINED && $this->quoteRequest->is_open;
     }
 
-    /**
-     * Recorded the first time the agency opens the request, and only then -
-     * a later visit doesn't move it, so "viewed 2 hours ago" keeps meaning
-     * when they first saw it.
-     */
     public function markViewed(): void
     {
         if ($this->viewed_at === null) {
@@ -118,12 +89,7 @@ class QuoteResponse extends Model
         return $this->hasMany(QuoteSuggestion::class);
     }
 
-    /**
-     * The representative option for contexts that only show one figure per
-     * response (e.g. the side-by-side comparison table) - the cheapest,
-     * since that's the option most likely to interest a budget-conscious
-     * traveler comparing across agencies.
-     */
+    // The representative option for contexts that only show one figure per response (e.g.
     public function cheapestSuggestion(): ?QuoteSuggestion
     {
         return $this->relationLoaded('suggestions')
@@ -131,12 +97,6 @@ class QuoteResponse extends Model
             : $this->suggestions()->orderBy('price_amount')->first();
     }
 
-    /**
-     * The secure, unauthenticated link a partner uses to respond - the
-     * response_token itself is the credential (a long random opaque
-     * string), so unlike QuoteRequest::signedResultsUrl() this doesn't need
-     * Laravel's HMAC-signed-URL machinery on top of it.
-     */
     public function secureRespondUrl(): string
     {
         return URL::route('tourism.respond', [

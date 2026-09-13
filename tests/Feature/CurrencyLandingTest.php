@@ -9,11 +9,7 @@ use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * The pages that exist to be found. Somebody searching "USD to AMD rate today"
- * wants the number, so these assert the answer is on the page and in the meta,
- * not that a filter interface loaded.
- */
+// The pages that exist to be found.
 class CurrencyLandingTest extends TestCase
 {
     use RefreshDatabase;
@@ -57,10 +53,6 @@ class CurrencyLandingTest extends TestCase
         $this->get('/en/rates/USD')->assertOk();
     }
 
-    /**
-     * The fixed path must never be swallowed by the parameter beside it - the
-     * classic way a route like this breaks another.
-     */
     public function test_the_history_page_is_not_captured_by_the_currency_route(): void
     {
         $this->seedMarket();
@@ -88,10 +80,7 @@ class CurrencyLandingTest extends TestCase
         $this->get('/en/rates/xxx')->assertNotFound();
     }
 
-    /**
-     * Only what we can stand behind. No aggregate rating and no offer count -
-     * structured data that decorates rather than describes is worse than none.
-     */
+    // Only what we can stand behind.
     public function test_the_structured_data_claims_only_the_rate(): void
     {
         $this->seedMarket();

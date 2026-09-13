@@ -9,12 +9,7 @@ use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Widgets render on other people's websites. Everything asserted here follows
- * from that: they must be framable, they must not carry a session, and their
- * URL must never move - an embed code lives in someone else's HTML and nobody
- * is going back to edit it.
- */
+// Widgets render on other people's websites.
 class WidgetTest extends TestCase
 {
     use RefreshDatabase;
@@ -34,11 +29,7 @@ class WidgetTest extends TestCase
         return $usd;
     }
 
-    /**
-     * The default SAMEORIGIN would make a widget render everywhere except
-     * where it is meant to. Safe to frame because there is nothing to hijack:
-     * no session, no form, no action - numbers and a link home.
-     */
+    // The default SAMEORIGIN would make a widget render everywhere except where it is meant to.
     public function test_widgets_are_framable_while_the_rest_of_the_site_is_not(): void
     {
         $this->seedMarket();
@@ -59,11 +50,7 @@ class WidgetTest extends TestCase
         $this->get('/en/widgets/rate?currency=USD')->assertNotFound();
     }
 
-    /**
-     * The same numbers the API sells. If these ever disagree, the widget has
-     * grown its own copy of the rate logic - which is the thing
-     * MarketRateService exists to prevent.
-     */
+    // The same numbers the API sells.
     public function test_a_widget_shows_the_same_figures_as_the_api(): void
     {
         $this->seedMarket();

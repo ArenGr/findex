@@ -9,10 +9,6 @@ use App\Http\Controllers\Organization\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('org')->name('org.')->middleware(['auth:organization', 'banned'])->group(function () {
-    // The role:organization middleware is scoped to this dashboard group
-    // only - see auth/auth.php's /org logout route for why it's kept off
-    // there (a wrong-role session, though it shouldn't happen, should
-    // still be able to log itself out).
     Route::middleware('role:organization,'.UserRole::ORGANIZATION->value)->prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/', [OrganizationDashboardController::class, 'index'])->name('index');
 
@@ -37,8 +33,6 @@ Route::prefix('org')->name('org.')->middleware(['auth:organization', 'banned'])-
         Route::post('/team', [TeamController::class, 'store'])->name('team.store');
         Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
 
-        // Everything below is gated to the organization types it applies to -
-        // see rates.php, tourism.php and insurance.php.
         require __DIR__.'/rates.php';
         require __DIR__.'/tourism.php';
         require __DIR__.'/insurance.php';

@@ -4,13 +4,7 @@
 @section('description', __('meta.contact_description'))
 
 @section('content')
-    {{--
-        Outer section matches the home page's column. Unlike the other
-        static pages (faq/careers/team/company-news), the intro paragraph
-        is the only part kept in a narrower inner wrapper - the channel
-        grid below is genuine multi-column content that benefits from the
-        extra width instead of just padding it out with margin.
-    --}}
+    {{-- Outer section matches the home page's column. --}}
     <section class="site-container py-16">
         <div class="mx-auto max-w-3xl">
             <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('contact.heading') }}</h1>

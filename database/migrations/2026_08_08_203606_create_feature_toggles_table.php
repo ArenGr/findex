@@ -10,10 +10,7 @@ return new class extends Migration
     {
         Schema::create('feature_toggles', function (Blueprint $table) {
             $table->id();
-            // Matches a bank product category slug (see
-            // OfferController::categories()). Rows are seeded, not created
-            // from the admin panel - the set of toggles is defined by what
-            // the app actually has pages for.
+            // Matches a bank product category slug (see OfferController::categories()).
             $table->string('key')->unique();
             $table->boolean('is_enabled')->default(false);
             $table->timestamps();

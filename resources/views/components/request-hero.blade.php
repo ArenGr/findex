@@ -1,16 +1,5 @@
 @props(['heading', 'subheading', 'steps', 'badge' => null])
 
-{{--
-    Shared by every "tell us once, we ask our partners" request page - exchange
-    quotes, auto insurance, tourism. They make the same offer in the same three
-    steps, so they get the same hero: a pill badge, the heading and subheading,
-    then a "how it works" strip. One component, so the three flows cannot drift
-    into three different looks.
-
-    The strip is stacked on mobile and laid out horizontally on desktop; the
-    first step reads as the active one, matching the canonical (insurance)
-    design this pattern was standardised on.
---}}
 <section class="mx-auto max-w-6xl px-6 pt-12 lg:px-10 lg:pt-16">
     <div class="mb-8 lg:mb-10">
         @if ($badge)
@@ -22,8 +11,6 @@
         <h1 class="font-heading text-3xl font-bold text-ink lg:text-4xl">{{ $heading }}</h1>
         <p class="mt-3 max-w-2xl text-base text-muted lg:text-lg">{{ $subheading }}</p>
 
-        {{-- Anything a single page needs under its subheading, such as
-             tourism's link out to the agency directory. --}}
         {{ $slot }}
     </div>
 

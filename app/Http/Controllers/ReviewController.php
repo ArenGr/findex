@@ -10,28 +10,17 @@ use Illuminate\Validation\Rule;
 
 class ReviewController extends Controller
 {
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment.
-     */
     public function store(Request $request, string $locale, string $organization): RedirectResponse
     {
         $organization = Organization::active()->where('slug', $organization)->firstOrFail();
 
-        // Honeypot: a real visitor never sees or fills this field (hidden via
-        // CSS in the form). A bot filling every input trips it. Pretend to
-        // succeed so it doesn't learn the check exists.
+        // Honeypot: a real visitor never sees or fills this field (hidden via CSS in the form).
         if ($request->filled('company')) {
             return redirect()
                 ->route('organizations.show', $organization)
                 ->with('status', 'review-submitted');
         }
 
-        // Guests remain unaffected (no account, nothing to verify) - this
-        // only blocks a logged-in customer whose own account email isn't
-        // confirmed yet, since a review is public content attributed to
-        // that account.
         if ($request->user() && ! $request->user()->hasVerifiedEmail()) {
             return redirect()
                 ->route('organizations.show', $organization)
@@ -58,9 +47,6 @@ class ReviewController extends Controller
                 collect($validated)->except('guest_name')->all()
             );
         } else {
-            // Guest reviews have no account to dedupe against, so each
-            // submission is its own row - rate limiting (see routes/web.php)
-            // is the abuse guard here instead of the unique constraint.
             Review::create([
                 'organization_id' => $organization->id,
                 ...$validated,

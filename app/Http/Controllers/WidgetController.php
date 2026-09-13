@@ -9,9 +9,7 @@ use App\Services\RateHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-/**
- * Embeddable widgets.
- */
+// Embeddable widgets.
 class WidgetController extends Controller
 {
     private const TYPES = ['rate', 'best', 'converter', 'chart'];
@@ -41,18 +39,12 @@ class WidgetController extends Controller
             'currency' => $currency,
             'best' => $best,
             'series' => $series,
-            // Two looks, because a widget has to sit on someone else's page
-            // without being told what that page looks like.
             'dark' => $request->query('theme') === 'dark',
         ]);
 
-        // The whole point is that this is framed by somebody else. The default
-        // SAMEORIGIN would make the widget render everywhere except where it
-        // is meant to.
+        // The whole point is that this is framed by somebody else.
         $response->headers->remove('X-Frame-Options');
 
-        // Cached at the edge rather than per visitor: there is nothing personal
-        // in here, and a popular host page could otherwise hit us hard.
         $response->headers->set('Cache-Control', 'public, max-age=300');
 
         return $response;

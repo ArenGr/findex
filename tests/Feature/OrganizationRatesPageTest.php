@@ -11,12 +11,7 @@ use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * The rates half of an organization page. These pages existed but showed no
- * rates at all - the one thing someone searching "<bank> exchange rates" came
- * for, and the reason they work as an entry point rather than only as somewhere
- * /rates sends you.
- */
+// The rates half of an organization page.
 class OrganizationRatesPageTest extends TestCase
 {
     use RefreshDatabase;
@@ -56,19 +51,12 @@ class OrganizationRatesPageTest extends TestCase
         $this->get('/en/organizations/acba')
             ->assertOk()
             ->assertSee('Exchange rates')
-            // Cash and card are different products at different prices; a flat
-            // list invites reading one as the other.
             ->assertSee('Cash')
             ->assertSee('Card')
             ->assertSee('363.00')
             ->assertSee('368.00');
     }
 
-    /**
-     * The groups are alternatives, not a sequence - the cash rate and the card
-     * rate for one currency answer different questions - so they share a table
-     * and a set of tabs rather than stacking four of them down the page.
-     */
     public function test_each_transaction_type_gets_a_tab_and_only_the_first_is_shown(): void
     {
         $usd = $this->currency();
@@ -82,8 +70,7 @@ class OrganizationRatesPageTest extends TestCase
         $this->assertStringContainsString('id="rate-tab-cash"', $html);
         $this->assertStringContainsString('id="rate-tab-card"', $html);
 
-        // The first panel paints immediately; the rest stay hidden until a tab
-        // is chosen. Without the cloak they all flash on screen at load.
+        // The first panel paints immediately; the rest stay hidden until a tab is chosen.
         $this->assertMatchesRegularExpression(
             '/id="rate-panel-cash"(?![^>]*x-cloak)/',
             preg_replace('/\s+/', ' ', $html),
@@ -96,10 +83,6 @@ class OrganizationRatesPageTest extends TestCase
         );
     }
 
-    /**
-     * A bank quoting one kind of rate needs no tabs to choose between - it
-     * keeps the plain heading it always had.
-     */
     public function test_a_single_transaction_type_is_shown_without_tabs(): void
     {
         $usd = $this->currency();
@@ -113,11 +96,6 @@ class OrganizationRatesPageTest extends TestCase
         $this->assertStringContainsString('Cash', $html);
     }
 
-    /**
-     * Whether this organization holds the best rate in the country is the one
-     * fact a visitor cannot work out from this page alone, so it is the one
-     * thing worth marking.
-     */
     public function test_a_rate_that_leads_the_market_is_starred(): void
     {
         $usd = $this->currency();
@@ -144,11 +122,6 @@ class OrganizationRatesPageTest extends TestCase
             ->assertSee('currency=USD', false);
     }
 
-    /**
-     * Only exchange offices negotiate walk-in cash, and only once they are
-     * reachable - the same rule the fan-out job applies, so the page cannot
-     * offer something the job would silently drop.
-     */
     public function test_only_a_reachable_exchange_office_offers_to_negotiate(): void
     {
         $usd = $this->currency();
@@ -161,8 +134,6 @@ class OrganizationRatesPageTest extends TestCase
             $this->rate($org, $usd, 363.0, 367.0);
         }
 
-        // The CTA opens the same modal /rates uses, so it is asserted on the
-        // dialog it opens as well as on its label.
         $this->get('/en/organizations/reachable')->assertOk()
             ->assertSee('Get a better rate')
             ->assertSee('better-rate-open', false);
@@ -179,19 +150,12 @@ class OrganizationRatesPageTest extends TestCase
     {
         $this->organization('an-insurer', 'insurance');
 
-        // Asserted on the heading, not on the words: the footer now links to
-        // /rates with the same label, and "the phrase appears nowhere" was
-        // never what this test meant.
         $this->get('/en/organizations/an-insurer')
             ->assertOk()
             ->assertDontSee('<h2 class="mt-12 font-heading text-xl font-semibold break-words text-ink">Exchange rates', false);
     }
 
-    /**
-     * The description is what a search result shows. Only claimed when there
-     * are rates behind it - an empty page promising live rates is worse than
-     * one that promises nothing.
-     */
+    // The description is what a search result shows.
     public function test_the_meta_description_names_the_rates_only_when_there_are_some(): void
     {
         $usd = $this->currency();
@@ -207,11 +171,7 @@ class OrganizationRatesPageTest extends TestCase
             ->assertDontSee('exchange rates in Armenia', false);
     }
 
-    /**
-     * The page had the branches all along and only used them as a dropdown in
-     * the review form. Hours are three states: open, shut, and never recorded -
-     * and calling the third "closed" would send someone away from an open door.
-     */
+    // The page had the branches all along and only used them as a dropdown in the review form.
     public function test_branches_are_listed_with_their_hours(): void
     {
         $usd = $this->currency();
@@ -245,15 +205,6 @@ class OrganizationRatesPageTest extends TestCase
         $this->get('/en/organizations/acba')->assertOk()->assertSee('Closed');
     }
 
-    /**
-     * A trend for this organization's headline currency - enough to see whether
-     * it moves its rates or sits still.
-     *
-     * The guard is on the number of DAYS drawn, not the number of snapshots: a
-     * rate recorded once three days ago carries forward and gives four days of
-     * flat line, which is a true and useful chart. What is not a chart is a
-     * single day, which is a dot.
-     */
     public function test_a_rate_trend_appears_once_there_is_more_than_one_day_to_draw(): void
     {
         $usd = $this->currency();

@@ -6,16 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Compulsory motor TPL in Armenia rates on more than just owner type -
-     * engine power, driver experience, and accident-free history
-     * (bonus-malus) all move the real premium. Previously only owner_type
-     * and contract_term_months existed, so every provider's mock quote
-     * differed by nothing but an arbitrary per-partner multiplier - these
-     * give MockInsuranceProvider real inputs to work with (see its updated
-     * quote() formula), and are exactly the fields a genuine insurer API
-     * integration would need too.
-     */
     public function up(): void
     {
         Schema::table('auto_insurance_requests', function (Blueprint $table) {

@@ -9,14 +9,9 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    // Run the database seeds.
     public function run(): void
     {
-        // role isn't fillable (see User::canAccessPanel's docblock), so
-        // firstOrCreate's mass-assigned $attributes wouldn't persist it -
-        // look up/create then forceFill instead.
         $admin = User::firstOrNew(['email' => 'admin@findex.test']);
         $admin->forceFill([
             'name' => 'Admin',

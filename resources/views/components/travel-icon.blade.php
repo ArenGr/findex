@@ -1,24 +1,6 @@
 @props(['name'])
 
 @php
-    /**
-     * The travel flow's icon set, drawn as inline SVG rather than pulled in as
-     * a webfont: the whole icon font is a few hundred KB to render the dozen
-     * or so glyphs used here, and every other icon in this app is already an
-     * inline SVG.
-     *
-     * One set, one style: 24x24, outline only, stroked with currentColor at
-     * 1.7 so every glyph inherits colour and size from whatever it sits in,
-     * and every glyph carries the same optical weight next to the others. The
-     * large icons on this page - the "how it works" tiles, the hero's benefit
-     * row - are these same paths at a bigger size on a tinted ground, so the
-     * 16px summary row and the 32px step tile are literally the same drawing.
-     *
-     * Glyphs are drawn inside a 3-21 safe area on the 24 grid, so they are
-     * optically the same size - the previous set mixed a full-bleed plane
-     * silhouette with a half-size suitcase and read as icons from three
-     * different families.
-     */
     $paths = match ($name) {
         // Navigation and state
         'arrow_forward' => ['M4 12h15', 'M13 6l6 6-6 6'],

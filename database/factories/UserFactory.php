@@ -15,9 +15,7 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
+    // The current password being used by the factory.
     protected static ?string $password;
 
     /**
@@ -36,9 +34,7 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
+    // Indicate that the model's email address should be unverified.
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -46,13 +42,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * role/organization_id are deliberately absent from User::$fillable
-     * (see User::canAccessPanel's docblock), so a plain state() array
-     * here would be silently dropped - afterMaking()+forceFill() instead,
-     * matching how RegisteredOrganizationController/AdminSeeder/CreateAdmin
-     * set them outside mass assignment.
-     */
     public function organization(?Organization $organization = null): static
     {
         return $this->afterMaking(fn (User $user) => $user->forceFill([

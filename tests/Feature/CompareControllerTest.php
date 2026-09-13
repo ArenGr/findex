@@ -26,8 +26,7 @@ class CompareControllerTest extends TestCase
         $this->makeOrganization('bank-a');
         $this->makeOrganization('bank-b');
 
-        // Reversed vs. creation order - the view must follow the query
-        // string's order, not insertion/id order.
+        // Reversed vs.
         $response = $this->get('/en/compare?orgs=bank-b,bank-a');
 
         $slugs = $response->original->getData()['organizations']->pluck('slug')->all();
@@ -101,11 +100,6 @@ class CompareControllerTest extends TestCase
             'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
             'category' => 'secondary_market', 'interest_rate_min' => 10, 'interest_rate_max' => 12,
         ]);
-        // A second, distinct offer for the same currency+rate_type but a
-        // different category - (organization_id, currency, rate_type,
-        // category) is uniquely constrained (see
-        // 2026_07_09_000001_widen_mortgage_offers_unique_key), so both rows
-        // coexist rather than colliding.
         MortgageOffer::create([
             'organization_id' => $bank->id, 'currency' => 'AMD', 'rate_type' => 'fixed',
             'category' => 'new_construction', 'interest_rate_min' => 9, 'interest_rate_max' => 11,
@@ -120,11 +114,6 @@ class CompareControllerTest extends TestCase
 
     public function test_offers_with_the_same_currency_and_rate_type_but_different_category_both_persist(): void
     {
-        // Regression test for the unique-key gap: category was added to
-        // mortgage_offers after the original unique key, and was never
-        // folded into it - MortgageScraper::parseAndSaveOffers's
-        // updateOrCreate() used to silently overwrite one category's offer
-        // with another's on the very next scrape.
         $bank = $this->makeOrganization('bank-unique-key-test');
 
         MortgageOffer::create([

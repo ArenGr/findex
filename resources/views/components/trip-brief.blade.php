@@ -3,9 +3,7 @@
 @php
     use App\Models\QuoteRequest;
 
-    // The preferences the traveler actually narrowed. "Any" and "flexible"
-    // are left out on purpose - a brief that lists every unstated
-    // preference back at the reader is longer and says less.
+    // The preferences the traveler actually narrowed.
     $preferences = collect([
         $request->flight_preference !== QuoteRequest::FLIGHT_FLEXIBLE
             ? __('tourism.flights.' . $request->flight_preference) : null,
@@ -16,18 +14,12 @@
         $request->insurance ? __('tourism.request.insurance') : null,
     ])->filter();
 
-    // A request may name several destinations, or none at all when the
-    // traveller is open to suggestions - so both the heading and the flag
-    // come off the list rather than the single destination_country column,
-    // which is null in that case.
     $destinations = $request->destinations;
     $destinationName = $destinations === []
         ? __('tourism.request.summary_open_to_suggestions')
         : implode(', ', $request->destination_labels);
 
-    // The flag of the first destination. Regional indicator symbols are
-    // just the two ISO letters shifted into a Unicode block, so this is
-    // correct for any country without a lookup table.
+    // The flag of the first destination.
     $flag = $destinations === []
         ? '🌍'
         : mb_chr(127462 + (ord($destinations[0][0]) - 65)) . mb_chr(127462 + (ord($destinations[0][1]) - 65));

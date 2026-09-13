@@ -15,13 +15,6 @@ use Psr\Http\Message\ResponseInterface;
 
 class MortgageScraper
 {
-    /**
-     * Retries for transient failures only (connection/timeout errors, 5xx,
-     * 429) - a plain 403/404 means the site is actively blocking us or the
-     * URL is wrong, and hammering it again won't help. Kept short since
-     * this runs in a daily cron job for many organizations in sequence, not
-     * as a background retry queue.
-     */
     private const MAX_RETRIES = 2;
 
     private Client $httpClient;
@@ -71,21 +64,12 @@ class MortgageScraper
 
     private static function retryDelay(int $retries): int
     {
-        // Guzzle passes a 1-based retry count here (1, 2, ...), unlike the
-        // 0-based count shouldRetry() sees. Milliseconds: 1s, then 3s.
         return (int) (1000 * (2 * ($retries - 1) + 1));
     }
 
-    /**
-     * Scrape mortgage offers for an organization.
-     */
+    // Scrape mortgage offers for an organization.
     public function scrape(Organization $organization, string $sourceType = 'mortgages'): ScrapingJob
     {
-        // One row per organization+source_type, updated in place on every
-        // run - the admin's scraping jobs table is a current-status view,
-        // not a growing history log. Updating (rather than deleting the old
-        // row and inserting a new one) means the row is never briefly
-        // absent from the table while a run is in progress.
         $job = ScrapingJob::updateOrCreate(
             ['organization_id' => $organization->id, 'source_type' => $sourceType],
             ['status' => 'pending', 'started_at' => null, 'finished_at' => null, 'records_found' => 0, 'error_message' => null],
@@ -114,10 +98,6 @@ class MortgageScraper
 
             $job->log('info', "Successfully parsed {$recordsFound} records");
 
-            // The fetch succeeded and the parser didn't throw, but found
-            // nothing - most likely the site's markup changed under the
-            // parser. Left unflagged, this looks identical to "offers didn't
-            // change since last time" with no error anywhere.
             if ($recordsFound === 0) {
                 $job->log('warning', 'Zero records parsed - the source markup may have changed');
                 AdminNotifier::zeroRecordsScraped($organization->name, $sourceType);
@@ -136,10 +116,7 @@ class MortgageScraper
         }
     }
 
-    /**
-     * Fetch a URL's HTML. Always live - no caching, so this always reflects
-     * whatever the bank is currently publishing.
-     */
+    // Fetch a URL's HTML.
     private function getHtml(string $url): string
     {
         return (string) $this->httpClient->get($url)->getBody();
@@ -181,8 +158,6 @@ class MortgageScraper
                     [
                         'interest_rate_min' => $rateMin,
                         'interest_rate_max' => $rateMax,
-                        // Optional: only parsers that reach the disclosure
-                        // page set these; the ranker prefers APR when present.
                         'apr_min' => isset($row['apr_min']) ? (float) $row['apr_min'] : null,
                         'apr_max' => isset($row['apr_max']) ? (float) $row['apr_max'] : null,
                         'term_min_months' => $row['term_min_months'] ?? null,
@@ -196,8 +171,6 @@ class MortgageScraper
                     ]
                 );
 
-                // Only append history when the offer is new or its rate
-                // actually changed, so history doesn't fill with duplicates.
                 if ($offer->wasRecentlyCreated || $offer->wasChanged(['interest_rate_min', 'interest_rate_max'])) {
                     MortgageOfferHistory::createFromOffer($offer);
                 }

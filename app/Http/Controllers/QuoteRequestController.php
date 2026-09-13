@@ -45,9 +45,7 @@ class QuoteRequestController extends Controller
             'destinations' => QuoteRequest::DESTINATIONS,
             'countries' => $this->worldCountries(),
             'typicalPrices' => $typicalPrices,
-            // The popular trips offered above the form. They read the same
-            // typical prices the destination picker does, so a preset never
-            // quotes a figure the rest of the page would not.
+            // The popular trips offered above the form.
             'presets' => TravelPresets::all($typicalPrices),
             'flightOptions' => self::labelled(QuoteRequest::FLIGHT_PREFERENCES, 'tourism.flights.'),
             'hotelOptions' => self::labelled(QuoteRequest::HOTEL_PREFERENCES, 'tourism.hotel_class.'),
@@ -60,8 +58,7 @@ class QuoteRequestController extends Controller
             'maxDestinations' => QuoteRequest::MAX_DESTINATIONS,
             'maxChildren' => QuoteRequest::MAX_CHILDREN,
             'maxChildAge' => QuoteRequest::MAX_CHILD_AGE,
-            // Presentation only - the "trusted by" strip. Cached, so it
-            // does not add a query to this page's asserted budget.
+            // Presentation only - the "trusted by" strip.
             'partners' => TravelPartners::all(),
         ]);
     }
@@ -252,8 +249,6 @@ class QuoteRequestController extends Controller
             'flight_preference' => $validated['flight_preference'] ?? QuoteRequest::FLIGHT_FLEXIBLE,
             'hotel_preference' => $validated['hotel_preference'] ?? QuoteRequest::HOTEL_ANY,
             'meal_preference' => $validated['meal_preference'] ?? QuoteRequest::MEAL_ANY,
-            // array_values so a partially-unchecked set of boxes is stored
-            // as a JSON list, not an object with gappy numeric keys.
             'priorities' => array_values($validated['priorities'] ?? []),
             'insurance' => $request->boolean('insurance'),
             'notes' => $validated['notes'] ?? null,

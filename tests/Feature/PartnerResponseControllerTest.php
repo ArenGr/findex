@@ -13,12 +13,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the secure, no-login page a partner lands on from the Telegram
- * notification (see TelegramPartnerNotifier::notify). The response_token
- * is the only credential - there is no login, matching the MVP requirement
- * that partners only ever interact when they receive a notification.
- */
 class PartnerResponseControllerTest extends TestCase
 {
     use RefreshDatabase;
@@ -154,9 +148,6 @@ class PartnerResponseControllerTest extends TestCase
         $this->assertSame('Grand Batumi Hotel', $suggestion->offered_hotel_name);
         $this->assertNotNull($suggestion->attachment_path);
 
-        // The private disk - a quote attachment must not be reachable at a
-        // permanent public URL (see TravelOfferSubmission and the download
-        // routes that replaced it).
         Storage::disk('local')->assertExists($suggestion->attachment_path);
         Storage::disk('public')->assertMissing($suggestion->attachment_path);
 

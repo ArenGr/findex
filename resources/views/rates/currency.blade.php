@@ -13,11 +13,7 @@
 ]))
 
 @section('content')
-    {{--
-        This page exists to be found. Somebody searching "USD to AMD rate today"
-        wants the number, so the number is the first thing here and the
-        comparison tool is a link rather than the opening screen.
-    --}}
+    {{-- This page exists to be found. --}}
     <section class="mx-auto max-w-4xl px-6 py-16 lg:px-10">
         <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">
             {{ __('rates.landing.heading', ['code' => $code]) }}
@@ -55,8 +51,6 @@
             {{ __('rates.landing.where', ['code' => $code]) }}
         </h2>
 
-        {{-- Five rows, not fourteen: the full comparison is one click away, and
-        two pages competing for the same search help neither. --}}
         <div class="mt-4 overflow-x-auto rounded-xl border border-placeholder">
             <table class="w-full border-collapse text-sm">
                 <thead>
@@ -109,9 +103,7 @@
         </p>
     </section>
 
-    {{-- Only what we can actually stand behind: the pair, the rate, and when it
-    was read. No aggregate rating, no offer count, nothing Google would be
-    right to treat as decoration. --}}
+    {{-- Only what we can actually stand behind: the pair, the rate, and when it was read. --}}
     @if ($bestSell)
         <script type="application/ld+json">
             {!! json_encode([

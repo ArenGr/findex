@@ -41,3 +41,50 @@ design compositions rather than exported at production resolution. Measured:
 A genuine photograph loses RMSE 8-20 under the same test. The hero was
 therefore magnifying about 3x on a retina display. `build-travel-hero.mjs`
 refuses to enlarge past a source's natural resolution for exactly this reason.
+
+### `preset-<key>-source.<jpg|png|webp>` — the popular trips
+
+One photograph per card in the "Popular trips" row. **At least 640px wide**,
+landscape, cropped to roughly 2:1 — each is painted in a panel about
+240x128 CSS px, so 640 covers it on a retina screen and anything larger is
+shipped for nothing.
+
+| file | what it should show |
+|---|---|
+| `preset-georgia_break-source.*` | Tbilisi — old town, Narikala, the river |
+| `preset-dubai_city-source.*` | Dubai — the Marina or the Burj skyline |
+| `preset-egypt_all_in-source.*` | Hurghada — Red Sea resort coast, not the pyramids |
+| `preset-cyprus_sea-source.*` | Ayia Napa — sea caves or the beach |
+
+The city, not just the country: the card says "Hurghada", and a photograph of
+Giza under it would describe a different holiday from the one the preset
+actually asks for (5-star, all-inclusive, by the sea).
+
+Each is optional and independent. A preset with no photograph on disk falls
+back to its flag on a tinted panel, so the page works with none, some or all
+four installed — nothing 404s and no markup changes.
+
+### What is installed now, and under what licence
+
+All four are **CC0 / public domain** — free for commercial use with no
+attribution required. Found through the Openverse API, not a web image search:
+photographs off a search engine are almost all rights-reserved, and this is a
+commercial site.
+
+| stem | photograph | licence | source |
+|---|---|---|---|
+| `preset-georgia_break` | Tbilisi Peace Bridge and Kura River, by Falco | CC0 | Wikimedia Commons |
+| `preset-dubai_city` | Burj Al Arab | CC0 | rawpixel |
+| `preset-egypt_all_in` | Red Sea watersports and yachts | CC0 | rawpixel |
+| `preset-cyprus_sea` | Cyprus rocky coast | CC0 | rawpixel |
+
+Two caveats worth knowing. The Egypt and Cyprus originals carry no precise
+location, so they are regionally right rather than verified as Hurghada and
+Ayia Napa specifically - which is why each card's `alt` names the trip rather
+than asserting the place. And every source was pre-cropped to 2:1 with sharp's
+`attention` strategy before being saved here, because the card frame is about
+2.2:1 and the Dubai original is portrait: centred in a landscape frame it
+showed the middle of the hotel and nothing else.
+
+Replace any of them with a better photograph by dropping a new
+`preset-<key>-source.*` here and re-running - nothing else changes.

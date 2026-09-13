@@ -126,9 +126,6 @@ class OrganizationBadgesTest extends TestCase
             'status' => QuoteResponse::STATUS_RESPONDED,
             'responded_at' => $respondedAt,
         ]);
-        // created_at isn't fillable on QuoteResponse (only touched through
-        // normal Eloquent timestamps in real usage) - forceFill it after
-        // creation to control the response-time gap for this test.
         $response->forceFill(['created_at' => $createdAt])->save();
 
         return $response;

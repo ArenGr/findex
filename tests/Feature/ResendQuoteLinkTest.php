@@ -9,11 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-/**
- * Covers the "resend my results link" flow (QuoteRequestController::resend)
- * - a guest's only way back into a lost confirmation email, since they have
- * no account to log back into.
- */
 class ResendQuoteLinkTest extends TestCase
 {
     use RefreshDatabase;

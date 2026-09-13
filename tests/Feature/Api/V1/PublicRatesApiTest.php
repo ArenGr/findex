@@ -10,15 +10,7 @@ use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * The public API is a contract, and these tests are what makes it one.
- *
- * The shape assertions matter more than they look: every response is built by a
- * Resource rather than by handing an Eloquent model to the serializer, so a
- * column added or renamed tomorrow cannot silently join or break what a paying
- * customer's integration depends on. If one of these fails, the version needs
- * to go up - not the test.
- */
+// The public API is a contract, and these tests are what makes it one.
 class PublicRatesApiTest extends TestCase
 {
     use RefreshDatabase;
@@ -49,8 +41,6 @@ class PublicRatesApiTest extends TestCase
                 'data' => [['organization' => ['slug', 'name', 'type'], 'currency', 'rate_type', 'buy_rate', 'sell_rate', 'scraped_at']],
                 'meta' => ['currency', 'rate_type', 'count'],
             ])
-            // Decimals as strings: a consumer parsing 367.00 as a double and
-            // printing 366.99999 is a support ticket we would rather avoid.
             ->assertJsonPath('data.0.buy_rate', '360.0000');
     }
 
@@ -67,11 +57,6 @@ class PublicRatesApiTest extends TestCase
         }
     }
 
-    /**
-     * "Best" from the customer's side, and named so - the highest anyone buys
-     * at, the lowest anyone sells at. The ambiguity in the word is the thing
-     * this whole product exists to remove.
-     */
     public function test_best_is_named_from_the_customers_side(): void
     {
         $this->seedMarket();

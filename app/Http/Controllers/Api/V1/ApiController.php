@@ -8,13 +8,7 @@ use App\Models\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Shared input handling for the public API.
- *
- * Both parameters here name things by their public identifier - "USD", "cash" -
- * rather than by primary key. Ids are an implementation detail and would tie a
- * customer's integration to our row numbering.
- */
+// Shared input handling for the public API.
 abstract class ApiController extends Controller
 {
     protected function currencyFromRequest(Request $request, bool $required = true): ?Currency

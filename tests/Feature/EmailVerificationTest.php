@@ -11,16 +11,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
-/**
- * Covers the whole verification loop: sending on registration, the
- * guard-agnostic signed link (see VerifyEmailController), resending per
- * guard, and where verification status is actually enforced - a
- * logged-in-but-unverified customer can't submit a quote request or review
- * (guests are unaffected either way). Tourism orgs are intentionally *not*
- * gated on email verification for lead matching (see
- * Organization::tourismPartnersForDestination) - unverified orgs still
- * receive leads.
- */
 class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;

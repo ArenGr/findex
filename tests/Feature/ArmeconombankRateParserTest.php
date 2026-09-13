@@ -9,9 +9,7 @@ class ArmeconombankRateParserTest extends TestCase
 {
     private function fixture(): string
     {
-        // Real structure: HTML-entity-escaped JSON objects embedded in a
-        // script block, one per currency. GBP has no card ("Arca") rate,
-        // matching how AEB reports that as "0" rather than omitting it.
+        // Real structure: HTML-entity-escaped JSON objects embedded in a script block, one per currency.
         $usd = '{&quot;currency&quot;:&quot;USD&quot;,&quot;buy&quot;:&quot;365&quot;,&quot;sell&quot;:&quot;370&quot;,'
             .'&quot;cbRate&quot;:&quot;367.29&quot;,&quot;buyNC&quot;:&quot;365&quot;,&quot;sellNC&quot;:&quot;370&quot;,'
             .'&quot;sellArca&quot;:&quot;373&quot;,&quot;buyArca&quot;:&quot;363&quot;,&quot;lastUpdated&quot;:&quot;2026-07-08T11:44:00&quot;}';

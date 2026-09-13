@@ -13,14 +13,7 @@ class CurrencyRateHistory extends Model
 
     protected $table = 'currency_rate_history';
 
-    /**
-     * The history charts are cached, so a new snapshot has to flush them.
-     *
-     * In practice a row only ever lands here because RateScraper saw a rate
-     * change, and saving that rate invalidates the cache anyway - but the two
-     * writes are independent, and a chart that silently ignores the data it was
-     * built from is a bad thing to leave load-bearing on that coincidence.
-     */
+    // The history charts are cached, so a new snapshot has to flush them.
     protected static function booted(): void
     {
         static::saved(fn () => RateCache::invalidate());
@@ -42,18 +35,13 @@ class CurrencyRateHistory extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Scanned by the scheduled `model:prune` command - see
-     * config/history.php.
-     */
+    // Scanned by the scheduled `model:prune` command - see config/history.php.
     public function prunable(): Builder
     {
         return static::where('scraped_at', '<=', now()->subMonths(config('history.retention_months')));
     }
 
-    /**
-     * Create a history record from a currency rate.
-     */
+    // Create a history record from a currency rate.
     public static function createFromRate(CurrencyRate $rate): self
     {
         return self::create([

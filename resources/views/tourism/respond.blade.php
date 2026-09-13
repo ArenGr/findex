@@ -169,10 +169,6 @@
                     @endif
                 </div>
 
-                {{-- The same offer form the agency's dashboard inbox uses
-                     (see the travel-offer-form component) - one form, so a
-                     quote sent from a Telegram link and one sent from the
-                     dashboard can't drift apart in what they ask for. --}}
                 <x-travel-offer-form
                     class="mt-8"
                     :action="route('tourism.respond.store', ['locale' => app()->getLocale(), 'token' => $response->response_token])"

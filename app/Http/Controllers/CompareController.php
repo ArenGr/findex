@@ -11,11 +11,7 @@ use Illuminate\View\View;
 
 class CompareController extends Controller
 {
-    /**
-     * Currencies shown in the comparison table, in display order. Kept to a
-     * small curated set (rather than every currency) so the table stays
-     * readable with 2-3 organizations side by side.
-     */
+    // Currencies shown in the comparison table, in display order.
     private const CURRENCIES = ['USD', 'EUR', 'RUR'];
 
     private const MAX_ORGANIZATIONS = 3;

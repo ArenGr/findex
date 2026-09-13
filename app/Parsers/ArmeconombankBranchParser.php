@@ -6,31 +6,9 @@ use App\Support\OpeningHours;
 
 class ArmeconombankBranchParser implements BranchParser
 {
-    /**
-     * Armeconombank's branch page renders a list with no coordinates in it -
-     * the map is filled separately, from the endpoint its filter form posts
-     * to:
-     *
-     *   https://www.aeb.am/en/branch-service-network/ajax
-     *
-     *   {"branches":{"points":[
-     *      {"Name":" ASHTARAK","Address":"Nerses Ashtaraketsi square 6, ...",
-     *       "Latitude":40.298355,"Longitude":44.361938,
-     *       "WorkingDays":[{"DayOfWeek":1,"WorkTimeFrom":"09:00:00",
-     *                       "WorkTimeTo":"17:30:00","IsHoliday":false}, ...]}
-     *   ]},"atms":{...},"terminals":{...}}
-     *
-     * The ATMs and payment terminals come back in the same response under
-     * their own keys, so only `branches` is read - 51 branches rather than
-     * the 285 locations the response holds in total.
-     */
     private const BRANCH_KEY = 'branches';
 
-    /**
-     * The response numbers its days the way JavaScript's getDay() does,
-     * Sunday first. Confirmed against the dates it ships alongside them:
-     * DayOfWeek 0 falls on a Sunday and is flagged a holiday.
-     */
+    // The response numbers its days the way JavaScript's getDay() does, Sunday first.
     private const WEEKDAYS = [
         0 => 'sun', 1 => 'mon', 2 => 'tue', 3 => 'wed',
         4 => 'thu', 5 => 'fri', 6 => 'sat',
@@ -70,8 +48,6 @@ class ArmeconombankBranchParser implements BranchParser
             return null;
         }
 
-        // Names arrive padded and shouting (" ASHTARAK"), which would read
-        // as emphasis beside other banks' branch names.
         $name = ucwords(mb_strtolower(trim((string) ($point['Name'] ?? ''))));
 
         return [

@@ -9,10 +9,6 @@ class IdbankRateParserTest extends TestCase
 {
     private function fixture(): string
     {
-        // Trimmed real structure: a header row, two data rows (one with a
-        // leading trend-arrow SVG on its cells, one without), then the
-        // "table-actions" boundary that must stop the row scan before a
-        // banner further down the page that could otherwise look similar.
         return <<<'HTML'
         <div class="m-exchange">
             <div class="m-exchange__table">

@@ -81,21 +81,11 @@
             method="POST"
             action="{{ route('alerts.store') }}"
             class="mt-6 grid grid-cols-1 gap-5 rounded-2xl border border-placeholder bg-white p-6 shadow-sm sm:grid-cols-2 sm:p-8"
-            {{-- The header's Connect entry links here with ?channel=telegram,
-            so the connect button is on screen instead of hidden behind the
-            channel select. --}}
             @php($requestedChannel = in_array(request('channel'), ['email', 'telegram', 'viber'], true) ? request('channel') : 'email')
             x-data="{ channel: @js(old('channel', $requestedChannel)) }"
         >
             @csrf
 
-            {{--
-                Fields default to old() first (a failed submission should
-                restore exactly what was typed) and fall back to the query
-                string second - lets rates-table.blade.php deep-link here
-                with currency/organization/rate_type/rate_field prefilled
-                instead of the user re-entering what they were just looking at.
-            --}}
             <label class="block">
                 <span class="text-sm font-medium text-ink">{{ __('alerts.form.currency') }}</span>
                 <select name="currency_id" class="field mt-1.5">
@@ -180,15 +170,6 @@
                 @enderror
             </label>
 
-            {{--
-                No raw "chat ID" text field anymore - a numeric Telegram chat
-                ID isn't something a visitor could reasonably know off the
-                top of their head. Instead, this reads the account's own
-                connected state (users.telegram_chat_id, linked via the
-                one-tap deep link below) - the exact same connect-token
-                pattern partner organizations already use, see
-                PartnerReplyHandler::handleConnect().
-            --}}
             <div class="sm:col-span-2" x-show="channel === 'telegram'" x-cloak>
                 @if (auth()->user()->telegram_chat_id)
                     <div class="flex items-center justify-between gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
@@ -199,16 +180,6 @@
                             {{ __('alerts.telegram_connect.connected') }}
                         </span>
 
-                        {{--
-                            A plain nested <form> here would be inside the
-                            page's big "Create a New Alert" form - browsers
-                            silently drop a nested form's opening tag (HTML
-                            doesn't allow forms inside forms), which quietly
-                            turns the button into a no-op. The disconnect
-                            form is declared once, standalone, further down
-                            the page (see #disconnect-telegram-form) and this
-                            button targets it by id instead.
-                        --}}
                         <button type="submit" form="disconnect-telegram-form" class="text-xs font-medium text-subtle hover:text-red-600">
                             {{ __('alerts.telegram_connect.disconnect_button') }}
                         </button>
@@ -233,11 +204,6 @@
                 @endif
             </div>
 
-            {{--
-                Viber has no bot-token self-service flow like Telegram's, so
-                there's no deep link to open here - "Connect" is a plain
-                in-app action (see RateAlertController::connectViber()).
-            --}}
             <div class="sm:col-span-2" x-show="channel === 'viber'" x-cloak>
                 @if (auth()->user()->viber_chat_id)
                     <div class="flex items-center justify-between gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
@@ -248,9 +214,6 @@
                             {{ __('alerts.viber_connect.connected') }}
                         </span>
 
-                        {{-- Standalone form further down the page, same
-                        nested-form pitfall as the Telegram disconnect button
-                        above - see #disconnect-viber-form. --}}
                         <button type="submit" form="disconnect-viber-form" class="text-xs font-medium text-subtle hover:text-red-600">
                             {{ __('alerts.viber_connect.disconnect_button') }}
                         </button>

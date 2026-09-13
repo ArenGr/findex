@@ -11,13 +11,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Covers the Telegram-specific implementation of PartnerNotifierInterface:
- * message content, the inline "View & Respond" / "Not Interested" keyboard,
- * and how send success/failure map onto the QuoteResponse row. Partner
- * matching/fan-out is covered separately in SendQuoteRequestToPartnersJobTest
- * against the interface, not this concrete class.
- */
 class TelegramPartnerNotifierTest extends TestCase
 {
     use RefreshDatabase;

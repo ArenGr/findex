@@ -8,26 +8,10 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-/**
- * Called from DatabaseSeeder::run() - demo data, not production data, but
- * kept in the default run so `migrate:fresh --seed` produces a fully working
- * demo environment on its own. Creates a few auto insurance partners so the
- * /insurance/auto request/results flow has something to show: unlike
- * tourism partners, these don't need a telegram_chat_id - quotes come from
- * MockInsuranceProvider (see AutoInsuranceQuoteService), standing in for the
- * real per-partner APIs these organizations will eventually provide.
- *
- * Can still be run alone: php artisan db:seed --class=AutoInsuranceDemoSeeder
- */
 class AutoInsuranceDemoSeeder extends Seeder
 {
     public function run(): void
     {
-        // Contact info and a description are filled in on every partner
-        // (real orgs often leave these blank) so the results page always
-        // shows contact pills and a full profile - this seeder's purpose is
-        // a convincing walkthrough for prospective insurer partners, not a
-        // realistic snapshot of partial onboarding.
         $partners = [
             [
                 'slug' => 'demo-safedrive-insurance',
@@ -72,9 +56,6 @@ class AutoInsuranceDemoSeeder extends Seeder
         foreach ($partners as $partner) {
             $email = $partner['slug'].'@example.com';
 
-            // Organization (business profile) and User (login, role=organization)
-            // are two separate rows since the accounts-unification migration -
-            // see RegisteredOrganizationController::store() for the same pattern.
             $organization = Organization::firstOrCreate(
                 ['slug' => $partner['slug']],
                 [

@@ -10,14 +10,8 @@ return [
     // @see https://docs.sentry.io/concepts/key-terms/dsn-explainer/
     'dsn' => env('SENTRY_LARAVEL_DSN', env('SENTRY_DSN')),
 
-    // @see https://spotlightjs.com/
-    // 'spotlight' => env('SENTRY_SPOTLIGHT', false),
+    // @see https://spotlightjs.com/ 'spotlight' => env('SENTRY_SPOTLIGHT', false),
 
-    // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#logger
-    // 'logger' => Sentry\Logger\DebugFileLogger::class, // By default this will log to `storage_path('logs/sentry.log')`
-
-    // The release version of your application
-    // Example with dynamic git hash: trim(exec('git --git-dir ' . base_path('.git') . ' log --pretty="%h" -n1 HEAD'))
     'release' => env('SENTRY_RELEASE'),
 
     // When left empty or `null` the Laravel environment will be used (usually discovered from `APP_ENV` in your `.env`)
@@ -49,9 +43,6 @@ return [
 
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#send_default_pii
     'send_default_pii' => env('SENTRY_SEND_DEFAULT_PII', false),
-
-    // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore_exceptions
-    // 'ignore_exceptions' => [],
 
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore_transactions
     'ignore_transactions' => [
@@ -133,8 +124,6 @@ return [
         // Enable tracing for requests without a matching route (404's)
         'missing_routes' => env('SENTRY_TRACE_MISSING_ROUTES_ENABLED', false),
 
-        // Configures if the performance trace should continue after the response has been sent to the user until the application terminates
-        // This is required to capture any spans that are created after the response has been sent like queue jobs dispatched using `dispatch(...)->afterResponse()` for example
         'continue_after_response' => env('SENTRY_TRACE_CONTINUE_AFTER_RESPONSE', true),
 
         // Enable the tracing integrations supplied by Sentry (recommended)

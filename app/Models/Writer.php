@@ -33,12 +33,6 @@ class Writer extends Model
         return 'slug';
     }
 
-    /**
-     * Staff accounts logging in on this writer profile's behalf (guard
-     * 'writer', role 'writer') - see User::writer(). A HasMany rather than
-     * a single owner, mirroring Organization::users(), in case a writer
-     * profile ever supports multiple co-author logins.
-     */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

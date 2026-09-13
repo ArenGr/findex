@@ -52,11 +52,7 @@ class CheckRateAlerts extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * The best (first) currently-tracked rate that satisfies the alert, if
-     * any. When the alert isn't pinned to one organization, this checks
-     * across every active organization's rate for that currency/type.
-     */
+    // The best (first) currently-tracked rate that satisfies the alert, if any.
     private function findMatchingRate(RateAlert $alert): ?CurrencyRate
     {
         $query = CurrencyRate::query()
@@ -77,9 +73,7 @@ class CheckRateAlerts extends Command
         if ($alert->channel === 'telegram') {
             $response = $telegram->sendMessage($alert->telegram_chat_id, $this->messageText($alert, $rate, html: true));
 
-            // Telegram reports delivery failure via ok:false in a 200
-            // response (e.g. the user never opened a DM with the bot),
-            // not an HTTP error - without this check it looks delivered.
+            // Telegram reports delivery failure via ok:false in a 200 response (e.g.
             if (($response['ok'] ?? null) === false) {
                 throw new \RuntimeException($response['description'] ?? 'Telegram send failed');
             }

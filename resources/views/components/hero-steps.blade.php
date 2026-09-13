@@ -1,19 +1,6 @@
 @props(['steps', 'current' => 1])
 
-{{--
-    The shared step indicator for the multi-step request flows, sitting inside
-    the hero on its tint.
-
-    `steps` is [['title' => ..., 'body' => ...], ...]. `current` is the step the
-    page opens on. Pages whose step changes client-side (the travel flow) build
-    their own markup with the same classes and bind them with Alpine - this one
-    is for the pages where the step is fixed at render.
-
-    Filled green for the step you are on and every step behind it, a light
-    outline for the ones ahead: one glance, one answer. The connector carries
-    the same state, so the progress reads across the row rather than only in
-    the circles.
---}}
+{{-- The shared step indicator for the multi-step request flows, sitting inside the hero on its tint. --}}
 <ol class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-0">
     @foreach ($steps as $i => $step)
         @php $n = $i + 1; $done = $n < $current; $isCurrent = $n === $current; @endphp

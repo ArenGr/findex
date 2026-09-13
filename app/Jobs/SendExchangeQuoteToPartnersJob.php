@@ -25,14 +25,6 @@ class SendExchangeQuoteToPartnersJob implements ShouldQueue
         return [10, 30, 60];
     }
 
-    /**
-     * Matching partners is business logic and stays here regardless of
-     * notification channel; an ExchangeQuoteResponse row (with its secure
-     * respond token, and a snapshot of the partner's rate at this exact
-     * moment) is created for every match up front, so the response exists
-     * independently of whether this particular notification attempt
-     * succeeds. Same shape as SendQuoteRequestToPartnersJob (travel).
-     */
     public function handle(ExchangeNotifierInterface $notifier): void
     {
         $partners = Organization::exchangePartnersForCurrency(
@@ -44,9 +36,7 @@ class SendExchangeQuoteToPartnersJob implements ShouldQueue
                 ->where('rate_type', RateType::CASH)])
             ->get();
 
-        // A, B, C... in the order the offices were contacted, fixed at that
-        // moment. The letter is half of the code a visitor reads out at a
-        // counter, so it must never shift afterwards.
+        // A, B, C... in the order the offices were contacted, fixed at that moment.
         $letter = 'A';
 
         foreach ($partners as $partner) {

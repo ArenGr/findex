@@ -8,15 +8,6 @@ class AmeriaMortgageParser implements MortgageParser
 {
     private const CURRENCY_ORDER = ['AMD', 'USD', 'EUR'];
 
-    /**
-     * Ameriabank's mortgage pages render their regulatory disclosure via a
-     * DotNetNuke "Tabs" content module fetched over XHR - the marketing page
-     * itself has no numbers in its static HTML. That module's JSON is
-     * reachable directly with a plain HTTP GET (no JS engine needed): each
-     * "slide" is one tab's disclosure text as an HTML blob. We match the
-     * slide by its heading text rather than a fixed index, since slide order
-     * isn't guaranteed and this same module lists other, unrelated products.
-     */
     private const SLIDE_HEADING = 'Home Purchase Loan (secondary market)';
 
     public function parse(string $html): array

@@ -15,13 +15,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-/**
- * Covers the alerts:check command's core business logic: edge-triggering
- * (notify once on the false->true transition, not on every run while still
- * met), resetting so a later re-cross notifies again, per-organization
- * scoping, and - per the ok:false fix in CheckRateAlerts::notify() - that a
- * failed Telegram delivery is never mistaken for a successful one.
- */
 class CheckRateAlertsTest extends TestCase
 {
     use RefreshDatabase;

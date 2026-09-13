@@ -8,17 +8,6 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-/**
- * Local-testing data only - not called from DatabaseSeeder::run(), so it
- * never lands in a production seed run. Creates a couple of tourism
- * partners with a fake telegram_chat_id (real enough to pass the "does a
- * partner serve this destination" check, but any real send to it will fail
- * against the live Telegram API - use the tourism:fake-reply command to
- * simulate a partner submitting their secure response form instead of
- * relying on a real Telegram round trip).
- *
- * Run with: php artisan db:seed --class=TourismDemoSeeder
- */
 class TourismDemoSeeder extends Seeder
 {
     public function run(): void
@@ -41,9 +30,6 @@ class TourismDemoSeeder extends Seeder
         foreach ($partners as $partner) {
             $email = $partner['slug'].'@example.com';
 
-            // Organization (business profile) and User (login, role=organization)
-            // are two separate rows since the accounts-unification migration -
-            // see RegisteredOrganizationController::store() for the same pattern.
             $organization = Organization::firstOrCreate(
                 ['slug' => $partner['slug']],
                 [

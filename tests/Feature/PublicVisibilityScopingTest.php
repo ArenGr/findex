@@ -9,11 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Regression coverage for a gap where unapproved/suspended (is_active =
- * false) organizations' data still reached the public site, defeating the
- * admin-approval workflow end to end.
- */
 class PublicVisibilityScopingTest extends TestCase
 {
     use RefreshDatabase;

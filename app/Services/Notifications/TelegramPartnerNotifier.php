@@ -106,18 +106,10 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
         return true;
     }
 
-    /**
-     * Written in Armenian regardless of the requester's own site language -
-     * this goes to local Armenian travel agencies, not the tourist who
-     * filed the request.
-     */
     private function buildMessage(QuoteResponse $response): string
     {
         $r = $response->quoteRequest;
 
-        // The preferences worth a partner's attention, skipping every "any"
-        // - listing the things the traveler didn't state as if they were
-        // requirements is how a short brief becomes an unreadable one.
         $extras = collect([
             $r->flight_preference !== QuoteRequest::FLIGHT_FLEXIBLE
                 ? __('tourism.flights.'.$r->flight_preference, [], 'hy')
@@ -134,9 +126,7 @@ class TelegramPartnerNotifier implements PartnerNotifierInterface
                 : null,
         ])->filter()->implode(', ');
 
-        // Armenian labels, not the requester's locale - see the docblock
-        // above. Reading the keys with an explicit 'hy' is why these can't
-        // just reuse QuoteRequest::$priority_labels.
+        // Armenian labels, not the requester's locale - see the docblock above.
         $priorities = collect($r->priorities ?? [])
             ->filter(fn ($priority) => in_array($priority, QuoteRequest::PRIORITIES, true))
             ->map(fn ($priority) => __('tourism.priorities.'.$priority, [], 'hy'))

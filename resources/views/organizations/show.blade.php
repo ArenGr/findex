@@ -3,9 +3,6 @@
 @section('title', $organization->name . ' — Findex')
 
 @if ($rates['currency_count'] > 0)
-    {{-- Named after what the page actually answers, which is what someone
-    searching "ACBA exchange rates" is looking for. Only claimed when there are
-    rates to back it up. --}}
     @section('description', __('organizations.rates_meta_description', [
         'name' => $organization->name,
         'count' => $rates['currency_count'],
@@ -14,8 +11,6 @@
 
 @section('content')
     @php
-        // The sticky nav only lists sections the page actually renders -
-        // pointing at an anchor that is not there scrolls nowhere.
         $sections = array_filter([
             'overview' => true,
             'exchange-rates' => $organization->hasRatesPage() && $rates['groups'] !== [],
@@ -38,9 +33,6 @@
             </div>
         @endif
 
-        {{-- Hero. Everything needed to recognise the organization and act on
-        it, above the fold: who it is, how it is rated, how big it is, and the
-        two things anyone does next. --}}
         <div class="flex flex-col items-center gap-6 rounded-2xl border border-placeholder bg-white p-6 shadow-sm md:flex-row md:items-center md:p-8">
             @if ($organization->logo)
                 <img src="{{ $organization->logo }}" alt="{{ $organization->name }}" class="h-24 w-24 shrink-0 rounded-full border border-placeholder bg-white object-contain p-2">
@@ -65,8 +57,7 @@
                     </div>
                 </div>
 
-                {{-- The one-line identity: type, country, and how many places
-                you can actually walk into. --}}
+                {{-- The one-line identity: type, country, and how many places you can actually walk into. --}}
                 <p class="mt-2 text-sm break-words text-muted">
                     {{ __('organizations.types.' . $organization->type) }}
                     <span aria-hidden="true">·</span>
@@ -100,8 +91,7 @@
             </div>
         </div>
 
-        {{-- Section nav. These pages run long once a bank has 56 branches and
-        five rate tables, and the rates are usually what someone came for. --}}
+        {{-- Section nav. --}}
         @if (count($sections) > 1)
             <nav
                 class="sticky top-0 z-30 -mx-4 mb-10 mt-8 border-b border-placeholder bg-white/95 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10"
@@ -128,13 +118,6 @@
         @if ($organization->description)
             <p class="mt-6 text-sm leading-relaxed text-body-text">{{ $organization->description }}</p>
         @endif
-
-        {{--
-            The rates themselves, which this page did not show at all - the one
-            thing someone searching "<bank> exchange rates" came for, and the
-            reason these pages exist as an entry point rather than only as a
-            destination from /rates.
-        --}}
 
                 <dl class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                     <div class="flex items-center gap-3 rounded-xl border border-placeholder bg-placeholder/15 p-4">
@@ -218,10 +201,7 @@
                     @endif
                 </div>
 
-                {{-- Not a "verified" badge: nothing in the schema verifies
-                anyone. It says the one thing that is actually true and actually
-                useful - this office is reachable, so asking it will reach
-                somebody. Same flag the CTA below is gated on. --}}
+                {{-- Not a "verified" badge: nothing in the schema verifies anyone. --}}
                 @if ($canNegotiate)
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold break-words text-ink">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true">
@@ -236,12 +216,7 @@
                 @php $firstCode = (string) (collect($rates['groups'])->first()[0]['code'] ?? ''); @endphp
 
                 @if ($activeQuoteRequest)
-                    {{--
-                        One is already running, so the page stops selling the
-                        idea and points at it instead. Offering "get a better
-                        rate" to somebody who is mid-request is how you end up
-                        with two requests and two sets of offers.
-                    --}}
+                    {{-- One is already running, so the page stops selling the idea and points at it instead. --}}
                     <div class="mt-6 rounded-2xl border-2 border-primary/40 bg-primary/5 p-5">
                         <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
                             <div class="min-w-0">
@@ -275,13 +250,6 @@
                         </div>
                     </div>
                 @else
-                    {{--
-                        The offer only this organization's own page can make,
-                        and only when the fan-out would actually reach them. It
-                        says what it is for rather than only naming itself: a
-                        bare "Get a better rate" button assumes the visitor
-                        already knows that is a thing they can do.
-                    --}}
                     <div class="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-placeholder bg-placeholder/20 p-5 sm:flex-row sm:items-center">
                         <div class="flex min-w-0 items-start gap-3">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true">
@@ -294,8 +262,7 @@
                         </div>
 
                         <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
-                            {{-- Opens the same modal /rates uses; the href is
-                            the full page, so it still works with JS off. --}}
+                            {{-- Opens the same modal /rates uses; the href is the full page, so it still works with JS off. --}}
                             <a
                                 href="{{ route('exchange.request') }}"
                                 onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
@@ -317,14 +284,7 @@
                 @endif
             @endif
 
-            {{-- One table at a time. These groups are alternatives - the cash
-            rate and the card rate for the same currency answer different
-            questions - and stacking them meant four near-identical tables
-            down the page, with the one someone wanted below the fold.
-
-            Same pill tabs as the /rates table (see components/rates-table),
-            so the two pages behave alike. With JS off, x-show never runs and
-            every panel stays visible, which is exactly the old layout. --}}
+            {{-- One table at a time. --}}
             @if ($rates['groups'] !== [])
                 @php $firstRateType = array_key_first($rates['groups']); @endphp
 
@@ -410,13 +370,6 @@
                                                 />
                                             @endif
                                         </td>
-                                        {{-- Out to the comparison, which is the
-                                        question this table raises and cannot
-                                        answer: is this a good rate? --}}
-                                        {{-- Hidden below sm: "See all USD rates" was being
-                                        wrapped into 33px of width and rendered one
-                                        letter per line. The currency name in the first
-                                        column is the link on a phone instead. --}}
                                         <td class="hidden px-4 py-4 text-right sm:table-cell">
                                             <a
                                                 href="{{ route('rates.index', ['currency' => $row['code'], 'type' => $type]) }}"
@@ -437,9 +390,6 @@
                 <p class="mt-4 text-sm text-muted">{{ __('organizations.rates_none', ['name' => $organization->name]) }}</p>
             @endif
 
-        {{-- One currency's trend, not eleven: enough to see whether this
-        organization moves its rates or sits still, with the full picture a
-        click away. --}}
         @if ($historySeries !== [])
             <div class="mt-10 rounded-2xl border border-placeholder bg-white p-5 sm:p-6">
                 <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
@@ -465,13 +415,7 @@
             </section>
         @endif
 
-        {{-- Branches. Where you can actually walk in, and whether it is worth
-        walking in right now.
-
-        The filtering is client-side on purpose: the whole list is already on
-        the page (56 for the largest bank), so searching it needs no round
-        trip, and with JS off every branch stays visible rather than the
-        controls silently hiding them. --}}
+        {{-- Branches. Where you can actually walk in, and whether it is worth walking in right now. --}}
         @if ($organization->branches->isNotEmpty())
             @php
                 $branchCities = $organization->branches->pluck('city')->filter()->unique()->sort()->values();
@@ -499,11 +443,6 @@
                         let visible = 0;
                         for (const el of this.$refs.list.children) {
                             const ok = this.matches(el);
-                            // Greater-than, not less-than: a raw angle
-                            // bracket inside an HTML attribute is legal but
-                            // reads as the start of a tag to anything that
-                            // parses the page roughly. Which is why this
-                            // comment does not contain one either.
                             const room = this.expanded || this.preview > visible;
                             el.hidden = ! (ok && room);
                             if (ok) { visible++; }
@@ -556,10 +495,6 @@
                     </label>
                 </div>
 
-                {{-- The overflow branches are hidden server-side so the
-                list does not paint at full length and then collapse. That
-                would leave them unreachable with JS off, where the Show-all
-                button never appears - so this puts them back. --}}
                 <noscript>
                     <style>#branches li[hidden] { display: flex !important; }</style>
                 </noscript>
@@ -611,11 +546,6 @@
 
                 @if ($organization->branches->count() > $branchPreview)
                     <div class="mt-6 text-center">
-                        {{-- No x-cloak: the branch-count condition above only
-                             renders this button when there are more branches
-                             than the preview, which is exactly what x-show
-                             re-checks - hiding it until Alpine booted just made
-                             the section grow by 50px on load. --}}
                         <button
                             type="button"
                             x-show="expanded || total > preview"

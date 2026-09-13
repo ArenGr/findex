@@ -19,14 +19,6 @@ class RateAlertController extends Controller
     {
         $user = $request->user();
 
-        // A connect link is only useful before the user has linked their
-        // chat - generate one lazily (same pattern as
-        // Organization\TourismController::index) so the page always has a
-        // live link to show, without a separate "generate" step for the
-        // common case. The locale is refreshed on every visit (not just set
-        // once) so the bot's eventual confirmation message matches whatever
-        // language they're browsing in *when they actually connect*, not
-        // whatever it was the first time this page happened to run.
         if (! $user->telegram_chat_id) {
             $user->update([
                 'telegram_connect_token' => $user->telegram_connect_token ?? Str::random(32),
@@ -52,11 +44,6 @@ class RateAlertController extends Controller
     {
         $validated = $request->validate([
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
-            // Scoped to active orgs, not just Rule::in the index() dropdown:
-            // the dropdown only ever offers active orgs, but without this an
-            // alert could still be pinned to a deactivated one via a direct
-            // POST - and CheckRateAlerts only matches active orgs, so it
-            // would then silently never fire.
             'organization_id' => ['nullable', 'integer', Rule::exists('organizations', 'id')->where('is_active', true)],
             'rate_type' => ['required', Rule::in(array_column(RateType::cases(), 'value'))],
             'rate_field' => ['required', Rule::in(['buy_rate', 'sell_rate'])],
@@ -65,13 +52,6 @@ class RateAlertController extends Controller
             'channel' => ['required', Rule::in(['email', 'telegram', 'viber'])],
         ]);
 
-        // The chat ID always comes from the user's own connected account
-        // (see index()'s connect-link generation for telegram,
-        // connectViber() for viber), never typed into the form - a raw chat
-        // ID isn't something a visitor could reasonably know, and a
-        // stale/mistyped one would silently break delivery. Guarded here
-        // too, not just hidden client-side in the view, since "connect
-        // first" is enforced server-side either way.
         if ($validated['channel'] === 'telegram' && ! $request->user()->telegram_chat_id) {
             return back()->withInput()->withErrors([
                 'channel' => __('alerts.form.telegram_not_connected_error'),
@@ -92,13 +72,6 @@ class RateAlertController extends Controller
         return $this->afterStore($request)->with('status', 'alert-created');
     }
 
-    /**
-     * An alert set from the modal on /rates is a side errand - the visitor was
-     * comparing rates and wants to keep doing that, not land on a management
-     * page with their filters gone. The URL is taken from the form rather than
-     * the referer so it survives a validation round-trip, and is honoured only
-     * when it points at this host: an unchecked one is an open redirect.
-     */
     private function afterStore(Request $request): RedirectResponse
     {
         return redirect()->to(SafeRedirectUrl::resolve(
@@ -108,12 +81,6 @@ class RateAlertController extends Controller
         ));
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding), same reason
-     * as OrganizationController: implicit binding doesn't resolve correctly
-     * for a route parameter coming right after the dynamic {locale} prefix.
-     * Also enforces that the alert belongs to the current user.
-     */
     public function toggle(string $locale, Request $request, string $rateAlert): RedirectResponse
     {
         $alert = RateAlert::where('id', $rateAlert)->where('user_id', $request->user()->id)->firstOrFail();
@@ -130,12 +97,6 @@ class RateAlertController extends Controller
         return redirect()->route('alerts.index')->with('status', 'alert-deleted');
     }
 
-    /**
-     * telegram_connect_token is deliberately left untouched here - index()'s
-     * lazy-generate block already issues a fresh one the next time this page
-     * loads once telegram_chat_id is null, so a working reconnect link
-     * appears immediately with no extra code.
-     */
     public function disconnectTelegram(string $locale, Request $request): RedirectResponse
     {
         $request->user()->update(['telegram_chat_id' => null]);
@@ -143,14 +104,6 @@ class RateAlertController extends Controller
         return redirect()->route('alerts.index')->with('status', 'telegram-disconnected');
     }
 
-    /**
-     * Viber has no self-service bot equivalent to Telegram's BotFather - a
-     * real integration needs a registered Viber Public Account and API
-     * access (see App\Services\Viber\ViberClient). Until that's in place,
-     * this simulates a successful connection directly rather than round-
-     * tripping through a deep link and a webhook that doesn't exist yet, so
-     * the channel is still selectable and demoable end to end.
-     */
     public function connectViber(string $locale, Request $request): RedirectResponse
     {
         $request->user()->update(['viber_chat_id' => 'demo-viber-'.Str::random(12)]);

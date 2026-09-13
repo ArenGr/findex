@@ -5,11 +5,6 @@ namespace App\Http\Controllers\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-/**
- * Shared by RegisteredOrganizationController and RegisteredWriterController -
- * both need a unique, URL-safe slug generated from a user-submitted name at
- * registration time, with the same "-2", "-3"... collision-suffix behavior.
- */
 trait GeneratesUniqueSlug
 {
     /**

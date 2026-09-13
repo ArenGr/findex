@@ -7,22 +7,9 @@ use App\Models\Currency;
 use App\Services\Cache\RateCache;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * Approximate cross-currency conversion for display only (e.g. "≈ 850 USD"
- * next to a quote priced in AMD) - not a financial-grade FX rate. There's
- * no single canonical AMD exchange rate in this app (every bank publishes
- * its own via CurrencyRate), so this averages each active bank's latest
- * rate rather than picking one bank arbitrarily.
- */
+// Approximate cross-currency conversion for display only (e.g.
 class CurrencyConverter
 {
-    /**
-     * No explicit currency-preference setting exists anywhere in the app -
-     * this reuses the visitor's site locale as a proxy, the same way
-     * Organization::getDescriptionAttribute() already does for content.
-     * Approximate by nature (a Russian-reading visitor outside Russia
-     * wouldn't get their real local currency).
-     */
     public const LOCALE_CURRENCIES = [
         'hy' => 'AMD',
         'en' => 'USD',
@@ -63,12 +50,6 @@ class CurrencyConverter
         return $rate === null || $rate == 0.0 ? null : $amountInAmd / $rate;
     }
 
-    /**
-     * Mean of (buy+sell)/2 across every bank's latest non-cash rate for
-     * this currency (falling back to cash if no non-cash rate was
-     * scraped) - non-cash is the more representative "value" rate, cash
-     * exchange-booth rates carry a wider spread.
-     */
     private function averageRate(string $currencyCode): ?float
     {
         return Cache::tags([RateCache::TAG])->remember(

@@ -11,26 +11,6 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-/**
- * Demo data, and NOT part of the default `migrate:fresh --seed` run: the
- * rates it writes are invented, and once stored they are indistinguishable
- * from scraped ones on the comparison pages. Run it explicitly when you need
- * exchange-office partners locally. Creates a few exchange-office partners with
- * cash rates for USD/EUR/RUR plus a broader set (GBP/CHF/GEL/AED/CNY/KZT/
- * CAD/AUD, spread unevenly across partners like a real exchange market
- * would - not every office trades every currency), so:
- *  - the /exchange large-amount quote request flow has partners to match
- *    against (see Organization::exchangePartnersForCurrency()), and
- *  - the /rates and home-rates-table widgets have exchange-office rows to
- *    show alongside banks.
- *
- * These get a fake telegram_chat_id (same pattern as TourismDemoSeeder) so
- * they show as "connected" - a real send to them will fail, since it's not
- * a real chat id. Use `php artisan exchange:fake-reply` to simulate a
- * partner's response instead of relying on a live Telegram round trip.
- *
- * Can still be run alone: php artisan db:seed --class=ExchangeOrgSeeder
- */
 class ExchangeOrgSeeder extends Seeder
 {
     public function run(): void
@@ -104,9 +84,6 @@ class ExchangeOrgSeeder extends Seeder
         foreach ($partners as $partner) {
             $email = $partner['slug'].'@example.com';
 
-            // Organization (business profile) and User (login, role=organization)
-            // are two separate rows since the accounts-unification migration -
-            // see RegisteredOrganizationController::store() for the same pattern.
             $organization = Organization::firstOrCreate(
                 ['slug' => $partner['slug']],
                 [

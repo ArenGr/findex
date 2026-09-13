@@ -7,9 +7,7 @@
 
     $rows = app(TravelOfferComparison::class)->for($quoteRequest);
 
-    // Agencies that were contacted but haven't priced anything yet. Listed
-    // separately and plainly, below the real offers - a traveler comparing
-    // quotes shouldn't have to scroll past agencies that haven't sent one.
+    // Agencies that were contacted but haven't priced anything yet.
     $pending = $quoteRequest->responses->where('has_replied', false)->values();
 
     $comparableCount = $rows->count();
@@ -168,9 +166,6 @@
                                     {{ __('tourism.offers.view_details') }}
                                 </a>
 
-                                {{-- Contacting the agency is the whole point
-                                of the platform, so it stays one tap away on
-                                the card rather than only on the detail page. --}}
                                 @if ($response->has_contact_info)
                                     <p class="text-xs tracking-wide text-subtle uppercase">{{ __('tourism.results.contact_heading') }}</p>
                                     <x-agency-contact :response="$response" :organization="$organization" />
@@ -193,8 +188,7 @@
                     </div>
                 </article>
             @empty
-                {{-- No offers yet. Which of the two honest reasons applies
-                depends on whether anyone was contacted at all. --}}
+                {{-- No offers yet. --}}
                 <div class="rounded-2xl border border-dashed border-placeholder p-10 text-center">
                     @if ($pending->isEmpty())
                         <p class="text-sm text-muted">{{ __('tourism.offers.empty_no_agencies') }}</p>

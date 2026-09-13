@@ -32,9 +32,6 @@ class ProfileController extends Controller
             'contact_whatsapp' => ['nullable', 'string', 'max:30'],
             'contact_telegram' => ['nullable', 'string', 'max:50'],
             'contact_instagram' => ['nullable', 'string', 'max:50'],
-            // Laravel's generic 'image' rule allows SVG, which can carry
-            // embedded scripts - a stored-XSS risk if ever served inline
-            // rather than as a download. Restrict to raster formats only.
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 

@@ -6,12 +6,6 @@ use App\Services\Insurance\InsuranceErrorClassifier;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
-/**
- * The rule that decides whether an insurer error blocks the whole request or
- * just drops that one insurer. Getting this wrong in the "block" direction is
- * the worse failure - it turns one insurer's quirk into a dead comparison -
- * so the emphasis is on what must NOT be treated as a user error.
- */
 class InsuranceErrorClassifierTest extends TestCase
 {
     public static function identityErrors(): array

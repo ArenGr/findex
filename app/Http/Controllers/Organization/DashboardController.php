@@ -25,14 +25,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Response rate / avg response time, shown on the overview page so a
-     * tourism partner has a reason to check the dashboard beyond just
-     * reacting to individual Telegram pings. The underlying numbers live
-     * on Organization (see avgQuoteResponseTimeHours()/quoteResponseRate())
-     * since the public profile page's badges (isFastResponder()) need the
-     * same figures.
-     */
     private function tourismStats(Organization $organization): array
     {
         return [

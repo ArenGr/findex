@@ -62,8 +62,6 @@ class TravelHeroAssetsTest extends TestCase
 
     public function test_the_landscape_crop_is_no_longer_shipped_or_referenced(): void
     {
-        // It bakes a flight path and a cream blob into the sky, both left over
-        // from the full-bleed band the framed hero replaced.
         $this->assertNull(TravelHero::asset('hero-photo'));
 
         $response = $this->get(route('tourism.request', ['locale' => 'en']));

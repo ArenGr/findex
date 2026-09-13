@@ -9,20 +9,8 @@ use App\Services\Insurance\MockInsuranceProvider;
 use App\Services\Insurance\QuoteIdentity;
 use Tests\TestCase;
 
-/**
- * Locks in the pricing behavior real partner APIs will eventually replace
- * (see InsuranceQuoteProviderInterface) - deterministic and always
- * successful, so demos never look flaky. MockInsuranceProvider::quote()
- * only reads model attributes and never touches the database, so these use
- * unsaved model instances with a forced id rather than persisting rows -
- * that keeps the variance formula's input fully under the test's control.
- */
 class MockInsuranceProviderTest extends TestCase
 {
-    /**
-     * MockInsuranceProvider ignores the identity - it has no registry to look
-     * anything up in - but the interface requires one, so this stands in.
-     */
     private static function identity(): QuoteIdentity
     {
         return new QuoteIdentity('01AA123', 'AN1234567');

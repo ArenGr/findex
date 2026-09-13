@@ -4,9 +4,6 @@
 @section('description', __('meta.team_description'))
 
 @section('content')
-    {{-- See faq.blade.php for why the outer section matches the home
-    page's own column while the actual prose stays in a narrower inner
-    wrapper. --}}
     <section class="site-container py-16">
         <div class="mx-auto max-w-3xl">
             <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('team.heading') }}</h1>

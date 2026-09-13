@@ -1,18 +1,5 @@
-{{--
-    Where you are in the request.
-
-    The wizard card's own header bar, above whichever step is on screen. It
-    lived inside the hero for a moment, back when the hero was only painted on
-    step 1 - which took the progress indicator away exactly when it starts
-    being useful.
-
-    Alpine-bound rather than the shared x-hero-steps: this one is clickable and
-    its state changes without a page load.
---}}
+{{-- Where you are in the request. --}}
 <nav aria-label="{{ __('tourism.request.heading') }}">
-    {{-- Small screens only: there the three steps stack into a column and the
-         connector lines that carry the progress on a wide screen are gone, so
-         the count is worth saying in words. --}}
     <p
         class="mb-4 text-xs font-semibold text-gray-500 sm:hidden"
         x-text="@js(__('tourism.request.wizard_step_of', ['current' => ':c', 'total' => ':t'])).replace(':c', step).replace(':t', totalSteps)"
@@ -32,9 +19,6 @@
                     :class="{{ $done }} ? 'cursor-pointer' : ({{ $current }} ? '' : 'cursor-default')"
                     class="flex items-center gap-3 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none"
                 >
-                    {{-- Filled green with a ring for the step you are on and
-                         every step you have finished; a hairline circle for the
-                         ones still ahead. One glance, one answer. --}}
                     <span
                         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition {{ $reached ? 'bg-travel-600 text-white ring-4 ring-travel-100' : 'border-2 border-gray-300 bg-white text-gray-400' }}"
                         :class="{
@@ -42,9 +26,6 @@
                             'border-2 border-gray-300 bg-white text-gray-400': !({{ $done }}) && !({{ $current }}),
                         }"
                     >
-                        {{-- x-show, not x-if: a template renders nothing
-                             until Alpine runs, which left every circle
-                             blank on first paint. --}}
                         <span x-show="{{ $done }}" @if ($initialStep <= $n) x-cloak @endif><x-travel-icon name="check" class="h-4 w-4" /></span>
                         <span x-show="!({{ $done }})" @if ($initialStep > $n) x-cloak @endif>{{ $n }}</span>
                     </span>

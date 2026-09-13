@@ -83,9 +83,7 @@
                         </p>
                     @endif
 
-                    {{-- The end of Findex's involvement: this records the
-                    traveler's choice and tells the agency. No checkout, no
-                    payment - the agency books the trip itself. --}}
+                    {{-- The end of Findex's involvement: this records the traveler's choice and tells the agency. --}}
                     @if ($offer->is_selected)
                         <p class="mt-5 rounded-lg bg-white px-4 py-3 text-center text-sm font-semibold text-primary ring-1 ring-primary/30">
                             {{ __('tourism.offer.chosen') }}
@@ -137,9 +135,6 @@
                     </a>
                 </div>
 
-                {{-- Contact. The agency's per-response details take priority
-                over its profile ones: they're what this agency asked to be
-                reached on for this particular quote. --}}
                 <div class="rounded-2xl border border-placeholder bg-white p-6 shadow-sm">
                     <h2 class="font-heading text-sm font-semibold text-ink">{{ __('tourism.offer.contact_heading') }}</h2>
 

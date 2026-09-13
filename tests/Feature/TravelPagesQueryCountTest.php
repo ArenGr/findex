@@ -14,24 +14,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Guards the pages that show many agencies at once against N+1 queries.
- *
- * The assertions are deliberately "adding more agencies must not add more
- * queries" rather than a fixed budget - a fixed number would fail on any
- * unrelated change and teach everyone to just raise it.
- */
+// Guards the pages that show many agencies at once against N+1 queries.
 class TravelPagesQueryCountTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Real rate data, so CurrencyConverter's cache behaves the way it does
-     * in production. Without a Currency row its lookup returns null, and
-     * Laravel's Cache::remember treats a cached null as a miss - so the
-     * lookup would repeat per offer here and mask the thing this test is
-     * actually watching for.
-     */
+    // Real rate data, so CurrencyConverter's cache behaves the way it does in production.
     private function seedRates(): void
     {
         $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'sort_order' => 1]);
@@ -95,11 +83,7 @@ class TravelPagesQueryCountTest extends TestCase
 
     private function queriesFor(string $url): int
     {
-        // A warm-up request first, then measure the second. Several
-        // process-lifetime caches (feature toggles, currency rates) are
-        // populated by whichever request happens to run first, and counting
-        // that one against a later warm one would report a difference that
-        // has nothing to do with how many agencies are on the page.
+        // A warm-up request first, then measure the second.
         $this->get($url)->assertOk();
 
         DB::flushQueryLog();

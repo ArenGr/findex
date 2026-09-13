@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'breadcrumb' => 'Նավիգացիա',
+    'compare_selected' => 'Համեմատել ընտրվածները',
     'website' => 'Կայք',
     'type' => 'Տեսակ',
     'country' => 'Երկիր',

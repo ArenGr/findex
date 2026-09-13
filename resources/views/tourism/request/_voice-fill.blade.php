@@ -1,12 +1,4 @@
-{{--
-    The voice concierge, hidden behind services.openai.voice_fill. It writes
-    into the same x-data as the rest of the form via applyVoiceFields(); the
-    methods it calls live there whether or not this card renders, and cost
-    nothing while unreachable.
-
-    Split out of request.blade.php only for length - it is not a component,
-    because it is inseparable from that one form's Alpine state.
---}}
+{{-- The voice concierge, hidden behind services.openai.voice_fill. --}}
 @if (config('services.openai.voice_fill'))
     <div class="rounded-xl border border-travel-200 bg-travel-50/70 p-6">
         <div class="flex items-start gap-3">
@@ -39,10 +31,6 @@
                                 <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-error"></span>
                                 <span>{{ __('tourism.request.voice_fill_recording') }}</span>
                                 <span class="text-gray-400 tabular-nums" x-text="formattedTime"></span>
-                                {{-- Live mic-level meter: bars scale off the same
-                                     `level` value, so a silent or muted mic is
-                                     obvious immediately rather than after a
-                                     wasted round trip. --}}
                                 <span class="flex h-3 items-end gap-0.5" aria-hidden="true">
                                     <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 100)}%`"></span>
                                     <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 75)}%`"></span>

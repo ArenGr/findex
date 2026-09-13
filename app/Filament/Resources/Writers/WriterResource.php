@@ -24,12 +24,6 @@ class WriterResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Writers';
 
-    /**
-     * Writer::getRouteKeyName() returns 'slug' for the public site's URLs -
-     * without this override, Filament would inherit that and try to resolve
-     * its own {record} parameter (the numeric id) as a slug lookup. Mirrors
-     * OrganizationResource's identical override for the same reason.
-     */
     protected static ?string $recordRouteKeyName = 'id';
 
     public static function form(Schema $schema): Schema

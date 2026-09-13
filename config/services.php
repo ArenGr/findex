@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
@@ -41,25 +29,7 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
-    // client_secret is deliberately left blank - socialiteproviders/apple's
-    // Provider generates it itself, fresh on every request, as a short-lived
-    // (1 hour) JWT signed from team_id/key_id/private_key below. Nothing to
-    // pre-generate or rotate manually (see AppleAuthController).
-    'apple' => [
-        'client_id' => env('APPLE_CLIENT_ID'),
-        'client_secret' => env('APPLE_CLIENT_SECRET'),
-        'redirect' => env('APPLE_REDIRECT_URI'),
-        'team_id' => env('APPLE_TEAM_ID'),
-        'key_id' => env('APPLE_KEY_ID'),
-        // Absolute path to the downloaded .p8 key file - see
-        // storage/app/private/apple/ (already git-ignored).
-        'private_key' => env('APPLE_PRIVATE_KEY'),
-    ],
-
     'llm' => [
-        // Left unset until a provider is chosen - LlmReportAnalyzer degrades
-        // to an empty summary/themes rather than failing report generation
-        // when this is empty.
         'url' => env('LLM_API_URL'),
         'key' => env('LLM_API_KEY'),
         'model' => env('LLM_MODEL'),
@@ -68,21 +38,6 @@ return [
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
 
-        /*
-        |----------------------------------------------------------------------
-        | AI travel concierge
-        |----------------------------------------------------------------------
-        |
-        | The "describe your trip out loud" card on the tourism request form,
-        | and the endpoint behind it. Off for now; set VOICE_FILL_ENABLED=true
-        | to bring it back - no deploy, just the env and a config:cache.
-        |
-        | It lives here rather than in a config file of its own so that a box
-        | running a stale config cache reads null and hides the feature, which
-        | is the safe direction. A new file would read null and, before this
-        | flag existed, took a page down instead.
-        |
-        */
         'voice_fill' => env('VOICE_FILL_ENABLED', false),
     ],
 
@@ -90,10 +45,6 @@ return [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
         'group_url' => env('TELEGRAM_GROUP_URL'),
-        // Telegram echoes this back on every webhook POST as the
-        // X-Telegram-Bot-Api-Secret-Token header - lets the webhook route
-        // reject requests that didn't actually come from Telegram. Generate
-        // with e.g. `php artisan tinker --execute="echo Str::random(32);"`.
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 

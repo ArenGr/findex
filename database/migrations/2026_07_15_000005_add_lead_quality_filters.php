@@ -4,13 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Lets a tourism partner opt in to only receiving leads above a minimum
- * budget/party size (see Organization::tourismPartnersForDestination()),
- * and lets a customer optionally state a budget when filing a request.
- * Both amounts are plain AMD - avoids needing currency conversion just to
- * compare a partner's threshold against a request's stated budget.
- */
 return new class extends Migration
 {
     public function up(): void

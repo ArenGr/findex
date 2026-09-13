@@ -3,10 +3,6 @@
 @php
     $moment = \Illuminate\Support\Carbon::parse($scrapedAt);
 
-    // Two different facts, and the second is the more useful one: "checked 22
-    // hours ago" is true of every bank at once, while "unchanged for a week"
-    // tells them apart. It rides in the title rather than on the row - one more
-    // line per row is the last thing this table needs.
     $title = __('rates.checked_at', ['time' => $moment->diffForHumans()]);
 
     if ($changedAt) {
@@ -16,12 +12,6 @@
     }
 @endphp
 
-{{--
-    Staleness used to be amber text and nothing else, which says nothing to a
-    screen reader and nothing to the ~8% of men who cannot separate it from the
-    grey beside it. The warning triangle carries the same meaning without
-    relying on the colour, and the title spells it out in words.
---}}
 <span
     @class(['inline-flex items-center gap-1', 'text-[#B4791F]' => $stale, 'text-muted' => ! $stale])
     title="{{ $title }}"

@@ -7,13 +7,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * Organizations serve customers across all three site locales
- * (config('localization.available')) - the profile description used to be
- * a single column, so every visitor saw whichever language it was written
- * in. Covers Organization::getDescriptionAttribute()'s per-locale
- * resolution and fallback, plus the dashboard edit form saving all three.
- */
 class OrganizationLocalizedDescriptionTest extends TestCase
 {
     use RefreshDatabase;
@@ -47,8 +40,6 @@ class OrganizationLocalizedDescriptionTest extends TestCase
             'description_hy' => 'Հայերեն նկարագրություն', // default locale, no 'en'/'ru' written
         ]);
 
-        // No English description was ever written - falls back to the
-        // site's default locale (hy) rather than showing nothing.
         $this->get("/en/organizations/{$organization->slug}")->assertSee('Հայերեն նկարագրություն');
     }
 

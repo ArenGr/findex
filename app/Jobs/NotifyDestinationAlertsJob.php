@@ -9,13 +9,6 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
-/**
- * Fired when a tourism org starts serving a destination (see
- * TourismController::updateDestinations()) - a no-op if nobody had an
- * alert set for that country. One-shot: alerts for this country are
- * cleared after sending, matching the "notify me once available"
- * expectation rather than repeating on every future partner.
- */
 class NotifyDestinationAlertsJob implements ShouldQueue
 {
     use Queueable;

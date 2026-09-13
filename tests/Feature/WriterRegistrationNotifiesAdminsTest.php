@@ -26,8 +26,7 @@ class WriterRegistrationNotifiesAdminsTest extends TestCase
 
         $response->assertRedirect();
 
-        // Login credentials live on `users`, not `writers` - see
-        // RegisteredWriterController::store().
+        // Login credentials live on `users`, not `writers` - see RegisteredWriterController::store().
         $writerUser = User::where('email', 'new-test-writer@example.com')->first();
         $this->assertNotNull($writerUser);
         $writer = $writerUser->writer;
@@ -40,9 +39,6 @@ class WriterRegistrationNotifiesAdminsTest extends TestCase
         $notification = $adminOne->fresh()->unreadNotifications()->first();
         $this->assertSame('New writer awaiting approval', $notification->data['title']);
 
-        // WriterResource routes admin pages by id, not by the model's own
-        // slug-based getRouteKeyName() used for public routes - the review
-        // link must be built from the id or it 404s once clicked.
         $reviewUrl = $notification->data['actions'][0]['url'];
         $this->assertStringContainsString("/admin/writers/{$writer->id}/edit", $reviewUrl);
         $this->assertStringNotContainsString("/writers/{$writer->slug}/edit", $reviewUrl);

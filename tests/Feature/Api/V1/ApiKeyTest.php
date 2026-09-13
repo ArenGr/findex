@@ -7,22 +7,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-/**
- * Keys, plans and limits.
- *
- * The commercial numbers live in config/api.php and are read from there in
- * every assertion below rather than repeated - a repricing should change one
- * file, and if it also has to change the tests then the limits have leaked into
- * the code somewhere they should not have.
- */
+// Keys, plans and limits.
 class ApiKeyTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * The key is shown once and never stored. A database dump has to be
-     * worthless to whoever ends up holding it.
-     */
+    // The key is shown once and never stored.
     public function test_the_key_itself_is_never_written_down(): void
     {
         [$key, $token] = ApiKey::issue(['name' => 'Test']);
@@ -54,11 +44,6 @@ class ApiKeyTest extends TestCase
             ->assertHeader('X-RateLimit-Limit', (string) config('api.plans.business.requests_per_day'));
     }
 
-    /**
-     * Distinct from having no key: someone holding a revoked or mistyped key
-     * needs to be told, not quietly downgraded and left wondering why they are
-     * being throttled.
-     */
     public function test_a_wrong_or_revoked_key_is_rejected_rather_than_ignored(): void
     {
         $this->withToken('fx_never_issued')->getJson('/api/v1/currencies')->assertStatus(401);

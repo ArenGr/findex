@@ -14,13 +14,6 @@
             {{ __('news.subtitle') }}
         </p>
 
-        {{--
-            Below sm, this is a native CSS scroll-snap carousel (one card per
-            swipe, touch/momentum scrolling comes free from the browser - no
-            JS gesture handling needed) instead of a stacked single column.
-            At sm and up it reverts to the plain grid used on tablet/desktop.
-            Same pattern as components/services-grid.blade.php.
-        --}}
         <div
             x-data="{
                 active: 0,

@@ -23,19 +23,8 @@ class ArticleResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Content';
 
-    /**
-     * Article::getRouteKeyName() returns 'slug' for the public site's URLs -
-     * without this override, Filament would inherit that and try to resolve
-     * its own {record} parameter (the numeric id) as a slug lookup. Mirrors
-     * WriterResource's identical override for the same reason.
-     */
     protected static ?string $recordRouteKeyName = 'id';
 
-    /**
-     * Articles are authored by writers, not admins - the panel manages
-     * them for moderation (view + approve/reject + delete) only, same
-     * convention as ReviewResource.
-     */
     public static function canCreate(): bool
     {
         return false;

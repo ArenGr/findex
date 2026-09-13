@@ -6,8 +6,7 @@
     <section class="mx-auto max-w-4xl px-6 py-16 lg:px-10">
         <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">{{ __('api.your_keys') }}</h1>
 
-        {{-- The only moment this key exists in a form anyone can read. It is
-        flashed, never stored, and the page says so plainly. --}}
+        {{-- The only moment this key exists in a form anyone can read. --}}
         @if (session('new_api_key'))
             <div class="mt-6 rounded-2xl border-2 border-primary/40 bg-primary/5 p-5">
                 <p class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('api.shown_once') }}</p>
@@ -49,8 +48,7 @@
                     <li class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-placeholder bg-white p-5">
                         <div class="min-w-0">
                             <p class="font-medium break-words text-ink">{{ $key->name }}</p>
-                            {{-- The prefix only: enough to tell two keys apart,
-                            not enough to use. --}}
+                            {{-- The prefix only: enough to tell two keys apart, not enough to use. --}}
                             <p class="mt-0.5 font-mono text-xs break-all text-muted">{{ $key->prefix }}&hellip;</p>
                             <p class="mt-1 text-xs break-words text-muted">
                                 {{ $plans[$key->plan]['label'] ?? $key->plan }}

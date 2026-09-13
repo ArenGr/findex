@@ -7,10 +7,7 @@ use App\Models\Organization;
 class BranchParserFactory
 {
     /**
-     * Map of organization slug => branch parser class. Mirrors
-     * RateParserFactory; a bank appears here only once its branch listing
-     * has a parser, which is not the same set as the banks we take rates
-     * from.
+     * Map of organization slug => branch parser class.
      *
      * @var array<string, class-string<BranchParser>>
      */

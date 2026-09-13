@@ -8,12 +8,6 @@ use Tests\TestCase;
 
 class ArdshinbankRateParserTest extends TestCase
 {
-    /**
-     * Trimmed from https://ardshinbank.am/api/currency, keeping the real
-     * shape: figures as strings, a small one written without its leading
-     * zero (KZT), the same `cb` repeated on the cash and non-cash rows, and
-     * the separate gold branch.
-     */
     private function fixture(): string
     {
         return <<<'JSON'
@@ -71,11 +65,6 @@ class ArdshinbankRateParserTest extends TestCase
         );
     }
 
-    /**
-     * The central bank's reference rate belongs to the currency, not to how
-     * it is traded, so the API repeats it on both the cash and non-cash
-     * rows. Publishing it twice would put two identical rows in the table.
-     */
     public function test_it_publishes_one_central_bank_rate_per_currency(): void
     {
         $central = $this->ofType($this->parse(), RateType::CENTRAL_BANK);

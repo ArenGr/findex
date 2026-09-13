@@ -16,11 +16,6 @@ use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
-    /**
-     * Public directory of all organizations, filterable by type and sorted
-     * by average rating (highest first) so the best-reviewed organizations
-     * surface first.
-     */
     public function index(string $locale, Request $request): View
     {
         $type = $request->string('type')->value();
@@ -50,13 +45,6 @@ class OrganizationController extends Controller
         ]);
     }
 
-    /**
-     * SEO landing page for a single organization type - unlike index()'s
-     * type filter (a query string on a generic directory), this is a
-     * dedicated URL with its own title/meta description/intro copy, so it
-     * can actually rank for "banks in armenia" style searches instead of
-     * competing with the unfiltered directory for the same content.
-     */
     public function banks(Request $request): View
     {
         return $this->categoryPage(
@@ -101,9 +89,13 @@ class OrganizationController extends Controller
             statLabel: __('auto_insurance.companies.stat_count'),
             ctaLabel: __('auto_insurance.companies.cta_quote'),
             ctaRoute: route('insurance.auto.request'),
-            showCompare: false,
+            showCompare: true,
+            view: 'organizations.insurance-companies',
         );
     }
+
+    // How a category listing may be ordered.
+    public const CATEGORY_SORTS = ['rated', 'reviewed', 'name'];
 
     private function categoryPage(
         Request $request,
@@ -116,20 +108,33 @@ class OrganizationController extends Controller
         string $ctaLabel,
         string $ctaRoute,
         bool $showCompare,
+        // Insurance has its own listing; banks and travel agencies share the plain one.
+        string $view = 'organizations.category',
     ): View {
         $search = $request->string('q')->trim()->value();
+        $sort = in_array($request->query('sort'), self::CATEGORY_SORTS, true) ? $request->query('sort') : 'rated';
 
         $organizations = Organization::active()
             ->withRatingStats()
+            // So a row can say how many branches an organization has without a query per row.
+            ->withCount(['branches' => fn ($query) => $query->active()])
             ->where('type', $type)
             ->when($search, fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
-            ->orderByDesc('reviews_avg_rating')
-            ->orderByDesc('reviews_count')
-            ->orderBy('name')
+            ->when(
+                $sort === 'name',
+                fn ($query) => $query->orderBy('name'),
+                fn ($query) => $query
+                    ->when(
+                        $sort === 'reviewed',
+                        fn ($query) => $query->orderByDesc('reviews_count')->orderByDesc('reviews_avg_rating'),
+                        fn ($query) => $query->orderByDesc('reviews_avg_rating')->orderByDesc('reviews_count'),
+                    )
+                    ->orderBy('name'),
+            )
             ->paginate(20)
             ->withQueryString();
 
-        return view('organizations.category', compact(
+        return view($view, compact(
             'organizations',
             'heading',
             'subtitle',
@@ -140,14 +145,10 @@ class OrganizationController extends Controller
             'ctaRoute',
             'showCompare',
             'search',
+            'sort',
         ));
     }
 
-    /**
-     * Resolved manually (not via implicit route-model binding): Laravel's
-     * implicit binding does not resolve correctly for a route parameter
-     * that comes after a dynamic {locale} prefix segment.
-     */
     public function show(Request $request, string $locale, string $organization, OrganizationRatesData $ratesData, RateHistoryService $history): View
     {
         $organization = Organization::active()->where('slug', $organization)->firstOrFail();
@@ -158,15 +159,11 @@ class OrganizationController extends Controller
             ? $organization->reviews->firstWhere('user_id', auth()->id())
             : null;
 
-        // Banks and exchange offices publish rates; travel agencies and
-        // insurers do not, and asking for theirs would be a guaranteed empty
-        // section on every one of their pages.
         $rates = $organization->hasRatesPage()
             ? $ratesData->build($organization)
             : ['groups' => [], 'updated_at' => null, 'currency_count' => 0];
 
-        // A trend for the organization's headline currency. Cash only, and only
-        // when there is more than a single point - a chart of one day is a dot.
+        // A trend for the organization's headline currency.
         $historyCurrency = null;
         $historySeries = [];
         $historyDays = $history->offerableRanges()[0];
@@ -189,10 +186,7 @@ class OrganizationController extends Controller
             }
         }
 
-        // Where to go next when this organization is not the answer. Same
-        // type only - offering an insurer to somebody comparing bank rates is
-        // noise - and each carries its headline currency so the card can be
-        // compared at a glance rather than only clicked.
+        // Where to go next when this organization is not the answer.
         $similar = Organization::active()
             ->where('type', $organization->type)
             ->whereKeyNot($organization->id)
@@ -221,25 +215,15 @@ class OrganizationController extends Controller
             'similarRates' => $similarRates,
             'headlineCode' => $headlineCode,
             'rates' => $rates,
-            // Only exchange offices negotiate walk-in cash, and only once they
-            // are reachable on Telegram - the same rule the fan-out job uses,
-            // so the page cannot offer something the job would drop.
-            // This organization's own rate over time, for whichever currency
-            // it quotes first - one chart, not eleven. The full picture lives
-            // on the history page.
             'historyCurrency' => $historyCurrency ?? null,
             'historySeries' => $historySeries ?? [],
             'historyDays' => $historyDays ?? 0,
-            // Same modal as /rates, so "Get a better rate" means one thing
-            // and behaves one way wherever it is pressed.
             'quoteCurrencies' => Currency::where('is_active', true)
                 ->whereIn('code', array_keys(config('exchange-quotes.minimum_amounts')))
                 ->orderBy('sort_order')
                 ->get(),
             'quoteCities' => Branch::query()->whereNotNull('city')->where('is_active', true)
                 ->distinct()->orderBy('city')->pluck('city')->all(),
-            // An open request of the viewer's own, so the page says "you
-            // already asked" rather than offering to ask again.
             'activeQuoteRequest' => $this->activeQuoteRequest($request),
             'canNegotiate' => $organization->type === 'exchange'
                 && $organization->telegram_chat_id !== null
@@ -247,14 +231,7 @@ class OrganizationController extends Controller
         ]);
     }
 
-    /**
-     * The viewer's own open better-rate request, if there is one.
-     *
-     * Signed-in visitors are looked up by account; guests by the session note
-     * left when they submitted, because they have no account to look up. Both
-     * re-check that the request is still open rather than trusting the note -
-     * a window that closed while the tab sat there has closed.
-     */
+    // The viewer's own open better-rate request, if there is one.
     private function activeQuoteRequest(Request $request): ?array
     {
         $quoteRequest = $request->user()

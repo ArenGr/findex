@@ -12,12 +12,6 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/**
- * Claiming a promo code requires being logged in and holding the same
- * signed link the results page itself is gated behind (see
- * QuoteRequestController::claimSuggestion) - so an org can trust that
- * whoever the claim names is really the customer who filed the request.
- */
 class QuoteSuggestionClaimTest extends TestCase
 {
     use RefreshDatabase;

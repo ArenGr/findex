@@ -10,15 +10,9 @@ use Tests\TestCase;
 
 class VoiceFillTest extends TestCase
 {
-    // The endpoint tests never touch the database; the one that renders the
-    // form does.
+    // The endpoint tests never touch the database; the one that renders the form does.
     use RefreshDatabase;
 
-    /**
-     * The concierge is hidden behind a flag, not deleted, so everything below
-     * still describes how it behaves - with the flag on, which is the state
-     * these tests are about.
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -156,11 +150,7 @@ class VoiceFillTest extends TestCase
         Http::assertNothingSent();
     }
 
-    /**
-     * Hidden means off, not merely invisible. This endpoint spends money per
-     * call, so leaving it reachable while the card is gone would be a button
-     * nobody can see and anybody can press.
-     */
+    // Hidden means off, not merely invisible.
     public function test_the_endpoint_is_gone_while_the_concierge_is_hidden(): void
     {
         config(['services.openai.voice_fill' => false]);
