@@ -27,7 +27,7 @@
         ></span>
     </div>
 
-    <p class="text-xs text-gray-500">
+    <p class="text-xs text-muted">
         {{ __('tourism.request.priorities_hint_agencies', ['max' => $maxPriorities]) }}
     </p>
 
@@ -47,7 +47,7 @@
                     :disabled="priorityLocked(@js($value))"
                     class="peer sr-only"
                 >
-                <span class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-700 transition-all peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-500">
+                <span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2.5 text-xs font-medium text-muted transition-all peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-500">
                     <x-travel-icon
                         name="check"
                         class="hidden h-4 w-4 text-travel-600"
@@ -56,7 +56,7 @@
                     @isset ($priorityIcons[$value])
                         <x-travel-icon
                             :name="$priorityIcons[$value]"
-                            class="h-4 w-4 text-gray-500"
+                            class="h-4 w-4 text-muted"
                             ::class="priorityChosen({{ Illuminate\Support\Js::from($value) }}) ? 'hidden' : 'inline'"
                         />
                     @endisset

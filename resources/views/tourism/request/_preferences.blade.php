@@ -25,11 +25,11 @@
 
         <label class="group inline-flex cursor-pointer">
             <input type="checkbox" name="insurance" value="1" x-model="insurance" class="peer sr-only">
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 group-hover:border-travel-200 group-hover:bg-gray-50/70">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-xs font-medium text-muted transition-colors peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 group-hover:border-travel-200 group-hover:bg-surface-alt/70">
                 <span data-check class="hidden shrink-0 text-travel-600">
                     <x-travel-icon name="check" class="h-3.5 w-3.5" />
                 </span>
-                <x-travel-icon name="shield" class="h-4 w-4 text-gray-500" />
+                <x-travel-icon name="shield" class="h-4 w-4 text-muted" />
                 {{ __('tourism.request.insurance') }}
             </span>
         </label>

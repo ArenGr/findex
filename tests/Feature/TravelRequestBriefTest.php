@@ -83,12 +83,15 @@ class TravelRequestBriefTest extends TestCase
         }
     }
 
-    public function test_the_request_page_renders_in_the_travel_design_system(): void
+    public function test_the_request_page_renders_in_the_findex_design_system(): void
     {
         $response = $this->get(route('tourism.request', ['locale' => 'en']))->assertOk();
 
-        foreach (['font-jakarta', 'bg-travel-600', 'border-travel-200', 'text-travel-700', 'text-travel-ink'] as $class) {
-            $this->assertStringContainsString($class, $response->getContent());
+        // Travel used to ship its own face, olive ramp and navy ink. It reads
+        // from the one palette now, so what matters is that it does NOT carry
+        // a design system of its own.
+        foreach (['font-jakarta', 'text-slate-800', 'text-gray-900', 'bg-sky-50'] as $orphan) {
+            $this->assertStringNotContainsString($orphan, $response->getContent(), $orphan.' is not part of the design system');
         }
 
         // The four sections of the approved design.

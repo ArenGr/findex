@@ -25,47 +25,94 @@ button {
 @theme {
     --font-freesans: "FreeSans";
 
-    /* Each real face is followed by its metric-matched fallback from fonts-fallbacks.css. */
+    /* One face for the whole product. Each real face is followed by its
+       metric-matched fallback from fonts-fallbacks.css. */
     --font-sans:
-        var(--font-freesans), "FreeSans fallback", ui-sans-serif, system-ui,
-        sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-        "Noto Color Emoji";
-    --font-heading: "Montserrat", "Montserrat fallback", var(--font-sans);
-    --font-logo: "Allerta Stencil", "Allerta Stencil fallback", var(--font-sans);
+        "Manrope", "Manrope fallback", var(--font-freesans), "FreeSans fallback",
+        ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
-    /* Findex brand palette (see resources/views/style-guide.blade.php) */
+    /* Headings are the same face, kept as a token so the 250-odd font-heading
+       usages stay valid and can never drift to a second family. */
+    --font-heading: var(--font-sans);
+    --font-logo: var(--font-sans);
+
+    /* The editorial script, used only on travel. See the note in app.css. */
+    --font-script: "Caveat", "Caveat fallback", ui-serif, cursive;
+
+    /* ------------------------------------------------------------------
+     * Brand. Three colours, each with a job:
+     *   primary - actions, active states, important detail
+     *   yellow  - small highlights only (badges, dots, selected)
+     *   blue    - informational states and links
+     * Nothing else. A page does not get its own accent.
+     * ---------------------------------------------------------------- */
     --color-primary: #607e34;
     --color-primary-dark: #4c6529;
     --color-accent-yellow: #f1cb40;
     --color-accent-blue: #005fb9;
     --color-accent-blue-dark: #004a91;
-
     --color-accent-red: #ba1a1a;
+    --color-error: #ba1a1a;
 
-    /* Hero carousel per-slide accents */
-    --color-slide-green: #607e34;
-    --color-slide-blue: #87b8f5;
-    --color-slide-yellow: #f8d97e;
-    --color-slide-pink: #feb2b9;
-    --color-slide-purple: #dcb0e9;
-    --color-slide-green-pastel: #dfe5d6;
+    /* Neutrals. Warm, slightly green - they sit under the brand green
+       rather than fighting it. */
+    --color-ink: #1d241c;
+    --color-muted: #6b7168;
+    --color-subtle: #8d938a;
+    --color-border: #e6e9e3;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f7f8f4;
 
-    --color-currency-tint: #eaf3ff;
-    --color-currency-line: #c7ddf7;
-    --color-cards-tint: #ecf7ef;
-    --color-cards-line: #cbe7d1;
-    --color-insurance-tint: #fff8e8;
-    --color-insurance-line: #f1e1a6;
-    --color-travel-tint: #eef5ff;
-    --color-travel-line: #c9dbf8;
+    /* ------------------------------------------------------------------
+     * Compatibility aliases.
+     *
+     * These are the names the views already use. They now resolve to the
+     * palette above rather than to a page-specific colour of their own, so
+     * the whole site moves at once. They are removed as the views migrate
+     * onto the names above - nothing new should use them.
+     * ---------------------------------------------------------------- */
+    --color-body-text: var(--color-ink);
+    --color-placeholder: var(--color-border);
+    --color-border-muted: #dde2d9;
+    --color-border-subtle: var(--color-border);
+    --color-outline: var(--color-muted);
+    --color-on-surface: var(--color-ink);
+    --color-ink-muted: var(--color-muted);
+    --color-surface-container: var(--color-surface-alt);
+    --color-surface-container-low: var(--color-surface-alt);
+    --color-primary-container: var(--color-primary);
+    --color-on-primary-container: #ffffff;
 
-    /* Neutrals */
-    --color-ink: #161515;
-    --color-body-text: #262626;
-    --color-muted: #676767;
-    --color-subtle: #a6a6a6;
-    --color-border-muted: #b3b3b3;
-    --color-placeholder: #d9d9d9;
+    /* The hero carousel had six per-slide accents; slides no longer carry
+       their own colour. */
+    --color-slide-green: var(--color-primary);
+    --color-slide-blue: var(--color-accent-blue);
+    --color-slide-yellow: var(--color-accent-yellow);
+    --color-slide-pink: var(--color-accent-yellow);
+    --color-slide-purple: var(--color-accent-blue);
+    --color-slide-green-pastel: var(--color-surface-alt);
+
+    /* One tinted panel and one hairline, not one pair per category. */
+    --color-currency-tint: var(--color-surface-alt);
+    --color-currency-line: var(--color-border);
+    --color-cards-tint: var(--color-surface-alt);
+    --color-cards-line: var(--color-border);
+    --color-insurance-tint: var(--color-surface-alt);
+    --color-insurance-line: var(--color-border);
+    --color-travel-tint: var(--color-surface-alt);
+    --color-travel-line: var(--color-border);
+
+    /* Travel had its own olive ramp and a navy ink that existed nowhere
+       else. It now reads from the one palette. */
+    --color-travel-50: var(--color-surface-alt);
+    --color-travel-100: #e8eede;
+    --color-travel-200: var(--color-border);
+    --color-travel-500: var(--color-primary);
+    --color-travel-600: var(--color-primary);
+    --color-travel-700: var(--color-primary-dark);
+    --color-travel-800: var(--color-primary-dark);
+    --color-travel-ink: var(--color-ink);
 
     --text-xs: 0.9375rem;
     --text-xs--line-height: 1.25rem;
@@ -83,100 +130,8 @@ button {
     --text-3xl--line-height: 2.5rem;
     --text-4xl: 2.5rem;
     --text-4xl--line-height: 2.75rem;
-
-    /* The travel design system, from the approved Stitch designs for the quote request flow. */
-    /* The travel design's face. */
-    --font-jakarta: "Plus Jakarta Sans", "Plus Jakarta Sans fallback", var(--font-sans);
-
-    /* The travel page's editorial script lines. */
-    --font-script: "Caveat", "Caveat fallback", ui-serif, cursive;
-
-    --color-surface-alt: #f9faf1;
-    --color-surface-container: #eeeee6;
-    --color-surface-container-low: #f4f4eb;
-    --color-border-subtle: #e2e3db;
-    --color-outline: #74796a;
-    --color-on-surface: #1a1c17;
-    --color-ink-muted: #44483b;
-    --color-primary-container: #607e34;
-    --color-on-primary-container: #fbffeb;
-    --color-error: #ba1a1a;
-
-    /* The travel design's ink. */
-    --color-travel-ink: #0D1C2D;
-
-    /* The travel design's olive ramp, verbatim from its Tailwind config. */
-    --color-travel-50: #F4F7EE;
-    --color-travel-100: #E6EDD8;
-    --color-travel-200: #D0DDB6;
-    --color-travel-500: #759942;
-    --color-travel-600: #607E34;
-    --color-travel-700: #4D652A;
-    --color-travel-800: #3D5022;
-
-    /* The travel type scale, stated in absolute pixels on purpose. */
-    --text-label-caps: 13px;
-    --text-label-caps--line-height: 18px;
-    --text-label-caps--letter-spacing: 0.05em;
-    --text-label-caps--font-weight: 600;
-
-    --text-body-sm: 15px;
-    --text-body-sm--line-height: 22px;
-
-    --text-body-md: 16px;
-    --text-body-md--line-height: 24px;
-
-    --text-body-lg: 18px;
-    --text-body-lg--line-height: 28px;
-
-    /* Used by the summary panel and the review card. */
-    --text-headline-sm: 20px;
-    --text-headline-sm--line-height: 26px;
-    --text-headline-sm--letter-spacing: -0.01em;
-    --text-headline-sm--font-weight: 700;
-
-    --text-headline-md: 24px;
-    --text-headline-md--line-height: 32px;
-    --text-headline-md--letter-spacing: -0.01em;
-    --text-headline-md--font-weight: 700;
-
-    --text-headline-lg: 32px;
-    --text-headline-lg--line-height: 40px;
-    --text-headline-lg--letter-spacing: -0.02em;
-    --text-headline-lg--font-weight: 700;
-
-    --text-headline-lg-mobile: 28px;
-    --text-headline-lg-mobile--line-height: 36px;
-    --text-headline-lg-mobile--letter-spacing: -0.02em;
-    --text-headline-lg-mobile--font-weight: 700;
-
-    /* One step above headline-lg, for the request page's opening title only. */
-    --text-headline-xl: 42px;
-    --text-headline-xl--line-height: 48px;
-    --text-headline-xl--letter-spacing: -0.025em;
-    --text-headline-xl--font-weight: 700;
-
-    --text-headline-xl-mobile: 30px;
-    --text-headline-xl-mobile--line-height: 38px;
-    --text-headline-xl-mobile--letter-spacing: -0.02em;
-    --text-headline-xl-mobile--font-weight: 700;
 }
 
-/* The site's one content column. */
-/* The travel page's container. */
-@utility travel-container {
-    margin-inline: auto;
-    max-width: 80rem;
-    padding-inline: 1rem;
-
-    @media (width >= 40rem) {
-        padding-inline: 1.5rem;
-    }
-
-    @media (width >= 64rem) {
-        padding-inline: 2rem;
-    }
-}
 
 /* A wizard step arriving. */
 @keyframes travel-step-in {
@@ -216,18 +171,79 @@ button {
     cursor: pointer;
 }
 
+/* One column for the whole product. 24 / 40 / 64px of gutter. */
 @utility site-container {
     margin-inline: auto;
-    max-width: 1360px;
-    padding-inline: 1rem;
+    max-width: 1280px;
+    padding-inline: 1.5rem;
 
     @media (width >= 40rem) {
-        padding-inline: 1.5rem;
+        padding-inline: 2.5rem;
     }
 
     @media (width >= 64rem) {
+        padding-inline: 4rem;
+    }
+}
+
+/* travel-container was a second, narrower column. It is the same column now. */
+@utility travel-container {
+    margin-inline: auto;
+    max-width: 1280px;
+    padding-inline: 1.5rem;
+
+    @media (width >= 40rem) {
         padding-inline: 2.5rem;
     }
+
+    @media (width >= 64rem) {
+        padding-inline: 4rem;
+    }
+}
+
+/* ------------------------------------------------------------------------
+ * One input, one button, one card. A page picks from these; it does not
+ * invent a sixth shape. See the design notes in the brief.
+ * --------------------------------------------------------------------- */
+
+/* The one field. Every text input, select and search box on the site. */
+@utility field {
+    display: block;
+    width: 100%;
+    min-height: 3.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border-muted);
+    background-color: var(--color-surface);
+    padding-inline: 0.875rem;
+    padding-block: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--color-ink);
+    transition-property: border-color, box-shadow;
+    transition-duration: 200ms;
+
+    &::placeholder {
+        color: var(--color-subtle);
+    }
+
+    &:hover:not(:disabled) {
+        border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border-muted));
+    }
+
+    &:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 15%, transparent);
+    }
+
+    &[aria-invalid="true"] {
+        border-color: var(--color-error);
+    }
+}
+
+/* A field with room for a leading glyph. */
+@utility field-icon {
+    padding-inline-start: 2.75rem;
 }
 
 /* Buttons and fields. */
@@ -236,9 +252,9 @@ button {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     padding-inline: 1.25rem;
-    min-height: 2.75rem;
+    min-height: 3.25rem;
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.25rem;

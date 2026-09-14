@@ -13,7 +13,7 @@
     ];
 @endphp
 
-<section class="relative isolate overflow-hidden border-b border-placeholder bg-sky-50">
+<section class="relative isolate overflow-hidden border-b border-placeholder bg-surface-alt">
     @if ($photo)
         {{-- The picture is the band's own background, full bleed. --}}
         <div class="absolute inset-0 -z-10">
@@ -59,7 +59,7 @@
                 <span class="text-travel-600">{{ __('tourism.request.hero_line2') }} {{ __('tourism.request.hero_line2_accent') }}</span>
             </h1>
 
-            <p class="mt-4 max-w-md text-[15px] leading-relaxed text-gray-600">
+            <p class="mt-4 max-w-md text-[15px] leading-relaxed text-muted">
                 {{ __('tourism.request.subheading') }}
             </p>
 
@@ -74,7 +74,7 @@
                         </span>
                         <span class="min-w-0">
                             <span class="block text-[12.5px] leading-4 font-bold text-travel-ink">{{ __('tourism.request.' . $signal['title']) }}</span>
-                            <span class="mt-0.5 block text-[11px] leading-tight text-gray-500">{{ __('tourism.request.' . $signal['sub']) }}</span>
+                            <span class="mt-0.5 block text-[11px] leading-tight text-muted">{{ __('tourism.request.' . $signal['sub']) }}</span>
                         </span>
                     </li>
                 @endforeach

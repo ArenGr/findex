@@ -4,7 +4,7 @@
 @if ($partners->count() >= \App\Support\TravelPartners::MIN_TO_SHOW)
     {{-- On the page's own white, not in a tinted panel. --}}
     <section class="travel-container pb-16">
-        <div class="space-y-5 border-t border-gray-100 pt-10">
+        <div class="space-y-5 border-t border-border pt-10">
             <p class="flex items-center gap-2 text-xs font-bold tracking-wider text-travel-700 uppercase">
                 <x-travel-icon name="shield_check" class="h-4 w-4" />
                 {{ __('tourism.request.partners_heading') }}
@@ -13,7 +13,7 @@
             {{-- Badges that size to their own name and wrap, not a fixed grid. --}}
             <ul class="flex flex-wrap items-center gap-3">
                 @foreach ($partners as $partner)
-                    <li class="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5">
+                    <li class="flex items-center gap-2.5 rounded-xl border border-border bg-white px-3.5 py-2.5">
                         @if ($partner->logo)
                             <img
                                 src="{{ $partner->logo }}"
@@ -30,7 +30,7 @@
                                 <x-travel-icon name="luggage" class="h-4 w-4" />
                             </span>
                         @endif
-                        <span class="text-xs font-semibold whitespace-nowrap text-gray-800">{{ $partner->name }}</span>
+                        <span class="text-xs font-semibold whitespace-nowrap text-ink">{{ $partner->name }}</span>
                     </li>
                 @endforeach
             </ul>

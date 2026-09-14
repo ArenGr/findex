@@ -19,7 +19,7 @@
 
 <fieldset {{ $attributes->only('class') }}>
     @if ($label)
-        <legend class="mb-2.5 block text-xs font-semibold text-gray-600">{{ $label }}</legend>
+        <legend class="mb-2.5 block text-xs font-semibold text-muted">{{ $label }}</legend>
     @endif
 
     <div class="flex flex-wrap gap-2.5">
@@ -42,12 +42,12 @@
                     {{ $attributes->except('class') }}
                     class="peer sr-only"
                 >
-                <span class="{{ $pill }} border-gray-200 bg-white font-medium text-gray-700 peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-200 group-hover:bg-gray-50/70">
+                <span class="{{ $pill }} border-border bg-white font-medium text-muted peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-200 group-hover:bg-surface-alt/70">
                     <span data-check class="hidden shrink-0 text-travel-600">
                         <x-travel-icon name="check" class="h-3.5 w-3.5" />
                     </span>
                     @isset ($icons[$value])
-                        <x-travel-icon :name="$icons[$value]" class="h-4 w-4 text-gray-500" />
+                        <x-travel-icon :name="$icons[$value]" class="h-4 w-4 text-muted" />
                     @endisset
                     {{ $optionLabel }}
                 </span>

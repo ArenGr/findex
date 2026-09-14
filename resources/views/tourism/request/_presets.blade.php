@@ -23,7 +23,7 @@
                 <h2 id="presets-heading" class="text-2xl font-extrabold tracking-tight text-travel-ink lg:text-[1.75rem]">
                     {{ __('tourism.presets.heading') }}
                 </h2>
-                <p class="mt-2 text-sm leading-relaxed text-gray-600">{{ __('tourism.presets.sub') }}</p>
+                <p class="mt-2 text-sm leading-relaxed text-muted">{{ __('tourism.presets.sub') }}</p>
             </div>
 
             <a
@@ -63,7 +63,7 @@
                         type="button"
                         @click="applyPreset(@js($preset + ['departure' => __('tourism.request.departure_default')]))"
                         :class="preset === @js($preset['key']) && 'border-travel-600 ring-2 ring-travel-600/20'"
-                        class="group relative flex w-[78%] shrink-0 snap-start flex-col items-start rounded-2xl border border-gray-200 bg-white p-3 pb-16 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[46%] lg:w-auto"
+                        class="group relative flex w-[78%] shrink-0 snap-start flex-col items-start rounded-2xl border border-border bg-white p-3 pb-16 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[46%] lg:w-auto"
                     >
                         <span class="relative block h-40 w-full overflow-hidden rounded-xl bg-travel-50">
                             @if ($preset['photo'])

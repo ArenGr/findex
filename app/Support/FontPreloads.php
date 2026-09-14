@@ -10,7 +10,6 @@ class FontPreloads
     // The variants worth preloading, per family.
     private const VARIANTS = [
         'montserrat' => ['600:normal', '700:normal'],
-        'plus-jakarta-sans' => ['400:normal', '500:normal', '600:normal', '700:normal', '800:normal'],
     ];
 
     // Representative code points per script, used to pick the right subset out of the variant's files.

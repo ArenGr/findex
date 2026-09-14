@@ -51,17 +51,18 @@ class OrganizationCategoryPagesTest extends TestCase
         $this->insurerRated('Aaa Insurance', 'aaa-insurance', 3, 1);
         $this->insurerRated('Zzz Insurance', 'zzz-insurance', 5, 4);
 
-        $first = fn (string $sort) => strpos(
-            $this->get('/en/insurance/companies?sort='.$sort)->assertOk()->getContent(),
-            'Zzz Insurance',
-        ) < strpos(
-            $this->get('/en/insurance/companies?sort='.$sort)->getContent(),
-            'Aaa Insurance',
-        );
+        // One document per sort: comparing an offset in one response against
+        // an offset in another only works while both are byte-identical, and
+        // they are not.
+        $leads = function (string $sort): bool {
+            $html = $this->get('/en/insurance/companies?sort='.$sort)->assertOk()->getContent();
 
-        $this->assertTrue($first('rated'), 'best rated should lead');
-        $this->assertTrue($first('reviewed'), 'most reviewed should lead');
-        $this->assertFalse($first('name'), 'A-Z should put Aaa first');
+            return strpos($html, 'Zzz Insurance') < strpos($html, 'Aaa Insurance');
+        };
+
+        $this->assertTrue($leads('rated'), 'best rated should lead');
+        $this->assertTrue($leads('reviewed'), 'most reviewed should lead');
+        $this->assertFalse($leads('name'), 'A-Z should put Aaa first');
     }
 
     public function test_an_unknown_insurance_sort_falls_back_rather_than_erroring(): void

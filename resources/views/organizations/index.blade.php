@@ -3,61 +3,68 @@
 @section('title', __('organizations.directory_heading') . ' — Findex')
 
 @section('content')
-    <x-page-hero :title="__('organizations.directory_heading')" :subtitle="__('organizations.directory_subtitle')" />
+    {{-- The directory is the same two steps as every other page: say what you
+         are looking for in the hero, compare what comes back below it. --}}
+    <x-page-hero :title="__('organizations.directory_heading')" :subtitle="__('organizations.directory_subtitle')">
+        <x-slot:panel>
+            <form method="GET" action="{{ route('organizations.index') }}" class="flex flex-wrap items-center gap-3">
+                @if ($activeType)
+                    <input type="hidden" name="type" value="{{ $activeType }}">
+                @endif
 
-    <section class="site-container pt-10 pb-16">
-        <div class="lg:flex lg:items-start lg:gap-10">
-            <div class="min-w-0 flex-1">
+                <label for="organizations-search" class="sr-only">{{ __('organizations.search_placeholder') }}</label>
+                <input
+                    id="organizations-search"
+                    type="search"
+                    name="q"
+                    value="{{ $search }}"
+                    placeholder="{{ __('organizations.search_placeholder') }}"
+                    class="field min-w-0 flex-1"
+                >
+                <button type="submit" class="btn btn-primary shrink-0">
+                    {{ __('organizations.search_button') }}
+                </button>
+            </form>
+        </x-slot:panel>
 
-                <form method="GET" action="{{ route('organizations.index') }}" class="mt-8 flex gap-2">
-                    @if ($activeType)
-                        <input type="hidden" name="type" value="{{ $activeType }}">
-                    @endif
-                    <input
-                        type="search"
-                        name="q"
-                        value="{{ $search }}"
-                        placeholder="{{ __('organizations.search_placeholder') }}"
-                        class="block w-full max-w-sm rounded-lg border border-border-muted px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
-                    >
-                    <button type="submit" class="btn btn-primary shrink-0">
-                        {{ __('organizations.search_button') }}
-                    </button>
-                </form>
+        <x-slot:facts>
+            <li>{{ trans_choice('compare_ui.count', $organizations->total(), ['count' => number_format($organizations->total())]) }}</li>
+            <li>{{ trans_choice('compare_ui.categories', count($types), ['count' => count($types)]) }}</li>
+        </x-slot:facts>
+    </x-page-hero>
 
-                {{-- Type filter --}}
-                <div class="mt-4 flex flex-wrap gap-2">
+    <x-results :count="$organizations->total()">
+        {{-- One control per filter, stating its own answer. --}}
+        <x-slot:filters>
+            <p class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('organizations.stat_type') }}</p>
+            <div class="mt-3 flex flex-wrap gap-2 lg:flex-col lg:items-start">
+                @foreach (array_merge([null], $types) as $type)
                     <a
-                        href="{{ route('organizations.index', array_filter(['q' => $search])) }}"
-                        class="rounded-full px-4 py-2 text-xs font-medium transition {{ $activeType === null ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
+                        href="{{ route('organizations.index', array_filter(['type' => $type, 'q' => $search])) }}"
+                        @class([
+                            'rounded-xl px-4 py-2 text-sm font-medium transition lg:w-full',
+                            'bg-primary text-white' => $activeType === $type,
+                            'text-muted hover:bg-surface-alt hover:text-ink' => $activeType !== $type,
+                        ])
                     >
-                        {{ __('organizations.filter_all_types') }}
+                        {{ $type === null ? __('organizations.filter_all_types') : __('organizations.types.' . $type) }}
                     </a>
-                    @foreach ($types as $type)
-                        <a
-                            href="{{ route('organizations.index', array_filter(['type' => $type, 'q' => $search])) }}"
-                            class="rounded-full px-4 py-2 text-xs font-medium transition {{ $activeType === $type ? 'bg-ink text-white' : 'bg-placeholder/40 text-muted hover:text-ink' }}"
-                        >
-                            {{ __('organizations.types.' . $type) }}
-                        </a>
-                    @endforeach
-                </div>
-
-                {{-- Organizations list --}}
-                <div class="mt-10 divide-y divide-placeholder overflow-hidden rounded-2xl border border-placeholder bg-white shadow-sm">
-                    @forelse ($organizations as $organization)
-                        <x-organization-row :organization="$organization" :show-compare="true" />
-                    @empty
-                        <p class="px-5 py-12 text-center text-sm text-muted">{{ __('organizations.no_organizations') }}</p>
-                    @endforelse
-                </div>
-
-                <div class="mt-10">
-                    {{ $organizations->links() }}
-                </div>
+                @endforeach
             </div>
+        </x-slot:filters>
 
-            <x-ad-slot placement="organizations_index" />
+        <div class="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+            @forelse ($organizations as $organization)
+                <x-organization-row :organization="$organization" :show-compare="true" />
+            @empty
+                <p class="px-5 py-12 text-center text-sm text-muted">{{ __('organizations.no_organizations') }}</p>
+            @endforelse
         </div>
-    </section>
+
+        <x-slot:pagination>
+            {{ $organizations->links() }}
+        </x-slot:pagination>
+    </x-results>
+
+    <x-ad-slot placement="organizations_index" />
 @endsection

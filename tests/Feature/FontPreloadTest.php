@@ -49,14 +49,14 @@ class FontPreloadTest extends TestCase
         }
     }
 
-    /** The heading face is the one whose absence shows up as a swap. */
+    /** The one face. Its absence shows up as a swap on every page. */
     public function test_the_heading_font_is_preloaded(): void
     {
         $hrefs = $this->preloadedFontHrefs('http://localhost/en/insurance/auto');
 
         $this->assertNotEmpty(
-            array_filter($hrefs, fn (string $href) => str_contains($href, 'montserrat')),
-            'Montserrat must be preloaded or headings swap in late'
+            array_filter($hrefs, fn (string $href) => str_contains($href, 'manrope')),
+            'Manrope must be preloaded or the whole page swaps in late'
         );
     }
 }

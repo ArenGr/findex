@@ -49,20 +49,6 @@ export default defineConfig({
             input: ["resources/css/app.css", "resources/js/app.js"],
             refresh: true,
             fonts: [
-                bunny("Montserrat", {
-                    weights: [400, 500, 600, 700],
-                    subsets: SUBSETS,
-                    preload: false,
-                    display: "swap",
-                    fallbacks: FALLBACKS,
-                }),
-                bunny("Allerta Stencil", {
-                    weights: [400],
-                    display: DISPLAY_PRELOADED,
-                    fallbacks: FALLBACKS,
-                    subsets: ["latin"],
-                    preload: true,
-                }),
                 bunny("Caveat", {
                     weights: [600],
                     subsets: ["latin", "cyrillic"],
@@ -70,18 +56,11 @@ export default defineConfig({
                     preload: true,
                     fallbacks: FALLBACKS,
                 }),
-                bunny("Plus Jakarta Sans", {
+                bunny("Manrope", {
                     weights: [400, 500, 600, 700, 800],
                     subsets: SUBSETS,
-                    preload: false,
-                    display: "swap",
-                    fallbacks: FALLBACKS,
-                }),
-                bunny("Manrope", {
-                    weights: [400, 500, 600, 700],
-                    subsets: SUBSETS,
-                    preload: false,
-                    display: "swap",
+                    display: DISPLAY_PRELOADED,
+                    preload: true,
                     fallbacks: FALLBACKS,
                 }),
             ],

@@ -11,9 +11,9 @@
             </span>
 
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-gray-900">{{ __('tourism.request.voice_fill_card_heading') }}</p>
-                <p class="text-xs text-gray-500">{{ __('tourism.request.voice_fill_hint') }}</p>
-                <p class="mt-1 text-xs text-gray-400 italic">{{ __('tourism.request.voice_fill_example') }}</p>
+                <p class="text-sm font-bold text-ink">{{ __('tourism.request.voice_fill_card_heading') }}</p>
+                <p class="text-xs text-muted">{{ __('tourism.request.voice_fill_hint') }}</p>
+                <p class="mt-1 text-xs text-subtle italic">{{ __('tourism.request.voice_fill_example') }}</p>
 
                 <div class="mt-4">
                     <template x-if="state === 'idle'">
@@ -28,10 +28,10 @@
 
                     <template x-if="state === 'recording'">
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                            <div class="flex items-center gap-2 text-xs text-muted">
                                 <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-error"></span>
                                 <span>{{ __('tourism.request.voice_fill_recording') }}</span>
-                                <span class="text-gray-400 tabular-nums" x-text="formattedTime"></span>
+                                <span class="text-subtle tabular-nums" x-text="formattedTime"></span>
                                 <span class="flex h-3 items-end gap-0.5" aria-hidden="true">
                                     <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 100)}%`"></span>
                                     <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 75)}%`"></span>
@@ -39,7 +39,7 @@
                                 </span>
                             </div>
                             <div class="flex gap-2">
-                                <button type="button" @click="cancel()" class="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-500 hover:bg-white">
+                                <button type="button" @click="cancel()" class="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted hover:bg-white">
                                     {{ __('tourism.request.voice_fill_cancel') }}
                                 </button>
                                 <button type="button" @click="stop()" class="rounded-full bg-travel-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-travel-700">
@@ -50,7 +50,7 @@
                     </template>
 
                     <template x-if="state === 'processing'">
-                        <div class="flex items-center gap-2 text-xs text-gray-700">
+                        <div class="flex items-center gap-2 text-xs text-muted">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 shrink-0 animate-spin text-travel-600">
                                 <circle cx="12" cy="12" r="9" class="opacity-25" stroke="currentColor" stroke-width="3" fill="none" />
                                 <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" />
@@ -73,7 +73,7 @@
                             <x-travel-icon name="check" class="h-4 w-4" />
                             {{ __('tourism.request.voice_fill_applied') }}
                         </p>
-                        <button type="button" @click="clearVoiceFields()" class="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-500 hover:bg-white">
+                        <button type="button" @click="clearVoiceFields()" class="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted hover:bg-white">
                             {{ __('tourism.request.voice_fill_clear') }}
                         </button>
                     </div>

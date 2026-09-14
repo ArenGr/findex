@@ -51,7 +51,7 @@
                             x-model="budgetMin"
                             class="{{ $field }} pr-14 @error('budget_min_amd') border-error @enderror"
                         >
-                        <span class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-medium text-gray-400">{{ __('tourism.request.amd') }}</span>
+                        <span class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-medium text-subtle">{{ __('tourism.request.amd') }}</span>
                     </div>
                     @error('budget_min_amd')
                         <p class="text-xs text-error">{{ $message }}</p>
@@ -70,7 +70,7 @@
                             x-model="budgetMax"
                             class="{{ $field }} pr-14 @error('budget_max_amd') border-error @enderror"
                         >
-                        <span class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-medium text-gray-400">{{ __('tourism.request.amd') }}</span>
+                        <span class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-medium text-subtle">{{ __('tourism.request.amd') }}</span>
                     </div>
                     @error('budget_max_amd')
                         <p class="text-xs text-error">{{ $message }}</p>

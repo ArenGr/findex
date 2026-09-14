@@ -2,26 +2,20 @@
 
 @section('title', __('tourism.request.heading') . ' — Findex')
 
-@push('head')
-    @foreach (App\Support\FontPreloads::urls('plus-jakarta-sans', app()->getLocale()) as $href)
-        <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ $href }}">
-    @endforeach
-@endpush
-
 @php
     use App\Models\QuoteRequest;
 
     // The page's shared shapes, stated once.
-    $field = 'w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-800 transition-colors placeholder:text-gray-400 focus:border-travel-600 focus:ring-1 focus:ring-travel-600 focus:outline-none';
+    $field = 'w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-subtle focus:border-travel-600 focus:ring-1 focus:ring-travel-600 focus:outline-none';
     $fieldIcon = $field.' pl-10';
-    $label = 'block text-xs font-semibold text-gray-600';
-    $card = 'rounded-2xl border border-gray-200 bg-white p-6 sm:p-7';
-    $cardHeading = 'text-lg font-bold text-gray-900';
-    $stepper = 'flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition-colors hover:border-travel-600 hover:text-travel-700 disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600';
+    $label = 'block text-xs font-semibold text-muted';
+    $card = 'rounded-2xl border border-border bg-white p-6 sm:p-7';
+    $cardHeading = 'text-lg font-bold text-ink';
+    $stepper = 'flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-travel-600 hover:text-travel-700 disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted';
 
     // The selection pill, in its two states.
     $pill = 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
-    $pillOff = 'border-gray-200 bg-white font-medium text-gray-700 hover:border-travel-200 hover:bg-gray-50/70';
+    $pillOff = 'border-border bg-white font-medium text-muted hover:border-travel-200 hover:bg-surface-alt/70';
     $pillOn = 'border-travel-600 bg-travel-50 font-semibold text-travel-800';
 
     // Which wizard step a failed submission should reopen: the earliest step holding a rejected field.
@@ -40,12 +34,12 @@
     }
 
     $navPrimary = 'inline-flex items-center gap-2 rounded-lg bg-travel-600 px-7 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-travel-700 focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
-    $navGhost = 'inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
+    $navGhost = 'inline-flex items-center gap-2 rounded-lg border border-border-muted px-5 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
 @endphp
 
 @section('content')
     <div
-        class="bg-white font-jakarta text-slate-800 accent-travel-600"
+        class="bg-white text-ink accent-primary"
         x-data="travelRequestForm(@js([
             'countries' => $countries,
             'initialStep' => $initialStep,
@@ -98,7 +92,7 @@
             @endif
 
             @if (session('status') === 'email-verification-required')
-                <div class="mb-6 rounded-lg border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-gray-800">
+                <div class="mb-6 rounded-lg border border-accent-yellow/40 bg-accent-yellow/10 px-4 py-3 text-sm text-ink">
                     {{ __('auth.verify_email.action_blocked') }}
                 </div>
             @endif
@@ -112,9 +106,9 @@
                 </div>
 
                 {{-- The card shell. --}}
-                <div class="relative z-10 overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-18px_rgba(15,23,42,0.22)] ring-1 ring-gray-200/80">
+                <div class="relative z-10 overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-18px_rgba(15,23,42,0.22)] ring-1 ring-border/80">
                     {{-- White like the rest of the body, delimited by its rule rather than by a tint. --}}
-                    <div class="border-b border-gray-100 px-6 py-5 sm:px-12">
+                    <div class="border-b border-border px-6 py-5 sm:px-12">
                         @include('tourism.request._stepper')
                     </div>
 
@@ -161,7 +155,7 @@
                                 {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
                                     <h2 x-ref="heading2" tabindex="-1" class="text-2xl font-bold text-travel-ink outline-none">{{ __('tourism.request.step2_heading') }}</h2>
-                                    <p class="text-sm text-gray-500">{{ __('tourism.request.step2_sub') }}</p>
+                                    <p class="text-sm text-muted">{{ __('tourism.request.step2_sub') }}</p>
                                 </div>
 
                                 {{-- Two columns, not three stacked cards. --}}
@@ -196,7 +190,7 @@
                                 {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
                                     <h2 x-ref="heading3" tabindex="-1" class="text-2xl font-bold text-travel-ink outline-none">{{ __('tourism.request.step3_heading') }}</h2>
-                                    <p class="text-sm text-gray-500">{{ __('tourism.request.step3_sub') }}</p>
+                                    <p class="text-sm text-muted">{{ __('tourism.request.step3_sub') }}</p>
                                 </div>
 
                                 <p
@@ -210,13 +204,13 @@
 
                                 <section class="{{ $card }} lg:hidden">
                                     <div class="mb-4 flex items-center justify-between gap-3">
-                                        <h3 class="text-base font-bold text-gray-900">{{ __('tourism.request.review_heading') }}</h3>
+                                        <h3 class="text-base font-bold text-ink">{{ __('tourism.request.review_heading') }}</h3>
                                         <button type="button" @click="goToStep(1)" class="text-xs font-bold text-travel-600 hover:underline">{{ __('tourism.request.summary_edit') }}</button>
                                     </div>
 
-                                    <div x-show="hasItinerary" x-cloak class="mb-4 border-b border-gray-100 pb-4">
-                                        <p class="text-base font-bold text-gray-900" x-text="itineraryRoute"></p>
-                                        <p class="mt-1 text-xs text-gray-500" x-text="itineraryMeta"></p>
+                                    <div x-show="hasItinerary" x-cloak class="mb-4 border-b border-border pb-4">
+                                        <p class="text-base font-bold text-ink" x-text="itineraryRoute"></p>
+                                        <p class="mt-1 text-xs text-muted" x-text="itineraryMeta"></p>
                                     </div>
 
                                     <dl class="flex flex-col gap-2.5">
@@ -227,12 +221,12 @@
                                             ['label' => __('tourism.request.summary_budget'), 'value' => 'budgetSummary'],
                                         ] as $row)
                                             <div class="flex justify-between gap-3 text-xs">
-                                                <dt class="shrink-0 text-gray-500">{{ $row['label'] }}</dt>
-                                                <dd class="text-right font-semibold text-gray-900" x-text="{{ $row['value'] }}"></dd>
+                                                <dt class="shrink-0 text-muted">{{ $row['label'] }}</dt>
+                                                <dd class="text-right font-semibold text-ink" x-text="{{ $row['value'] }}"></dd>
                                             </div>
                                         @endforeach
-                                        <div x-show="priorities.length" x-cloak class="flex justify-between gap-3 border-t border-gray-100 pt-2.5 text-xs">
-                                            <dt class="shrink-0 text-gray-500">{{ __('tourism.request.priorities_label') }}</dt>
+                                        <div x-show="priorities.length" x-cloak class="flex justify-between gap-3 border-t border-border pt-2.5 text-xs">
+                                            <dt class="shrink-0 text-muted">{{ __('tourism.request.priorities_label') }}</dt>
                                             <dd class="flex flex-wrap justify-end gap-1.5">
                                                 <template x-for="value in priorities" :key="value">
                                                     <span class="rounded-full border border-travel-200 bg-travel-50 px-2.5 py-1 text-[11px] font-semibold text-travel-700" x-text="@js($priorityOptions)[value]"></span>
@@ -264,22 +258,22 @@
                                                 @error('guest_email')
                                                     <p class="text-xs text-error">{{ $message }}</p>
                                                 @enderror
-                                                <p class="text-xs text-gray-500">{{ __('tourism.request.your_email_hint') }}</p>
+                                                <p class="text-xs text-muted">{{ __('tourism.request.your_email_hint') }}</p>
                                             </div>
                                         </div>
                                     @endguest
 
                                     @auth
-                                        <p class="text-xs text-gray-500">
+                                        <p class="text-xs text-muted">
                                             {{ __('tourism.request.your_email_hint') }}
-                                            <span class="font-semibold text-gray-900">{{ auth()->user()->email }}</span>
+                                            <span class="font-semibold text-ink">{{ auth()->user()->email }}</span>
                                         </p>
                                     @endauth
                                 </section>
 
                                 <section class="{{ $card }}">
-                                    <label class="flex cursor-pointer items-start gap-2.5 text-sm text-gray-700">
-                                        <input type="checkbox" name="consent" value="1" x-model="consented" class="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-travel-600 focus:ring-travel-600">
+                                    <label class="flex cursor-pointer items-start gap-2.5 text-sm text-muted">
+                                        <input type="checkbox" name="consent" value="1" x-model="consented" class="mt-0.5 h-4 w-4 shrink-0 rounded border-border-muted text-travel-600 focus:ring-travel-600">
                                         <span>{{ __('tourism.request.consent') }}</span>
                                     </label>
                                     @error('consent')
@@ -297,7 +291,7 @@
                                         </button>
                                     </div>
 
-                                    <p class="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-500">
+                                    <p class="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-muted">
                                         <x-travel-icon name="lock" class="h-3.5 w-3.5 shrink-0" />
                                         {{ __('tourism.request.safe_secure') }}
                                     </p>

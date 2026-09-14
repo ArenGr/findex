@@ -1,39 +1,25 @@
 @php
     $feature = fn(string $key) => \App\Support\Features::enabled($key);
 
+    // A slide is a photograph and a link. It does not get a palette of its
+    // own - badge, button and dot are the same on every slide.
     $slides = array_values(array_filter([
         [
-            'badge' => 'bg-slide-green-pastel text-ink',
-            'button' => 'bg-slide-green text-white hover:bg-primary-dark',
-            'dot' => 'bg-slide-green',
-            'blob' => 'bg-slide-green/20',
             'n' => 1,
             'photo' => 'slide-1.jpg',
             'href' => $feature('mortgages') ? route('banks.show', 'mortgages') : null,
         ],
         [
-            'badge' => 'bg-slide-blue text-ink',
-            'button' => 'bg-slide-blue text-ink hover:opacity-90',
-            'dot' => 'bg-slide-blue',
-            'blob' => 'bg-slide-blue/40',
             'n' => 2,
             'photo' => 'slide-2.jpg',
             'href' => $feature('rates') ? route('rates.index') : null,
         ],
         [
-            'badge' => 'bg-slide-pink text-ink',
-            'button' => 'bg-slide-pink text-ink hover:opacity-90',
-            'dot' => 'bg-slide-pink',
-            'blob' => 'bg-slide-pink/40',
             'n' => 3,
             'photo' => 'slide-4.jpg',
             'href' => $feature('insurance') ? route('insurance.auto.request') : null,
         ],
         [
-            'badge' => 'bg-slide-purple text-ink',
-            'button' => 'bg-slide-purple text-ink hover:opacity-90',
-            'dot' => 'bg-slide-purple',
-            'blob' => 'bg-slide-purple/40',
             'n' => 4,
             'photo' => 'slide-5.jpg',
             'href' => $feature('travel') ? route('tourism.request') : null,
@@ -68,9 +54,9 @@
             >
                 {{-- Text column --}}
                 <div>
-                    <span class="relative inline-flex rounded-full px-4 py-2 text-sm font-medium shadow-sm {{ $slide['badge'] }}">
+                    <span class="relative inline-flex rounded-full px-4 py-2 text-sm font-medium shadow-sm bg-surface-alt text-ink">
                         {{ __("hero.slides.$n.badge") }}
-                        <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 {{ $slide['badge'] }}"></span>
+                        <span class="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 bg-surface-alt text-ink"></span>
                     </span>
 
                     <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink lg:text-4xl">
@@ -82,7 +68,7 @@
                     </p>
 
                     <div class="mt-8 flex flex-wrap items-center gap-4">
-                        <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md {{ $slide['button'] }}">
+                        <a href="{{ $slide['href'] }}" class="px-6 py-3 text-sm font-medium shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md bg-primary text-white hover:bg-primary-dark">
                             {{ __("hero.slides.$n.cta") }}
                         </a>
                         @feature('compare')
@@ -95,7 +81,6 @@
 
                 {{-- Photo column --}}
                 <div class="relative">
-                    <div class="absolute inset-x-6 top-6 -right-3 -bottom-6 rounded-3xl sm:-right-6 {{ $slide['blob'] }}"></div>
 
                     <div class="overflow-hidden rounded-3xl shadow-xl">
                         <img
@@ -117,8 +102,8 @@
                 <button
                     type="button"
                     @click="active = {{ $i }}"
-                    :class="{ '{{ $slide['dot'] }} w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
-                    class="h-2 rounded-full transition-all {{ $i === 0 ? $slide['dot'].' w-6' : 'bg-border-muted w-2' }}"
+                    :class="{ 'bg-primary w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
+                    class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-primary w-6' : 'bg-border-muted w-2' }}"
                     aria-label="{{ __('hero.go_to_slide', ['n' => $i + 1]) }}"
                 ></button>
             @endforeach
