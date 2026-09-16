@@ -115,94 +115,21 @@
 @endphp
 
 @section('content')
-    {{-- Hero geometry lives in x-page-hero, shared by every main page. --}}
-    <x-page-hero :title="__('rates.all_heading')" :subtitle="__('rates.all_subheading')">
-                <div class="flex flex-wrap items-center gap-3">
-                @if ($quoteMinimum !== null && $exchangeOn)
-                    @php $qualifies = $amount >= $quoteMinimum; @endphp
-                    <a
-                        @php
-                            $handoverAmount = $amount === null
-                                ? null
-                                : ($isBuying && $best
-                                    ? round($convert((float) $best->{$rateField}), 2)
-                                    : $amount);
-                        @endphp
-                        href="{{ route('exchange.request', array_filter([
-                            'currency' => $selectedCurrency?->code,
-                            'amount' => $handoverAmount,
-                            'city' => $selectedCity,
-                            'rate_field' => $rateField,
-                        ])) }}"
-                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
-                            'form' => [
-                                'currency_code' => (string) ($selectedCurrency?->code ?? ''),
-                                'amount' => $handoverAmount === null ? '' : (string) $handoverAmount,
-                                'rate_field' => $rateField,
-                                'preferred_city' => (string) ($selectedCity ?? ''),
-                            ],
-                            'context' => [
-                                'code' => (string) ($selectedCurrency?->code ?? ''),
-                                'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
-                                'total' => $best && $handoverAmount ? $amd($handoverAmount * (float) $best->{$rateField}) : null,
-                            ],
-                        ]) }} }))"
-                        class="btn btn-primary min-w-0"
-                    >
-                        <svg
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="h-5 w-5 shrink-0" aria-hidden="true"
-                        >
-                            <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
-                            <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
-                        </svg>
-                        <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
-                    </a>
+    {{-- Same hero as insurance and travel - see x-vertical-hero. The CTAs
+         that used to live here are the page's own controls, and now sit with
+         the rest of them below. --}}
+    <x-vertical-hero
+        icon="arrow-left-right"
+        :eyebrow="__('nav.rates')"
+        :title="__('rates.all_heading')"
+        :subtitle="__('rates.all_subheading')"
+        :signals="[
+            ['icon' => 'building-2', 'title' => trans_choice('compare_ui.organizations', count($organizations), ['count' => count($organizations)]), 'sub' => __('rates.signal_organizations_sub')],
+            ['icon' => 'clock', 'title' => __('rates.signal_fresh'), 'sub' => __('rates.signal_fresh_sub')],
+            ['icon' => 'scale', 'title' => __('rates.signal_independent'), 'sub' => __('rates.signal_independent_sub')],
+        ]"
+    />
 
-                    <x-info-popover :label="__('rates.cta_button')">
-                        <p class="font-semibold text-ink">
-                            @if ($qualifies)
-                                {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
-                            @else
-                                {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
-                            @endif
-                        </p>
-                        <p class="mt-2">{{ __('rates.cta_body') }}</p>
-                        <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
-                    </x-info-popover>
-                @endif
-
-                @if ($alertsOn)
-                <a
-                    href="{{ $alertHref }}"
-                    onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
-                    class="btn btn-secondary min-w-0"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
-                </a>
-
-                <x-info-popover :label="__('rates.alert_cta')">
-                    {{ __('rates.alert_hint') }}
-                </x-info-popover>
-                @endif
-                </div>
-
-        {{-- Currency composition in Findex greens. --}}
-        <x-slot:illustration>
-            <div class="relative" aria-hidden="true">
-                <div class="absolute right-4 bottom-2 h-20 w-80 rounded-[50%] bg-primary/5"></div>
-                <div class="absolute right-14 bottom-12 h-20 w-60 rounded-[50%] bg-primary/5 shadow-sm"></div>
-                <div class="absolute top-12 right-[250px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/70 text-3xl font-semibold text-white shadow-lg">$</div>
-                <div class="absolute top-5 right-[170px] flex h-16 w-16 items-center justify-center rounded-full bg-primary text-3xl font-semibold text-white shadow-lg">€</div>
-                <div class="absolute top-0 right-[90px] flex h-16 w-16 items-center justify-center rounded-full bg-primary/60 text-3xl font-semibold text-white shadow-lg">₽</div>
-                <div class="absolute top-14 right-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary-dark text-3xl font-semibold text-white shadow-lg">֏</div>
-            </div>
-        </x-slot:illustration>
-    </x-page-hero>
 
     <section id="rates-panel" class="site-container pt-9 pb-12">
         @php
@@ -219,7 +146,12 @@
             $othersOpen = $otherCurrencies->contains(fn ($currency) => $selectedCurrency?->id === $currency->id);
         @endphp
 
-        <div x-data="{ showAll: @js($othersOpen) }">
+        {{-- One collect panel, like the form on insurance and travel: what to
+             convert, then how to narrow it. Everything the visitor answers
+             before the results is inside this box. --}}
+        <div class="rounded-3xl border border-border bg-surface p-5 sm:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+        <div x-data="{ showAll: @js($othersOpen) }" class="min-w-0">
             <span class="{{ $labelClass }}">{{ __('rates.currency_label') }}</span>
             {{-- On a phone the row scrolls sideways rather than wrapping. --}}
             <div class="mt-2 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
@@ -260,8 +192,84 @@
 
         </div>
 
+            <div class="flex flex-wrap items-center gap-3">
+    
+                    @if ($quoteMinimum !== null && $exchangeOn)
+                        @php $qualifies = $amount >= $quoteMinimum; @endphp
+                        <a
+                            @php
+                                $handoverAmount = $amount === null
+                                    ? null
+                                    : ($isBuying && $best
+                                        ? round($convert((float) $best->{$rateField}), 2)
+                                        : $amount);
+                            @endphp
+                            href="{{ route('exchange.request', array_filter([
+                                'currency' => $selectedCurrency?->code,
+                                'amount' => $handoverAmount,
+                                'city' => $selectedCity,
+                                'rate_field' => $rateField,
+                            ])) }}"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
+                                'form' => [
+                                    'currency_code' => (string) ($selectedCurrency?->code ?? ''),
+                                    'amount' => $handoverAmount === null ? '' : (string) $handoverAmount,
+                                    'rate_field' => $rateField,
+                                    'preferred_city' => (string) ($selectedCity ?? ''),
+                                ],
+                                'context' => [
+                                    'code' => (string) ($selectedCurrency?->code ?? ''),
+                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+                                    'total' => $best && $handoverAmount ? $amd($handoverAmount * (float) $best->{$rateField}) : null,
+                                ],
+                            ]) }} }))"
+                            class="btn btn-primary min-w-0"
+                        >
+                            <svg
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                class="h-5 w-5 shrink-0" aria-hidden="true"
+                            >
+                                <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+                                <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                            </svg>
+                            <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
+                        </a>
+    
+                        <x-info-popover :label="__('rates.cta_button')">
+                            <p class="font-semibold text-ink">
+                                @if ($qualifies)
+                                    {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                                @else
+                                    {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                                @endif
+                            </p>
+                            <p class="mt-2">{{ __('rates.cta_body') }}</p>
+                            <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
+                        </x-info-popover>
+                    @endif
+    
+                    @if ($alertsOn)
+                    <a
+                        href="{{ $alertHref }}"
+                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
+                        class="btn btn-secondary min-w-0"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
+                    </a>
+    
+                    <x-info-popover :label="__('rates.alert_cta')">
+                        {{ __('rates.alert_hint') }}
+                    </x-info-popover>
+                    @endif
+                </div>
+        </div>
+
         @if ($centralBankRate)
-            <div class="mt-5 text-sm break-words text-muted">
+            <div class="mt-4 text-sm break-words text-muted">
                 {{ __('rates.central_bank_reference', [
                     'rate' => number_format((float) $centralBankRate['rate'], 2),
                     'code' => $selectedCurrency?->code,
@@ -363,7 +371,7 @@
             ];
         @endphp
 
-        <section class="{{ $cardClass }} mt-6 p-3">
+        <div class="mt-5 border-t border-border pt-5">
             <div class="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-stretch">
                 @if ($viewMode !== 'map')
                     <form method="GET" action="{{ route('rates.index') }}" class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-placeholder px-4 xl:min-w-[15rem]">
@@ -504,7 +512,8 @@
             @if ($search !== '')
                 <a href="{{ $link(['q' => null]) }}" class="mt-2 inline-block px-1 text-xs text-muted underline hover:text-ink">{{ __('rates.search_clear') }}</a>
             @endif
-        </section>
+        </div>
+        </div>
 
         @if ($rowCount > 0)
                 <div class="mt-8 grid gap-4 md:grid-cols-3">
@@ -592,6 +601,32 @@
                     @endif
                 </p>
                 <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    {{-- Sorting used to live in the table's column headings.
+                         The table is gone, so it sits above the list where the
+                         other compare pages put it. --}}
+                    @if ($viewMode !== 'map')
+                        <label for="rates-sort" class="text-xs text-muted">{{ __('compare_ui.sort_by') }}</label>
+                        <select
+                            id="rates-sort"
+                            {{-- A synthetic link click, so the panel's fetch-and-morph handler takes it
+                                 like every other control here instead of reloading the page. --}}
+                            onchange="const a = document.createElement('a'); a.href = this.value; this.parentElement.appendChild(a); a.click(); a.remove();"
+                            class="field h-11 min-h-0 w-auto min-w-0 py-2 pr-8 pl-3 text-sm font-medium"
+                        >
+                            @foreach (['buy', 'sell', 'spread', 'updated'] as $column)
+                                @foreach (['desc', 'asc'] as $dir)
+                                    <option
+                                        value="{{ $link(['sort' => $column, 'dir' => $dir]) }}"
+                                        @selected($activeSortColumn === $column && $direction === $dir)
+                                    >{{ __('rates.sort_'.$dir, ['column' => __('rates.'.$column.'_column')]) }}</option>
+                                @endforeach
+                            @endforeach
+                            @if ($hasLocation)
+                                <option value="{{ $link(['sort' => 'distance', 'dir' => 'asc']) }}" @selected($activeSortColumn === 'distance')>{{ __('rates.sort_distance') }}</option>
+                            @endif
+                        </select>
+                    @endif
+
                     {{-- Not rendered at all rather than hidden with a class:
                          a list/map switch with one option is not a switch. --}}
                     @if ($mapOn)
@@ -640,232 +675,23 @@
                     </div>
                 @endif
             @else
-            <div class="mt-4 space-y-3 sm:hidden">
+            {{-- One card per rate at every width. The table and the separate
+                 phone cards it replaced were two markups for the same rows;
+                 sorting moved to the control above the list. --}}
+            <div data-rates-list class="mt-5 flex flex-col gap-3">
                 @foreach ($pageRows as $rate)
-                    @php
-                        $total = $calculating ? $convert((float) $rate->{$rateField}) : null;
-                        $winsMobile = $calculating ? $rate->rank === 1 : $isBestRate((float) $rate->buy_rate, $bestBuy);
-                    @endphp
-
-                    <article @class([
-                        'relative overflow-hidden rounded-xl p-4',
-                        'border-2 border-primary/40 bg-accent-yellow/10' => $winsMobile,
-                        'border border-placeholder bg-white' => ! $winsMobile,
-                    ])>
-                        @if ($winsMobile)
-                            <span class="btn btn-primary absolute top-0 right-0 rounded-bl-lg text-[10px] font-bold tracking-wider uppercase">
-                                {{ __('rates.best_badge') }}
-                            </span>
-                        @endif
-
-                        <div class="flex items-center gap-3">
-                            <a href="{{ $rate->organization_url }}" class="shrink-0">
-                                <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
-                            </a>
-
-                            <div class="min-w-0 flex-1">
-                                <a href="{{ $rate->organization_url }}" class="-my-2 block py-2 pr-16 font-semibold break-words text-ink hover:text-primary">
-                                    {{ $rate->organization_name }}
-                                </a>
-                                <span class="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
-                                    @if ($showMarket)
-                                        <span class="break-words">{{ __('rates.market_badge.' . $rate->organization_type) }}</span>
-                                    @endif
-                                    @if ($hasLocation && isset($rate->distance_km))
-                                        @if ($showMarket)<span aria-hidden="true">&middot;</span>@endif
-                                        <span>{{ __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) }}</span>
-                                    @endif
-                                </span>
-                                @if ($rate->organization_reviews_count > 0)
-                                    <span class="mt-1 flex items-center gap-1">
-                                        <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
-                                        <span class="text-xs text-muted">({{ $rate->organization_reviews_count }})</span>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="my-3 grid grid-cols-2 gap-4 border-y border-placeholder py-3">
-                            <div class="min-w-0">
-                                <span class="block text-xs font-semibold tracking-wider text-muted uppercase">{{ __('rates.buy_column') }}</span>
-                                <span class="mt-0.5 block text-xl font-bold whitespace-nowrap text-primary tabular-nums">{{ number_format($rate->buy_rate, 2) }}</span>
-                            </div>
-                            <div class="min-w-0">
-                                <span class="block text-xs font-semibold tracking-wider text-muted uppercase">{{ __('rates.sell_column') }}</span>
-                                <span class="mt-0.5 block text-xl font-bold whitespace-nowrap tabular-nums text-accent-red">{{ number_format($rate->sell_rate, 2) }}</span>
-                            </div>
-                        </div>
-
-                        @if ($calculating)
-                            <p class="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-placeholder/25 px-3 py-2">
-                                <span class="text-xs font-semibold tracking-wider text-muted uppercase">{{ $totalColumn }}</span>
-                                <span class="font-bold whitespace-nowrap text-ink tabular-nums">
-                                    {{ $amd($total) }} <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
-                                </span>
-                            </p>
-                        @endif
-
-                        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                            @if ($rate->scraped_at)
-                                <x-rates.freshness
-                                    :scraped-at="$rate->scraped_at"
-                                    :stale="$isStale($rate->scraped_at)"
-                                    :changed-at="$rate->changed_at ?? null"
-                                />
-                            @else
-                                <span></span>
-                            @endif
-
-                            @if ($rate->branch ?? null)
-                                <a
-                                    href="{{ $rate->branch['url'] }}"
-                                    target="_blank" rel="noopener noreferrer"
-                                    class="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-placeholder px-4 text-xs font-medium break-words text-ink transition hover:border-primary hover:text-primary"
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true">
-                                        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-                                        <circle cx="12" cy="10" r="3" />
-                                    </svg>
-                                    {{ __('rates.directions') }}
-                                </a>
-                            @endif
-                        </div>
-                    </article>
+                    <x-rates.result-card
+                        :rate="$rate"
+                        :best="$calculating ? $rate->rank === 1 : $isBestRate((float) $rate->buy_rate, $bestBuy)"
+                        :badge="__('rates.best_badge')"
+                        :best-count="$calculating ? $bestTotalCount : $bestBuyCount"
+                        :total="$calculating ? $amd($convert((float) $rate->{$rateField})) : null"
+                        :total-label="$totalColumn"
+                        :stale="$isStale($rate->scraped_at)"
+                        :show-market="$showMarket"
+                        :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
+                    />
                 @endforeach
-            </div>
-            <div class="relative mt-4 hidden overflow-x-auto rounded-xl border border-placeholder sm:block">
-                <table class="w-full border-collapse text-sm">
-                    <thead>
-                        <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
-                            <th class="px-6 py-3 text-left">{{ __('rates.provider_column') }}</th>
-                            <th class="px-6 py-3 text-right" title="{{ __('rates.buy_hint') }}">
-                                <x-rates.sort-heading column="buy" :href="$sortHref('buy')" :active="$activeSortColumn === 'buy'" :direction="$direction">
-                                    {{ __('rates.buy_column') }}
-                                </x-rates.sort-heading>
-                            </th>
-                            <th class="px-6 py-3 text-right" title="{{ __('rates.sell_hint') }}">
-                                <x-rates.sort-heading column="sell" :href="$sortHref('sell')" :active="$activeSortColumn === 'sell'" :direction="$direction">
-                                    {{ __('rates.sell_column') }}
-                                </x-rates.sort-heading>
-                            </th>
-                            <th class="hidden px-4 py-3 text-right lg:table-cell" title="{{ __('rates.spread_hint') }}">
-                                <x-rates.sort-heading column="spread" :href="$sortHref('spread')" :active="$activeSortColumn === 'spread'" :direction="$direction">
-                                    {{ __('rates.spread_column') }}
-                                </x-rates.sort-heading>
-                            </th>
-
-                            @if ($calculating)
-                                <th class="bg-placeholder/25 px-6 py-3 text-right">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        {{ $totalColumn }}
-                                        <x-info-popover :label="$totalColumn">
-                                            {{ __($isBuying ? 'rates.rate_column_hint_buy' : 'rates.rate_column_hint_sell', ['code' => $selectedCurrency?->code]) }}
-                                        </x-info-popover>
-                                    </span>
-                                </th>
-                            @endif
-                            <th class="hidden px-4 py-3 text-right md:table-cell">
-                                <x-rates.sort-heading column="updated" :href="$sortHref('updated')" :active="$activeSortColumn === 'updated'" :direction="$direction">
-                                    {{ __('rates.updated_column') }}
-                                </x-rates.sort-heading>
-                            </th>
-                            <th class="px-4 py-3"><span class="sr-only">{{ __('rates.directions') }}</span></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($pageRows as $rate)
-                            @php $total = $calculating ? $convert((float) $rate->{$rateField}) : null; @endphp
-                            <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ $rate->organization_url }}" class="shrink-0">
-                                            <x-rates.org-mark :logo="$rate->organization_logo" :name="$rate->organization_name" />
-                                        </a>
-                                        <div class="min-w-0">
-                                            <a href="{{ $rate->organization_url }}" class="block truncate font-medium text-ink hover:text-primary">{{ $rate->organization_name }}</a>
-                                            <x-rates.org-meta
-                                                :market="$showMarket ? __('rates.market_badge.' . $rate->organization_type) : null"
-                                                :scraped-at="$rate->scraped_at"
-                                                :stale="$isStale($rate->scraped_at)"
-                                                :changed-at="$rate->changed_at ?? null"
-                                                :distance="$hasLocation && isset($rate->distance_km) ? __('rates.distance_km', ['km' => number_format($rate->distance_km, 1)]) : null"
-                                                timestamp-class="md:hidden"
-                                            />
-                                            @if ($rate->organization_reviews_count > 0)
-                                                <span class="mt-1 flex items-center gap-1">
-                                                    <x-star-rating :rating="$rate->organization_reviews_avg_rating" size="h-3 w-3" />
-                                                    <span class="text-xs text-muted">({{ $rate->organization_reviews_count }})</span>
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                @php
-                                    $winsBuy = ! $calculating && $isBestRate((float) $rate->buy_rate, $bestBuy);
-                                    $winsSell = ! $calculating && $isBestRate((float) $rate->sell_rate, $bestSell);
-                                    $winsTotal = $calculating && $rate->rank === 1;
-                                @endphp
-                                <td @class(['px-6 py-4 text-right text-base text-primary tabular-nums', 'font-semibold' => $winsBuy, 'font-medium' => ! $winsBuy])>
-                                    <span class="inline-flex items-center justify-end gap-2">
-                                        @if ($winsBuy)
-                                            <x-rates.best-chip :count="$bestBuyCount" />
-                                        @endif
-                                        {{ number_format($rate->buy_rate, 2) }}
-                                    </span>
-                                </td>
-                                <td @class(['px-6 py-4 text-right text-base tabular-nums text-accent-red', 'font-semibold' => $winsSell, 'font-medium' => ! $winsSell])>
-                                    <span class="inline-flex items-center justify-end gap-2">
-                                        @if ($winsSell)
-                                            <x-rates.best-chip :count="$bestSellCount" />
-                                        @endif
-                                        {{ number_format($rate->sell_rate, 2) }}
-                                    </span>
-                                </td>
-
-                                <td class="hidden px-4 py-4 text-right text-muted tabular-nums lg:table-cell">
-                                    {{ number_format((float) $rate->sell_rate - (float) $rate->buy_rate, 2) }}
-                                </td>
-
-                                @if ($calculating)
-                                    <td @class(['bg-placeholder/25 px-6 py-4 text-right text-base whitespace-nowrap text-ink tabular-nums', 'font-bold' => $winsTotal, 'font-medium' => ! $winsTotal])>
-                                        <span class="inline-flex items-center justify-end gap-2">
-                                            @if ($winsTotal)
-                                                <x-rates.best-chip :count="$bestTotalCount" />
-                                            @endif
-                                            <span>
-                                                {{ $amd($total) }}
-                                                <span class="text-xs font-normal text-muted">{{ $targetCode }}</span>
-                                            </span>
-                                        </span>
-                                    </td>
-                                @endif
-
-                                <td class="hidden px-4 py-4 text-right text-xs whitespace-nowrap md:table-cell">
-                                    @if ($rate->scraped_at)
-                                        <x-rates.freshness :scraped-at="$rate->scraped_at" :stale="$isStale($rate->scraped_at)" :changed-at="$rate->changed_at ?? null" />
-                                    @else
-                                        <span class="text-muted" aria-hidden="true">&mdash;</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-4">
-                                    @if ($rate->branch ?? null)
-                                        <a
-                                            href="{{ $rate->branch['url'] }}"
-                                            target="_blank" rel="noopener noreferrer"
-                                            title="{{ $rate->branch['address'] ?: $rate->branch['name'] }}"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition hover:bg-primary hover:text-white"
-                                        >
-                                            <span class="sr-only">{{ __('rates.directions') }}</span>
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
-                                                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-                                                <circle cx="12" cy="10" r="3" />
-                                            </svg>
-                                        </a>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
             </div>
             @endif
             @if ($viewMode !== 'map')
@@ -901,6 +727,19 @@
         </p>
 
     </section>
+
+    <x-how-it-works
+        :heading="__('rates.works_heading')"
+        :sub="__('rates.works_sub')"
+        :steps="[
+            ['icon' => 'arrow-left-right', 'title' => __('rates.works_1_title'), 'body' => __('rates.works_1_body')],
+            ['icon' => 'scale', 'title' => __('rates.works_2_title'), 'body' => __('rates.works_2_body')],
+            ['icon' => 'bell', 'title' => __('rates.works_3_title'), 'body' => __('rates.works_3_body')],
+            ['icon' => 'map-pin', 'title' => __('rates.works_4_title'), 'body' => __('rates.works_4_body')],
+        ]"
+    />
+
+    <x-partners-strip :partners="$partners" :heading="__('rates.partners_heading')" marquee />
     @if ($alertsOn)
         <x-rate-alert-modal
             :currencies="$currencies"

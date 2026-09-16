@@ -22,5 +22,7 @@ return [
 
     'travel' => [
         'label' => 'Travel',
+        'packages' => 'Travel packages',
+        'visa' => 'Visa support',
     ],
 ];

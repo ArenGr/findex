@@ -13,20 +13,20 @@
 ]))
 
 @section('content')
-    {{-- This page exists to be found. --}}
-    <section class="mx-auto max-w-4xl px-6 py-16 lg:px-10">
-        <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">
-            {{ __('rates.landing.heading', ['code' => $code]) }}
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm break-words text-muted">
-            {{ __('rates.landing.subheading', [
-                'code' => $code,
-                'count' => $topRates->count() >= 5 ? '14' : $topRates->count(),
-                'time' => $updatedAt ? $updatedAt->diffForHumans() : '—',
-            ]) }}
-        </p>
+    {{-- Same page header as rates, insurance and travel. --}}
+    <x-vertical-hero
+        icon="arrow-left-right"
+        :eyebrow="__('nav.rates')"
+        :title="__('rates.landing.heading', ['code' => $code])"
+        :subtitle="__('rates.landing.subheading', [
+            'code' => $code,
+            'count' => $topRates->count() >= 5 ? '14' : $topRates->count(),
+            'time' => $updatedAt ? $updatedAt->diffForHumans() : '—',
+        ])"
+    />
 
-        <div class="mt-8 grid gap-4 sm:grid-cols-3">
+    <section class="site-container py-12">
+        <div class="grid gap-4 sm:grid-cols-3">
             @foreach ([
                 ['label' => __('rates.landing.best_sell_heading', ['code' => $code]), 'rate' => $bestBuy?->buy_rate,
                  'org' => $bestBuy?->organization, 'note' => __('rates.landing.you_get', ['code' => $code]), 'tone' => 'text-primary'],
@@ -36,10 +36,10 @@
                  'org' => null, 'note' => __('rates.landing.you_get', ['code' => $code]), 'tone' => 'text-ink'],
             ] as $card)
                 @continue($card['rate'] === null)
-                <div class="min-w-0 rounded-xl border border-placeholder bg-white p-5">
+                <div class="min-w-0 rounded-2xl border border-border bg-surface p-5 sm:p-6">
                     <span class="text-xs font-semibold tracking-wider text-muted uppercase">{{ $card['label'] }}</span>
                     <p class="mt-2 flex items-baseline gap-2 whitespace-nowrap">
-                        <span class="text-3xl font-semibold tracking-tight tabular-nums {{ $card['tone'] }}">{{ number_format((float) $card['rate'], 2) }}</span>
+                        <span class="text-4xl font-semibold tracking-tight tabular-nums {{ $card['tone'] }}">{{ number_format((float) $card['rate'], 2) }}</span>
                         <span class="text-sm text-muted">{{ $amd }}</span>
                     </p>
                     <p class="mt-1 truncate text-sm text-muted">{{ $card['org']?->name ?? $card['note'] }}</p>
@@ -51,29 +51,29 @@
             {{ __('rates.landing.where', ['code' => $code]) }}
         </h2>
 
-        <div class="mt-4 overflow-x-auto rounded-xl border border-placeholder">
-            <table class="w-full border-collapse text-sm">
-                <thead>
-                    <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
-                        <th class="px-4 py-3 text-left sm:px-6">{{ __('rates.provider_column') }}</th>
-                        <th class="px-4 py-3 text-right sm:px-6">{{ __('rates.buy_column') }}</th>
-                        <th class="px-4 py-3 text-right sm:px-6">{{ __('rates.sell_column') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($topRates as $rate)
-                        <tr class="border-b border-placeholder last:border-b-0">
-                            <td class="px-4 py-4 sm:px-6">
-                                <a @if(\App\Support\Features::enabled('organizations')) href="{{ route('organizations.show', $rate->organization) }}" @endif class="flex min-h-11 items-center font-medium break-words text-ink hover:text-primary">
-                                    {{ $rate->organization->name }}
-                                </a>
-                            </td>
-                            <td class="px-4 py-4 text-right text-base font-medium text-ink tabular-nums sm:px-6">{{ number_format((float) $rate->buy_rate, 2) }}</td>
-                            <td class="px-4 py-4 text-right text-base font-medium tabular-nums text-accent-red sm:px-6">{{ number_format((float) $rate->sell_rate, 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        {{-- The same result card as /rates, so a currency reads the same wherever it is listed. --}}
+        <div class="mt-5 flex flex-col gap-3">
+            @foreach ($topRates as $i => $rate)
+                <x-rates.result-card
+                    :rate="(object) [
+                        'organization_url' => \App\Support\Features::enabled('organizations') ? route('organizations.show', $rate->organization) : null,
+                        'organization_logo' => $rate->organization->logo,
+                        'organization_name' => $rate->organization->name,
+                        'organization_type' => $rate->organization->type,
+                        'organization_reviews_count' => 0,
+                        'organization_reviews_avg_rating' => 0,
+                        'buy_rate' => $rate->buy_rate,
+                        'sell_rate' => $rate->sell_rate,
+                        'spread' => $rate->getSpread(),
+                        'scraped_at' => $rate->scraped_at?->toIso8601String(),
+                        'changed_at' => null,
+                        'branch' => null,
+                    ]"
+                    :best="$i === 0"
+                    :badge="__('rates.best_badge')"
+                    :stale="$rate->scraped_at && $rate->scraped_at->diffInHours(now()) >= 24"
+                />
+            @endforeach
         </div>
 
         <div class="mt-6 flex flex-wrap gap-4">
@@ -86,7 +86,7 @@
         </div>
 
         @if ($series !== [])
-            <div class="mt-10 rounded-2xl border border-placeholder bg-white p-5 sm:p-6">
+            <div class="mt-10 rounded-2xl border border-border bg-surface p-5 sm:p-6">
                 <x-rates.history-chart
                     :series="$series"
                     :lines="[
@@ -98,7 +98,7 @@
             </div>
         @endif
 
-        <p class="mt-8 border-t border-placeholder pt-5 text-xs leading-relaxed break-words text-muted">
+        <p class="mt-8 border-t border-border pt-5 text-xs leading-relaxed break-words text-muted">
             {{ __('rates.disclaimer') }}
         </p>
     </section>

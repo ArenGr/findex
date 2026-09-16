@@ -33,6 +33,8 @@ final class Features
 
     public const TRAVEL_VOICE_FILL = 'travel_voice_fill';
 
+    public const VISA = 'visa';
+
     public const EXCHANGE = 'exchange';
 
     public const ARTICLES = 'articles';
@@ -111,6 +113,7 @@ final class Features
             self::INSURANCE => $f('Verticals', 'Auto insurance', 'Insurance quote requests and the insurer directory.'),
             self::TRAVEL => $f('Verticals', 'Travel quotes', 'Travel quote requests, agency offers and everything under /tourism.'),
             self::TRAVEL_VOICE_FILL => $f('Verticals', 'Voice trip fill', 'Filling the travel form by voice. Each use makes two paid OpenAI calls.', true, self::TRAVEL),
+            self::VISA => $f('Verticals', 'Visa support', 'Visa support requests and the offers visa agencies send back, under /visa.'),
             self::EXCHANGE => $f('Verticals', 'Exchange quotes', '"Get a better rate" - asking organizations to beat a published rate.'),
             self::ARTICLES => $f('Verticals', 'Articles', 'Published articles and the writer-facing side of them.'),
             self::ORGANIZATIONS => $f('Verticals', 'Organization directory', 'The /organizations listing and each organization profile.'),

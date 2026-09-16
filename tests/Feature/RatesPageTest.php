@@ -555,14 +555,14 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD')
             ->assertOk()
             ->assertViewHas('viewMode', 'list')
-            ->assertSee('<table', false)
+            ->assertSee('data-rates-list', false)
             ->assertDontSee('data-rates-map', false);
 
         $this->get('/en/rates?currency=USD&view=map')
             ->assertOk()
             ->assertViewHas('viewMode', 'map')
             ->assertSee('data-rates-map', false)
-            ->assertDontSee('<table', false);
+            ->assertDontSee('data-rates-list', false);
 
         $this->get('/en/rates?currency=USD&view=nonsense')->assertOk()->assertViewHas('viewMode', 'list');
     }
@@ -1076,17 +1076,22 @@ class RatesPageTest extends TestCase
         $this->get('/en/rates?currency=USD&sort=buy&dir=DESC')->assertOk()->assertViewHas('direction', 'desc');
     }
 
-    public function test_the_default_ordering_marks_its_own_column(): void
+    /** Sorting moved out of the table headings into one control above the list. */
+    public function test_the_default_ordering_is_preselected_in_the_sort_control(): void
     {
         $this->seedMarket();
 
         // Selling USD ranks on the buy column; buying it ranks on sell.
-        $this->get('/en/rates?currency=USD&intent=sell')->assertOk()
-            ->assertSee('sort=sell', false)
-            ->assertSee('sorted highest first');
+        // Every option is always rendered, so check which one carries `selected`.
+        $this->assertMatchesRegularExpression(
+            '/selected\s*>Buy, highest first</',
+            $this->get('/en/rates?currency=USD&intent=sell')->assertOk()->getContent(),
+        );
 
-        $this->get('/en/rates?currency=USD&intent=buy')->assertOk()
-            ->assertSee('sorted lowest first');
+        $this->assertMatchesRegularExpression(
+            '/selected\s*>Sell, lowest first</',
+            $this->get('/en/rates?currency=USD&intent=buy')->assertOk()->getContent(),
+        );
     }
 
     // Finding one organization among fourteen was a job the page had no answer for.
@@ -1226,14 +1231,15 @@ class RatesPageTest extends TestCase
         }
     }
 
-    public function test_the_rate_pair_is_coloured_the_same_way_in_the_table(): void
+    /** Buy reads green and sell reads red, on the cards and in the summary. */
+    public function test_the_rate_pair_is_coloured_the_same_way_everywhere(): void
     {
         $this->seedMarket();
 
-        $this->get('/en/rates?currency=USD')
-            ->assertOk()
-            ->assertSee('text-primary tabular-nums', false)
-            ->assertSee('tabular-nums text-accent-red', false);
+        $html = $this->get('/en/rates?currency=USD')->assertOk()->getContent();
+
+        $this->assertStringContainsString('text-primary', $html);
+        $this->assertStringContainsString('text-accent-red', $html);
     }
 
     public function test_the_map_is_not_paged(): void

@@ -1,38 +1,19 @@
 @php
-    $showScript = app()->getLocale() !== 'hy';
-
-    // The four search controls sit on one row from lg.
-    $col = 'flex min-w-0 flex-col gap-1.5';
+    $col = 'flex min-w-0 flex-col gap-2';
 @endphp
 
-<section class="{{ $card }}">
-    <div class="flex flex-wrap items-start justify-between gap-6">
-        <div class="flex items-start gap-3">
-            <x-travel-section-icon name="flight_takeoff" done="tripComplete" />
-            <div>
-                <h2 class="{{ $cardHeading }}">{{ __('tourism.request.search_heading') }}</h2>
-                <p class="mt-1 text-sm text-muted">{{ __('tourism.request.search_sub') }}</p>
-            </div>
-        </div>
-
-        @if ($showScript)
-            <p class="hidden items-center gap-2 lg:flex" aria-hidden="true">
-                <span class="font-script text-lg font-bold text-travel-700">{{ __('tourism.request.search_script') }}</span>
-                {{-- Curls down towards the first field. --}}
-                <svg class="h-8 w-10 fill-none stroke-travel-600" viewBox="0 0 40 32" aria-hidden="true">
-                    <path d="M4 4c14-2 26 4 28 16" stroke-width="2" stroke-linecap="round" />
-                    <path d="M26 18l6 3 1-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </p>
-        @endif
+<section>
+    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h2 class="{{ $cardHeading }}">{{ __('tourism.request.search_heading') }}</h2>
+        <p class="text-sm text-muted">{{ __('tourism.request.search_sub') }}</p>
     </div>
 
-    <div class="mt-8 grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2 lg:grid-cols-[0.8fr_0.95fr_1.25fr_1.05fr_auto] lg:items-start">
+    <div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 md:grid-cols-2 lg:grid-cols-[0.8fr_1.1fr_1.2fr_1fr] lg:items-start">
         {{-- From --}}
         <div class="{{ $col }}">
             <label for="departure_location" class="{{ $label }}">{{ __('tourism.request.departure_location') }}</label>
             <div class="relative">
-                <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle">
+                <span class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-subtle">
                     <x-travel-icon name="flight_takeoff" class="h-[17px] w-[17px]" />
                 </span>
                 <input
@@ -57,7 +38,7 @@
             <label for="destination-search" class="{{ $label }}">{{ __('tourism.request.destination') }}</label>
 
             <div x-show="!destinationsFull" class="relative">
-                <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-subtle">
+                <span class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-subtle">
                     <x-travel-icon name="location_on" class="h-[17px] w-[17px]" />
                 </span>
                 <input
@@ -84,7 +65,7 @@
                                 <button
                                     type="button"
                                     @click="addDestination(country.code)"
-                                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted hover:bg-travel-50"
+                                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted hover:bg-surface-alt"
                                 >
                                     <span x-text="country.flag"></span>
                                     <span x-text="country.name"></span>
@@ -100,13 +81,13 @@
 
             <div x-show="destinations.length" x-cloak class="flex flex-wrap gap-1.5">
                 <template x-for="code in destinations" :key="code">
-                    <span class="inline-flex items-center gap-1 rounded-full border border-travel-200 bg-travel-50 px-2.5 py-1 text-xs font-semibold text-travel-800">
+                    <span class="inline-flex items-center gap-1 rounded-full border border-border bg-surface-alt px-2.5 py-1 text-xs font-semibold text-primary-dark">
                         <span x-text="countryFlag(code)"></span>
                         <span x-text="countryName(code)"></span>
                         <button
                             type="button"
                             @click="removeDestination(code)"
-                            class="rounded-full p-0.5 transition-colors hover:bg-travel-200 focus-visible:ring-2 focus-visible:ring-travel-600 focus-visible:outline-none"
+                            class="rounded-full p-0.5 transition-colors hover:bg-border focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                             :aria-label="@js(__('tourism.request.destination_remove', ['destination' => ':name'])).replace(':name', countryName(code))"
                         >
                             <x-travel-icon name="close" class="h-3.5 w-3.5" />
@@ -124,7 +105,7 @@
                 x-show="destinations.length && !destinationsFull"
                 x-cloak
                 @click="destinationPickerOpen = true; $nextTick(() => $refs.destinationSearch.focus())"
-                class="w-fit text-xs font-bold text-travel-600 hover:text-travel-700 hover:underline focus-visible:ring-2 focus-visible:ring-travel-600 focus-visible:outline-none"
+                class="w-fit text-xs font-bold text-primary hover:text-primary-dark hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
             >
                 {{ __('tourism.request.destination_add') }}
             </button>
@@ -135,7 +116,7 @@
                     name="open_to_suggestions"
                     value="1"
                     x-model="openToSuggestions"
-                    class="h-4 w-4 shrink-0 rounded border-border-muted text-travel-600 focus:ring-travel-600"
+                    class="h-4 w-4 shrink-0 rounded border-border-muted text-primary focus:ring-primary"
                 >
                 <span class="text-xs text-muted">{{ __('tourism.request.open_to_suggestions') }}</span>
             </label>
@@ -146,7 +127,7 @@
             <template x-for="code in destinations" :key="'price-' + code">
                 <p x-show="@js($typicalPrices)[code]" x-cloak class="text-xs text-muted">
                     <span x-text="countryName(code)"></span>:
-                    <span class="font-semibold text-travel-700" x-text="Number(@js($typicalPrices)[code]).toLocaleString('en-US') + ' {{ __('tourism.request.amd') }}'"></span>
+                    <span class="font-semibold text-primary-dark" x-text="Number(@js($typicalPrices)[code]).toLocaleString('en-US') + ' {{ __('tourism.request.amd') }}'"></span>
                 </p>
             </template>
         </div>
@@ -157,7 +138,7 @@
 
             {{-- Both dates in one field-shaped box rather than two boxes side by side. --}}
             <div
-                class="flex items-center gap-1 rounded-lg border border-border bg-white px-2 py-2.5 transition-colors focus-within:border-travel-600 focus-within:ring-1 focus-within:ring-travel-600 @error('check_in') border-error @enderror @error('check_out') border-error @enderror"
+                class="field flex! items-center gap-1 py-0 @error('check_in') border-error @enderror @error('check_out') border-error @enderror"
                 role="group"
                 aria-labelledby="dates-label"
             >
@@ -176,12 +157,12 @@
                         required
                         aria-label="{{ $date['label'] }}"
                         @if ($date['min']) :min="{{ $date['min'] }}" @endif
-                        class="travel-date w-full min-w-0 bg-transparent text-sm text-ink focus:outline-none"
+                        class="travel-date w-full min-w-0 bg-transparent text-[15px] text-ink focus:outline-none"
                     >
                 @endforeach
             </div>
 
-            <div class="flex w-fit rounded-lg border border-border bg-surface-alt p-0.5" role="group" aria-label="{{ __('tourism.request.dates_label') }}">
+            <div class="flex w-fit rounded-lg border border-placeholder bg-placeholder/25 p-1" role="group" aria-label="{{ __('tourism.request.dates_label') }}">
                 @php $flexibleInitially = (bool) old('date_flexibility'); @endphp
                 @foreach ([
                     ['flexible' => false, 'label' => __('tourism.request.dates_exact')],
@@ -196,10 +177,10 @@
                         @click="setDateMode({{ $mode['flexible'] ? 'true' : 'false' }})"
                         :aria-pressed="{{ $on }}"
                         :class="{
-                            'bg-white text-ink shadow-sm': {{ $on }},
+                            'bg-primary text-white shadow-sm': {{ $on }},
                             'text-muted hover:text-ink': !({{ $on }}),
                         }"
-                        class="rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors {{ $onNow ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink' }}"
+                        class="inline-flex min-h-9 items-center rounded-md px-3 text-xs font-medium transition {{ $onNow ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink' }}"
                     >
                         {{ $mode['label'] }}
                     </button>
@@ -213,7 +194,7 @@
                         @click="dateFlexibility = @js($value)"
                         :aria-pressed="dateFlexibility === @js($value)"
                         :class="dateFlexibility === @js($value) ? @js($pillOn) : @js($pillOff)"
-                        class="{{ $pill }} {{ $pillOff }} px-3 py-1 text-[11px]"
+                        class="{{ $pill }} {{ $pillOff }} min-h-9 px-3 text-xs"
                     >
                         {{ $optionLabel }}
                     </button>
@@ -237,7 +218,7 @@
         <div class="{{ $col }}">
             <span class="{{ $label }}" id="travelers-label">{{ __('tourism.request.travelers_label') }}</span>
 
-            <div class="flex flex-col gap-2 rounded-lg border border-border bg-white px-3 py-2" role="group" aria-labelledby="travelers-label">
+            <div class="field flex! flex-col justify-center gap-2 py-2" role="group" aria-labelledby="travelers-label">
                 @foreach ([
                     ['key' => 'adults', 'label' => __('tourism.request.adults'), 'step' => 'stepAdults', 'min' => 1],
                     ['key' => 'children', 'label' => __('tourism.request.children'), 'step' => 'stepChildren', 'min' => 0],
@@ -285,7 +266,7 @@
                             :id="'child_age_' + index"
                             :name="'child_ages[' + index + ']'"
                             x-model="childAges[index]"
-                            class="w-full rounded-lg border border-border bg-white p-1.5 text-xs focus:border-travel-600 focus:outline-none"
+                            class="field min-h-11 py-2"
                         >
                             <option value="">{{ __('tourism.request.summary_not_set') }}</option>
                             <template x-for="option in childAgeOptions" :key="option">
@@ -310,28 +291,25 @@
             @endforeach
         </div>
 
-        {{-- The search itself. --}}
-        <div class="{{ $col }} md:col-span-2 lg:col-span-1">
-            <span class="{{ $label }} hidden lg:block" aria-hidden="true">&nbsp;</span>
-            <button type="button" @click="toContact()" class="{{ $navPrimary }} max-w-[12rem] justify-center px-5 py-2.5 text-center leading-snug whitespace-normal">
-                {{ __('tourism.request.get_offers') }}
-                <x-travel-icon name="arrow_forward" class="h-4 w-4" />
-            </button>
-        </div>
     </div>
 
     {{-- Everything the search row leaves out, one click away. --}}
-    <div class="mt-7 border-t border-border pt-5">
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
         <button
             type="button"
             @click="goToStep(2)"
-            class="inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-travel-700"
+            class="{{ $pill }} {{ $pillOff }}"
         >
-            <x-travel-icon name="tune" class="h-4 w-4 text-travel-600" />
+            <x-travel-icon name="tune" class="h-4 w-4" />
             {{ __('tourism.request.more_options') }}
             <svg class="h-4 w-4 fill-none stroke-current" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 9.5l6 6 6-6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
+        </button>
+
+        <button type="button" @click="toContact()" class="{{ $navPrimary }} w-full sm:w-auto">
+            {{ __('tourism.request.get_offers') }}
+            <x-travel-icon name="arrow_forward" class="h-4 w-4" />
         </button>
     </div>
 </section>

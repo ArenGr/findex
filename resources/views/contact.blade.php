@@ -4,16 +4,18 @@
 @section('description', __('meta.contact_description'))
 
 @section('content')
+    <x-vertical-hero
+        icon="mail"
+        :eyebrow="__('footer.columns.help.title')"
+        :title="__('contact.heading')"
+        :subtitle="__('contact.intro')"
+    />
+
     {{-- Outer section matches the home page's column. --}}
     <section class="site-container py-16">
-        <div class="mx-auto max-w-3xl">
-            <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('contact.heading') }}</h1>
-            <p class="mt-4 text-base leading-relaxed text-muted">{{ __('contact.intro') }}</p>
-        </div>
-
-        <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             @foreach (__('contact.channels') as $channel)
-                <div class="rounded-2xl border border-placeholder p-6">
+                <div class="rounded-2xl border border-border bg-surface p-6">
                     <h2 class="font-heading text-sm font-semibold text-ink">{{ $channel['title'] }}</h2>
                     <p class="mt-2 text-xs leading-relaxed text-muted">{{ $channel['body'] }}</p>
                     <a href="mailto:{{ $channel['email'] }}" class="mt-3 inline-block text-sm font-medium text-primary hover:underline">

@@ -31,7 +31,14 @@
 @endphp
 
 @section('content')
-    <section class="mx-auto max-w-5xl px-6 py-16 lg:px-10">
+    <x-vertical-hero
+        icon="plane"
+        :eyebrow="__('tourism.request.eyebrow')"
+        :title="__('tourism.status_page.heading')"
+        :subtitle="__('tourism.status_page.subheading')"
+    />
+
+    <section class="site-container py-12">
         <a href="{{ route('tourism.mine') }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
                 <path fill-rule="evenodd" d="M12.7 15.7a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4l5-5a1 1 0 1 1 1.4 1.4L8.4 10l4.3 4.3a1 1 0 0 1 0 1.4Z" clip-rule="evenodd" />
@@ -94,11 +101,7 @@
             </div>
         @endif
 
-        <div class="mt-6 flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('tourism.status_page.heading') }}</h1>
-                <p class="mt-2 text-sm text-muted">{{ __('tourism.status_page.subheading') }}</p>
-            </div>
+        <div class="mt-6 flex flex-wrap items-start justify-end gap-4">
 
             <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold {{ $status->badgeClasses() }}">
                 {{ $status->label() }}

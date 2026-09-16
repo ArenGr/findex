@@ -1,6 +1,6 @@
 @props(['label', 'align' => 'right'])
 
-{{-- A "?" that explains a control without spending a paragraph of page space on it. --}}
+{{-- An info glyph that explains a control without spending a paragraph of page space on it. --}}
 <div
     x-data="{
         open: false,
@@ -35,9 +35,9 @@
         aria-label="{{ $label }}"
         class="group inline-flex h-11 w-11 shrink-0 items-center justify-center"
     >
-        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border-muted text-xs font-semibold text-muted transition group-hover:border-primary group-hover:text-primary">
-            ?
-        </span>
+        {{-- A quiet glyph from the one icon family, not a bordered "?" disc:
+             four of these in a row read as controls rather than as footnotes. --}}
+        <x-lucide name="info" :size="18" class="text-subtle transition group-hover:text-primary" />
     </button>
 
     <div
@@ -47,7 +47,7 @@
         @click.outside="open = false"
         @resize.window="if (open) place()"
         :style="shift ? `transform: translateX(${shift}px)` : ''"
-        class="absolute top-11 z-30 w-64 max-w-[calc(100vw-3rem)] rounded-xl border border-placeholder bg-white p-4 text-sm leading-relaxed break-words text-muted shadow-lg {{ $align === 'left' ? 'left-0' : 'right-0' }}"
+        class="absolute top-11 z-30 w-64 max-w-[calc(100vw-3rem)] rounded-xl border border-border bg-surface p-4 text-sm leading-relaxed break-words text-muted shadow-lg {{ $align === 'left' ? 'left-0' : 'right-0' }}"
     >
         {{ $slot }}
     </div>

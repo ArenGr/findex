@@ -52,6 +52,7 @@ class OrganizationsTable
                         'exchange' => 'Currency Exchange',
                         'insurance' => 'Insurance',
                         'tourism' => 'Tourism Agency',
+                        'visa' => 'Visa Agency',
                         'other' => 'Other',
                     ]),
                 TernaryFilter::make('is_active')

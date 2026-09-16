@@ -19,7 +19,7 @@
         </div>
 
         <span
-            class="rounded-full border border-travel-200 bg-travel-50 px-2.5 py-1 text-xs font-semibold text-travel-700"
+            class="rounded-full border border-border bg-surface-alt px-2.5 py-1 text-xs font-semibold text-primary-dark"
             aria-live="polite"
             x-text="@js(__('tourism.request.priorities_counter', ['count' => ':c', 'max' => ':m']))
                 .replace(':c', priorities.length)
@@ -47,16 +47,16 @@
                     :disabled="priorityLocked(@js($value))"
                     class="peer sr-only"
                 >
-                <span class="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2.5 text-xs font-medium text-muted transition-all peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-500">
+                <span class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-placeholder bg-white px-4 text-sm font-medium text-muted transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-primary group-hover:text-primary peer-checked:group-hover:bg-primary-dark peer-checked:group-hover:text-white">
                     <x-travel-icon
                         name="check"
-                        class="hidden h-4 w-4 text-travel-600"
+                        class="hidden h-4 w-4 text-current"
                         ::class="priorityChosen({{ Illuminate\Support\Js::from($value) }}) ? 'inline' : 'hidden'"
                     />
                     @isset ($priorityIcons[$value])
                         <x-travel-icon
                             :name="$priorityIcons[$value]"
-                            class="h-4 w-4 text-muted"
+                            class="h-4 w-4 text-current"
                             ::class="priorityChosen({{ Illuminate\Support\Js::from($value) }}) ? 'hidden' : 'inline'"
                         />
                     @endisset

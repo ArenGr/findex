@@ -28,13 +28,15 @@ class Organization extends Model
         static::deleted(fn () => RateCache::invalidate());
     }
 
-    public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'other'];
+    public const TYPES = ['bank', 'exchange', 'insurance', 'tourism', 'visa', 'other'];
 
     public const RATES_TYPES = ['bank', 'exchange'];
 
     public const TOURISM_TYPES = ['tourism'];
 
     public const INSURANCE_TYPES = ['insurance'];
+
+    public const VISA_TYPES = ['visa'];
 
     protected $fillable = [
         'name',
@@ -139,6 +141,12 @@ class Organization extends Model
         return $this->hasMany(QuoteResponse::class);
     }
 
+    // Visa support requests this organization (type: visa) has been asked to price.
+    public function visaResponses(): HasMany
+    {
+        return $this->hasMany(VisaResponse::class);
+    }
+
     public function quoteTemplates(): HasMany
     {
         return $this->hasMany(QuoteTemplate::class);
@@ -204,6 +212,22 @@ class Organization extends Model
             });
     }
 
+    /**
+     * Visa agencies that can be asked to price a request: active, and reachable
+     * by Telegram or by a dashboard user.
+     */
+    #[Scope]
+    protected function visaPartners(Builder $query): Builder
+    {
+        return $query->active()
+            ->whereIn('type', self::VISA_TYPES)
+            ->where(fn ($query) => $query
+                ->whereNotNull('telegram_chat_id')
+                ->orWhereHas('users'))
+            ->inRandomOrder()
+            ->limit(VisaRequest::MAX_PARTNERS_PER_REQUEST);
+    }
+
     #[Scope]
     protected function exchangePartnersForCurrency(Builder $query, int $currencyId, ?string $city = null): Builder
     {
@@ -237,6 +261,11 @@ class Organization extends Model
     public function hasInsurancePage(): bool
     {
         return in_array($this->type, self::INSURANCE_TYPES, true);
+    }
+
+    public function hasVisaPage(): bool
+    {
+        return in_array($this->type, self::VISA_TYPES, true);
     }
 
     // Minimum sample sizes below which a badge would be noise rather than signal (e.g.

@@ -3,7 +3,7 @@
     <div class="flex items-center gap-3">
         <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-ink" x-text="compactSummary"></p>
-            <a href="#travel-request-summary" class="text-xs font-bold text-travel-600 hover:underline">
+            <a href="#travel-request-summary" class="text-xs font-bold text-primary hover:underline">
                 {{ __('tourism.request.review_request') }}
             </a>
         </div>
@@ -12,7 +12,7 @@
             type="button"
             x-show="step < totalSteps"
             @click="step === 1 ? toContact() : next()"
-            class="flex shrink-0 items-center gap-1.5 rounded-lg bg-travel-600 px-5 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-travel-700 focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none"
+            class="btn btn-primary shrink-0"
         >
             {{ __('tourism.request.wizard_continue') }}
             <x-travel-icon name="arrow_forward" class="h-4 w-4" />
@@ -23,7 +23,7 @@
             x-show="step === totalSteps"
             x-cloak
             :disabled="!consented"
-            class="flex shrink-0 items-center gap-1.5 rounded-lg bg-travel-600 px-5 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-travel-700 focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-travel-600"
+            class="btn btn-primary shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
         >
             {{ __('tourism.request.submit_offers_short') }}
             <x-travel-icon name="arrow_forward" class="h-4 w-4" />

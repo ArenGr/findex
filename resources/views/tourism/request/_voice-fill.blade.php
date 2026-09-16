@@ -1,9 +1,9 @@
 @feature('travel_voice_fill')
 {{-- The voice concierge, hidden behind services.openai.voice_fill. --}}
 @if (config('services.openai.voice_fill'))
-    <div class="rounded-xl border border-travel-200 bg-travel-50/70 p-6">
+    <div class="rounded-xl border border-border bg-surface-alt/70 p-6">
         <div class="flex items-start gap-3">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-travel-600 text-white">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="1.8">
                     <rect x="9" y="2" width="6" height="12" rx="3" stroke-linecap="round" stroke-linejoin="round" />
                     <path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke-linecap="round" stroke-linejoin="round" />
@@ -17,7 +17,7 @@
 
                 <div class="mt-4">
                     <template x-if="state === 'idle'">
-                        <button type="button" @click="start()" class="flex items-center gap-2 rounded-full bg-travel-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-travel-700">
+                        <button type="button" @click="start()" class="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary-dark">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-none stroke-current" stroke-width="2">
                                 <rect x="9" y="2" width="6" height="12" rx="3" stroke-linecap="round" stroke-linejoin="round" />
                                 <path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke-linecap="round" stroke-linejoin="round" />
@@ -33,16 +33,16 @@
                                 <span>{{ __('tourism.request.voice_fill_recording') }}</span>
                                 <span class="text-subtle tabular-nums" x-text="formattedTime"></span>
                                 <span class="flex h-3 items-end gap-0.5" aria-hidden="true">
-                                    <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 100)}%`"></span>
-                                    <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 75)}%`"></span>
-                                    <span class="w-1 rounded-full bg-travel-600 transition-all" :style="`height: ${Math.max(15, level * 100)}%`"></span>
+                                    <span class="w-1 rounded-full bg-primary transition-all" :style="`height: ${Math.max(15, level * 100)}%`"></span>
+                                    <span class="w-1 rounded-full bg-primary transition-all" :style="`height: ${Math.max(15, level * 75)}%`"></span>
+                                    <span class="w-1 rounded-full bg-primary transition-all" :style="`height: ${Math.max(15, level * 100)}%`"></span>
                                 </span>
                             </div>
                             <div class="flex gap-2">
                                 <button type="button" @click="cancel()" class="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted hover:bg-white">
                                     {{ __('tourism.request.voice_fill_cancel') }}
                                 </button>
-                                <button type="button" @click="stop()" class="rounded-full bg-travel-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-travel-700">
+                                <button type="button" @click="stop()" class="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white hover:bg-primary-dark">
                                     {{ __('tourism.request.voice_fill_stop') }}
                                 </button>
                             </div>
@@ -51,7 +51,7 @@
 
                     <template x-if="state === 'processing'">
                         <div class="flex items-center gap-2 text-xs text-muted">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 shrink-0 animate-spin text-travel-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 shrink-0 animate-spin text-primary">
                                 <circle cx="12" cy="12" r="9" class="opacity-25" stroke="currentColor" stroke-width="3" fill="none" />
                                 <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" />
                             </svg>
@@ -69,7 +69,7 @@
                     </template>
 
                     <div x-show="applied === 'applied'" x-cloak x-transition class="flex flex-wrap items-center justify-between gap-2">
-                        <p class="flex items-center gap-1.5 text-xs font-bold text-travel-700">
+                        <p class="flex items-center gap-1.5 text-xs font-bold text-primary-dark">
                             <x-travel-icon name="check" class="h-4 w-4" />
                             {{ __('tourism.request.voice_fill_applied') }}
                         </p>

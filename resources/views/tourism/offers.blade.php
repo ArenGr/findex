@@ -14,8 +14,14 @@
 @endphp
 
 @section('content')
+    <x-vertical-hero
+        icon="plane"
+        :eyebrow="__('tourism.request.eyebrow')"
+        :title="trans_choice('tourism.offers.heading', $comparableCount, ['count' => $comparableCount])"
+    />
+
     <section
-        class="mx-auto max-w-6xl px-6 py-16 lg:px-10"
+        class="site-container py-12"
         x-data="{
             selected: [],
             max: {{ \App\Http\Controllers\QuoteRequestController::MAX_COMPARED_OFFERS }},
@@ -48,11 +54,8 @@
             </div>
         @endif
 
-        <h1 class="mt-6 font-heading text-2xl font-bold text-ink lg:text-3xl">
-            {{ trans_choice('tourism.offers.heading', $comparableCount, ['count' => $comparableCount]) }}
-        </h1>
 
-        <div class="mt-6 rounded-2xl border border-placeholder bg-white p-5 shadow-sm">
+        <div class="mt-6 rounded-2xl border border-border bg-surface p-5">
             <x-trip-brief :request="$quoteRequest" compact />
         </div>
 

@@ -5,7 +5,6 @@ namespace App\Support;
 class TravelHero
 {
     private const WIDTHS = [
-        'hero-mobile' => [640, 900, 1080],
         'trip-empty' => [320, 640, 960],
         'panorama' => [960, 1440, 1916],
 

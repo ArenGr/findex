@@ -14,12 +14,12 @@
     $chosen = $multiple ? (array) ($current ?? []) : $current;
 
     // The page's one pill, not a copy of it - see request.blade.php.
-    $pill = 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs transition-colors';
+    $pill = 'inline-flex items-center gap-1.5 min-h-11 rounded-lg border px-4 text-sm font-medium transition';
 @endphp
 
 <fieldset {{ $attributes->only('class') }}>
     @if ($label)
-        <legend class="mb-2.5 block text-xs font-semibold text-muted">{{ $label }}</legend>
+        <legend class="mb-2 block text-[13px] font-semibold text-ink">{{ $label }}</legend>
     @endif
 
     <div class="flex flex-wrap gap-2.5">
@@ -42,8 +42,8 @@
                     {{ $attributes->except('class') }}
                     class="peer sr-only"
                 >
-                <span class="{{ $pill }} border-border bg-white font-medium text-muted peer-checked:border-travel-600 peer-checked:bg-travel-50 peer-checked:font-semibold peer-checked:text-travel-800 peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-travel-600/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-travel-200 group-hover:bg-surface-alt/70">
-                    <span data-check class="hidden shrink-0 text-travel-600">
+                <span class="{{ $pill }} border-placeholder bg-white text-muted peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white peer-checked:[&_[data-check]]:inline-flex peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 group-hover:border-primary group-hover:text-primary peer-checked:group-hover:bg-primary-dark peer-checked:group-hover:text-white">
+                    <span data-check class="hidden shrink-0 text-current">
                         <x-travel-icon name="check" class="h-3.5 w-3.5" />
                     </span>
                     @isset ($icons[$value])

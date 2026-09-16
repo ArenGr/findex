@@ -10,6 +10,7 @@ use App\Services\Insurance\AutoInsuranceQuoteService;
 use App\Services\Insurance\InsuranceQuoteInputException;
 use App\Services\Insurance\MarketQuoteDetails;
 use App\Services\Insurance\QuoteIdentity;
+use App\Support\TravelPartners;
 use App\Support\ValidationRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class AutoInsuranceController extends Controller
             'contractTerms' => AutoInsuranceRequest::CONTRACT_TERMS,
             // Shown in the loading screen's "checking N insurers" line.
             'insurerCount' => Organization::active()->where('type', 'insurance')->count(),
+            'partners' => TravelPartners::forType('insurance'),
         ]);
     }
 

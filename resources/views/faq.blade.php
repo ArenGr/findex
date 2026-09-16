@@ -4,12 +4,16 @@
 @section('description', __('meta.faq_description'))
 
 @section('content')
+    <x-vertical-hero
+        icon="info"
+        :eyebrow="__('footer.columns.help.title')"
+        :title="__('faq.heading')"
+        :subtitle="__('faq.intro')"
+    />
+
     <section class="site-container py-16">
         <div class="mx-auto max-w-3xl">
-            <h1 class="font-heading text-2xl font-bold text-ink lg:text-3xl">{{ __('faq.heading') }}</h1>
-            <p class="mt-4 text-base leading-relaxed text-muted">{{ __('faq.intro') }}</p>
-
-            <div class="mt-10 divide-y divide-placeholder border-t border-b border-placeholder">
+<div class="divide-y divide-border border-t border-b border-border">
                 @foreach (__('faq.questions') as $item)
                     <div x-data="{ open: false }">
                         <button

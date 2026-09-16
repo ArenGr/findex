@@ -71,7 +71,7 @@
                                     <td class="border-t border-placeholder px-4 py-4 text-ink">
                                         @if ($rate)
                                             <span class="font-heading font-bold text-primary">{{ number_format($rate->buy_rate, 2) }}</span>
-                                            / <span class="font-heading font-bold text-[#c25b6e]">{{ number_format($rate->sell_rate, 2) }}</span>
+                                            / <span class="font-heading font-bold text-accent-red">{{ number_format($rate->sell_rate, 2) }}</span>
                                         @else
                                             <span class="text-subtle">—</span>
                                         @endif

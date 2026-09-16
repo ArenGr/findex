@@ -19,6 +19,7 @@ Route::prefix('{locale}')
         $feature(Features::TRAVEL, 'public/tourism.php');
         $feature(Features::EXCHANGE, 'public/exchange.php');
         $feature(Features::INSURANCE, 'public/insurance.php');
+        $feature(Features::VISA, 'public/visa.php');
 
         // Authentication
         require __DIR__.'/web/auth/auth.php';

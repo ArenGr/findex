@@ -65,12 +65,23 @@
                 'href' => route('insurance.auto.request'),
                 'active' => $isActive(['insurance.']),
             ],
-            !$feature('travel') ? null : [
-                'label' => __('nav.travel.label'),
-                'icon' => 'travel',
-                'href' => route('tourism.request'),
-                'active' => $isActive(['tourism.']),
-            ],
+            // Travel is a menu once visa support is on, a plain link when it is not.
+            ! ($feature('travel') || $feature('visa')) ? null : (function () use ($feature, $isActive) {
+                $items = array_values(array_filter([
+                    ! $feature('travel') ? null : ['label' => __('nav.travel.packages'), 'href' => route('tourism.request')],
+                    ! $feature('visa') ? null : ['label' => __('nav.travel.visa'), 'href' => route('visa.request')],
+                ]));
+
+                $shared = [
+                    'label' => __('nav.travel.label'),
+                    'icon' => 'travel',
+                    'active' => $isActive(['tourism.', 'visa.']),
+                ];
+
+                return count($items) === 1
+                    ? $shared + ['href' => $items[0]['href']]
+                    : $shared + ['columns' => [[['heading' => __('nav.travel.label'), 'items' => $items]]]];
+            })(),
             [
                 'label' => __('nav.about'),
                 'icon' => 'about',

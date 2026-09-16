@@ -18,7 +18,7 @@
                         :class="budgetBand === @js($value) ? @js($pillOn) : @js($pillOff)"
                         class="{{ $pill }} {{ $pillOff }}"
                     >
-                        <x-travel-icon name="check" class="h-3.5 w-3.5 shrink-0 text-travel-600" x-show="budgetBand === {{ Illuminate\Support\Js::from($value) }}" x-cloak />
+                        <x-travel-icon name="check" class="h-3.5 w-3.5 shrink-0 text-primary" x-show="budgetBand === {{ Illuminate\Support\Js::from($value) }}" x-cloak />
                         {{ $optionLabel }}
                     </button>
                 @endforeach
@@ -30,7 +30,7 @@
                 type="button"
                 x-show="!customBudgetOpen"
                 @click="openCustomBudget()"
-                class="text-xs font-bold text-travel-600 hover:text-travel-700 hover:underline focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none"
+                class="text-xs font-bold text-primary hover:text-primary-dark hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
             >
                 {{ __('tourism.request.budget_custom_toggle') }}
             </button>

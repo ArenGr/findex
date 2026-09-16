@@ -8,15 +8,13 @@
 ])
 
 @php
+    // One card, three numbers. The colour lives in the figure, not behind it -
+    // a tinted card per variant was the loudest thing on the page and read as
+    // three different components.
     $tone = ['buy' => 'text-primary', 'sell' => 'text-accent-red', 'neutral' => 'text-ink'][$variant] ?? 'text-ink';
-    $tint = [
-        'buy' => 'border-primary/20 bg-primary/5',
-        'sell' => 'border-accent-red/20 bg-accent-red/5',
-        'neutral' => 'border-placeholder bg-white',
-    ][$variant] ?? 'border-placeholder bg-white';
 @endphp
 
-<article class="flex min-w-0 flex-col rounded-2xl border p-5 shadow-sm sm:p-6 {{ $tint }}">
+<article class="flex min-w-0 flex-col rounded-2xl border border-border bg-surface p-5 sm:p-6">
     <span class="flex items-center gap-1.5">
         <span class="text-[11px] font-semibold tracking-wider break-words text-muted uppercase sm:text-xs">{{ $label }}</span>
         <x-info-popover :label="$label">{{ $hint }}</x-info-popover>

@@ -324,10 +324,10 @@
                                 <h3 class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('organizations.rate_types.' . $type) }}</h3>
                             @endif
 
-                            <div class="relative mt-2 overflow-x-auto rounded-xl border border-placeholder">
+                            <div class="relative mt-2 overflow-x-auto rounded-2xl border border-border bg-surface">
                         <table class="w-full border-collapse text-sm">
                             <thead>
-                                <tr class="border-b border-placeholder bg-placeholder/25 text-xs font-semibold tracking-wider text-muted uppercase">
+                                <tr class="border-b border-border bg-surface-alt text-[11px] font-semibold tracking-wider text-muted uppercase">
                                     <th class="px-4 py-3 text-left sm:px-6">{{ __('rates.currency_label') }}</th>
                                     <th class="px-4 py-3 text-right sm:px-6" title="{{ __('rates.buy_hint') }}">{{ __('rates.buy_column') }}</th>
                                     <th class="px-4 py-3 text-right sm:px-6" title="{{ __('rates.sell_hint') }}">{{ __('rates.sell_column') }}</th>
@@ -337,7 +337,7 @@
                             </thead>
                             <tbody>
                                 @foreach ($rows as $row)
-                                    <tr class="border-b border-placeholder last:border-b-0 hover:bg-placeholder/15">
+                                    <tr class="border-b border-border last:border-b-0 transition-colors hover:bg-surface-alt">
                                         <td class="px-4 py-4 sm:px-6">
                                             <a
                                                 href="{{ $on('rates') ? route('rates.index', ['currency' => $row['code'], 'type' => $type]) : '#' }}"
@@ -349,7 +349,7 @@
                                                 <span class="hidden text-xs break-words text-muted sm:inline">{{ $row['name'] }}</span>
                                             </a>
                                         </td>
-                                        <td @class(['px-4 py-4 text-right text-base text-ink tabular-nums sm:px-6', 'font-semibold' => $row['best_buy'], 'font-medium' => ! $row['best_buy']])>
+                                        <td @class(['px-4 py-4 text-right text-lg text-primary tabular-nums sm:px-6', 'font-bold' => $row['best_buy'], 'font-semibold' => ! $row['best_buy']])>
                                             <span class="inline-flex items-center justify-end gap-2">
                                                 @if ($row['best_buy'])
                                                     <x-rates.best-chip :label="__('organizations.rates_best_badge')" />
@@ -357,7 +357,7 @@
                                                 {{ number_format($row['buy_rate'], 2) }}
                                             </span>
                                         </td>
-                                        <td @class(['px-4 py-4 text-right text-base tabular-nums text-accent-red sm:px-6', 'font-semibold' => $row['best_sell'], 'font-medium' => ! $row['best_sell']])>
+                                        <td @class(['px-4 py-4 text-right text-lg tabular-nums text-accent-red sm:px-6', 'font-bold' => $row['best_sell'], 'font-semibold' => ! $row['best_sell']])>
                                             <span class="inline-flex items-center justify-end gap-2">
                                                 @if ($row['best_sell'])
                                                     <x-rates.best-chip :label="__('organizations.rates_best_badge')" />

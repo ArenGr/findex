@@ -1,6 +1,4 @@
 @php
-    use App\Support\TravelHero;
-
     $rows = [
         ['label' => __('tourism.request.summary_destination'), 'value' => 'destinationSummary', 'icon' => 'location_on'],
         ['label' => __('tourism.request.summary_dates'), 'value' => 'datesSummary', 'icon' => 'calendar_month'],
@@ -9,110 +7,52 @@
         ['label' => __('tourism.request.summary_hotel'), 'value' => 'hotelSummary', 'icon' => 'hotel'],
         ['label' => __('tourism.request.summary_meals'), 'value' => 'mealsSummary', 'icon' => 'restaurant'],
     ];
-
-    $emptyArt = TravelHero::asset('trip-empty');
-
-    $hasDetail = (bool) (
-        trim((string) old('departure_location', ''))
-        || array_filter((array) old('destination_countries', []))
-        || old('open_to_suggestions')
-        || (old('check_in') && old('check_out'))
-        || old('budget_band')
-        || old('budget_min_amd')
-        || old('budget_max_amd')
-        || array_filter((array) old('priorities', []))
-    );
 @endphp
 
-{{-- What you have told us so far. --}}
-<div id="travel-request-summary" class="scroll-mt-24 space-y-4 lg:sticky lg:top-24">
-    <div class="space-y-6 rounded-2xl border border-border/80 bg-white p-6 shadow-sm">
-        <div class="flex items-center justify-between border-b border-border pb-4">
-            <div class="flex min-w-0 items-center gap-2.5">
-                <span class="rounded-lg bg-travel-100 p-2 text-travel-700">
-                    <x-travel-icon name="luggage" class="h-4 w-4" />
-                </span>
-                <span class="min-w-0">
-                    <span class="block text-sm leading-none font-bold text-ink">{{ __('tourism.request.summary_heading_request') }}</span>
-                    <span class="mt-1 block text-[11px] text-subtle">{{ __('tourism.request.summary_live') }}</span>
-                </span>
-            </div>
-            <button type="button" x-show="step > 1" x-cloak @click="goToStep(1)" class="shrink-0 text-xs font-bold text-travel-600 hover:text-travel-700 hover:underline focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none">
-                {{ __('tourism.request.summary_edit') }}
-            </button>
-        </div>
-
-        {{-- Nothing entered yet. --}}
-        <div x-show="!hasAnyDetail" @if ($hasDetail) x-cloak @endif class="text-center">
-            @if ($emptyArt)
-                <img
-                    src="{{ $emptyArt['src'] }}"
-                    @isset($emptyArt['srcset']['webp'])
-                        srcset="{{ $emptyArt['srcset']['webp'] }}"
-                        sizes="230px"
-                    @endisset
-                    alt=""
-                    aria-hidden="true"
-                    width="{{ $emptyArt['width'] }}"
-                    height="{{ $emptyArt['height'] }}"
-                    decoding="async"
-                    class="mx-auto w-[180px] max-w-full"
-                >
-            @endif
-            <p class="mt-2 text-sm font-bold text-ink">{{ __('tourism.request.summary_empty_title') }}</p>
-            <p class="mx-auto mt-1.5 max-w-[17rem] text-[11px] leading-relaxed text-muted">{{ __('tourism.request.summary_empty_body') }}</p>
-        </div>
-
-        {{-- ...and what it becomes once there is something to show. --}}
-        <div x-show="hasAnyDetail" @if (! $hasDetail) x-cloak @endif class="space-y-6">
-            <div x-show="hasItinerary" x-cloak class="space-y-1">
-                <p class="text-base font-bold text-ink" x-text="itineraryRoute"></p>
-                <p class="text-xs text-muted" x-text="itineraryMeta"></p>
-            </div>
-
-            <dl class="space-y-3.5 text-xs text-muted">
-                @foreach ($rows as $row)
-                    <div class="flex items-center justify-between gap-3">
-                        <dt class="flex shrink-0 items-center gap-2 text-muted">
-                            <x-travel-icon :name="$row['icon']" class="h-4 w-4 text-travel-600" />
-                            {{ $row['label'] }}
-                        </dt>
-                        <dd class="text-right font-semibold text-ink" x-text="{{ $row['value'] }}"></dd>
-                    </div>
-                @endforeach
-
-                <div class="flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <dt class="flex shrink-0 items-center gap-2 text-muted">
-                        <x-travel-icon name="wallet" class="h-4 w-4 text-travel-600" />
-                        {{ __('tourism.request.summary_budget') }}
-                    </dt>
-                    <dd
-                        class="text-right font-semibold text-ink"
-                        :class="budgetBand || budgetMin || budgetMax ? '' : 'text-xs font-normal text-subtle italic'"
-                        x-text="budgetSummary"
-                    ></dd>
-                </div>
-
-                <div x-show="priorities.length" x-cloak class="border-t border-border pt-3">
-                    <dt class="mb-2 text-muted">{{ __('tourism.request.priorities_label') }}</dt>
-                    <dd class="flex flex-wrap gap-1.5">
-                        <template x-for="value in priorities" :key="value">
-                            <span
-                                class="rounded-full border border-travel-200 bg-travel-50 px-2.5 py-1 text-[11px] font-semibold text-travel-700"
-                                x-text="@js($priorityOptions)[value]"
-                            ></span>
-                        </template>
-                    </dd>
-                </div>
-            </dl>
-        </div>
+{{-- What you have told us so far, in the rates summary card. --}}
+<div id="travel-request-summary" class="scroll-mt-24 rounded-2xl border border-border bg-surface p-5 sm:p-6 lg:sticky lg:top-24">
+    <div class="flex items-center justify-between gap-3">
+        <span class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('tourism.request.summary_heading_request') }}</span>
+        <button type="button" x-show="step > 1" x-cloak @click="goToStep(1)" class="shrink-0 text-sm font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none">
+            {{ __('tourism.request.summary_edit') }}
+        </button>
     </div>
 
-    <div class="flex items-start gap-3 rounded-2xl border border-travel-200/80 bg-travel-50/70 p-4">
-        <x-travel-icon name="lightbulb" class="mt-0.5 h-5 w-5 text-travel-600" />
-        <span class="min-w-0">
-            <span class="block text-xs font-bold text-travel-800">{{ __('tourism.request.summary_tip_title') }}</span>
-            <span class="mt-0.5 block text-[11px] leading-snug text-travel-700">{{ __('tourism.request.summary_tip_body') }}</span>
-        </span>
+    <div x-show="hasItinerary" x-cloak class="mt-4">
+        <p class="text-lg font-bold text-ink" x-text="itineraryRoute"></p>
+        <p class="mt-0.5 text-sm text-muted" x-text="itineraryMeta"></p>
     </div>
+
+    <dl class="mt-4 space-y-3 border-t border-border pt-4 text-sm">
+        @foreach ($rows as $row)
+            <div class="flex items-center justify-between gap-3">
+                <dt class="flex shrink-0 items-center gap-2 text-muted">
+                    <x-travel-icon :name="$row['icon']" class="h-4 w-4 text-primary" />
+                    {{ $row['label'] }}
+                </dt>
+                <dd class="text-right font-semibold text-ink" x-text="{{ $row['value'] }}"></dd>
+            </div>
+        @endforeach
+
+        <div class="flex items-center justify-between gap-3">
+            <dt class="flex shrink-0 items-center gap-2 text-muted">
+                <x-travel-icon name="wallet" class="h-4 w-4 text-primary" />
+                {{ __('tourism.request.summary_budget') }}
+            </dt>
+            <dd
+                class="text-right font-semibold text-ink"
+                :class="budgetBand || budgetMin || budgetMax ? '' : 'font-normal text-subtle'"
+                x-text="budgetSummary"
+            ></dd>
+        </div>
+
+        <div x-show="priorities.length" x-cloak class="border-t border-border pt-3">
+            <dt class="mb-2 text-muted">{{ __('tourism.request.priorities_label') }}</dt>
+            <dd class="flex flex-wrap gap-1.5">
+                <template x-for="value in priorities" :key="value">
+                    <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary" x-text="@js($priorityOptions)[value]"></span>
+                </template>
+            </dd>
+        </div>
+    </dl>
 </div>

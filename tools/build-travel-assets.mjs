@@ -31,7 +31,6 @@ const TARGETS = [
     // second flight path beside the page's own and there was no crop that
     // dropped it without also dropping the domes. hero-photo-source.png is
     // still in resources/images/travel/ if it is ever wanted back.
-    { stem: 'hero-mobile', widths: [640, 900, 1080], minWidth: 1000 },
     // Empty-state illustration inside "Your trip"; painted at ~230px.
     { stem: 'trip-empty', widths: [320, 640, 960], minWidth: 900 },
     // Full-bleed closing band.

@@ -2,8 +2,8 @@
 
 {{-- The glyph beside a wizard section's heading. --}}
 <span
-    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-travel-100 text-travel-700 transition-colors"
-    @if ($done) :class="({{ $done }}) && '!bg-travel-600 !text-white'" @endif
+    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-dark transition-colors"
+    @if ($done) :class="({{ $done }}) && '!bg-primary !text-white'" @endif
 >
     @if ($done)
         <x-travel-icon name="check" class="h-4 w-4" x-show="{{ $done }}" x-cloak />

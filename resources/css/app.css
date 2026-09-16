@@ -57,9 +57,11 @@ button {
 
     /* Neutrals. Warm, slightly green - they sit under the brand green
        rather than fighting it. */
-    --color-ink: #1d241c;
-    --color-muted: #6b7168;
-    --color-subtle: #8d938a;
+    --color-ink: #121711;
+    --color-muted: #4a5047;
+    --color-subtle: #6b7168;
+    /* Only for text a field is waiting for: clearly lighter than a real answer. */
+    --color-field-placeholder: #9aa195;
     --color-border: #e6e9e3;
     --color-surface: #ffffff;
     --color-surface-alt: #f7f8f4;
@@ -84,14 +86,22 @@ button {
     --color-primary-container: var(--color-primary);
     --color-on-primary-container: #ffffff;
 
-    /* The hero carousel had six per-slide accents; slides no longer carry
-       their own colour. */
+    /* slide-* still follows the site palette for the other pages that use it
+       (About, register, the header travel icon). */
     --color-slide-green: var(--color-primary);
     --color-slide-blue: var(--color-accent-blue);
     --color-slide-yellow: var(--color-accent-yellow);
     --color-slide-pink: var(--color-accent-yellow);
     --color-slide-purple: var(--color-accent-blue);
     --color-slide-green-pastel: var(--color-surface-alt);
+
+    /* The home page carousel's own per-slide colours. The home page is the one
+       page outside the shared design, so these are used there and nowhere else. */
+    --color-hero-green: #607e34;
+    --color-hero-blue: #87b8f5;
+    --color-hero-pink: #feb2b9;
+    --color-hero-purple: #dcb0e9;
+    --color-hero-green-pastel: #dfe5d6;
 
     /* One tinted panel and one hairline, not one pair per category. */
     --color-currency-tint: var(--color-surface-alt);
@@ -212,28 +222,48 @@ button {
     width: 100%;
     min-height: 3.25rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--color-border-muted);
-    background-color: var(--color-surface);
-    padding-inline: 0.875rem;
+    border: 1px solid var(--color-placeholder);
+    background-color: #fff;
+    padding-inline: 1rem;
     padding-block: 0.75rem;
-    font-size: 1rem;
+    /* The answer is the largest text in the control, never the label above it. */
+    font-size: 0.9375rem;
     line-height: 1.5rem;
     color: var(--color-ink);
     transition-property: border-color, box-shadow;
     transition-duration: 200ms;
 
     &::placeholder {
-        color: var(--color-subtle);
+        color: var(--color-field-placeholder);
     }
 
-    &:hover:not(:disabled) {
-        border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border-muted));
+    /* A select still waiting for a choice reads as unanswered, not as an answer. */
+    &:is(select) {
+        appearance: none;
+        padding-inline-end: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%239aa195' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 0.75rem 0.5rem;
     }
 
-    &:focus {
+    &:is(select):required:invalid {
+        color: var(--color-field-placeholder);
+    }
+
+    &:hover:not(:disabled):not(:focus) {
+        border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-placeholder));
+    }
+
+    &:focus, &:focus-within {
         outline: none;
         border-color: var(--color-primary);
         box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 15%, transparent);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
     }
 
     &[aria-invalid="true"] {
@@ -244,6 +274,37 @@ button {
 /* A field with room for a leading glyph. */
 @utility field-icon {
     padding-inline-start: 2.75rem;
+}
+
+/*
+ * An empty date shows the browser's own "mm/dd/yyyy", which would otherwise
+ * paint in the text colour and read as a filled-in date. A required date is
+ * :invalid while empty, which is exactly the state we want to grey out.
+ */
+input[type="date"]:required:invalid::-webkit-datetime-edit {
+    color: var(--color-field-placeholder);
+}
+
+/* .travel-date stretches an invisible indicator across the whole field so a
+   click anywhere opens the picker - leave that one alone. */
+input[type="date"]:not(.travel-date)::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+input[type="date"]:not(.travel-date):hover::-webkit-calendar-picker-indicator {
+    opacity: 0.8;
+}
+
+/* Spinners add a second control to a field that already has its own buttons. */
+input[type="number"] {
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        appearance: none;
+        margin: 0;
+    }
+
+    -moz-appearance: textfield;
 }
 
 /* Buttons and fields. */
@@ -318,40 +379,6 @@ button {
     }
 }
 
-/* The text field every form shares. */
-@utility field {
-    width: 100%;
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-border-muted);
-    background-color: #fff;
-    padding-inline: 1rem;
-    padding-block: 0.625rem;
-    font-size: 0.875rem;
-    color: var(--color-ink);
-    transition-property: color, background-color, border-color, box-shadow;
-    transition-duration: 200ms;
-
-    &::placeholder {
-        color: color-mix(in oklab, var(--color-subtle) 75%, transparent);
-    }
-
-    &:hover:not(:disabled):not(:focus) {
-        border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border-muted));
-    }
-
-    &:focus {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 18%, transparent);
-    }
-
-    &:disabled {
-        cursor: not-allowed;
-        background-color: color-mix(in oklab, var(--color-placeholder) 25%, #fff);
-        opacity: 0.7;
-    }
-}
-
 .leaflet-container {
     isolation: isolate;
 }
@@ -377,4 +404,53 @@ button {
     background-color: currentColor;
     opacity: 0.2;
     animation: findex-pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* The partners marquee: one list drawn twice, slid half its width, looped. */
+@keyframes partners-marquee {
+    to { transform: translateX(-50%); }
+}
+
+.partners-marquee {
+    mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+
+.partners-marquee-track {
+    animation: partners-marquee 120s linear infinite;
+}
+
+.partners-marquee:hover .partners-marquee-track,
+.partners-marquee:focus-within .partners-marquee-track {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .partners-marquee-track { animation: none; }
+}
+
+/* An always-visible page scrollbar. Chrome on Linux (and some macOS settings)
+   uses overlay scrollbars that stay invisible until you scroll; giving the
+   page scrollbar an explicit style makes it a classic, permanent one.
+   Scoped to the page itself, so carousels that hide theirs are unaffected. */
+html {
+    scrollbar-width: auto;
+    scrollbar-color: #b8beb4 #f7f8f4;
+}
+
+html::-webkit-scrollbar {
+    width: 12px;
+}
+
+html::-webkit-scrollbar-track {
+    background: #f7f8f4;
+}
+
+html::-webkit-scrollbar-thumb {
+    background: #b8beb4;
+    border: 3px solid #f7f8f4;
+    border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background: #8d938a;
 }

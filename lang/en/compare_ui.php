@@ -11,4 +11,6 @@ return [
     'empty_heading' => 'Nothing matches those filters',
     'empty_body' => 'Try widening one of them, or clear them and start again.',
     'categories' => '{1} 1 category|[2,*] :count categories',
+    'organizations' => '{1} 1 organization|[0,*] :count organizations',
+    'insurers' => '{1} 1 insurer|[0,*] :count insurers',
 ];

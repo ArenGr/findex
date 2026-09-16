@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Services\Cache\OrgRatingsCache;
 use App\Services\Cache\RateCache;
 use App\Support\Features;
+use App\Support\TravelPartners;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -175,6 +176,7 @@ class RateController extends Controller
         );
 
         return view('rates.index', [
+            'partners' => TravelPartners::forType('bank', 30),
             'currencies' => $currencies,
             'selectedCurrency' => $selectedCurrency,
             'rateTypes' => RateType::cases(),

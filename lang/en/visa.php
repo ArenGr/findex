@@ -1,0 +1,116 @@
+<?php
+
+return [
+    'nav_label' => 'Visa support',
+
+    'status' => [
+        'submitted' => 'Sent to agencies',
+        'offers_received' => 'Answers received',
+        'closed' => 'Closed',
+        'expired' => 'Expired',
+    ],
+
+    'request' => [
+        'eyebrow' => 'Visa support',
+        'heading' => 'Get help with your visa',
+        'subheading' => 'Tell us where you are going and when. Visa agencies come back with their fee and how long it takes.',
+
+        'signal_agencies' => 'Verified agencies',
+        'signal_agencies_sub' => 'Answering the same request',
+        'signal_free' => 'Free to ask',
+        'signal_free_sub' => 'No fee, no markup',
+        'signal_fast' => 'Answers in days',
+        'signal_fast_sub' => 'Not weeks',
+
+        'section_trip' => 'Where and when',
+        'section_contact' => 'Where to send the answers',
+
+        'destination' => 'Country you need a visa for',
+        'destination_placeholder' => 'Choose a country',
+        'travel_from' => 'Travelling from',
+        'travel_to' => 'Travelling until',
+        'applicants' => 'People applying',
+        'your_name' => 'Your name',
+        'your_email' => 'Your email',
+        'consent' => 'I agree that these details will be shared with Findex partner agencies so they can answer.',
+        'submit' => 'Get visa offers',
+
+        'no_partners' => 'No visa agency is taking requests right now. Please try again later.',
+        'secure_note' => 'Your details go to partner agencies so they can answer. Findex never charges you for this.',
+
+        'works_heading' => 'How it works',
+        'works_sub' => 'Ask once, and compare what the agencies charge.',
+        'works_1_title' => 'Tell us your trip',
+        'works_1_body' => 'Country, dates and how many people are applying.',
+        'works_2_title' => 'Agencies answer',
+        'works_2_body' => 'Each partner agency sends its fee and how long it takes.',
+        'works_3_title' => 'Compare answers',
+        'works_3_body' => 'Every answer lands on one page, cheapest first.',
+        'works_4_title' => 'Choose an agency',
+        'works_4_body' => 'Contact the one you want and go ahead.',
+
+        'partners_heading' => 'Trusted by leading visa agencies',
+    ],
+
+    'show' => [
+        'heading' => 'Your visa request',
+        'dates' => 'Dates',
+        'contacted' => 'Agencies asked',
+        'replied' => 'Answers so far',
+        'waiting' => 'Still to answer',
+        'offers_heading' => 'Answers',
+        'empty_heading' => 'No answers yet',
+        'empty_body' => 'We have sent your request. Agencies usually answer within a day or two, and we will email you when the first answer lands.',
+        'price' => 'Service fee',
+        'processing_days' => 'Ready in',
+        'days' => ':count day|:count days',
+        'valid_until' => 'Answer valid until',
+        'cheapest' => 'Lowest fee',
+        'close_button' => 'Close this request',
+        'closed_notice' => 'This request is closed. Agencies can no longer answer it.',
+        'submitted_notice' => 'Your request is on its way to :count agencies. We will email you when the first answer lands.',
+        'duplicate_notice' => 'You already have an open request for this trip, so here it is.',
+    ],
+
+    'respond' => [
+        'heading' => 'Visa support request',
+        'intro' => 'A traveller is asking for visa support. Send your fee and how long it takes.',
+        'destination' => 'Country',
+        'dates' => 'Dates',
+        'applicants' => 'People applying',
+        'price' => 'Your service fee',
+        'currency' => 'Currency',
+        'processing_days' => 'Working days to process',
+        'reply_text' => 'Anything the traveller should know',
+        'reply_placeholder' => 'Documents you need, what the fee covers, and anything else.',
+        'valid_until' => 'This answer is valid until',
+        'submit' => 'Send answer',
+        'update' => 'Update answer',
+        'decline' => 'Not interested',
+        'sent_heading' => 'Answer sent',
+        'sent_body' => 'The traveller can see your answer. You can change it while the request is open.',
+        'declined_heading' => 'You passed on this one',
+        'declined_body' => 'Nothing more to do. The traveller will not see you in the answers.',
+        'closed_heading' => 'This request is closed',
+        'closed_body' => 'It has been closed or has expired, so it can no longer be answered.',
+        'unknown_heading' => 'This link is not valid',
+        'unknown_body' => 'Check the link in your email, or ask Findex for a new one.',
+    ],
+
+    'email' => [
+        'submitted_subject' => 'Your visa request is with the agencies',
+        'submitted_heading' => 'Your visa request is on its way',
+        'submitted_body' => 'We sent it to :count agency. You will hear back here.|We sent it to :count agencies. Their answers land on one page.',
+        'submitted_button' => 'See your request',
+
+        'agency_subject' => 'New visa support request on Findex',
+        'agency_heading' => 'A traveller needs visa support',
+        'agency_body' => 'Send your fee and how long it takes. The traveller compares it with the other agencies asked.',
+        'agency_button' => 'Answer this request',
+
+        'offer_subject' => 'An agency answered your visa request',
+        'offer_heading' => 'You have an answer',
+        'offer_body' => ':agency answered your visa request.',
+        'offer_button' => 'See the answer',
+    ],
+];

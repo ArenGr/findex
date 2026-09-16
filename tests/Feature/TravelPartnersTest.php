@@ -17,7 +17,7 @@ class TravelPartnersTest extends TestCase
     {
         parent::setUp();
 
-        Cache::forget('travel.partners');
+        Cache::forget('partners.tourism.8');
     }
 
     private function makePartners(int $count): void
@@ -30,7 +30,7 @@ class TravelPartnersTest extends TestCase
             ]);
         }
 
-        Cache::forget('travel.partners');
+        Cache::forget('partners.tourism.8');
     }
 
     public function test_the_strip_is_hidden_below_the_threshold(): void
@@ -60,7 +60,7 @@ class TravelPartnersTest extends TestCase
         $this->makePartners(3);
         Organization::factory()->create(['type' => 'bank', 'name' => 'A Bank', 'is_active' => true]);
         Organization::factory()->create(['type' => 'tourism', 'name' => 'Dormant Agency', 'is_active' => false]);
-        Cache::forget('travel.partners');
+        Cache::forget('partners.tourism.8');
 
         $response = $this->get(route('tourism.request', ['locale' => 'en']));
 

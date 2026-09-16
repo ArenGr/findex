@@ -8,15 +8,15 @@
 @section('description', __('rates.history.meta', ['code' => $code]))
 
 @section('content')
-    <section class="mx-auto max-w-5xl px-6 py-16 lg:px-10">
-        <h1 class="font-heading text-3xl leading-tight font-bold break-words text-ink">
-            {{ __('rates.history.heading', ['code' => $code]) }}
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm break-words text-muted">
-            {{ __('rates.history.subheading', ['code' => $code, 'count' => $availableDays]) }}
-        </p>
+    <x-vertical-hero
+        icon="trending-up"
+        :eyebrow="__('nav.rates')"
+        :title="__('rates.history.heading', ['code' => $code])"
+        :subtitle="__('rates.history.subheading', ['code' => $code, 'count' => $availableDays])"
+    />
 
-        <div class="mt-8 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+    <section class="site-container py-12">
+<div class="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
             @foreach ($currencies as $currency)
                 <a
                     href="{{ route('rates.history', ['currency' => $currency->code, 'days' => $days]) }}"

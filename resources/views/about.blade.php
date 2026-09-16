@@ -16,44 +16,14 @@
             ['value' => \App\Models\Currency::where('is_active', true)->count(), 'label' => __('about.stats.currencies_label')],
             ['value' => __('about.stats.realtime_value'), 'label' => __('about.stats.realtime_label')],
         ];
-
-        $pillars = [
-            ['label' => __('about.hero.pillars.cards'), 'color' => 'slide-green'],
-            ['label' => __('about.hero.pillars.rates'), 'color' => 'slide-blue'],
-            ['label' => __('about.hero.pillars.mortgages'), 'color' => 'slide-yellow'],
-            ['label' => __('about.hero.pillars.insurance'), 'color' => 'slide-pink'],
-            ['label' => __('about.hero.pillars.travel'), 'color' => 'accent-blue'],
-        ];
     @endphp
 
-    {{-- Hero --}}
-    <section class="overflow-hidden border-b border-placeholder bg-primary/5">
-        <div class="site-container grid grid-cols-1 items-center gap-12 py-20 lg:grid-cols-2">
-            <div>
-                <span class="inline-flex rounded-full bg-slide-green/20 px-4 py-2 text-sm font-medium text-ink">
-                    {{ __('about.hero.title') }}
-                </span>
-
-                <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('about.hero.title') }}</h1>
-                <p class="mt-4 max-w-md text-base leading-relaxed text-muted">{{ __('about.hero.subtitle') }}</p>
-            </div>
-
-            {{-- Decorative composition of the four things Findex compares --}}
-            <div class="relative mx-auto w-full max-w-sm">
-                <div class="absolute -inset-3 -z-10 rounded-[2rem] bg-slide-purple/20 sm:-inset-6"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    @foreach ($pillars as $i => $pillar)
-                        <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60 {{ $i % 2 === 1 ? 'mt-6' : '' }}">
-                            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-placeholder/20">
-                                <span class="h-4 w-4 rounded-full" style="background-color: var(--color-{{ $pillar['color'] }})"></span>
-                            </span>
-                            <p class="mt-3 text-sm font-semibold text-ink">{{ $pillar['label'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-vertical-hero
+        icon="building-2"
+        :eyebrow="__('nav.about')"
+        :title="__('about.hero.title')"
+        :subtitle="__('about.hero.subtitle')"
+    />
 
     {{-- Mission --}}
     <section class="site-container py-16">

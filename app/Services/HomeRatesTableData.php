@@ -8,6 +8,7 @@ use App\Models\CurrencyRate;
 use App\Models\Organization;
 use App\Services\Cache\OrgRatingsCache;
 use App\Services\Cache\RateCache;
+use App\Support\Features;
 use Illuminate\Support\Facades\Cache;
 
 class HomeRatesTableData
@@ -18,7 +19,7 @@ class HomeRatesTableData
     public function build(): array
     {
         return Cache::tags([RateCache::TAG, OrgRatingsCache::TAG])->remember(
-            'home.rates_table.'.app()->getLocale(),
+            'home.rates_table.'.app()->getLocale().'.'.(Features::enabled('organizations') ? 'orgs' : 'no-orgs'),
             now()->addMinutes(15),
             fn () => $this->compute()
         );
@@ -52,7 +53,7 @@ class HomeRatesTableData
                     ->map(fn ($rate) => [
                         'id' => $rate->organization->id,
                         'name' => $rate->organization->name,
-                        'url' => route('organizations.show', $rate->organization),
+                        'url' => Features::enabled('organizations') ? route('organizations.show', $rate->organization) : null,
                         'logo' => $rate->organization->logo,
                         'initial' => mb_strtoupper(mb_substr($rate->organization->name, 0, 1)),
                         'buy_rate' => (float) $rate->buy_rate,

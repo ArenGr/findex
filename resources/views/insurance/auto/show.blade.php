@@ -32,45 +32,19 @@
     $maxCompare = 3;
     $termLabel = __('auto_insurance.request.contract_terms.' . $autoInsuranceRequest->contract_term_months);
 
-    $cardClass = 'rounded-2xl border border-placeholder bg-white shadow-sm';
+    $cardClass = 'rounded-2xl border border-border bg-surface';
     $iconDisc = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary';
 @endphp
 
 @section('content')
     {{-- Auto insurance results. --}}
-    <x-page-hero
+    {{-- Same header as the request form and the other verticals. --}}
+    <x-vertical-hero
+        icon="shield-check"
+        :eyebrow="__('nav.insurance.label')"
         :title="$quotedCount > 0 ? __('auto_insurance.results.ready_heading') : __('auto_insurance.results.heading')"
         :subtitle="$quotedCount > 0 ? __('auto_insurance.results.ready_subtitle', ['count' => $quotedCount]) : null"
-    >
-        <x-slot:eyebrow>
-            <x-hero-badge>
-                <x-slot:icon>
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                </x-slot:icon>
-                {{ __('auto_insurance.request.badge') }}
-            </x-hero-badge>
-        </x-slot:eyebrow>
-
-        <ul class="flex flex-wrap items-center gap-x-8 gap-y-3">
-            @foreach (['benefit_real', 'benefit_no_fees', 'benefit_save'] as $benefit)
-                <li class="flex items-center gap-2 text-sm text-ink">
-                    <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    {{ __('auto_insurance.results.' . $benefit) }}
-                </li>
-            @endforeach
-        </ul>
-
-        <x-slot:illustration>
-            <img
-                src="{{ asset('images/insurance/hero-car-ins.webp') }}?v={{ filemtime(public_path('images/insurance/hero-car-ins.webp')) }}"
-                alt=""
-                width="630"
-                height="420"
-            >
-        </x-slot:illustration>
-    </x-page-hero>
+    />
 
     <div class="site-container py-6">
         @if (session('status') === 'insurance-request-submitted')

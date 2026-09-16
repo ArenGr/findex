@@ -6,17 +6,18 @@
     use App\Models\QuoteRequest;
 
     // The page's shared shapes, stated once.
-    $field = 'w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink transition-colors placeholder:text-subtle focus:border-travel-600 focus:ring-1 focus:ring-travel-600 focus:outline-none';
-    $fieldIcon = $field.' pl-10';
-    $label = 'block text-xs font-semibold text-muted';
-    $card = 'rounded-2xl border border-border bg-white p-6 sm:p-7';
-    $cardHeading = 'text-lg font-bold text-ink';
-    $stepper = 'flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-travel-600 hover:text-travel-700 disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted';
+    $field = 'field';
+    $fieldIcon = 'field field-icon';
+    $label = 'block text-[13px] font-semibold text-ink';
+    // Sections inside the one panel are split by a rule, not boxed again.
+    $card = 'border-t border-border pt-6';
+    $cardHeading = 'font-heading text-base font-bold text-ink';
+    $stepper = 'flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-primary hover:text-primary-dark disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted';
 
     // The selection pill, in its two states.
-    $pill = 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
-    $pillOff = 'border-border bg-white font-medium text-muted hover:border-travel-200 hover:bg-surface-alt/70';
-    $pillOn = 'border-travel-600 bg-travel-50 font-semibold text-travel-800';
+    $pill = 'inline-flex items-center gap-1.5 min-h-11 rounded-lg border px-4 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none';
+    $pillOff = 'border-placeholder bg-white text-muted hover:border-primary hover:bg-primary/10 hover:text-primary';
+    $pillOn = 'border-primary bg-primary text-white hover:bg-primary-dark';
 
     // Which wizard step a failed submission should reopen: the earliest step holding a rejected field.
     $stepFields = [
@@ -33,8 +34,8 @@
         }
     }
 
-    $navPrimary = 'inline-flex items-center gap-2 rounded-lg bg-travel-600 px-7 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-travel-700 focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
-    $navGhost = 'inline-flex items-center gap-2 rounded-lg border border-border-muted px-5 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-travel-600/40 focus-visible:outline-none';
+    $navPrimary = 'btn btn-primary';
+    $navGhost = 'btn btn-secondary';
 @endphp
 
 @section('content')
@@ -81,12 +82,11 @@
         {{-- On every step, not just the first. --}}
         @include('tourism.request._hero')
 
-        @include('tourism.request._presets')
 
-        <main class="travel-container pb-20">
+        <main class="site-container pt-9 pb-12">
             <div id="travel-form-top" class="scroll-mt-24"></div>
             @if (session('status') === 'destination-alert-created')
-                <div class="mb-6 rounded-lg border border-travel-200 bg-travel-50 px-4 py-3 text-sm text-travel-800">
+                <div class="mb-6 rounded-lg border border-border bg-surface-alt px-4 py-3 text-sm text-primary-dark">
                     {{ __('tourism.request.notify_me_confirmed') }}
                 </div>
             @endif
@@ -105,14 +105,13 @@
                     <input type="text" name="company" id="company" tabindex="-1" autocomplete="off">
                 </div>
 
-                {{-- The card shell. --}}
-                <div class="relative z-10 overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-18px_rgba(15,23,42,0.22)] ring-1 ring-border/80">
-                    {{-- White like the rest of the body, delimited by its rule rather than by a tint. --}}
-                    <div class="border-b border-border px-6 py-5 sm:px-12">
+                {{-- The rates panel. --}}
+                <div class="relative z-10 rounded-3xl border border-border bg-surface">
+                    <div class="border-b border-border px-5 py-4 sm:px-6">
                         @include('tourism.request._stepper')
                     </div>
 
-                    <div class="grid grid-cols-1 gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:items-start lg:p-12">
+                    <div class="grid grid-cols-1 gap-6 p-5 sm:p-6 lg:grid-cols-12 lg:items-start">
                         {{-- The step viewport. --}}
                         {{-- Full width on step 1, two thirds after it. --}}
                         <div
@@ -154,7 +153,7 @@
                             >
                                 {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
-                                    <h2 x-ref="heading2" tabindex="-1" class="text-2xl font-bold text-travel-ink outline-none">{{ __('tourism.request.step2_heading') }}</h2>
+                                    <h2 x-ref="heading2" tabindex="-1" class="font-heading text-xl font-bold text-ink outline-none">{{ __('tourism.request.step2_heading') }}</h2>
                                     <p class="text-sm text-muted">{{ __('tourism.request.step2_sub') }}</p>
                                 </div>
 
@@ -189,23 +188,23 @@
                             >
                                 {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
-                                    <h2 x-ref="heading3" tabindex="-1" class="text-2xl font-bold text-travel-ink outline-none">{{ __('tourism.request.step3_heading') }}</h2>
+                                    <h2 x-ref="heading3" tabindex="-1" class="font-heading text-xl font-bold text-ink outline-none">{{ __('tourism.request.step3_heading') }}</h2>
                                     <p class="text-sm text-muted">{{ __('tourism.request.step3_sub') }}</p>
                                 </div>
 
                                 <p
                                     x-show="preset"
                                     x-cloak
-                                    class="flex items-center gap-2 rounded-xl border border-travel-200 bg-travel-50 px-4 py-3 text-xs font-medium text-travel-800"
+                                    class="flex items-center gap-2 rounded-xl border border-border bg-surface-alt px-4 py-3 text-xs font-medium text-primary-dark"
                                 >
-                                    <x-travel-icon name="check" class="h-4 w-4 shrink-0 text-travel-600" />
+                                    <x-travel-icon name="check" class="h-4 w-4 shrink-0 text-primary" />
                                     {{ __('tourism.presets.applied') }}
                                 </p>
 
                                 <section class="{{ $card }} lg:hidden">
                                     <div class="mb-4 flex items-center justify-between gap-3">
                                         <h3 class="text-base font-bold text-ink">{{ __('tourism.request.review_heading') }}</h3>
-                                        <button type="button" @click="goToStep(1)" class="text-xs font-bold text-travel-600 hover:underline">{{ __('tourism.request.summary_edit') }}</button>
+                                        <button type="button" @click="goToStep(1)" class="text-xs font-bold text-primary hover:underline">{{ __('tourism.request.summary_edit') }}</button>
                                     </div>
 
                                     <div x-show="hasItinerary" x-cloak class="mb-4 border-b border-border pb-4">
@@ -229,7 +228,7 @@
                                             <dt class="shrink-0 text-muted">{{ __('tourism.request.priorities_label') }}</dt>
                                             <dd class="flex flex-wrap justify-end gap-1.5">
                                                 <template x-for="value in priorities" :key="value">
-                                                    <span class="rounded-full border border-travel-200 bg-travel-50 px-2.5 py-1 text-[11px] font-semibold text-travel-700" x-text="@js($priorityOptions)[value]"></span>
+                                                    <span class="rounded-full border border-border bg-surface-alt px-2.5 py-1 text-[11px] font-semibold text-primary-dark" x-text="@js($priorityOptions)[value]"></span>
                                                 </template>
                                             </dd>
                                         </div>
@@ -273,7 +272,7 @@
 
                                 <section class="{{ $card }}">
                                     <label class="flex cursor-pointer items-start gap-2.5 text-sm text-muted">
-                                        <input type="checkbox" name="consent" value="1" x-model="consented" class="mt-0.5 h-4 w-4 shrink-0 rounded border-border-muted text-travel-600 focus:ring-travel-600">
+                                        <input type="checkbox" name="consent" value="1" x-model="consented" class="mt-0.5 h-4 w-4 shrink-0 rounded border-border-muted text-primary focus:ring-primary">
                                         <span>{{ __('tourism.request.consent') }}</span>
                                     </label>
                                     @error('consent')
@@ -285,7 +284,7 @@
                                             <x-travel-icon name="arrow_back" class="h-4 w-4" />
                                             {{ __('tourism.request.wizard_back') }}
                                         </button>
-                                        <button type="submit" :disabled="!consented" class="{{ $navPrimary }} disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:bg-travel-600">
+                                        <button type="submit" :disabled="!consented" class="{{ $navPrimary }} disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:bg-primary">
                                             {{ __('tourism.request.submit_offers') }}
                                             <x-travel-icon name="arrow_forward" class="h-4 w-4" />
                                         </button>
@@ -322,8 +321,11 @@
             @enderror
         </main>
 
+        {{-- After the form, not before it: the page asks first and
+             suggests second, like rates and insurance. --}}
+        @include('tourism.request._presets')
+
         @include('tourism.request._how-it-works')
-        <x-travel.partners :partners="$partners" />
-        @include('tourism.request._closing-band')
+        <x-partners-strip :partners="$partners" :heading="__('tourism.request.partners_heading')" marquee />
     </div>
 @endsection

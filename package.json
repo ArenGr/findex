@@ -8,7 +8,8 @@
         "check:layout-shift": "node tools/check-layout-shift.mjs",
         "fonts:fallbacks": "node tools/generate-font-fallbacks.mjs",
         "brand:assets": "node tools/build-brand-assets.mjs",
-        "travel:assets": "node tools/build-travel-assets.mjs"
+        "travel:assets": "node tools/build-travel-assets.mjs",
+        "icons": "node tools/build-icons.mjs"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -33,6 +34,7 @@
     "dependencies": {
         "@alpinejs/morph": "^3.15.12",
         "alpinejs": "^3.15.12",
-        "leaflet": "^1.9.4"
+        "leaflet": "^1.9.4",
+        "lucide-static": "^1.46.0"
     }
 }

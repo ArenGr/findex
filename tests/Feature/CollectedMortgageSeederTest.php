@@ -46,6 +46,11 @@ class CollectedMortgageSeederTest extends TestCase
 
     public function test_the_page_shows_the_market_tier_and_a_promo_free_offers_table(): void
     {
+        // The seeded promo carries a real end date, and the table drops a promo
+        // once it has passed. Pin it ahead so the badge does not depend on today.
+        MortgageOffer::whereHas('organization', fn ($q) => $q->where('slug', 'ineco'))
+            ->update(['promo_ends_at' => now()->addMonth()]);
+
         $html = $this->get(route('banks.show', ['locale' => 'en', 'category' => 'mortgages']))
             ->assertOk()
             ->getContent();

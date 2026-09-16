@@ -20,7 +20,7 @@
         {{-- Heading left, the way out to the full list right. --}}
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div class="max-w-xl">
-                <h2 id="presets-heading" class="text-2xl font-extrabold tracking-tight text-travel-ink lg:text-[1.75rem]">
+                <h2 id="presets-heading" class="text-2xl font-extrabold tracking-tight text-ink lg:text-[1.75rem]">
                     {{ __('tourism.presets.heading') }}
                 </h2>
                 <p class="mt-2 text-sm leading-relaxed text-muted">{{ __('tourism.presets.sub') }}</p>
@@ -28,7 +28,7 @@
 
             <a
                 href="#travel-form-top"
-                class="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-travel-600 transition-colors hover:text-travel-700"
+                class="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-primary transition-colors hover:text-primary-dark"
             >
                 {{ __('tourism.presets.view_all') }}
                 <x-travel-icon name="arrow_forward" class="h-4 w-4" />
@@ -62,10 +62,10 @@
                     <button
                         type="button"
                         @click="applyPreset(@js($preset + ['departure' => __('tourism.request.departure_default')]))"
-                        :class="preset === @js($preset['key']) && 'border-travel-600 ring-2 ring-travel-600/20'"
+                        :class="preset === @js($preset['key']) && 'border-primary ring-2 ring-primary'"
                         class="group relative flex w-[78%] shrink-0 snap-start flex-col items-start rounded-2xl border border-border bg-white p-3 pb-16 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[46%] lg:w-auto"
                     >
-                        <span class="relative block h-40 w-full overflow-hidden rounded-xl bg-travel-50">
+                        <span class="relative block h-40 w-full overflow-hidden rounded-xl bg-surface-alt">
                             @if ($preset['photo'])
                                 <picture>
                                     @isset($preset['photo']['srcset']['avif'])
@@ -89,17 +89,17 @@
                             @endif
 
                             {{-- The city, on the picture. --}}
-                            <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-travel-ink shadow-sm backdrop-blur-sm">
-                                <x-travel-icon name="location_on" class="h-3 w-3 text-travel-600" />
+                            <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-ink shadow-sm backdrop-blur-sm">
+                                <x-travel-icon name="location_on" class="h-3 w-3 text-primary" />
                                 {{ $preset['city_label'] }}
                             </span>
                         </span>
 
                         <span class="mt-4 block w-full px-1">
-                            <span class="block text-[15px] font-bold text-travel-ink">{{ $preset['title'] }}</span>
+                            <span class="block text-[15px] font-bold text-ink">{{ $preset['title'] }}</span>
 
                             @if ($preset['typical_price'])
-                                <span class="mt-1 block text-[13px] font-semibold text-travel-600">
+                                <span class="mt-1 block text-[13px] font-semibold text-primary">
                                     {{ __('tourism.presets.from', ['amount' => number_format($preset['typical_price']).' '.__('tourism.request.amd')]) }}
                                 </span>
                             @endif
@@ -107,8 +107,8 @@
 
                         <span class="mt-3 flex w-full flex-wrap gap-1 px-1">
                             @foreach ($tags($preset) as $tag)
-                                <span class="inline-flex items-center gap-1 rounded-full bg-travel-50 px-2 py-1 text-[10.5px] font-medium whitespace-nowrap text-travel-800">
-                                    <x-travel-icon :name="$tag['icon']" class="h-2.5 w-2.5 text-travel-600" />
+                                <span class="inline-flex items-center gap-1 rounded-full bg-surface-alt px-2 py-1 text-[10.5px] font-medium whitespace-nowrap text-primary-dark">
+                                    <x-travel-icon :name="$tag['icon']" class="h-2.5 w-2.5 text-primary" />
                                     {{ $tag['label'] }}
                                 </span>
                             @endforeach
@@ -116,7 +116,7 @@
 
                         {{-- What the card leaves out, for anyone who cannot see the photograph or the chips. --}}
                         <span class="sr-only">{{ $preset['summary'] }} {{ __('tourism.presets.choose') }}</span>
-                        <span class="absolute right-4 bottom-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-travel-600 text-white transition-colors duration-300 group-hover:bg-travel-700">
+                        <span class="absolute right-4 bottom-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-colors duration-300 group-hover:bg-primary-dark">
                             <x-travel-icon name="arrow_forward" class="h-4 w-4" />
                         </span>
                     </button>
@@ -129,7 +129,7 @@
                     type="button"
                     @click="go(active - 1)"
                     :disabled="active === 0"
-                    class="flex h-9 w-9 items-center justify-center rounded-full border border-travel-200 bg-white text-travel-700 transition hover:border-travel-500 disabled:opacity-30 disabled:hover:border-travel-200"
+                    class="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-primary-dark transition hover:border-primary disabled:opacity-30 disabled:hover:border-border"
                     aria-label="{{ __('tourism.presets.previous') }}"
                 >
                     <x-travel-icon name="arrow_back" class="h-4 w-4" />
@@ -140,8 +140,8 @@
                     <button
                         type="button"
                         @click="go({{ $i }})"
-                        :class="{ 'bg-travel-600 w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
-                        class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-travel-600 w-6' : 'bg-border-muted w-2' }}"
+                        :class="{ 'bg-primary w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
+                        class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-primary w-6' : 'bg-border-muted w-2' }}"
                         aria-label="{{ $preset['title'] }}"
                     ></button>
                 @endforeach
@@ -151,7 +151,7 @@
                     type="button"
                     @click="go(active + 1)"
                     :disabled="active >= total - 1"
-                    class="flex h-9 w-9 items-center justify-center rounded-full border border-travel-200 bg-white text-travel-700 transition hover:border-travel-500 disabled:opacity-30 disabled:hover:border-travel-200"
+                    class="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-primary-dark transition hover:border-primary disabled:opacity-30 disabled:hover:border-border"
                     aria-label="{{ __('tourism.presets.next') }}"
                 >
                     <x-travel-icon name="arrow_forward" class="h-4 w-4" />

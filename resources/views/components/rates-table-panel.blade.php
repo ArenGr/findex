@@ -8,19 +8,19 @@
         fn ($row) => ['buy_rate' => $row['buy_rate'], 'sell_rate' => $row['sell_rate']],
         $rows
     )))"
-    class="overflow-hidden border-t border-placeholder"
+    class="overflow-hidden border-t border-border"
 >
     {{-- Column header --}}
-    <div class="flex items-center gap-4 border-b border-placeholder bg-placeholder/20 px-6 py-2 text-xs font-semibold text-subtle uppercase">
+    <div class="flex items-center gap-4 border-b border-border bg-surface-alt px-6 py-2.5 text-[11px] font-semibold tracking-wider text-muted uppercase">
         <span class="w-8 shrink-0"></span>
-        <span class="w-10 shrink-0"></span>
+        <span class="w-20 shrink-0"></span>
         <span class="min-w-0 flex-1"></span>
-        <button type="button" @click="toggleSort('buy_rate')" class="flex w-20 items-center justify-end gap-1 text-right hover:text-ink">
-            {{ __('organizations.buy') }}
+        <button type="button" @click="toggleSort('buy_rate')" class="flex w-20 items-center justify-end gap-1 text-right tracking-wider uppercase hover:text-ink">
+            {{ __('rates.buy_column') }}
             <span x-show="sortKey === 'buy_rate'" x-cloak x-text="sortDir === 'asc' ? '▲' : '▼'"></span>
         </button>
-        <button type="button" @click="toggleSort('sell_rate')" class="flex w-20 items-center justify-end gap-1 text-right hover:text-ink">
-            {{ __('organizations.sell') }}
+        <button type="button" @click="toggleSort('sell_rate')" class="flex w-20 items-center justify-end gap-1 text-right tracking-wider uppercase hover:text-ink">
+            {{ __('rates.sell_column') }}
             <span x-show="sortKey === 'sell_rate'" x-text="sortDir === 'asc' ? '▲' : '▼'">▲</span>
         </button>
         <span class="hidden w-24 shrink-0 text-right whitespace-nowrap sm:block" title="{{ __('rates.spread_hint') }}">{{ __('rates.spread_column') }}</span>

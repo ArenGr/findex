@@ -6,7 +6,7 @@
 @php
     use Illuminate\Support\Str;
 
-    $cardClass = 'rounded-2xl border border-placeholder bg-white shadow-sm';
+    $cardClass = 'rounded-2xl border border-border bg-surface';
     $iconDisc = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary';
 @endphp
 

@@ -1,137 +1,43 @@
 @props(['name'])
 
+{{--
+    The old hand-drawn travel set, now a thin alias onto the one icon family.
+
+    Kept so the ~35 existing call sites did not all have to change in one
+    commit; new markup should use <x-icon name="..."> directly. The class
+    attribute still sizes it, as it always did.
+--}}
 @php
-    $paths = match ($name) {
-        // Navigation and state
-        'arrow_forward' => ['M4 12h15', 'M13 6l6 6-6 6'],
-        'arrow_back' => ['M20 12H5', 'M11 18l-6-6 6-6'],
-        'check' => ['M5.5 12.5l4 4 9-9'],
-        'close' => ['M7 7l10 10', 'M17 7L7 17'],
-        'plus' => ['M12 5.5v13', 'M5.5 12h13'],
-        'minus' => ['M5.5 12h13'],
-
-        // Trip
-        'flight_takeoff' => [
-            'M3 21h18',
-            'M6.9 16.2 4.8 15.9 3 12.4l1-.5a1.8 1.8 0 0 1 1.6 0l.2.1a1.8 1.8 0 0 0 1.6 0l.3-.2-2.6-5.3.8-.4a1.8 1.8 0 0 1 1.9.2l3.6 2.6a1.8 1.8 0 0 0 1.9.2l3.7-1.8a2.2 2.2 0 0 1 1.6-.2l.6.2a1.25 1.25 0 0 1 .7 1.8l-.3.7c-.2.4-.6.7-1 1L8 16a1.8 1.8 0 0 1-1.1.2Z',
-        ],
-        'flight' => [
-            'M16.6 19.4 15 12l3.2-3.2c1.3-1.3 1.8-3.1 1.3-4-.9-.5-2.7 0-4 1.3L12.3 9.4 4.9 7.7c-.5-.1-.9.1-1 .5l-.3.5c-.2.4-.1.9.3 1.2l4.4 2.9-1.8 2.7H4l-.9.9 2.7 1.8L7.6 21l.9-.9v-2.7l2.7-1.8 3.1 4.8c.3.4.8.5 1.2.3l.4-.2c.4-.2.6-.6.5-1.1Z',
-        ],
-        'calendar_month' => [
-            'M6.5 5h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z',
-            'M4.5 10h15',
-            'M8.5 3.2v3.6',
-            'M15.5 3.2v3.6',
-        ],
-        'location_on' => [
-            'M12 21c4.4-4.3 6.6-7.7 6.6-10.4a6.6 6.6 0 1 0-13.2 0C5.4 13.3 7.6 16.7 12 21Z',
-            'M12 13.2a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2Z',
-        ],
-        'group' => [
-            'M9 11.4a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z',
-            'M2.5 20.2v-1.4a4 4 0 0 1 4-4h5a4 4 0 0 1 4 4v1.4',
-            'M15.7 4.6a3.6 3.6 0 0 1 0 6.6',
-            'M21.5 20.2v-1.4a4 4 0 0 0-3-3.85',
-        ],
-        'family' => [
-            'M8 10.4a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
-            'M3 20v-1.4a5 5 0 0 1 10 0V20',
-            'M17 11.8a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z',
-            'M13.6 20v-2.4a3.4 3.4 0 0 1 6.8 0V20',
-        ],
-
-        // Preferences
-        'tune' => [
-            'M3 6.5h7', 'M14 6.5h7', 'M12 4.3v4.4',
-            'M3 17.5h5', 'M12 17.5h9', 'M10 15.3v4.4',
-            'M3 12h11', 'M18 12h3', 'M16 9.8v4.4',
-        ],
-        'hotel' => [
-            'M3 19.5v-7.4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7.4',
-            'M5 10.1V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3.1',
-            'M12 5v5.1',
-            'M3 16.6h18',
-        ],
-        'restaurant' => [
-            'M4.5 3v5.5a2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5V3',
-            'M7 11v10',
-            'M18.6 21V3.4c-2.1 1.7-3.2 4.1-3.2 6.6 0 1.5 1 2.5 3.2 2.7',
-        ],
-        'wallet' => [
-            'M7 6.5h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2h11',
-            'M17.4 13.8a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z',
-        ],
-        'sell' => [
-            'M11.6 3H5a2 2 0 0 0-2 2v6.6a2 2 0 0 0 .6 1.4l7.4 7.4a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8L12.4 3.6a2 2 0 0 0-.8-.6Z',
-            'M7.9 8.4a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z',
-        ],
-        'map' => [
-            'M9 4.5 3.5 6.8v12.7L9 17.2',
-            'M9 4.5v12.7',
-            'M9 4.5l6 2.3',
-            'M15 6.8l5.5-2.3v12.7L15 19.5',
-            'M15 6.8v12.7',
-            'M15 19.5l-6-2.3',
-        ],
-        'star' => ['M12 3.6l2.55 5.17 5.7.83-4.13 4.02.98 5.68L12 16.62l-5.1 2.68.98-5.68L3.75 9.6l5.7-.83L12 3.6Z'],
-
-        // Trust and process
-        'shield' => ['M12 20.9c-4.2-1.5-7-4.9-7-9.2V6.2l7-2.8 7 2.8v5.5c0 4.3-2.8 7.7-7 9.2Z'],
-        'shield_check' => [
-            'M12 20.9c-4.2-1.5-7-4.9-7-9.2V6.2l7-2.8 7 2.8v5.5c0 4.3-2.8 7.7-7 9.2Z',
-            'M9 11.8l2.2 2.2 4-4.4',
-        ],
-        'clock' => ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'M12 7.4V12l3.1 1.9'],
-        'lock' => [
-            'M5 10.4h14a2 2 0 0 1 2 2v6.6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6.6a2 2 0 0 1 2-2Z',
-            'M7.6 10.4V7a4.4 4.4 0 0 1 8.8 0v3.4',
-        ],
-        'document' => [
-            'M14.2 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.8L14.2 3Z',
-            'M13.9 3.3V8h4.8',
-            'M8.6 13h6.8',
-            'M8.6 16.6h4.4',
-        ],
-        'mail' => [
-            'M4.5 5h15a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z',
-            'M21.2 7.3 13 12.6a2 2 0 0 1-2 0L2.8 7.3',
-        ],
-        'compare' => [
-            'M12 3.4v17.2',
-            'M7.5 20.6h9',
-            'M3 7.4h2.2c2 0 4.9-.9 6.8-1.9 1.9 1 4.8 1.9 6.8 1.9H21',
-            'M17.8 7.9 21 15.5c-.9.6-1.9.9-3.2.9s-2.3-.3-3.2-.9l3.2-7.6Z',
-            'M6.2 7.9 9.4 15.5c-.9.6-1.9.9-3.2.9S3.9 16.1 3 15.5l3.2-7.6Z',
-        ],
-        'luggage' => [
-            'M4.5 7.5h15A1.5 1.5 0 0 1 21 9v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18V9a1.5 1.5 0 0 1 1.5-1.5Z',
-            'M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9',
-            'M8.5 7.5v12',
-            'M15.5 7.5v12',
-        ],
-        'lightbulb' => [
-            'M9.2 18.3h5.6',
-            'M10.3 21.2h3.4',
-            'M15.3 14.4a5.6 5.6 0 1 0-6.6 0c.6.5 1 1.2 1.1 1.9h4.4c.1-.7.5-1.4 1.1-1.9Z',
-        ],
-
-        default => [],
-    };
+    $lucide = [
+        'arrow_forward' => 'arrow-right',
+        'arrow_back' => 'arrow-left',
+        'check' => 'check',
+        'close' => 'x',
+        'plus' => 'plus',
+        'minus' => 'minus',
+        'flight_takeoff' => 'plane-takeoff',
+        'flight' => 'plane',
+        'calendar_month' => 'calendar-days',
+        'location_on' => 'map-pin',
+        'group' => 'users',
+        'family' => 'users',
+        'tune' => 'sliders-horizontal',
+        'hotel' => 'bed-double',
+        'restaurant' => 'utensils',
+        'wallet' => 'wallet',
+        'sell' => 'tag',
+        'map' => 'map',
+        'star' => 'star',
+        'shield' => 'shield-check',
+        'shield_check' => 'shield-check',
+        'clock' => 'clock',
+        'lock' => 'lock',
+        'document' => 'file-text',
+        'mail' => 'mail',
+        'compare' => 'scale',
+        'luggage' => 'luggage',
+        'lightbulb' => 'lightbulb',
+    ][$name] ?? $name;
 @endphp
 
-<svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.7"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-    {{ $attributes->merge(['class' => 'h-5 w-5 shrink-0']) }}
->
-    @foreach ($paths as $path)
-        <path d="{{ $path }}" />
-    @endforeach
-</svg>
+<x-lucide :name="$lucide" {{ $attributes }} />

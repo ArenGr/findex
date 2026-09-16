@@ -47,17 +47,17 @@ class TravelHeroAssetsTest extends TestCase
         $this->assertNull(TravelHero::asset('not-an-asset'));
     }
 
-    public function test_the_hero_reports_its_srcset_and_intrinsic_size(): void
+    public function test_an_asset_reports_its_srcset_and_intrinsic_size(): void
     {
-        $hero = TravelHero::asset('hero-mobile');
+        $hero = TravelHero::asset('panorama');
 
         $this->assertNotNull($hero, 'run `npm run travel:assets` to build the derivatives');
-        $this->assertStringContainsString('hero-mobile-640.webp 640w', $hero['srcset']['webp']);
-        $this->assertStringContainsString('hero-mobile-1080.webp 1080w', $hero['srcset']['webp']);
-        $this->assertStringContainsString('hero-mobile-1080.avif 1080w', $hero['srcset']['avif']);
-        $this->assertStringContainsString('hero-mobile-1080.webp', $hero['src']);
-        $this->assertSame(1080, $hero['width']);
-        $this->assertSame(1440, $hero['height']);
+        $this->assertStringContainsString('panorama-960.webp 960w', $hero['srcset']['webp']);
+        $this->assertStringContainsString('panorama-1916.webp 1916w', $hero['srcset']['webp']);
+        $this->assertStringContainsString('panorama-1916.avif 1916w', $hero['srcset']['avif']);
+        $this->assertStringContainsString('panorama-1916.webp', $hero['src']);
+        $this->assertSame(1916, $hero['width']);
+        $this->assertSame(821, $hero['height']);
     }
 
     public function test_the_landscape_crop_is_no_longer_shipped_or_referenced(): void
@@ -83,12 +83,10 @@ class TravelHeroAssetsTest extends TestCase
         $this->assertNull(TravelHero::asset('trip-empty'));
     }
 
-    public function test_the_hero_renders_without_its_photograph(): void
+    public function test_the_hero_carries_its_headline_and_signals(): void
     {
-        $this->uninstall('hero-mobile');
         $response = $this->get(route('tourism.request', ['locale' => 'en']));
         $response->assertOk();
-        $response->assertDontSee('images/travel/hero-mobile-1080', false);
         $response->assertSee(__('tourism.request.hero_line1'));
         $response->assertSee(__('tourism.request.benefit_trusted'));
     }
@@ -101,11 +99,15 @@ class TravelHeroAssetsTest extends TestCase
         $response->assertDontSee(__('tourism.request.closing_title_2'));
     }
 
-    public function test_the_page_renders_the_photograph_when_it_is_installed(): void
+    /**
+     * Travel opened on a full-bleed photograph while every other vertical
+     * opened on a headline and a panel, which is what made the site read as
+     * several products. It opens like the rest now - see x-vertical-hero.
+     */
+    public function test_the_hero_is_no_longer_a_photograph(): void
     {
         $response = $this->get(route('tourism.request', ['locale' => 'en']));
         $response->assertOk();
-        $response->assertSee('images/travel/hero-mobile-1080.avif', false);
-        $response->assertSee('type="image/avif"', false);
+        $response->assertDontSee('images/travel/hero-mobile', false);
     }
 }
