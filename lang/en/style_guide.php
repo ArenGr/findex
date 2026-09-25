@@ -5,6 +5,7 @@ return [
     'subtitle' => "Findex's core color and typography system. Source: the Figma \"Colors and fonts\" page.",
     'brand_colors' => 'Brand Colors',
     'carousel_colors' => 'Carousel Colors',
+    'page_accents' => 'Page Accents',
     'neutral_colors' => 'Neutral Colors',
     'typography' => 'Typography',
     'buttons' => 'Buttons',

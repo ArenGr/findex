@@ -5,6 +5,7 @@ return [
     'subtitle' => 'Findex-ի գույների և տառատեսակների հիմնական համակարգը։ Աղբյուր՝ Figma "Colors and fonts" էջը։',
     'brand_colors' => 'Հիմնական գույներ',
     'carousel_colors' => 'Carousel-ի գույներ',
+    'page_accents' => 'Էջերի գույներ',
     'neutral_colors' => 'Չեզոք գույներ',
     'typography' => 'Տառատեսակներ',
     'buttons' => 'Կոճակներ',

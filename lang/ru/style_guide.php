@@ -5,6 +5,7 @@ return [
     'subtitle' => 'Основная система цветов и типографики Findex. Источник: страница Figma "Colors and fonts".',
     'brand_colors' => 'Основные цвета',
     'carousel_colors' => 'Цвета карусели',
+    'page_accents' => 'Цвета страниц',
     'neutral_colors' => 'Нейтральные цвета',
     'typography' => 'Типографика',
     'buttons' => 'Кнопки',

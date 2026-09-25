@@ -38,6 +38,46 @@ return [
     ],
 
     'request' => [
+        // The four-step request wizard: one card, one question at a time.
+        'wizard' => [
+            'step_vehicle' => 'Vehicle',
+            'step_contact' => 'Contact',
+            'step_payout' => 'Payout',
+            'step_review' => 'Review',
+            'step_of' => 'Step :current of :total',
+            'back' => 'Back',
+            'continue' => 'Continue',
+            'not_set' => 'Not set',
+
+            'vehicle_eyebrow' => 'Auto insurance',
+            'vehicle_heading' => "Let's find insurance for your car",
+            'vehicle_sub' => 'Enter your vehicle details to get started.',
+
+            'contact_eyebrow' => 'Contact details',
+            'contact_heading' => 'Where should insurers send your quote?',
+            'contact_sub' => 'Enter your contact information.',
+            'contact_privacy' => 'Used only for this insurance request. We never share your contact details for marketing.',
+            'name_placeholder' => 'e.g. Aren Grigoryan',
+            'email_placeholder' => 'your@email.com',
+            'phone_placeholder' => '+374 00 000 000',
+
+            'payout_eyebrow' => 'Payout details',
+            'payout_heading' => 'Enter your bank account',
+            'payout_sub' => 'Your bank account is required by the insurer to prepare your quote.',
+            'payout_private_title' => 'Your information stays private',
+            'payout_private_body' => 'Findex sends this straight on with your quote request and does not store your ID or bank account.',
+            'bank_placeholder' => 'e.g. 1234 5678 9012 3456',
+
+            'review_eyebrow' => 'Review',
+            'review_heading' => 'Review your request',
+            'review_sub' => 'Please check your details before we send them to insurers.',
+            'review_edit' => 'Edit',
+            'review_vehicle' => 'Vehicle',
+            'review_term' => 'Contract term',
+            'review_contact' => 'Contact',
+            'review_bank' => 'Bank account',
+            'footnote_fast' => 'Usually takes a few minutes',
+        ],
         'works_heading' => 'How it works',
         'works_sub' => 'Compare auto insurance in three minutes.',
         'works_1_title' => 'Enter your plate',

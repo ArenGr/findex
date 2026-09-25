@@ -379,6 +379,53 @@ input[type="number"] {
     }
 }
 
+/* One accent per page family. A hero sets --tone from one of these and
+   everything in the band - the wash, the eyebrow rule, the step numbers -
+   follows it. Deep enough to carry small text on white. */
+:root {
+    --color-tone-rates: #0f766e;
+    --color-tone-banking: #005fb9;
+    --color-tone-insurance: #607e34;
+    --color-tone-travel: #b45309;
+    --color-tone-about: #5b50c8;
+}
+
+/* ------------------------------------------------------------------------
+ * The page hero. One band per page, washed with that page's accent - see
+ * --color-tone-* above and resources/views/components/section-hero.
+ * --------------------------------------------------------------------- */
+.section-hero {
+    --tone: var(--color-primary);
+    border-bottom: 1px solid var(--color-border);
+    background:
+        radial-gradient(44rem 20rem at 6% -45%, color-mix(in oklab, var(--tone) 18%, transparent), transparent 70%),
+        color-mix(in oklab, var(--tone) 4%, #fff);
+}
+
+.hero-accent-text {
+    color: var(--tone);
+}
+
+.hero-accent-rule {
+    background-color: color-mix(in oklab, var(--tone) 45%, transparent);
+}
+
+/*
+ * One form fills the whole screen on /insurance/auto, so its controls step up
+ * a size. Two classes, so it beats the .field and .btn utilities themselves.
+ */
+.form-lg {
+    .field {
+        min-height: 3.5rem;
+        font-size: 1rem;
+    }
+
+    .btn {
+        min-height: 3.5rem;
+        font-size: 0.9375rem;
+    }
+}
+
 .leaflet-container {
     isolation: isolate;
 }

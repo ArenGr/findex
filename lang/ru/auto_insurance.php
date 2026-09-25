@@ -36,6 +36,46 @@ return [
     ],
 
     'request' => [
+        // The four-step request wizard: one card, one question at a time.
+        'wizard' => [
+            'step_vehicle' => 'Автомобиль',
+            'step_contact' => 'Контакты',
+            'step_payout' => 'Выплата',
+            'step_review' => 'Проверка',
+            'step_of' => 'Шаг :current из :total',
+            'back' => 'Назад',
+            'continue' => 'Продолжить',
+            'not_set' => 'Не указано',
+
+            'vehicle_eyebrow' => 'Автострахование',
+            'vehicle_heading' => 'Подберём страховку для вашего автомобиля',
+            'vehicle_sub' => 'Введите данные автомобиля, чтобы начать.',
+
+            'contact_eyebrow' => 'Контактные данные',
+            'contact_heading' => 'Куда страховщикам отправить предложение?',
+            'contact_sub' => 'Введите ваши контактные данные.',
+            'contact_privacy' => 'Используется только для этого запроса. Мы никогда не передаём ваши контакты для рекламы.',
+            'name_placeholder' => 'напр. Арен Григорян',
+            'email_placeholder' => 'your@email.com',
+            'phone_placeholder' => '+374 00 000 000',
+
+            'payout_eyebrow' => 'Платёжные данные',
+            'payout_heading' => 'Введите номер банковского счёта',
+            'payout_sub' => 'Номер счёта нужен страховщику, чтобы подготовить предложение.',
+            'payout_private_title' => 'Ваши данные остаются конфиденциальными',
+            'payout_private_body' => 'Findex отправляет их только вместе с запросом и не хранит ваш ID или банковский счёт.',
+            'bank_placeholder' => 'напр. 1234 5678 9012 3456',
+
+            'review_eyebrow' => 'Проверка',
+            'review_heading' => 'Проверьте ваш запрос',
+            'review_sub' => 'Пожалуйста, проверьте данные, прежде чем мы отправим их страховщикам.',
+            'review_edit' => 'Изменить',
+            'review_vehicle' => 'Автомобиль',
+            'review_term' => 'Срок договора',
+            'review_contact' => 'Контакты',
+            'review_bank' => 'Банковский счёт',
+            'footnote_fast' => 'Обычно занимает несколько минут',
+        ],
         'works_heading' => 'Как это работает',
         'works_sub' => 'Сравните автостраховку за три минуты.',
         'works_1_title' => 'Введите номер',

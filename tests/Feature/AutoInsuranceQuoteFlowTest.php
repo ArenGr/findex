@@ -59,11 +59,21 @@ class AutoInsuranceQuoteFlowTest extends TestCase
         ], $overrides);
     }
 
-    public function test_request_form_renders(): void
+    public function test_request_form_renders_all_four_wizard_steps(): void
     {
         $this->get(route('insurance.auto.request', ['locale' => 'en']))
             ->assertOk()
-            ->assertSee(__('auto_insurance.request.heading'));
+            ->assertSee(__('auto_insurance.request.wizard.vehicle_heading'))
+            ->assertSee(__('auto_insurance.request.wizard.review_heading'))
+            ->assertSee('data-step="4"', false);
+    }
+
+    public function test_a_signed_in_visitor_is_not_asked_for_their_name_again(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('insurance.auto.request', ['locale' => 'en']))
+            ->assertOk()
+            ->assertDontSee('name="guest_name"', false);
     }
 
     public function test_submitting_creates_a_request_and_a_quote_per_active_insurance_partner(): void

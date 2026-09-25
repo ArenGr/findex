@@ -19,6 +19,15 @@
             ['name' => __('style_guide.colors.slide_purple'), 'hex' => '#DCB0E9', 'class' => 'bg-slide-purple'],
         ];
 
+        // One accent per page family - see --color-tone-* in app.css.
+        $pageAccents = [
+            ['tone' => 'rates', 'name' => __('nav.rates'), 'hex' => '#0F766E'],
+            ['tone' => 'banking', 'name' => __('nav.banking.label'), 'hex' => '#005FB9'],
+            ['tone' => 'insurance', 'name' => __('nav.insurance.label'), 'hex' => '#607E34'],
+            ['tone' => 'travel', 'name' => __('nav.travel.label'), 'hex' => '#B45309'],
+            ['tone' => 'about', 'name' => __('nav.about'), 'hex' => '#5B50C8'],
+        ];
+
         $neutrals = [
             ['name' => __('style_guide.colors.ink'), 'hex' => '#161515', 'class' => 'bg-ink'],
             ['name' => __('style_guide.colors.body_text'), 'hex' => '#262626', 'class' => 'bg-body-text'],
@@ -52,6 +61,18 @@
                     <div class="h-24 rounded-lg {{ $color['class'] }}"></div>
                     <p class="mt-3 text-sm font-medium text-ink">{{ $color['name'] }}</p>
                     <p class="text-xs text-muted">{{ $color['hex'] }}</p>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- One accent per page family; a hero reads it through --tone. --}}
+        <h2 class="mt-12 font-heading text-xl font-semibold text-ink">{{ __('style_guide.page_accents') }}</h2>
+        <div class="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-5">
+            @foreach ($pageAccents as $accent)
+                <div>
+                    <div class="h-24 rounded-lg" style="background-color: var(--color-tone-{{ $accent['tone'] }})"></div>
+                    <p class="mt-3 text-sm font-medium text-ink">{{ $accent['name'] }}</p>
+                    <p class="text-xs text-muted">{{ $accent['hex'] }}</p>
                 </div>
             @endforeach
         </div>

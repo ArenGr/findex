@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const NAMES = [
     // navigation + chrome
     'search', 'map-pin', 'arrow-right', 'arrow-left', 'chevron-down', 'chevron-right',
-    'check', 'x', 'plus', 'minus', 'info', 'external-link', 'sliders-horizontal',
+    'check', 'x', 'plus', 'minus', 'info', 'external-link', 'sliders-horizontal', 'pencil',
     // the verticals
     'arrow-left-right', 'shield-check', 'plane', 'plane-takeoff', 'house',
     'landmark', 'graduation-cap', 'car', 'banknote', 'credit-card',

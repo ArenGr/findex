@@ -36,6 +36,46 @@ return [
     ],
 
     'request' => [
+        // The four-step request wizard: one card, one question at a time.
+        'wizard' => [
+            'step_vehicle' => 'Մեքենա',
+            'step_contact' => 'Կապ',
+            'step_payout' => 'Վճարում',
+            'step_review' => 'Ստուգում',
+            'step_of' => 'Քայլ :current / :total',
+            'back' => 'Հետ',
+            'continue' => 'Շարունակել',
+            'not_set' => 'Նշված չէ',
+
+            'vehicle_eyebrow' => 'Ավտոապահովագրություն',
+            'vehicle_heading' => 'Գտնենք ապահովագրություն Ձեր մեքենայի համար',
+            'vehicle_sub' => 'Մուտքագրեք մեքենայի տվյալները՝ սկսելու համար։',
+
+            'contact_eyebrow' => 'Կապի տվյալներ',
+            'contact_heading' => 'Ո՞ւր ուղարկեն ապահովագրողները առաջարկը',
+            'contact_sub' => 'Մուտքագրեք Ձեր կապի տվյալները։',
+            'contact_privacy' => 'Օգտագործվում է միայն այս հարցման համար։ Մենք երբեք չենք փոխանցում Ձեր կապի տվյալները գովազդի նպատակով։',
+            'name_placeholder' => 'օր.՝ Արեն Գրիգորյան',
+            'email_placeholder' => 'your@email.com',
+            'phone_placeholder' => '+374 00 000 000',
+
+            'payout_eyebrow' => 'Վճարման տվյալներ',
+            'payout_heading' => 'Մուտքագրեք բանկային հաշվեհամարը',
+            'payout_sub' => 'Բանկային հաշվեհամարը պահանջվում է ապահովագրողի կողմից՝ առաջարկը պատրաստելու համար։',
+            'payout_private_title' => 'Ձեր տվյալները մնում են գաղտնի',
+            'payout_private_body' => 'Findex-ը դա ուղարկում է միայն Ձեր հարցման հետ և չի պահում Ձեր անձնագիրը կամ բանկային հաշիվը։',
+            'bank_placeholder' => 'օր.՝ 1234 5678 9012 3456',
+
+            'review_eyebrow' => 'Ստուգում',
+            'review_heading' => 'Ստուգեք Ձեր հարցումը',
+            'review_sub' => 'Խնդրում ենք ստուգել տվյալները՝ նախքան ապահովագրողներին ուղարկելը։',
+            'review_edit' => 'Փոփոխել',
+            'review_vehicle' => 'Մեքենա',
+            'review_term' => 'Պայմանագրի ժամկետ',
+            'review_contact' => 'Կապ',
+            'review_bank' => 'Բանկային հաշիվ',
+            'footnote_fast' => 'Սովորաբար տևում է մի քանի րոպե',
+        ],
         'works_heading' => 'Ինչպես է աշխատում',
         'works_sub' => 'Համեմատեք ավտոապահովագրությունը երեք րոպեում։',
         'works_1_title' => 'Մուտքագրեք համարանիշը',

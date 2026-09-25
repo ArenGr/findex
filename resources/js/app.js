@@ -1,6 +1,7 @@
 import Alpine from 'alpinejs';
 import morph from '@alpinejs/morph';
 import travelRequestForm from './travel-request-form.js';
+import autoInsuranceForm from './auto-insurance-form.js';
 import homeRatesPanel from './home-rates-panel.js';
 import mortgageTable from './mortgage-table.js';
 
@@ -8,6 +9,9 @@ window.Alpine = Alpine;
 
 // The /tourism request form's state.
 Alpine.data('travelRequestForm', travelRequestForm);
+
+// The /insurance/auto request wizard.
+Alpine.data('autoInsuranceForm', autoInsuranceForm);
 
 // One panel of the homepage rates table.
 Alpine.data('homeRatesPanel', homeRatesPanel);
