@@ -6,6 +6,7 @@ export default function autoInsuranceForm(config) {
         loading: false,
 
         plate: config.plate,
+        idNumber: config.idNumber,
         term: config.term,
         name: config.name,
         email: config.email,
@@ -65,7 +66,7 @@ export default function autoInsuranceForm(config) {
 
         /** Whether a step holds everything it asked for, so the stepper can tick it. */
         stepDone(n) {
-            if (n === 1) return Boolean(this.plate.trim() && this.term);
+            if (n === 1) return Boolean(this.plate.trim() && this.idNumber.trim() && this.term);
             if (n === 2) return Boolean(this.name.trim() && this.email.trim() && this.phone.trim());
             if (n === 3) return Boolean(this.bankAccount.trim());
 

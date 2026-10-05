@@ -48,6 +48,10 @@ return [
             'back' => 'Back',
             'continue' => 'Continue',
             'not_set' => 'Not set',
+            'hero_sub' => "Enter your plate number once and we'll ask every partner insurer for a live price. Compare them side by side in minutes - free, and with no commitment.",
+            'need_heading' => "What you'll need",
+            'need_contact' => 'Phone and email',
+            'reassure_private' => 'Your ID and account are never stored',
 
             'vehicle_eyebrow' => 'Auto insurance',
             'vehicle_heading' => "Let's find insurance for your car",

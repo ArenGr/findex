@@ -35,128 +35,51 @@
             </a>
         </div>
 
-        {{-- Four across from lg, which is the whole set on one screen. --}}
-        <div
-            x-data="{
-                active: 0,
-                total: {{ count($presets) }},
-                go(to) {
-                    this.active = Math.min(Math.max(to, 0), this.total - 1);
-                    this.$refs.track.children[this.active]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-                },
-                sync() {
-                    const card = this.$refs.track.children[0];
-                    if (!card) return;
-                    const step = card.getBoundingClientRect().width + 20;
-                    this.active = Math.round(this.$refs.track.scrollLeft / step);
-                },
-            }"
-            class="relative mt-8"
-        >
-            <div
-                x-ref="track"
-                @scroll.debounce.100ms="sync()"
-                class="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible [&::-webkit-scrollbar]:hidden"
-            >
-                @foreach ($presets as $preset)
+        {{-- One list, one row per trip: the words do the work, so no photographs. --}}
+        <ul class="mt-8 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+            @foreach ($presets as $preset)
+                <li>
                     <button
                         type="button"
                         @click="applyPreset(@js($preset + ['departure' => __('tourism.request.departure_default')]))"
-                        :class="preset === @js($preset['key']) && 'border-primary ring-2 ring-primary'"
-                        class="group relative flex w-[78%] shrink-0 snap-start flex-col items-start rounded-2xl border border-border bg-white p-3 pb-16 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[46%] lg:w-auto"
+                        :class="preset === @js($preset['key']) ? 'bg-primary/5' : ''"
+                        class="group flex w-full flex-col gap-3 px-5 py-4 text-left transition hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none sm:flex-row sm:items-center sm:gap-5"
                     >
-                        <span class="relative block h-40 w-full overflow-hidden rounded-xl bg-surface-alt">
-                            @if ($preset['photo'])
-                                <picture>
-                                    @isset($preset['photo']['srcset']['avif'])
-                                        <source type="image/avif" srcset="{{ $preset['photo']['srcset']['avif'] }}" sizes="(min-width: 1024px) 300px, 80vw">
-                                    @endisset
-                                    <source type="image/webp" srcset="{{ $preset['photo']['srcset']['webp'] }}" sizes="(min-width: 1024px) 300px, 80vw">
-                                    <img
-                                        src="{{ $preset['photo']['src'] }}"
-                                        alt="{{ $preset['title'] }}"
-                                        width="{{ $preset['photo']['width'] }}"
-                                        height="{{ $preset['photo']['height'] }}"
-                                        loading="lazy"
-                                        decoding="async"
-                                        class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                    >
-                                </picture>
-                            @else
-                                <span class="flex h-full w-full items-center justify-center text-6xl leading-none" aria-hidden="true">
-                                    <span class="transition duration-300 group-hover:scale-105">{{ $countryFlag($preset['country']) }}</span>
-                                </span>
-                            @endif
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-alt text-xl leading-none" aria-hidden="true">
+                            {{ $countryFlag($preset['country']) }}
+                        </span>
 
-                            {{-- The city, on the picture. --}}
-                            <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-ink shadow-sm backdrop-blur-sm">
-                                <x-travel-icon name="location_on" class="h-3 w-3 text-primary" />
-                                {{ $preset['city_label'] }}
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-[15px] font-bold text-ink">{{ $preset['title'] }}</span>
+
+                            <span class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+                                <span class="inline-flex items-center gap-1">
+                                    <x-travel-icon name="location_on" class="h-3.5 w-3.5 text-primary" />
+                                    {{ $preset['city_label'] }}
+                                </span>
+
+                                @foreach ($tags($preset) as $tag)
+                                    <span class="inline-flex items-center gap-1">
+                                        <x-travel-icon :name="$tag['icon']" class="h-3.5 w-3.5 text-primary" />
+                                        {{ $tag['label'] }}
+                                    </span>
+                                @endforeach
                             </span>
                         </span>
 
-                        <span class="mt-4 block w-full px-1">
-                            <span class="block text-[15px] font-bold text-ink">{{ $preset['title'] }}</span>
+                        @if ($preset['typical_price'])
+                            <span class="shrink-0 text-sm font-semibold whitespace-nowrap text-primary sm:text-right">
+                                {{ __('tourism.presets.from', ['amount' => number_format($preset['typical_price']).' '.__('tourism.request.amd')]) }}
+                            </span>
+                        @endif
 
-                            @if ($preset['typical_price'])
-                                <span class="mt-1 block text-[13px] font-semibold text-primary">
-                                    {{ __('tourism.presets.from', ['amount' => number_format($preset['typical_price']).' '.__('tourism.request.amd')]) }}
-                                </span>
-                            @endif
-                        </span>
-
-                        <span class="mt-3 flex w-full flex-wrap gap-1 px-1">
-                            @foreach ($tags($preset) as $tag)
-                                <span class="inline-flex items-center gap-1 rounded-full bg-surface-alt px-2 py-1 text-[10.5px] font-medium whitespace-nowrap text-primary-dark">
-                                    <x-travel-icon :name="$tag['icon']" class="h-2.5 w-2.5 text-primary" />
-                                    {{ $tag['label'] }}
-                                </span>
-                            @endforeach
-                        </span>
-
-                        {{-- What the card leaves out, for anyone who cannot see the photograph or the chips. --}}
+                        {{-- What the row leaves out, for anyone who cannot see the chips. --}}
                         <span class="sr-only">{{ $preset['summary'] }} {{ __('tourism.presets.choose') }}</span>
-                        <span class="absolute right-4 bottom-4 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-colors duration-300 group-hover:bg-primary-dark">
-                            <x-travel-icon name="arrow_forward" class="h-4 w-4" />
-                        </span>
+
+                        <x-travel-icon name="arrow_forward" class="hidden h-4 w-4 shrink-0 text-subtle transition-colors group-hover:text-primary sm:block" />
                     </button>
-                @endforeach
-            </div>
-
-            {{-- Only while the row scrolls. --}}
-            <div class="mt-5 flex items-center justify-center gap-3 lg:hidden">
-                <button
-                    type="button"
-                    @click="go(active - 1)"
-                    :disabled="active === 0"
-                    class="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-primary-dark transition hover:border-primary disabled:opacity-30 disabled:hover:border-border"
-                    aria-label="{{ __('tourism.presets.previous') }}"
-                >
-                    <x-travel-icon name="arrow_back" class="h-4 w-4" />
-                </button>
-
-                <div class="flex items-center gap-2">
-                @foreach ($presets as $i => $preset)
-                    <button
-                        type="button"
-                        @click="go({{ $i }})"
-                        :class="{ 'bg-primary w-6': active === {{ $i }}, 'bg-border-muted w-2': active !== {{ $i }} }"
-                        class="h-2 rounded-full transition-all {{ $i === 0 ? 'bg-primary w-6' : 'bg-border-muted w-2' }}"
-                        aria-label="{{ $preset['title'] }}"
-                    ></button>
-                @endforeach
-                </div>
-
-                <button
-                    type="button"
-                    @click="go(active + 1)"
-                    :disabled="active >= total - 1"
-                    class="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-primary-dark transition hover:border-primary disabled:opacity-30 disabled:hover:border-border"
-                    aria-label="{{ __('tourism.presets.next') }}"
-                >
-                    <x-travel-icon name="arrow_forward" class="h-4 w-4" />
-                </button>
-            </div>
-        </div>
+                </li>
+            @endforeach
+        </ul>
     </section>
 @endif

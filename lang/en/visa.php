@@ -22,6 +22,11 @@ return [
         'signal_fast' => 'Answers in days',
         'signal_fast_sub' => 'Not weeks',
 
+        // The rail beside the form: what to have to hand before you start.
+        'need_heading' => "What you'll need",
+        'need_destination' => 'Country you need a visa for',
+        'need_dates' => 'Travel dates',
+        'need_contact' => 'Your name and email',
         'section_trip' => 'Where and when',
         'section_contact' => 'Where to send the answers',
 

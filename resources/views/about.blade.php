@@ -18,12 +18,43 @@
         ];
     @endphp
 
-    <x-vertical-hero
-        icon="building-2"
-        :eyebrow="__('nav.about')"
-        :title="__('about.hero.title')"
-        :subtitle="__('about.hero.subtitle')"
-    />
+    {{-- The About hero: what Findex is on the left, the five things it compares on the right.
+         The band colour is the shared one (see .section-hero); each tile carries its own
+         vertical's accent, which is the point of the row. --}}
+    <section class="section-hero overflow-hidden">
+        <div class="site-container grid grid-cols-1 items-center gap-12 py-14 lg:grid-cols-2 lg:py-20">
+            <div>
+                <span class="inline-flex rounded-full bg-primary/15 px-4 py-2 text-sm font-medium text-ink">
+                    {{ __('nav.about') }}
+                </span>
+
+                <h1 class="mt-6 font-heading text-3xl leading-tight font-bold break-words text-ink sm:text-4xl">{{ __('about.hero.title') }}</h1>
+                <p class="mt-4 max-w-md text-base leading-relaxed text-muted">{{ __('about.hero.subtitle') }}</p>
+            </div>
+
+            <div class="relative mx-auto w-full max-w-sm">
+                {{-- Not -z-10: a negative layer would fall behind the band's own background. --}}
+                <div class="absolute -inset-3 rounded-[2rem] bg-hero-purple/25 sm:-inset-6" aria-hidden="true"></div>
+
+                <ul class="relative grid grid-cols-2 gap-4">
+                    @foreach ([
+                        ['label' => __('about.hero.pillars.cards'), 'color' => 'tone-banking'],
+                        ['label' => __('about.hero.pillars.rates'), 'color' => 'tone-rates'],
+                        ['label' => __('about.hero.pillars.mortgages'), 'color' => 'accent-yellow'],
+                        ['label' => __('about.hero.pillars.insurance'), 'color' => 'tone-insurance'],
+                        ['label' => __('about.hero.pillars.travel'), 'color' => 'tone-travel'],
+                    ] as $i => $pillar)
+                        <li @class(['rounded-2xl bg-white p-5 shadow-sm ring-1 ring-placeholder/60', 'mt-6' => $i % 2 === 1])>
+                            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-placeholder/20">
+                                <span class="h-4 w-4 rounded-full" style="background-color: var(--color-{{ $pillar['color'] }})"></span>
+                            </span>
+                            <p class="mt-3 text-sm font-semibold text-ink">{{ $pillar['label'] }}</p>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </section>
 
     {{-- Mission --}}
     <section class="site-container py-16">

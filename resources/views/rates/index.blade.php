@@ -192,80 +192,6 @@
 
         </div>
 
-            <div class="flex flex-wrap items-center gap-3">
-    
-                    @if ($quoteMinimum !== null && $exchangeOn)
-                        @php $qualifies = $amount >= $quoteMinimum; @endphp
-                        <a
-                            @php
-                                $handoverAmount = $amount === null
-                                    ? null
-                                    : ($isBuying && $best
-                                        ? round($convert((float) $best->{$rateField}), 2)
-                                        : $amount);
-                            @endphp
-                            href="{{ route('exchange.request', array_filter([
-                                'currency' => $selectedCurrency?->code,
-                                'amount' => $handoverAmount,
-                                'city' => $selectedCity,
-                                'rate_field' => $rateField,
-                            ])) }}"
-                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
-                                'form' => [
-                                    'currency_code' => (string) ($selectedCurrency?->code ?? ''),
-                                    'amount' => $handoverAmount === null ? '' : (string) $handoverAmount,
-                                    'rate_field' => $rateField,
-                                    'preferred_city' => (string) ($selectedCity ?? ''),
-                                ],
-                                'context' => [
-                                    'code' => (string) ($selectedCurrency?->code ?? ''),
-                                    'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
-                                    'total' => $best && $handoverAmount ? $amd($handoverAmount * (float) $best->{$rateField}) : null,
-                                ],
-                            ]) }} }))"
-                            class="btn btn-primary min-w-0"
-                        >
-                            <svg
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
-                                stroke-linecap="round" stroke-linejoin="round"
-                                class="h-5 w-5 shrink-0" aria-hidden="true"
-                            >
-                                <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
-                                <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
-                            </svg>
-                            <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
-                        </a>
-    
-                        <x-info-popover :label="__('rates.cta_button')">
-                            <p class="font-semibold text-ink">
-                                @if ($qualifies)
-                                    {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
-                                @else
-                                    {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
-                                @endif
-                            </p>
-                            <p class="mt-2">{{ __('rates.cta_body') }}</p>
-                            <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
-                        </x-info-popover>
-                    @endif
-    
-                    @if ($alertsOn)
-                    <a
-                        href="{{ $alertHref }}"
-                        onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
-                        class="btn btn-secondary min-w-0"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
-                    </a>
-    
-                    <x-info-popover :label="__('rates.alert_cta')">
-                        {{ __('rates.alert_hint') }}
-                    </x-info-popover>
-                    @endif
-                </div>
         </div>
 
         @if ($centralBankRate)
@@ -512,6 +438,92 @@
             @if ($search !== '')
                 <a href="{{ $link(['q' => null]) }}" class="mt-2 inline-block px-1 text-xs text-muted underline hover:text-ink">{{ __('rates.search_clear') }}</a>
             @endif
+
+            {{-- The two things to do about a rate, on their own row under the controls
+                 they read from - not squeezed in beside the currency chips. --}}
+            @if (($quoteMinimum !== null && $exchangeOn) || $alertsOn)
+                <div class="mt-5 flex flex-col gap-4 border-t border-border pt-5 lg:flex-row lg:items-center lg:justify-between">
+                    <p class="max-w-md text-sm leading-relaxed text-muted">{{ __('rates.actions_hint') }}</p>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        @if ($quoteMinimum !== null && $exchangeOn)
+                            @php $qualifies = $amount >= $quoteMinimum; @endphp
+                            <div class="flex items-center gap-1.5">
+                            <a
+                                @php
+                                    $handoverAmount = $amount === null
+                                        ? null
+                                        : ($isBuying && $best
+                                            ? round($convert((float) $best->{$rateField}), 2)
+                                            : $amount);
+                                @endphp
+                                href="{{ route('exchange.request', array_filter([
+                                    'currency' => $selectedCurrency?->code,
+                                    'amount' => $handoverAmount,
+                                    'city' => $selectedCity,
+                                    'rate_field' => $rateField,
+                                ])) }}"
+                                onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('better-rate-open', { detail: {{ Js::from([
+                                    'form' => [
+                                        'currency_code' => (string) ($selectedCurrency?->code ?? ''),
+                                        'amount' => $handoverAmount === null ? '' : (string) $handoverAmount,
+                                        'rate_field' => $rateField,
+                                        'preferred_city' => (string) ($selectedCity ?? ''),
+                                    ],
+                                    'context' => [
+                                        'code' => (string) ($selectedCurrency?->code ?? ''),
+                                        'rate' => $best ? number_format((float) $best->{$rateField}, 2) : null,
+                                        'total' => $best && $handoverAmount ? $amd($handoverAmount * (float) $best->{$rateField}) : null,
+                                    ],
+                                ]) }} }))"
+                                class="btn btn-primary min-w-0"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="h-5 w-5 shrink-0" aria-hidden="true"
+                                >
+                                    <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+                                    <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                                </svg>
+                                <span class="min-w-0 break-words">{{ __('rates.cta_button') }}</span>
+                            </a>
+
+                            <x-info-popover :label="__('rates.cta_button')">
+                                <p class="font-semibold text-ink">
+                                    @if ($qualifies)
+                                        {{ __('rates.cta_heading_qualified', ['amount' => number_format($amount), 'code' => $selectedCurrency?->code]) }}
+                                    @else
+                                        {{ __('rates.cta_heading', ['amount' => number_format($quoteMinimum), 'code' => $selectedCurrency?->code]) }}
+                                    @endif
+                                </p>
+                                <p class="mt-2">{{ __('rates.cta_body') }}</p>
+                                <p class="mt-2 text-xs">{{ __('rates.cta_note') }}</p>
+                            </x-info-popover>
+                            </div>
+                        @endif
+
+                        @if ($alertsOn)
+                        <div class="flex items-center gap-1.5">
+                        <a
+                            href="{{ $alertHref }}"
+                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('rate-alert-open', { detail: {{ Js::from($alertPrefill) }} }))"
+                            class="btn btn-secondary min-w-0"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0 text-accent-yellow" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0010 18z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="min-w-0 break-words">{{ __('rates.alert_cta') }}</span>
+                        </a>
+
+                        <x-info-popover :label="__('rates.alert_cta')">
+                            {{ __('rates.alert_hint') }}
+                        </x-info-popover>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
         </div>
 
@@ -729,6 +741,7 @@
     </section>
 
     <x-how-it-works
+        tone="rates"
         :heading="__('rates.works_heading')"
         :sub="__('rates.works_sub')"
         :steps="[

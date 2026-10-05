@@ -105,23 +105,15 @@
                     <input type="text" name="company" id="company" tabindex="-1" autocomplete="off">
                 </div>
 
-                {{-- The rates panel. --}}
-                <div class="relative z-10 rounded-3xl border border-border bg-surface">
-                    <div class="border-b border-border px-5 py-4 sm:px-6">
-                        @include('tourism.request._stepper')
-                    </div>
+                {{-- White on white: a heavier border and a soft shadow lift the form off the page. --}}
+                <div class="form-lg relative z-10 w-full overflow-hidden rounded-3xl border-2 border-border bg-surface shadow-[0_18px_44px_-28px_rgb(24_29_18/0.45)]">
+                    {{-- The form keeps a readable measure; the rail beside it holds the trip so far. --}}
+                    <div class="grid lg:grid-cols-[minmax(0,1fr)_21rem]">
+                        <div class="p-5 sm:p-8 lg:p-10">
+                            @include('tourism.request._stepper')
 
-                    <div class="grid grid-cols-1 gap-6 p-5 sm:p-6 lg:grid-cols-12 lg:items-start">
                         {{-- The step viewport. --}}
-                        {{-- Full width on step 1, two thirds after it. --}}
-                        <div
-                            class="relative"
-                            :class="{ 'lg:col-span-12': step === 1, 'lg:col-span-8': step !== 1 }"
-                            @class([
-                                'lg:col-span-12' => $initialStep === 1,
-                                'lg:col-span-8' => $initialStep !== 1,
-                            ])
-                        >
+                        <div class="relative pt-8">
                             {{-- STEP 1 --}}
                             <div
                                 data-step="1"
@@ -153,7 +145,7 @@
                             >
                                 {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
-                                    <h2 x-ref="heading2" tabindex="-1" class="font-heading text-xl font-bold text-ink outline-none">{{ __('tourism.request.step2_heading') }}</h2>
+                                    <h2 x-ref="heading2" tabindex="-1" class="font-heading text-2xl leading-tight font-bold text-ink outline-none sm:text-3xl">{{ __('tourism.request.step2_heading') }}</h2>
                                     <p class="text-sm text-muted">{{ __('tourism.request.step2_sub') }}</p>
                                 </div>
 
@@ -188,7 +180,7 @@
                             >
                                 {{-- tabindex="-1" so goToStep() can move focus here; it is not a tab stop, only a focus target. --}}
                                 <div class="space-y-1">
-                                    <h2 x-ref="heading3" tabindex="-1" class="font-heading text-xl font-bold text-ink outline-none">{{ __('tourism.request.step3_heading') }}</h2>
+                                    <h2 x-ref="heading3" tabindex="-1" class="font-heading text-2xl leading-tight font-bold text-ink outline-none sm:text-3xl">{{ __('tourism.request.step3_heading') }}</h2>
                                     <p class="text-sm text-muted">{{ __('tourism.request.step3_sub') }}</p>
                                 </div>
 
@@ -200,40 +192,6 @@
                                     <x-travel-icon name="check" class="h-4 w-4 shrink-0 text-primary" />
                                     {{ __('tourism.presets.applied') }}
                                 </p>
-
-                                <section class="{{ $card }} lg:hidden">
-                                    <div class="mb-4 flex items-center justify-between gap-3">
-                                        <h3 class="text-base font-bold text-ink">{{ __('tourism.request.review_heading') }}</h3>
-                                        <button type="button" @click="goToStep(1)" class="text-xs font-bold text-primary hover:underline">{{ __('tourism.request.summary_edit') }}</button>
-                                    </div>
-
-                                    <div x-show="hasItinerary" x-cloak class="mb-4 border-b border-border pb-4">
-                                        <p class="text-base font-bold text-ink" x-text="itineraryRoute"></p>
-                                        <p class="mt-1 text-xs text-muted" x-text="itineraryMeta"></p>
-                                    </div>
-
-                                    <dl class="flex flex-col gap-2.5">
-                                        @foreach ([
-                                            ['label' => __('tourism.request.summary_flight'), 'value' => 'flightSummary'],
-                                            ['label' => __('tourism.request.summary_hotel'), 'value' => 'hotelSummary'],
-                                            ['label' => __('tourism.request.summary_meals'), 'value' => 'mealsSummary'],
-                                            ['label' => __('tourism.request.summary_budget'), 'value' => 'budgetSummary'],
-                                        ] as $row)
-                                            <div class="flex justify-between gap-3 text-xs">
-                                                <dt class="shrink-0 text-muted">{{ $row['label'] }}</dt>
-                                                <dd class="text-right font-semibold text-ink" x-text="{{ $row['value'] }}"></dd>
-                                            </div>
-                                        @endforeach
-                                        <div x-show="priorities.length" x-cloak class="flex justify-between gap-3 border-t border-border pt-2.5 text-xs">
-                                            <dt class="shrink-0 text-muted">{{ __('tourism.request.priorities_label') }}</dt>
-                                            <dd class="flex flex-wrap justify-end gap-1.5">
-                                                <template x-for="value in priorities" :key="value">
-                                                    <span class="rounded-full border border-border bg-surface-alt px-2.5 py-1 text-[11px] font-semibold text-primary-dark" x-text="@js($priorityOptions)[value]"></span>
-                                                </template>
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                </section>
 
                                 <section class="{{ $card }} space-y-5">
                                     <div class="flex items-center gap-3">
@@ -289,19 +247,13 @@
                                             <x-travel-icon name="arrow_forward" class="h-4 w-4" />
                                         </button>
                                     </div>
-
-                                    <p class="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-muted">
-                                        <x-travel-icon name="lock" class="h-3.5 w-3.5 shrink-0" />
-                                        {{ __('tourism.request.safe_secure') }}
-                                    </p>
                                 </section>
                             </div>
                         </div>
 
-                        <aside
-                            :class="{ 'hidden': step === 1 }"
-                            @class(['lg:col-span-4', 'hidden' => $initialStep === 1])
-                        >
+                        </div>
+
+                        <aside class="border-t border-border bg-surface-alt p-5 sm:p-8 lg:border-t-0 lg:border-l lg:p-8">
                             @include('tourism.request._summary')
                         </aside>
                     </div>
@@ -325,7 +277,18 @@
              suggests second, like rates and insurance. --}}
         @include('tourism.request._presets')
 
-        @include('tourism.request._how-it-works')
+        <x-how-it-works
+            tone="travel"
+            :heading="__('tourism.request.works_heading')"
+            :sub="__('tourism.request.works_sub')"
+            :steps="[
+                ['icon' => 'map', 'title' => __('tourism.request.step_1_title'), 'body' => __('tourism.request.step_1_body')],
+                ['icon' => 'mail', 'title' => __('tourism.request.step_2_title'), 'body' => __('tourism.request.step_2_body')],
+                ['icon' => 'scale', 'title' => __('tourism.request.step_3_title'), 'body' => __('tourism.request.step_3_body')],
+                ['icon' => 'plane', 'title' => __('tourism.request.step_4_title'), 'body' => __('tourism.request.step_4_body')],
+            ]"
+        />
+
         <x-partners-strip :partners="$partners" :heading="__('tourism.request.partners_heading')" marquee />
     </div>
 @endsection

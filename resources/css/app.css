@@ -391,15 +391,53 @@ input[type="number"] {
 }
 
 /* ------------------------------------------------------------------------
- * The page hero. One band per page, washed with that page's accent - see
- * --color-tone-* above and resources/views/components/section-hero.
+ * "How it works": four numbered cards threaded together, in the page's own
+ * accent - see resources/views/components/how-it-works.
+ * --------------------------------------------------------------------- */
+.section-steps {
+    --tone: var(--color-primary);
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-surface-alt);
+
+    /* The thread only shows in the gaps between the cards, which sit over it. */
+    .step-thread {
+        background-image: repeating-linear-gradient(
+            to right,
+            color-mix(in oklab, var(--tone) 50%, transparent) 0 6px,
+            transparent 6px 13px
+        );
+    }
+
+    .step-icon {
+        background-color: color-mix(in oklab, var(--tone) 12%, #fff);
+        color: var(--tone);
+    }
+
+    /* A watermark, not a label: the number sits behind the words. */
+    .step-number {
+        color: color-mix(in oklab, var(--tone) 15%, transparent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .step-card {
+            transition-duration: 0ms;
+
+            &:hover {
+                transform: none;
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------
+ * The page hero. One band colour across the site; the page's own accent is
+ * carried by what sits on it - see --color-tone-* above and
+ * resources/views/components/section-hero.
  * --------------------------------------------------------------------- */
 .section-hero {
     --tone: var(--color-primary);
     border-bottom: 1px solid var(--color-border);
-    background:
-        radial-gradient(44rem 20rem at 6% -45%, color-mix(in oklab, var(--tone) 18%, transparent), transparent 70%),
-        color-mix(in oklab, var(--tone) 4%, #fff);
+    background-color: var(--color-surface-alt);
 }
 
 .hero-accent-text {

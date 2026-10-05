@@ -1,44 +1,46 @@
-{{-- Where you are in the request: one compact row, like the rates list/map switch. --}}
-<nav aria-label="{{ __('tourism.request.heading') }}" class="flex items-center gap-4">
-    <ol class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-        @foreach ([1, 2, 3] as $n)
+{{-- Where you are in the request: numbered steps, each over its own progress rule - see insurance/auto/_wizard-stepper. --}}
+@php
+    $steps = [
+        1 => __('tourism.request.fstep_1_title'),
+        2 => __('tourism.request.fstep_2_title'),
+        3 => __('tourism.request.fstep_3_title'),
+    ];
+@endphp
+
+<nav aria-label="{{ __('tourism.request.heading') }}">
+    <ol class="grid grid-cols-3 gap-2 sm:gap-4">
+        @foreach ($steps as $n => $label)
             @php
+                // A step is done once it holds what it asked for; only then is it clickable.
                 $done = "(step > {$n} || stepDone({$n}))";
                 $current = "step === {$n}";
                 $reached = $initialStep >= $n;
             @endphp
-            <li @class(['flex min-w-0 items-center gap-2 sm:gap-3', 'flex-1' => $n < 3]) @if ($n === $initialStep) aria-current="step" @endif>
+            <li class="min-w-0" @if ($n === $initialStep) aria-current="step" @endif>
                 <button
                     type="button"
                     @click="({{ $done }}) && goToStep({{ $n }})"
                     :class="{{ $done }} ? 'cursor-pointer' : 'cursor-default'"
-                    class="flex min-w-0 items-center gap-2.5 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+                    class="flex w-full min-w-0 items-center justify-center gap-2 rounded-lg py-1 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
                 >
                     <span
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition {{ $reached ? 'bg-primary text-white' : 'border border-placeholder bg-white text-muted' }}"
-                        :class="{
-                            'bg-primary text-white': {{ $done }} || {{ $current }},
-                            'border border-placeholder bg-white text-muted': !({{ $done }}) && !({{ $current }}),
-                        }"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition {{ $reached ? 'bg-primary text-white' : 'border border-placeholder bg-white text-subtle' }}"
+                        :class="{ 'bg-primary text-white': {{ $done }} || {{ $current }}, 'border border-placeholder bg-white text-subtle': !({{ $done }}) && !({{ $current }}) }"
                     >
-                        <span x-show="{{ $done }}" @if ($initialStep <= $n) x-cloak @endif><x-travel-icon name="check" class="h-4 w-4" /></span>
-                        <span x-show="!({{ $done }})" @if ($initialStep > $n) x-cloak @endif>{{ $n }}</span>
+                        <span x-show="{{ $done }}" @if ($initialStep <= $n) x-cloak @endif><x-lucide name="check" :size="16" :stroke="2.5" /></span>
+                        <span x-show="!({{ $done }})" @if ($initialStep > $n) x-cloak @endif>{{ sprintf('%02d', $n) }}</span>
                     </span>
                     <span
-                        class="hidden truncate text-sm font-semibold sm:block {{ $reached ? 'text-ink' : 'text-muted' }}"
-                        :class="{ 'text-ink': {{ $current }} || {{ $done }}, 'text-muted': !({{ $current }}) && !({{ $done }}) }"
-                    >{{ __('tourism.request.fstep_' . $n . '_title') }}</span>
+                        class="hidden truncate text-[15px] font-semibold sm:block {{ $reached ? 'text-ink' : 'text-subtle' }}"
+                        :class="{ 'text-ink': {{ $done }} || {{ $current }}, 'text-subtle': !({{ $done }}) && !({{ $current }}) }"
+                    >{{ $label }}</span>
                 </button>
 
-                @if ($n < 3)
-                    <span class="h-px min-w-4 flex-1 transition-colors {{ $initialStep > $n ? 'bg-primary' : 'bg-border' }}" :class="{ 'bg-primary': step > {{ $n }}, 'bg-border': step <= {{ $n }} }"></span>
-                @endif
+                <span
+                    class="mt-2.5 block h-1 rounded-full transition-colors {{ $reached ? 'bg-primary' : 'bg-border' }}"
+                    :class="{ 'bg-primary': {{ $done }} || {{ $current }}, 'bg-border': !({{ $done }}) && !({{ $current }}) }"
+                ></span>
             </li>
         @endforeach
     </ol>
-
-    <p
-        class="shrink-0 text-xs font-semibold tracking-wider text-muted uppercase"
-        x-text="@js(__('tourism.request.wizard_step_of', ['current' => ':c', 'total' => ':t'])).replace(':c', step).replace(':t', totalSteps)"
-    >{{ __('tourism.request.wizard_step_of', ['current' => $initialStep, 'total' => 3]) }}</p>
 </nav>

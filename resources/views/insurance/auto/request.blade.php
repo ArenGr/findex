@@ -5,7 +5,7 @@
 @php
     // The card's shared shapes, stated once.
     $eyebrow = 'text-xs font-bold tracking-[0.18em] text-primary uppercase';
-    $heading = 'mt-2.5 font-heading text-3xl leading-tight font-bold text-ink outline-none sm:text-4xl';
+    $heading = 'mt-2.5 font-heading text-2xl leading-tight font-bold text-ink outline-none sm:text-3xl';
     $sub = 'mt-3 text-base text-muted';
     $panelFooter = 'mt-8 flex items-center justify-between gap-3 border-t border-border pt-6';
 
@@ -34,7 +34,7 @@
         tone="insurance"
         :eyebrow="__('nav.insurance.label')"
         :title="__('auto_insurance.request.heading')"
-        :subtitle="__('auto_insurance.request.works_sub')"
+        :subtitle="__('auto_insurance.request.wizard.hero_sub')"
     />
 
     <section class="py-8 sm:py-14">
@@ -46,10 +46,11 @@
                 action="{{ route('insurance.auto.request.store') }}"
                 novalidate
                 {{-- White on white: a heavier border and a soft shadow lift the form off the page. --}}
-                class="form-lg w-full rounded-3xl border-2 border-border bg-surface p-5 shadow-[0_18px_44px_-28px_rgb(24_29_18/0.45)] sm:p-8 lg:p-10"
+                class="form-lg w-full overflow-hidden rounded-3xl border-2 border-border bg-surface shadow-[0_18px_44px_-28px_rgb(24_29_18/0.45)]"
                 x-data="autoInsuranceForm(@js([
                     'initialStep' => $initialStep,
                     'plate' => old('vehicle_plate', ''),
+                    'idNumber' => old('owner_id_number', ''),
                     'term' => old('contract_term_months', 12),
                     'name' => old('guest_name', $isGuest ? '' : auth()->user()->name),
                     'email' => old($emailField, ''),
@@ -75,6 +76,9 @@
                     <input type="text" name="company" id="company" tabindex="-1" autocomplete="off">
                 </div>
 
+                {{-- The form keeps a readable measure; the rail beside it says what is coming. --}}
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_21rem]">
+                    <div class="p-5 sm:p-8 lg:p-10">
                 @include('insurance.auto._wizard-stepper')
 
                 @error('insurance_quote')
@@ -87,7 +91,7 @@
                     <h2 x-ref="heading1" tabindex="-1" class="{{ $heading }}">{{ __('auto_insurance.request.wizard.vehicle_heading') }}</h2>
                     <p class="{{ $sub }}">{{ __('auto_insurance.request.wizard.vehicle_sub') }}</p>
 
-                    <div class="mt-7 grid gap-6 md:grid-cols-2">
+                    <div class="mt-7 grid gap-6 sm:grid-cols-2">
                         @include('insurance.auto._field', ['field' => [
                             'name' => 'vehicle_plate',
                             'type' => 'text',
@@ -102,10 +106,11 @@
                             'name' => 'owner_id_number',
                             'type' => 'text',
                             'icon' => 'id-card',
+                            'model' => 'idNumber',
                             'label' => __('auto_insurance.request.owner_id_number'),
                         ]])
 
-                        <fieldset class="md:col-span-2">
+                        <fieldset class="sm:col-span-2">
                             <legend class="block text-sm font-semibold text-ink">{{ __('auto_insurance.request.contract_term') }}</legend>
                             <div class="mt-2.5 grid grid-cols-3 gap-2.5 sm:max-w-lg">
                                 @foreach ($contractTerms as $term)
@@ -138,9 +143,10 @@
                     <h2 x-ref="heading2" tabindex="-1" class="{{ $heading }}">{{ __('auto_insurance.request.wizard.contact_heading') }}</h2>
                     <p class="{{ $sub }}">{{ __('auto_insurance.request.wizard.contact_sub') }}</p>
 
-                    <div class="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="mt-7 grid gap-6 sm:grid-cols-2">
                         @if ($isGuest)
                             @include('insurance.auto._field', ['field' => [
+                                'wrapper' => 'sm:col-span-2',
                                 'name' => 'guest_name',
                                 'type' => 'text',
                                 'icon' => 'user',
@@ -201,7 +207,7 @@
                     <h2 x-ref="heading3" tabindex="-1" class="{{ $heading }}">{{ __('auto_insurance.request.wizard.payout_heading') }}</h2>
                     <p class="{{ $sub }}">{{ __('auto_insurance.request.wizard.payout_sub') }}</p>
 
-                    <div class="mt-7 grid gap-6 lg:grid-cols-2 lg:items-start">
+                    <div class="mt-7 grid gap-6">
                         @include('insurance.auto._field', ['field' => [
                             'name' => 'market_bank_account',
                             'type' => 'text',
@@ -214,7 +220,7 @@
                             'placeholder' => __('auto_insurance.request.wizard.bank_placeholder'),
                         ]])
 
-                        <div class="flex items-start gap-3.5 rounded-2xl border border-border bg-surface-alt px-5 py-4 lg:mt-8">
+                        <div class="flex items-start gap-3.5 rounded-2xl border border-border bg-surface-alt px-5 py-4">
                             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                                 <x-lucide name="lock" :size="18" />
                             </span>
@@ -292,16 +298,26 @@
                             <x-lucide x-show="!loading" name="arrow-right" :size="18" />
                         </button>
                     </div>
+                </div>
+                    </div>
 
-                    <p class="mt-5 text-right text-sm text-muted">
-                        {{ trans_choice('compare_ui.insurers', $insurerCount, ['count' => $insurerCount]) }}
-                        · {{ __('auto_insurance.request.signal_free') }}
-                        · {{ __('auto_insurance.request.wizard.footnote_fast') }}
-                    </p>
+                    @include('insurance.auto._rail')
                 </div>
             </form>
         </div>
     </section>
+
+    <x-how-it-works
+        tone="insurance"
+        :heading="__('auto_insurance.request.works_heading')"
+        :sub="__('auto_insurance.request.works_sub')"
+        :steps="[
+            ['icon' => 'car', 'title' => __('auto_insurance.request.works_1_title'), 'body' => __('auto_insurance.request.works_1_body')],
+            ['icon' => 'building-2', 'title' => __('auto_insurance.request.works_2_title'), 'body' => __('auto_insurance.request.works_2_body')],
+            ['icon' => 'scale', 'title' => __('auto_insurance.request.works_3_title'), 'body' => __('auto_insurance.request.works_3_body')],
+            ['icon' => 'circle-check', 'title' => __('auto_insurance.request.works_4_title'), 'body' => __('auto_insurance.request.works_4_body')],
+        ]"
+    />
 
     <x-partners-strip :partners="$partners" :heading="__('auto_insurance.request.partners_heading')" marquee />
 @endsection

@@ -22,6 +22,11 @@ return [
         'signal_fast' => 'Ответы за дни',
         'signal_fast_sub' => 'А не за недели',
 
+        // The rail beside the form: what to have to hand before you start.
+        'need_heading' => 'Что понадобится',
+        'need_destination' => 'Страна, для которой нужна виза',
+        'need_dates' => 'Даты поездки',
+        'need_contact' => 'Ваше имя и электронная почта',
         'section_trip' => 'Куда и когда',
         'section_contact' => 'Куда отправить ответы',
 

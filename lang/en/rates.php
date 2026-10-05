@@ -9,6 +9,7 @@ return [
     'alert_short' => 'Alert me',
     'alert_hint' => 'We will email you when this rate moves, so you do not have to keep checking.',
     'alert_cta' => 'Set a rate alert',
+    'actions_hint' => 'Exchanging a large amount, or waiting for the rate to move? Ask for a quote, or let us email you when it changes.',
     'view_all' => 'View all rates',
 
     'markets' => [

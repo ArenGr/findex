@@ -8,7 +8,8 @@
         <p class="text-sm text-muted">{{ __('tourism.request.search_sub') }}</p>
     </div>
 
-    <div class="mt-5 grid grid-cols-1 gap-x-4 gap-y-5 md:grid-cols-2 lg:grid-cols-[0.8fr_1.1fr_1.2fr_1fr] lg:items-start">
+    {{-- Two up, not four: the form column is a readable measure now, not the page width. --}}
+    <div class="mt-5 grid grid-cols-1 gap-x-5 gap-y-5 sm:grid-cols-2 sm:items-start">
         {{-- From --}}
         <div class="{{ $col }}">
             <label for="departure_location" class="{{ $label }}">{{ __('tourism.request.departure_location') }}</label>

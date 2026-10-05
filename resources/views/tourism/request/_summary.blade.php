@@ -7,23 +7,31 @@
         ['label' => __('tourism.request.summary_hotel'), 'value' => 'hotelSummary', 'icon' => 'hotel'],
         ['label' => __('tourism.request.summary_meals'), 'value' => 'mealsSummary', 'icon' => 'restaurant'],
     ];
+
+    // What the visitor gets for asking, kept in view on every step.
+    $reassurances = [
+        ['icon' => 'shield-check', 'text' => __('tourism.request.benefit_trusted')],
+        ['icon' => 'tag', 'text' => __('tourism.request.benefit_value')],
+        ['icon' => 'clock', 'text' => __('tourism.request.benefit_time')],
+        ['icon' => 'lock', 'text' => __('tourism.request.safe_secure')],
+    ];
 @endphp
 
-{{-- What you have told us so far, in the rates summary card. --}}
-<div id="travel-request-summary" class="scroll-mt-24 rounded-2xl border border-border bg-surface p-5 sm:p-6 lg:sticky lg:top-24">
+{{-- Beside the form: the trip so far, and why this is safe to send - see insurance/auto/_rail. --}}
+<div id="travel-request-summary" class="scroll-mt-24 lg:sticky lg:top-24">
     <div class="flex items-center justify-between gap-3">
-        <span class="text-xs font-semibold tracking-wider text-muted uppercase">{{ __('tourism.request.summary_heading_request') }}</span>
+        <h2 class="text-sm font-bold tracking-[0.14em] text-muted uppercase">{{ __('tourism.request.summary_heading_request') }}</h2>
         <button type="button" x-show="step > 1" x-cloak @click="goToStep(1)" class="shrink-0 text-sm font-medium text-primary hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none">
             {{ __('tourism.request.summary_edit') }}
         </button>
     </div>
 
-    <div x-show="hasItinerary" x-cloak class="mt-4">
+    <div x-show="hasItinerary" x-cloak class="mt-5">
         <p class="text-lg font-bold text-ink" x-text="itineraryRoute"></p>
         <p class="mt-0.5 text-sm text-muted" x-text="itineraryMeta"></p>
     </div>
 
-    <dl class="mt-4 space-y-3 border-t border-border pt-4 text-sm">
+    <dl class="mt-5 space-y-3.5 text-sm">
         @foreach ($rows as $row)
             <div class="flex items-center justify-between gap-3">
                 <dt class="flex shrink-0 items-center gap-2 text-muted">
@@ -46,7 +54,7 @@
             ></dd>
         </div>
 
-        <div x-show="priorities.length" x-cloak class="border-t border-border pt-3">
+        <div x-show="priorities.length" x-cloak class="border-t border-border pt-3.5">
             <dt class="mb-2 text-muted">{{ __('tourism.request.priorities_label') }}</dt>
             <dd class="flex flex-wrap gap-1.5">
                 <template x-for="value in priorities" :key="value">
@@ -55,4 +63,13 @@
             </dd>
         </div>
     </dl>
+
+    <ul class="mt-8 space-y-4 border-t border-border pt-6">
+        @foreach ($reassurances as $item)
+            <li class="flex items-start gap-3 text-sm text-muted">
+                <x-lucide :name="$item['icon']" :size="18" class="mt-0.5 text-primary" />
+                {{ $item['text'] }}
+            </li>
+        @endforeach
+    </ul>
 </div>

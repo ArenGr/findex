@@ -22,6 +22,11 @@ return [
         'signal_fast' => 'Պատասխան՝ օրերի ընթացքում',
         'signal_fast_sub' => 'Ոչ թե շաբաթների',
 
+        // The rail beside the form: what to have to hand before you start.
+        'need_heading' => 'Ինչ է պետք',
+        'need_destination' => 'Երկիրը, որի համար վիզա է պետք',
+        'need_dates' => 'Ճամփորդության ամսաթվերը',
+        'need_contact' => 'Ձեր անունը և էլ. փոստը',
         'section_trip' => 'Ուր և երբ',
         'section_contact' => 'Ուր ուղարկել պատասխանները',
 

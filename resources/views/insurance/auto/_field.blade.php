@@ -7,7 +7,7 @@
         ->first(fn ($first) => $first !== '');
 @endphp
 
-<div class="min-w-0">
+<div class="min-w-0 {{ $field['wrapper'] ?? '' }}">
     <label for="{{ $field['name'] }}" class="block text-sm font-semibold text-ink">{{ $field['label'] }}</label>
     <div class="relative mt-2.5">
         <x-lucide :name="$field['icon']" :size="20" class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-subtle" />
